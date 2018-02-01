@@ -1,2 +1,2 @@
 # plugin
-source doe and tests for Sovrin Ledger plugins
+source code and tests for Sovrin Ledger plugins
