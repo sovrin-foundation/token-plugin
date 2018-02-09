@@ -1,5 +1,5 @@
-from ledger.compact_merkle_tree import CompactMerkleTree
 from plenum.common.ledger import Ledger
+from ledger.compact_merkle_tree import CompactMerkleTree
 from plenum.persistence.leveldb_hash_store import LevelDbHashStore
 from plenum.persistence.storage import initKeyValueStorage
 from state.pruning_state import PruningState
