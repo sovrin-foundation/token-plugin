@@ -1,12 +1,14 @@
 import pytest
+
 from ledger.util import F
 from plenum.common.util import lxor
+from tokens.src.constants import OUTPUTS
 from tokens.src.util import register_token_wallet_with_client
 from tokens.src.wallet import TokenWallet, Address
-
-from tokens.src.constants import OUTPUTS
 from tokens.test.helper import do_public_minting, send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
+from plenum.test.pool_transactions.conftest import clientAndWallet1, \
+client1, wallet1, client1Connected, looper
 
 total_mint = 100
 seller_gets = 40

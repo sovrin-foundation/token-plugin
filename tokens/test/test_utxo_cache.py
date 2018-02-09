@@ -1,12 +1,14 @@
-import itertools
 import random
+
+import itertools
 from collections import defaultdict
 
 import pytest
-from plenum.common.util import randomString
-from tokens.src.utxo_cache import UTXOCache
 
+from plenum.common.util import randomString
 from tokens.src.token_types import Output
+from tokens.src.utxo_cache import UTXOCache
+from storage.test.conftest import parametrised_storage
 
 
 @pytest.fixture()             # noqa
