@@ -4,9 +4,9 @@ from collections import defaultdict
 
 import pytest
 from plenum.common.util import randomString
-from src.utxo_cache import UTXOCache
+from tokens.src.utxo_cache import UTXOCache
 
-from src.token_types import Output
+from tokens.src.token_types import Output
 
 
 @pytest.fixture()             # noqa

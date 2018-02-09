@@ -1,11 +1,11 @@
 import pytest
 from ledger.util import F
 from plenum.common.util import lxor
-from src.util import register_token_wallet_with_client
-from src.wallet import TokenWallet, Address
+from tokens.src.util import register_token_wallet_with_client
+from tokens.src.wallet import TokenWallet, Address
 
-from src.constants import OUTPUTS
-from test.helper import do_public_minting, send_xfer, \
+from tokens.src.constants import OUTPUTS
+from tokens.test.helper import do_public_minting, send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
 
 total_mint = 100
@@ -13,7 +13,7 @@ seller_gets = 40
 
 
 @pytest.fixture(scope='module') # noqa
-def public_minting(looper, txnPoolNodeSet, client1, # noqa
+def public_minting(looper, nodeSetWithIntegratedTokenPlugin, client1, # noqa
                    wallet1, client1Connected, trustee_wallets,
                    SF_address, seller_address):
     return do_public_minting(looper, trustee_wallets, client1, total_mint,
@@ -57,7 +57,7 @@ def user3_address(user3_token_wallet):
     return next(iter(user3_token_wallet.addresses.keys()))
 
 
-def test_seller_xfer_invalid_outputs(public_minting, looper, txnPoolNodeSet,# noqa
+def test_seller_xfer_invalid_outputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin,# noqa
                                      client1, seller_token_wallet,
                                      seller_address, user1_address):
     """
@@ -72,7 +72,7 @@ def test_seller_xfer_invalid_outputs(public_minting, looper, txnPoolNodeSet,# no
     with pytest.raises(AssertionError):
         send_xfer(looper, inputs, outputs, client1)
 
-def test_seller_xfer_float_amount(public_minting, looper, txnPoolNodeSet, # noqa
+def test_seller_xfer_float_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
                                     client1, seller_token_wallet,
                                     seller_address, user1_address):
     """
@@ -87,7 +87,7 @@ def test_seller_xfer_float_amount(public_minting, looper, txnPoolNodeSet, # noqa
     with pytest.raises(AssertionError):
         send_xfer(looper, inputs, outputs, client1)
 
-def test_seller_xfer_negative_amount(public_minting, looper, txnPoolNodeSet, # noqa
+def test_seller_xfer_negative_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
                                     client1, seller_token_wallet,
                                     seller_address, user1_address):
     """
@@ -102,7 +102,7 @@ def test_seller_xfer_negative_amount(public_minting, looper, txnPoolNodeSet, # n
     with pytest.raises(AssertionError):
         send_xfer(looper, inputs, outputs, client1)
 
-def test_seller_xfer_invalid_amount(public_minting, looper, txnPoolNodeSet, # noqa
+def test_seller_xfer_invalid_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
                                     client1, seller_token_wallet,
                                     seller_address, user1_address):
     """
@@ -118,7 +118,7 @@ def test_seller_xfer_invalid_amount(public_minting, looper, txnPoolNodeSet, # no
         send_xfer(looper, inputs, outputs, client1)
 
 
-def test_seller_xfer_invalid_inputs(public_minting, looper, txnPoolNodeSet, # noqa
+def test_seller_xfer_invalid_inputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
                                     client1, seller_token_wallet,
                                     seller_address, user1_address):
     """
@@ -137,7 +137,7 @@ def test_seller_xfer_invalid_inputs(public_minting, looper, txnPoolNodeSet, # no
 
 
 @pytest.fixture(scope='module')     # noqa
-def valid_xfer_txn_done(public_minting, looper, txnPoolNodeSet, client1,
+def valid_xfer_txn_done(public_minting, looper, nodeSetWithIntegratedTokenPlugin, client1,
                         seller_token_wallet, seller_address, user1_address):
     global seller_gets
     seq_no = public_minting[F.seqNo.name]
@@ -146,8 +146,8 @@ def valid_xfer_txn_done(public_minting, looper, txnPoolNodeSet, client1,
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     outputs = [[user1_address, user1_gets], [seller_address, seller_gets]]
     req = send_xfer(looper, inputs, outputs, client1)
-    check_output_val_on_all_nodes(txnPoolNodeSet, seller_address, seller_gets)
-    check_output_val_on_all_nodes(txnPoolNodeSet, user1_address, user1_gets)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_gets)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
     result, _ = client1.getReply(req.identifier, req.reqId)
     return result
 
@@ -159,7 +159,7 @@ def test_seller_xfer_valid(valid_xfer_txn_done):
     pass
 
 
-def test_seller_xfer_double_spend_attempt(looper, txnPoolNodeSet, client1,  # noqa
+def test_seller_xfer_double_spend_attempt(looper, nodeSetWithIntegratedTokenPlugin, client1,  # noqa
                                           seller_token_wallet, seller_address,
                                           valid_xfer_txn_done, user1_address,
                                           user2_address):
@@ -186,13 +186,13 @@ def test_seller_xfer_double_spend_attempt(looper, txnPoolNodeSet, client1,  # no
     # Both requests should not be successful, one and only one should be
     sucs1, sucs2 = False, False
     try:
-        check_output_val_on_all_nodes(txnPoolNodeSet, user1_address, user1_gets)
+        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
         sucs1 = True
     except Exception:
         pass
 
     try:
-        check_output_val_on_all_nodes(txnPoolNodeSet, user2_address, user2_gets)
+        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user2_address, user2_gets)
         sucs2 = True
     except Exception:
         pass
@@ -200,14 +200,14 @@ def test_seller_xfer_double_spend_attempt(looper, txnPoolNodeSet, client1,  # no
     assert lxor(sucs1, sucs2)
 
     if sucs1:
-        check_output_val_on_all_nodes(txnPoolNodeSet, seller_address,
+        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
                                       seller_gets - user1_gets)
     else:
-        check_output_val_on_all_nodes(txnPoolNodeSet, seller_address,
+        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
                                       seller_gets - user2_gets)
 
 
-def test_query_utxo(looper, txnPoolNodeSet, client1, wallet1, seller_token_wallet,  # noqa
+def test_query_utxo(looper, nodeSetWithIntegratedTokenPlugin, client1, wallet1, seller_token_wallet,  # noqa
                     seller_address, valid_xfer_txn_done, user1_address):
     """
     The ledger is queried for all UTXOs of a given address.
@@ -231,7 +231,7 @@ def test_query_utxo(looper, txnPoolNodeSet, client1, wallet1, seller_token_walle
     assert len(rep3[OUTPUTS]) == 0
 
 
-def test_xfer_with_multiple_inputs(public_minting, looper, txnPoolNodeSet,  # noqa
+def test_xfer_with_multiple_inputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin,  # noqa
                                    client1, wallet1, seller_token_wallet,
                                    seller_address, user1_address):
     """

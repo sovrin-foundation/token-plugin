@@ -1,4 +1,4 @@
-from src.transactions import TokenTransactions
+from tokens.src.transactions import TokenTransactions
 
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'

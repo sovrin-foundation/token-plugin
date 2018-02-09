@@ -1,5 +1,5 @@
 from copy import deepcopy
-from src import AcceptableWriteTypes, AcceptableQueryTypes
+from tokens.src import AcceptableWriteTypes, AcceptableQueryTypes
 
 from base58 import b58decode
 from plenum.common.constants import TXN_TYPE
@@ -9,7 +9,7 @@ from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
-from src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
+from tokens.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
 
 
 class AddressSigVerifier(Verifier):

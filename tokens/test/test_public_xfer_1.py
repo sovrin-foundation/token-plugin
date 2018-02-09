@@ -4,9 +4,9 @@ import pytest
 from ledger.util import F
 from plenum.common.types import f
 from plenum.test.helper import waitForSufficientRepliesForRequests
-from src.wallet import Address
-from src.constants import INPUTS
-from test.helper import xfer_request, inputs_outputs, send_xfer
+from tokens.src.wallet import Address
+from tokens.src.constants import INPUTS
+from tokens.test.helper import xfer_request, inputs_outputs, send_xfer
 
 
 def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa

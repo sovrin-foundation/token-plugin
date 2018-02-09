@@ -1,6 +1,6 @@
 import pytest
 
-from src.wallet import TokenWallet, Address
+from tokens.src.wallet import TokenWallet, Address
 
 
 @pytest.fixture(scope="module")

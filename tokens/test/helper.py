@@ -1,7 +1,7 @@
 from plenum.common.constants import TXN_TYPE
 from plenum.test.helper import waitForSufficientRepliesForRequests
 
-from src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
+from tokens.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
     EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
 
 

@@ -1,7 +1,7 @@
 from typing import List, Iterable
 
 import base58
-from src.constants import XFER_PUBLIC, MINT_PUBLIC, OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+from tokens.src.constants import XFER_PUBLIC, MINT_PUBLIC, OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE
 from plenum.common.exceptions import InvalidClientRequest, \
@@ -13,10 +13,10 @@ from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.req_handler import RequestHandler
-from src.utxo_cache import UTXOCache
+from tokens.src.utxo_cache import UTXOCache
 
-from src.messages.fields import PublicOutputField, PublicInputsField, PublicOutputsField
-from src.token_types import Output
+from tokens.src.messages.fields import PublicOutputField, PublicInputsField, PublicOutputsField
+from tokens.src.token_types import Output
 
 
 class TokenReqHandler(RequestHandler):

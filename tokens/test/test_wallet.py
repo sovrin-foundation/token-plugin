@@ -1,4 +1,4 @@
-from src.wallet import TokenWallet, Address
+from tokens.src.wallet import TokenWallet, Address
 
 def test_address_isunspent():
     address = Address()
