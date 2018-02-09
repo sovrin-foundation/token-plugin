@@ -1,14 +1,17 @@
+# NOTE: Do not remove this import, neither place any other import on top of
+# this, all imports should follow
+from plenum.test.conftest import *
+
 import pytest
-import plenum.test.conftest
 from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.test.plugin.helper import getPluginPath
 from plenum.test.test_node import TestNode
-from src.util import register_token_wallet_with_client
-from src.wallet import TokenWallet
+from tokens.src.util import register_token_wallet_with_client
+from tokens.src.wallet import TokenWallet
 
-from src.main import update_node_class, update_node_obj
-from test.helper import send_get_utxo, send_xfer
+from tokens.src.main import update_node_class, update_node_obj
+from tokens.test.helper import send_get_utxo, send_xfer
 
 
 def build_wallets_from_data(name_seeds):
@@ -61,7 +64,7 @@ def testNodeClass(patchPluginManager):
 
 
 @pytest.fixture(scope="module")
-def txnPoolNodeSet(txnPoolNodeSet):
+def nodeSetWithIntegratedTokenPlugin(txnPoolNodeSet):
     for node in txnPoolNodeSet:
         update_node_obj(node)
     return txnPoolNodeSet

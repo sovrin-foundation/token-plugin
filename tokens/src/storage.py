@@ -4,7 +4,7 @@ from plenum.persistence.leveldb_hash_store import LevelDbHashStore
 from plenum.persistence.storage import initKeyValueStorage
 from state.pruning_state import PruningState
 
-from src.utxo_cache import UTXOCache
+from tokens.src.utxo_cache import UTXOCache
 
 
 def get_token_hash_store(data_dir):
