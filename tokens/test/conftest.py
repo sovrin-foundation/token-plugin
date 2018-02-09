@@ -1,4 +1,5 @@
 import pytest
+import plenum.test.conftest
 from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.test.plugin.helper import getPluginPath
