@@ -1,0 +1,2 @@
+# class TestTokenAuthNr(TokenAuthNr):
+#     pass
