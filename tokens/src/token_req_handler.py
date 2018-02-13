@@ -1,9 +1,9 @@
 from typing import List, Iterable
 
 import base58
-from tokens.src.constants import XFER_PUBLIC, MINT_PUBLIC, OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+
 from ledger.util import F
-from plenum.common.constants import TXN_TYPE, TRUSTEE
+from plenum.common.constants import TXN_TYPE, TRUSTEE, DATA
 from plenum.common.exceptions import InvalidClientRequest, \
     UnauthorizedClientRequest
 from plenum.common.messages.fields import IterableField
@@ -12,16 +12,19 @@ from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
+from plenum.server.plugin.token.constants import XFER_PUBLIC, MINT_PUBLIC, \
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+from plenum.server.plugin.token.messages.fields import PublicOutputField, \
+    PublicInputsField, PublicOutputsField
+from plenum.server.plugin.token.types import Output
+from plenum.server.plugin.token.utxo_cache import UTXOCache
 from plenum.server.req_handler import RequestHandler
-from tokens.src.utxo_cache import UTXOCache
-
-from tokens.src.messages.fields import PublicOutputField, PublicInputsField, PublicOutputsField
-from tokens.src.token_types import Output
 
 
 class TokenReqHandler(RequestHandler):
-    valid_txn_types = {MINT_PUBLIC, XFER_PUBLIC, GET_UTXO}
+    write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
+
     _public_output_validator = IterableField(PublicOutputField())
     _public_outputs_validator = PublicOutputsField()
     _public_inputs_validator = PublicInputsField()
@@ -36,40 +39,82 @@ class TokenReqHandler(RequestHandler):
             GET_UTXO: self.get_all_utxo,
         }
 
+    def _MINT_PUBLIC_validate(self, request: Request):
+        operation = request.operation
+        if operation[TXN_TYPE] == MINT_PUBLIC:
+            return self._operation_outputs_validate(request)
+
+    def _XFER_PUBLIC_validate(self, request: Request):
+        operation = request.operation
+        if operation[TXN_TYPE] == XFER_PUBLIC:
+            error = self._operation_outputs_validate(request)
+            if error:
+                return error
+            else:
+                error = self._operation_inputs_validate(request)
+            return error
+
+    def _GET_UTXO_validate(self, request: Request):
+        operation = request.operation
+        if operation[TXN_TYPE] == GET_UTXO:
+            return self._operation_address_validate(request)
+
+    def _operation_outputs_validate(self, request: Request):
+        operation = request.operation
+        if OUTPUTS not in operation:
+            raise InvalidClientRequest(request.identifier, request.reqId,
+                                       "{} needs to be present".
+                                       format(OUTPUTS))
+        return self._public_outputs_validator.validate(operation[OUTPUTS])
+
+    def _operation_inputs_validate(self, request: Request):
+        operation = request.operation
+        if INPUTS not in operation:
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId,
+                                       "{} needs to be present".
+                                       format(INPUTS))
+        return self._public_inputs_validator.validate(operation[INPUTS])
+
+    def _operation_address_validate(self, request: Request):
+        operation = request.operation
+        if ADDRESS not in operation:
+            error = '{} needs to be provided'.format(ADDRESS)
+        else:
+            error = self._public_output_validator.inner_field_type. \
+                public_address_field.validate(operation[ADDRESS])
+        if error:
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId, error)
+
     def doStaticValidation(self, request: Request):
         operation = request.operation
-        error = ''
-        if operation[TXN_TYPE] in (MINT_PUBLIC, XFER_PUBLIC):
-            if OUTPUTS not in operation:
-                raise InvalidClientRequest(request.identifier, request.reqId,
-                                           "{} needs to be present".
-                                           format(OUTPUTS))
-            error = self._public_outputs_validator.validate(operation[OUTPUTS])
-            if not error:
-                if operation[TXN_TYPE] == XFER_PUBLIC:
-                    if INPUTS not in operation:
-                        raise InvalidClientRequest(request.identifier,
-                                                   request.reqId,
-                                                   "{} needs to be present".
-                                                   format(INPUTS))
-                    error = self._public_inputs_validator.validate(
-                        operation[INPUTS])
+        if operation[TXN_TYPE] in (MINT_PUBLIC, XFER_PUBLIC, GET_UTXO):
+            # This is the python way of doing a switch statment. It seems cleaner than a stack of if/elif/else
+            txn_type_switch = {
+                MINT_PUBLIC: self._MINT_PUBLIC_validate,
+                XFER_PUBLIC: self._XFER_PUBLIC_validate,
+                GET_UTXO: self._GET_UTXO_validate
+            }
+            error = txn_type_switch[operation[TXN_TYPE]](request)
+            #error = None
+            #self._GET_UTXO_validate(request)
+            if error:
+                raise InvalidClientRequest(request.identifier,
+                                           request.reqId,
+                                           error)
+        else:
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId,
+                                       "Invalid type in operation",
+                                       operation[TXN_TYPE])
 
-        if operation[TXN_TYPE] == GET_UTXO:
-            if ADDRESS not in operation:
-                error = '{} needs to be provided'.format(ADDRESS)
-            else:
-                error = self._public_output_validator.inner_field_type.\
-                    public_address_field.validate(operation[ADDRESS])
-        if error:
-            raise InvalidClientRequest(request.identifier, request.reqId,
-                                       error)
 
-    def validate(self, req: Request):
-        operation = req.operation
+    def validate(self, request: Request):
+        operation = request.operation
         error = ''
         if operation[TXN_TYPE] == MINT_PUBLIC:
-            senders = req.all_identifiers
+            senders = request.all_identifiers
             if not all(DomainRequestHandler.get_role(
                     self.domain_state, idr, TRUSTEE) for idr in senders):
                 error = 'only Trustees can send this transaction'
@@ -90,7 +135,8 @@ class TokenReqHandler(RequestHandler):
                             ' of outputs is {}'.format(sum_inputs, sum_outputs)
 
         if error:
-            raise UnauthorizedClientRequest(req.identifier, req.reqId,
+            raise UnauthorizedClientRequest(request.identifier,
+                                            request.reqId,
                                             error)
 
     def apply(self, req: Request, cons_time: int):

@@ -1,15 +1,16 @@
 from copy import deepcopy
-from tokens.src import AcceptableWriteTypes, AcceptableQueryTypes
 
 from base58 import b58decode
+
+from common.serializers.serialization import serialize_msg_for_signing
 from plenum.common.constants import TXN_TYPE
 from plenum.common.exceptions import InsufficientCorrectSignatures
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION
 from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
-
+from tokens.src import AcceptableWriteTypes, AcceptableQueryTypes
 from tokens.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
+from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
 
 class AddressSigVerifier(Verifier):

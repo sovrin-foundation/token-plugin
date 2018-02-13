@@ -13,7 +13,7 @@ from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper
 from tokens.test.test_public_xfer_2 import public_minting, \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
-user3_address, user3_token_wallet
+    user3_address, user3_token_wallet
 
 
 def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
@@ -69,7 +69,7 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
 
     # Add signature from an address not present in input
     seq_no, _ = next(iter(
-        seller_token_wallet.get_all_utxos(seller_address).values()))[0]
+        seller_token_wallet.get_all_address_utxos(seller_address).values()))[0]
     seller_token_wallet.sign_using_output(seller_address, seq_no,
                                           request=request)
     assert len(sigs) == len(inputs)
@@ -114,7 +114,7 @@ def first_xfer_done(tokens_distributed, # noqa
               [user3_token_wallet, user3_address, xfer_seq_no]]
 
     # Each address will just have 1 unspent sequence number
-    output_val = sum([w.get_total_amount(address=a) for (w, a) in [
+    output_val = sum([w.get_total_address_amount(address=a) for (w, a) in [
         (user1_token_wallet, user1_address),
         (user2_token_wallet, user2_address),
         (user3_token_wallet, user3_address)]])
@@ -136,9 +136,9 @@ def test_multiple_inputs_outputs_without_change(first_xfer_done,
                                                 user3_address):
     # Transfer with multiple inputs and outputs but with no change (input and
     # output addresses are mutually exclusive)
-    assert user1_token_wallet.get_total_amount(user1_address) == 0
-    assert user2_token_wallet.get_total_amount(user2_address) == 0
-    assert user3_token_wallet.get_total_amount(user3_address) == 0
+    assert user1_token_wallet.get_total_address_amount(user1_address) == 0
+    assert user2_token_wallet.get_total_address_amount(user2_address) == 0
+    assert user3_token_wallet.get_total_address_amount(user3_address) == 0
 
 
 def test_multiple_inputs_outputs_with_change(first_xfer_done,
@@ -154,7 +154,7 @@ def test_multiple_inputs_outputs_with_change(first_xfer_done,
               [user2_token_wallet, addr2, xfer_seq_no],
               [user3_token_wallet, addr3, xfer_seq_no]]
     # Each address will just have 1 unspent sequence number
-    output_val = sum([w.get_total_amount(address=a) for (w, a) in [
+    output_val = sum([w.get_total_address_amount(address=a) for (w, a) in [
         (user1_token_wallet, addr1),
         (user2_token_wallet, addr2),
         (user3_token_wallet, addr3)]])
@@ -168,6 +168,6 @@ def test_multiple_inputs_outputs_with_change(first_xfer_done,
     outputs = [[new_addr1.address, part1], [new_addr2.address, part2],
                [addr3, part3]]
     send_xfer(looper, inputs, outputs, client1)
-    assert user1_token_wallet.get_total_amount(addr1) == 0
-    assert user2_token_wallet.get_total_amount(addr2) == 0
-    assert user3_token_wallet.get_total_amount(addr3) == part3
+    assert user1_token_wallet.get_total_address_amount(addr1) == 0
+    assert user2_token_wallet.get_total_address_amount(addr2) == 0
+    assert user3_token_wallet.get_total_address_amount(addr3) == part3
