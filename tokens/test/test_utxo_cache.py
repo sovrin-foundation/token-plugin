@@ -6,8 +6,8 @@ from collections import defaultdict
 import pytest
 
 from plenum.common.util import randomString
-from plenum.server.plugin.token.types import Output
-from plenum.server.plugin.token.utxo_cache import UTXOCache
+from tokens.src.types import Output
+from tokens.src.utxo_cache import UTXOCache
 from storage.test.conftest import parametrised_storage
 
 # Test Constants
