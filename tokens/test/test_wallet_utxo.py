@@ -1,5 +1,4 @@
 import pytest
-
 from tokens.src.wallet import TokenWallet, Address
 
 
@@ -53,10 +52,10 @@ def test_wallet_get_total_amount_with_outputs_with_same_txn_seq_no(wallet,
                                                                    address3,
                                                                    vals1):
     wallet._update_outputs(outputs=vals1, txn_seq_no=3001)
-    assert wallet.get_total_amount(address1.address) == 1
-    assert wallet.get_total_amount(address2.address) == 2
-    assert wallet.get_total_amount(address3.address) == 10
-    assert wallet.get_total_amount() == 13
+    assert wallet.get_total_address_amount(address1.address) == 1
+    assert wallet.get_total_address_amount(address2.address) == 2
+    assert wallet.get_total_address_amount(address3.address) == 10
+    assert wallet.get_total_wallet_amount() == 13
 
 #This test builds on the previous test
 def test_wallet_get_total_amount_with_outputs_with_diff_txn_seq_no(wallet,
@@ -69,10 +68,10 @@ def test_wallet_get_total_amount_with_outputs_with_diff_txn_seq_no(wallet,
     wallet._update_outputs(outputs=vals)
     #These results are valid because they are combined with the updated amounts
     #  in the previous test
-    assert wallet.get_total_amount(address1.address) == 2
-    assert wallet.get_total_amount(address2.address) == 4
-    assert wallet.get_total_amount(address3.address) == 20
-    assert wallet.get_total_amount() == 26
+    assert wallet.get_total_address_amount(address1.address) == 2
+    assert wallet.get_total_address_amount(address2.address) == 4
+    assert wallet.get_total_address_amount(address3.address) == 20
+    assert wallet.get_total_wallet_amount() == 26
 
 #This test builds on the previous test
 def test_get_min_utxo_ge(wallet, address1, address2, address3):

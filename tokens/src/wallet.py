@@ -1,6 +1,8 @@
-import math
 from collections import OrderedDict
+from operator import itemgetter
 from typing import Dict, Optional, Tuple
+
+import math
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
@@ -10,7 +12,6 @@ from plenum.common.messages.fields import TxnSeqNoField
 from plenum.common.request import Request
 from plenum.common.signer_simple import SimpleSigner
 from plenum.common.util import lxor
-
 from tokens.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC
 
 
@@ -73,20 +74,24 @@ class TokenWallet(Wallet):
         request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
         return request
 
-    def get_all_utxos(self, address=None):
-        if address is not None:
-            assert address in self.addresses
-            return {self.addresses[address]: self.addresses[address].all_utxos}
-        else:
-            return {address: address.all_utxos
+    def get_all_wallet_utxos(self):
+        return {address: address.all_utxos
                     for address in self.addresses.values()}
 
-    def get_total_amount(self, address=None):
-        if address is not None:
-            assert address in self.addresses
+    def get_all_address_utxos(self, address):
+        if address in self.addresses:
+            return {self.addresses[address]: self.addresses[address].all_utxos}
+        else:
+            return {}
+
+    def get_total_wallet_amount(self):
+        return sum(addr.total_amount for addr in self.addresses.values())
+
+    def get_total_address_amount(self, address):
+        if address in self.addresses:
             return self.addresses[address].total_amount
         else:
-            return sum(addr.total_amount for addr in self.addresses.values())
+            return 0
 
     def on_reply_from_network(self, observer_name, req_id, frm, result,
                               num_replies):
@@ -124,7 +129,10 @@ class TokenWallet(Wallet):
 
     def get_min_utxo_ge(self, amount, address=None) -> Optional[Tuple]:
         # Get minimum utxo greater than or equal to `amount`
-        all_utxos = self.get_all_utxos(address=address)
+        if address is not None:
+            all_utxos = self.get_all_address_utxos(address=address)
+        else:
+            all_utxos = self.get_all_wallet_utxos()
         minimum = None
 
         def _greater_than(tpl):

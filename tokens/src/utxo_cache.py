@@ -1,10 +1,9 @@
 from typing import List
 
 from plenum.common.util import updateNamedTuple
+from tokens.src.types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
-
-from tokens.src.token_types import Output
 
 
 class UTXOCache(OptimisticKVStore):
