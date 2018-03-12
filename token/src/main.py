@@ -1,10 +1,10 @@
 from plenum.common.constants import DOMAIN_LEDGER_ID
-from tokens.src.client_authnr import TokenAuthNr
-from tokens.src.config import get_config
-from tokens.src.constants import TOKEN_LEDGER_ID
-from tokens.src.storage import get_token_hash_store, \
+from plugin.token.src.client_authnr import TokenAuthNr
+from plugin.token.src.config import get_config
+from plugin.token.src.constants import TOKEN_LEDGER_ID
+from plugin.token.src.storage import get_token_hash_store, \
     get_token_ledger, get_token_state, get_utxo_cache
-from tokens.src.token_req_handler import TokenReqHandler
+from plugin.token.src.token_req_handler import TokenReqHandler
 
 
 def update_node_obj(node):

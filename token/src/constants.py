@@ -1,4 +1,4 @@
-from tokens.src.transactions import TokenTransactions
+from plugin.token.src.transactions import TokenTransactions
 
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'

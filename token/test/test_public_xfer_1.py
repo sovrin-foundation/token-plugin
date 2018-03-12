@@ -4,14 +4,14 @@ import pytest
 
 from ledger.util import F
 from plenum.common.types import f
-from tokens.src.constants import INPUTS
-from tokens.src.wallet import Address
+from plugin.tokens.src.constants import INPUTS
+from plugin.tokens.src.wallet import Address
 from plenum.test.helper import waitForSufficientRepliesForRequests
-from tokens.test.helper import xfer_request, \
+from plugin.tokens.test.helper import xfer_request, \
     inputs_outputs, send_xfer
 from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper
-from tokens.test.test_public_xfer_2 import public_minting, \
+from plugin.tokens.test.test_public_xfer_2 import public_minting, \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 

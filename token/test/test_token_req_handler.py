@@ -8,7 +8,7 @@ from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientReq
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.persistence.util import txnsWithSeqNo
-from plenum.server.plugin.token.token_req_handler import TokenReqHandler
+from plugin.tokens.src.token_req_handler import TokenReqHandler
 
 # Do not optimize these out, they are needed for public_minting to work
 from plenum.test.plugin.token.test_public_xfer_2 import public_minting
@@ -16,8 +16,8 @@ from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper
 
 # TEST CONSTANTS
-from plenum.server.plugin.token.types import Output
-from plenum.server.plugin.token.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from plugin.tokens.src.token_types import Output
+from plugin.tokens.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
 VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'

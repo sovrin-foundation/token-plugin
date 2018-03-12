@@ -12,7 +12,7 @@ from plenum.common.messages.fields import TxnSeqNoField
 from plenum.common.request import Request
 from plenum.common.signer_simple import SimpleSigner
 from plenum.common.util import lxor
-from tokens.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC
+from plugin.token.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC
 
 
 class Address:
