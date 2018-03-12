@@ -33,7 +33,7 @@ exec(compile(open(METADATA).read(), METADATA, 'exec'))
 tests_require = ['pytest', 'pytest-xdist', 'python3-indy']
 
 setup(
-    name='indy-plugin',
+    name='sovrin-plugin',
     version=__version__,
     # TODO: Change the field values below
     description='Plenum Byzantine Fault Tolerant Protocol',
@@ -49,7 +49,7 @@ setup(
         'data', ],
     package_data={
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
-             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'tokens']},
+             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'token']},
     include_package_data=True,
     install_requires=['indy-plenum-dev==1.2.242',],
     setup_requires=['pytest-runner'],

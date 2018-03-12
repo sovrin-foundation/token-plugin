@@ -8,8 +8,8 @@ from plenum.common.exceptions import InsufficientCorrectSignatures
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION
 from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from tokens.src import AcceptableWriteTypes, AcceptableQueryTypes
-from tokens.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
+from plugin.token.src import AcceptableWriteTypes, AcceptableQueryTypes
+from plugin.token.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
 
