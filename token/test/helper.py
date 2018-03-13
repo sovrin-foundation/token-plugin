@@ -1,6 +1,6 @@
 from plenum.common.constants import TXN_TYPE
 from plenum.common.types import f
-from plugin.tokens.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
+from plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
     EXTRA, INPUTS, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
 from plenum.test.helper import waitForSufficientRepliesForRequests
 
