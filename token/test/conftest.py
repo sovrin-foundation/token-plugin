@@ -2,11 +2,11 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
-from plugin.tokens.src.main import update_node_obj
-from plugin.tokens.src.util import register_token_wallet_with_client
-from plugin.tokens.src.wallet import TokenWallet
+from plugin.token.src.main import update_node_obj
+from plugin.token.src.util import register_token_wallet_with_client
+from plugin.token.src.wallet import TokenWallet
 from plenum.test.plugin.helper import getPluginPath
-from plugin.tokens.test.helper import send_get_utxo, send_xfer
+from plugin.token.test.helper import send_get_utxo, send_xfer
 
 
 def build_wallets_from_data(name_seeds):
