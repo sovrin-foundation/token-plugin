@@ -1,5 +1,5 @@
 import pytest
-from plugin.tokens.src.wallet import TokenWallet, Address
+from plugin.token.src.wallet import TokenWallet, Address
 
 
 @pytest.fixture(scope="module")

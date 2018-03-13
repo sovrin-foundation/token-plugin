@@ -2,10 +2,10 @@ import pytest
 
 from ledger.util import F
 from plenum.common.util import lxor
-from plugin.tokens.src.constants import OUTPUTS
-from plugin.tokens.src.util import register_token_wallet_with_client
-from plugin.tokens.src.wallet import TokenWallet, Address
-from plugin.tokens.test.helper import do_public_minting, send_xfer, \
+from plugin.token.src.constants import OUTPUTS
+from plugin.token.src.util import register_token_wallet_with_client
+from plugin.token.src.wallet import TokenWallet, Address
+from plugin.token.test.helper import do_public_minting, send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
 from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper

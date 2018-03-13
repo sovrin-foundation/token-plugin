@@ -5,9 +5,9 @@ import pytest
 
 from plenum.common.constants import STEWARD
 from plenum.test.conftest import get_data_for_role
-from plugin.tokens.test.helper import send_public_mint, \
+from plugin.token.test.helper import send_public_mint, \
     do_public_minting, check_output_val_on_all_nodes
-from plugin.tokens.test.conftest import build_wallets_from_data
+from plugin.token.test.conftest import build_wallets_from_data
 from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper
 
