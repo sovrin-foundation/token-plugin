@@ -7,7 +7,7 @@ from plugin.token.src.util import register_token_wallet_with_client
 from plugin.token.src.wallet import TokenWallet
 from plenum.test.plugin.helper import getPluginPath
 from plugin.token.test.helper import send_get_utxo, send_xfer
-
+from plenum.test.conftest import *
 
 def build_wallets_from_data(name_seeds):
     wallets = []
@@ -48,9 +48,9 @@ def trustee_wallets(trustee_data):
     return build_wallets_from_data(trustee_data)
 
 
-@pytest.fixture(scope="module")
-def allPluginsPath(allPluginsPath):
-    return allPluginsPath + [getPluginPath('token')]
+# @pytest.fixture(scope="module")
+# def allPluginsPath(allPluginsPath):
+#     return allPluginsPath + [getPluginPath('token')]
 
 
 @pytest.fixture(scope="module")
@@ -63,7 +63,7 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def txnPoolNodeSet(tconf, do_post_node_creation, txnPoolNodeSet):
+def nodeSetWithIntegratedTokenPlugin(tconf, do_post_node_creation, txnPoolNodeSet):
     return txnPoolNodeSet
 
 
