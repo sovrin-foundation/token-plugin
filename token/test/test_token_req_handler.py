@@ -9,6 +9,7 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.persistence.util import txnsWithSeqNo
 from plugin.token.src.token_req_handler import TokenReqHandler
+from plugin.token.test.helper import do_public_minting
 
 # Do not optimize these out, they are needed for public_minting to work
 from plugin.token.test.test_public_xfer_2 import public_minting
@@ -40,6 +41,16 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
                   'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
+
+@pytest.fixture(scope='module') # noqa
+def public_minting(looper, txnPoolNodeSet, client1, # noqa
+                   wallet1, client1Connected, trustee_wallets,
+                   SF_address, seller_address):
+    total_mint = 100
+    seller_gets = 40
+    return do_public_minting(looper, trustee_wallets, client1, total_mint,
+                             total_mint - seller_gets, SF_address,
+                             seller_address)
 
 
 @pytest.fixture
