@@ -12,7 +12,7 @@ from plenum.test.pool_transactions.conftest import clientAndWallet1, \
     client1, wallet1, client1Connected, looper
 
 
-def test_trustee_invalid_minting(txnPoolNodeSet, looper, client1, # noqa
+def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, client1, # noqa
                                  wallet1, client1Connected, trustee_wallets,
                                  SF_address, seller_address):
     """
@@ -24,7 +24,7 @@ def test_trustee_invalid_minting(txnPoolNodeSet, looper, client1, # noqa
         send_public_mint(looper, trustee_wallets, outputs, client1)
 
 
-def test_trustee_float_minting(txnPoolNodeSet, looper, client1,  # noqa
+def test_trustee_float_minting(nodeSetWithIntegratedTokenPlugin, looper, client1,  # noqa
                                wallet1, client1Connected, trustee_wallets,
                                SF_address, seller_address):
     """
@@ -37,7 +37,7 @@ def test_trustee_float_minting(txnPoolNodeSet, looper, client1,  # noqa
 
 
 # What about trust anchors, TGB, do those fail as well?
-def test_non_trustee_minting(txnPoolNodeSet, looper, client1, # noqa
+def test_non_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper, client1, # noqa
                              wallet1, client1Connected, SF_address,
                              seller_address, poolTxnData):
     """
@@ -57,7 +57,7 @@ def test_non_trustee_minting(txnPoolNodeSet, looper, client1, # noqa
 # created here?
 # who can set the number of trustees needed, where is that value configured?
 # Is there a mint limit?
-def test_less_than_min_trustee_minting(txnPoolNodeSet, looper, client1, # noqa
+def test_less_than_min_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper, client1, # noqa
                                        wallet1, client1Connected,
                                        trustee_wallets, SF_address,
                                        seller_address):
@@ -73,7 +73,7 @@ def test_less_than_min_trustee_minting(txnPoolNodeSet, looper, client1, # noqa
         send_public_mint(looper, trustee_wallets[:3], outputs, client1)
 
 
-def test_trustee_valid_minting(txnPoolNodeSet, looper, client1, # noqa
+def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper, client1, # noqa
                                wallet1, client1Connected, trustee_wallets,
                                SF_address, seller_address):
     """
@@ -84,6 +84,6 @@ def test_trustee_valid_minting(txnPoolNodeSet, looper, client1, # noqa
     sf_master_gets = 60
     do_public_minting(looper, trustee_wallets, client1, total_mint,
                       sf_master_gets, SF_address, seller_address)
-    check_output_val_on_all_nodes(txnPoolNodeSet, SF_address, sf_master_gets)
-    check_output_val_on_all_nodes(txnPoolNodeSet, seller_address,
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, SF_address, sf_master_gets)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
                                   total_mint - sf_master_gets)
