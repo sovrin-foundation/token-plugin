@@ -1,4 +1,4 @@
-from plugin.token.src.transactions import TokenTransactions
+from plenum.server.plugin.token.transactions import TokenTransactions
 
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'

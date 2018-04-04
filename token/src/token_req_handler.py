@@ -3,7 +3,7 @@ from typing import List, Iterable
 import base58
 
 from ledger.util import F
-from plenum.common.constants import TXN_TYPE, TRUSTEE, DATA
+from plenum.common.constants import TXN_TYPE, TRUSTEE
 from plenum.common.exceptions import InvalidClientRequest, \
     UnauthorizedClientRequest
 from plenum.common.messages.fields import IterableField
@@ -12,12 +12,12 @@ from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
-from plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from plenum.server.plugin.token.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
-from plugin.token.src.messages.fields import PublicOutputField, \
+from plenum.server.plugin.token.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
-from plugin.token.src.token_types import Output
-from plugin.token.src.utxo_cache import UTXOCache
+from plenum.server.plugin.token.types import Output
+from plenum.server.plugin.token.utxo_cache import UTXOCache
 from plenum.server.req_handler import RequestHandler
 
 
@@ -97,8 +97,6 @@ class TokenReqHandler(RequestHandler):
                 GET_UTXO: self._GET_UTXO_validate
             }
             error = txn_type_switch[operation[TXN_TYPE]](request)
-            #error = None
-            #self._GET_UTXO_validate(request)
             if error:
                 raise InvalidClientRequest(request.identifier,
                                            request.reqId,
@@ -184,8 +182,8 @@ class TokenReqHandler(RequestHandler):
     def onBatchRejected(self):
         self.utxo_cache.reject_batch()
 
-    def commit(self, txnCount, stateRoot, txnRoot) -> List:
-        r = super().commit(txnCount, stateRoot, txnRoot)
+    def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
+        r = super().commit(txnCount, stateRoot, txnRoot, pptime)
         stateRoot = base58.b58decode(stateRoot.encode())
         assert self.utxo_cache.first_batch_idr == stateRoot
         self.utxo_cache.commit_batch()

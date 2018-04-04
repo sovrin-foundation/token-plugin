@@ -2,12 +2,15 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
-from plugin.token.src.main import update_node_obj
-from plugin.token.src.util import register_token_wallet_with_client
-from plugin.token.src.wallet import TokenWallet
+from plenum.server.plugin.token.main import update_node_obj
+from plenum.server.plugin.token.util import register_token_wallet_with_client
+from plenum.server.plugin.token.wallet import TokenWallet
 from plenum.test.plugin.helper import getPluginPath
-from plugin.token.test.helper import send_get_utxo, send_xfer
-from plenum.test.conftest import *
+from plenum.test.plugin.token.helper import send_get_utxo, send_xfer, \
+    do_public_minting
+
+total_mint = 100
+seller_gets = 40
 
 def build_wallets_from_data(name_seeds):
     wallets = []
@@ -16,6 +19,11 @@ def build_wallets_from_data(name_seeds):
         w.addIdentifier(seed=seed.encode())
         wallets.append(w)
     return wallets
+
+
+@pytest.fixture(scope="module")
+def txnPoolNodeSet(tconf, txnPoolNodeSet):
+    return [update_node_obj(n) for n in txnPoolNodeSet]
 
 
 @pytest.fixture(scope="module")
@@ -48,31 +56,24 @@ def trustee_wallets(trustee_data):
     return build_wallets_from_data(trustee_data)
 
 
-# @pytest.fixture(scope="module")
-# def allPluginsPath(allPluginsPath):
-#     return allPluginsPath + [getPluginPath('token')]
-
-
 @pytest.fixture(scope="module")
-def do_post_node_creation():
-    # Integrate plugin into each node.
-    def _post_node_creation(node):
-        update_node_obj(node)
-
-    return _post_node_creation
+def allPluginsPath(allPluginsPath):
+    return allPluginsPath + [getPluginPath('token')]
 
 
-@pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(tconf, do_post_node_creation, txnPoolNodeSet):
-    return txnPoolNodeSet
-
+@pytest.fixture(scope='module') # noqa
+def public_minting(looper, txnPoolNodeSet, steward1, trustee_wallets,
+                   SF_address, seller_address):
+    return do_public_minting(looper, trustee_wallets, steward1, total_mint,
+                             total_mint - seller_gets, SF_address,
+                             seller_address)
 
 @pytest.fixture(scope="module")
 def tokens_distributed(public_minting, seller_token_wallet, seller_address,
                        user1_address, user1_token_wallet,
                        user2_address, user2_token_wallet,
                        user3_address, user3_token_wallet, looper, client1,
-                       wallet1, client1Connected):
+                       wallet1):
     register_token_wallet_with_client(client1, seller_token_wallet)
     send_get_utxo(looper, seller_address, wallet1, client1)
     total_amount = seller_token_wallet.get_total_address_amount(seller_address)

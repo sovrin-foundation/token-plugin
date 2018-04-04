@@ -4,21 +4,21 @@ import pytest
 
 from ledger.util import F
 from plenum.common.types import f
-from plugin.token.src.constants import INPUTS
-from plugin.token.src.wallet import Address
+from plenum.server.plugin.token.constants import INPUTS
+from plenum.server.plugin.token.wallet import Address
 from plenum.test.helper import waitForSufficientRepliesForRequests
-from plugin.token.test.helper import xfer_request, \
+from plenum.test.plugin.token.helper import xfer_request, \
     inputs_outputs, send_xfer
-from plenum.test.pool_transactions.conftest import clientAndWallet1, \
-    client1, wallet1, client1Connected, looper
-from plugin.token.test.test_public_xfer_2 import public_minting, \
+# from plenum.test.pool_transactions.conftest import clientAndWallet1, \
+#     client1, wallet1, client1Connected, looper
+
+from plenum.test.plugin.token.test_public_xfer_2 import \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 
-
 def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
                                                     looper,
-                                                    client1,
+                                                    steward1,
                                                     seller_address,
                                                     user1_token_wallet,
                                                     user2_token_wallet,
@@ -33,9 +33,9 @@ def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
     sigs = getattr(request, f.SIGS.nm)
     # Change signature for 2nd input, set it same as the 1st input's signature
     sigs[request.operation[INPUTS][1][0]] = sigs[request.operation[INPUTS][0][0]]
-    client1.submitReqs(request)
+    steward1.submitReqs(request)
     with pytest.raises(AssertionError):
-        waitForSufficientRepliesForRequests(looper, client1,
+        waitForSufficientRepliesForRequests(looper, steward1,
                                             requests=[request])
 
 

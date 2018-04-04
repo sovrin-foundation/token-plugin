@@ -1,5 +1,5 @@
 import pytest
-from plugin.token.src.wallet import TokenWallet, Address
+from plenum.server.plugin.token.wallet import TokenWallet, Address
 
 
 @pytest.fixture(scope="module")

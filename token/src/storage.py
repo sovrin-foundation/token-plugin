@@ -1,13 +1,13 @@
 from ledger.compact_merkle_tree import CompactMerkleTree
 from plenum.common.ledger import Ledger
-from plenum.persistence.leveldb_hash_store import LevelDbHashStore
-from plenum.persistence.storage import initKeyValueStorage
-from plugin.token.src.utxo_cache import UTXOCache
+from plenum.persistence.db_hash_store import DbHashStore
+from storage.helper import initKeyValueStorage
+from plenum.server.plugin.token.utxo_cache import UTXOCache
 from state.pruning_state import PruningState
 
 
 def get_token_hash_store(data_dir):
-    return LevelDbHashStore(dataDir=data_dir,
+    return DbHashStore(dataDir=data_dir,
                             fileNamePrefix='token')
 
 
