@@ -1,5 +1,5 @@
-from plenum.server.plugin.token.constants import TOKEN_LEDGER_ID
-from plenum.server.plugin.token.transactions import TokenTransactions
+from plenum.server.plugin.token.src.constants import TOKEN_LEDGER_ID
+from plenum.server.plugin.token.src.transactions import TokenTransactions
 
 
 LEDGER_IDS = {TOKEN_LEDGER_ID, }

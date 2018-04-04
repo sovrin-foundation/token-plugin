@@ -12,12 +12,12 @@ from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
-from plenum.server.plugin.token.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
-from plenum.server.plugin.token.messages.fields import PublicOutputField, \
+from plenum.server.plugin.token.src.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
-from plenum.server.plugin.token.types import Output
-from plenum.server.plugin.token.utxo_cache import UTXOCache
+from plenum.server.plugin.token.src.types import Output
+from plenum.server.plugin.token.src.utxo_cache import UTXOCache
 from plenum.server.req_handler import RequestHandler
 
 

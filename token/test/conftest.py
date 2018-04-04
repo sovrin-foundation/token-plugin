@@ -2,15 +2,16 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
-from plenum.server.plugin.token.main import update_node_obj
-from plenum.server.plugin.token.util import register_token_wallet_with_client
-from plenum.server.plugin.token.wallet import TokenWallet
+from plenum.server.plugin.token.src.main import update_node_obj
+from plenum.server.plugin.token.src.util import register_token_wallet_with_client
+from plenum.server.plugin.token.src.wallet import TokenWallet
 from plenum.test.plugin.helper import getPluginPath
-from plenum.test.plugin.token.helper import send_get_utxo, send_xfer, \
+from plenum.server.plugin.token.test.helper import send_get_utxo, send_xfer, \
     do_public_minting
 
 total_mint = 100
 seller_gets = 40
+
 
 def build_wallets_from_data(name_seeds):
     wallets = []
@@ -67,6 +68,7 @@ def public_minting(looper, txnPoolNodeSet, steward1, trustee_wallets,
     return do_public_minting(looper, trustee_wallets, steward1, total_mint,
                              total_mint - seller_gets, SF_address,
                              seller_address)
+
 
 @pytest.fixture(scope="module")
 def tokens_distributed(public_minting, seller_token_wallet, seller_address,

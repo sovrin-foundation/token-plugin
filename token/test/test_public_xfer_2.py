@@ -2,12 +2,12 @@ import pytest
 
 from ledger.util import F
 from plenum.common.util import lxor
-from plenum.server.plugin.token.constants import OUTPUTS
-from plenum.server.plugin.token.util import register_token_wallet_with_client
-from plenum.server.plugin.token.wallet import TokenWallet, Address
-from plenum.test.plugin.token.helper import send_xfer, \
+from plenum.server.plugin.token.src.constants import OUTPUTS
+from plenum.server.plugin.token.src.util import register_token_wallet_with_client
+from plenum.server.plugin.token.src.wallet import TokenWallet, Address
+from plenum.server.plugin.token.test.helper import send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
-from plenum.test.plugin.token.conftest import seller_gets, total_mint
+from plenum.server.plugin.token.test.conftest import seller_gets, total_mint
 
 @pytest.fixture(scope="module")
 def user1_token_wallet():

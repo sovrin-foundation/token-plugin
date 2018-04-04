@@ -1,7 +1,7 @@
 from typing import List
 
 from plenum.common.util import updateNamedTuple
-from plenum.server.plugin.token.types import Output
+from plenum.server.plugin.token.src.types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
 

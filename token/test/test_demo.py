@@ -1,10 +1,8 @@
 from ledger.util import F
-# from plenum.test.pool_transactions.conftest import clientAndWallet1, client1Connected, \
-#     wallet1, looper, client1
 
 
 import pytest
-from plenum.test.plugin.token.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
+from plenum.server.plugin.token.test.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
 
 from .demo.demo_helpers import *
 demo_logger.log_green('Performing some setup')
@@ -18,11 +16,13 @@ wallet_names = ["Sender", "Recipient", "SF"]
 wallets = {wallet_name: create_wallet_with_default_identifier(wallet_name) for wallet_name in wallet_names}
 addresses = {wallet_name:create_address_add_wallet_log(wallet) for wallet_name,wallet in wallets.items()}
 
+
 @pytest.fixture(scope='session', autouse=True)
 def setup_teardown():
     demo_logger.log_green('Starting test\n')
     yield
     demo_logger.log_green('Test ended')
+
 
 @pytest.fixture(scope='module')
 def public_mint(trustee_wallets, looper, txnPoolNodeSet, client1, client1Connected):
@@ -34,6 +34,7 @@ def public_mint(trustee_wallets, looper, txnPoolNodeSet, client1, client1Connect
     for wallet in wallets.values():
         wallet._update_outputs(resp['outputs'], resp['seqNo'])
     return resp
+
 
 @pytest.fixture(scope='module')
 def xfer_partial(public_mint, looper, client1, txnPoolNodeSet):
@@ -47,15 +48,19 @@ def xfer_partial(public_mint, looper, client1, txnPoolNodeSet):
     result, _ = client1.getReply(req.identifier, req.reqId)
     return result
 
+
 def test_demo(xfer_partial):
     for wallet in wallets.values():
         wallet.handle_xfer(xfer_partial)
 
+
 def test_sender_wallet():
     assert_wallet_amount(wallets["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES, SELLER_RECEIVES)
 
+
 def test_recipient_wallet():
     assert_wallet_amount(wallets["Recipient"], RECIPIENT_RECEIVES, 0)
+
 
 def test_sf_wallet():
     assert_wallet_amount(wallets["SF"], SF_RECEIVES, 0)
