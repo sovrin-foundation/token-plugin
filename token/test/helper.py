@@ -1,8 +1,10 @@
+import json
+
 from plenum.common.constants import TXN_TYPE
-from plenum.common.types import f
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
     EXTRA, INPUTS, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
-from plenum.test.helper import waitForSufficientRepliesForRequests
+from plenum.test.helper import waitForSufficientRepliesForRequests, \
+    sdk_send_signed_requests, sdk_get_and_check_replies
 
 
 def public_mint_request(trustees, outputs):
@@ -20,21 +22,18 @@ def public_mint_request(trustees, outputs):
     return request
 
 
-def send_public_mint(looper, trustees, outputs, sender_client):
+def send_public_mint(looper, trustees, outputs, sdk_pool_handle):
     request = public_mint_request(trustees, outputs)
-    sender_client.submitReqs(request)
-    waitForSufficientRepliesForRequests(looper, sender_client,
-                                        requests=[request])
-    return request
+    request = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict), ])
+    return sdk_get_and_check_replies(looper, request)
 
 
 def do_public_minting(looper, trustees, sender_client, total_mint,
                       sf_master_share, sf_address, seller_address):
     seller_share = total_mint - sf_master_share
     outputs = [[sf_address, sf_master_share], [seller_address, seller_share]]
-    request = send_public_mint(looper, trustees, outputs, sender_client)
-    result, _ = sender_client.getReply(request.identifier, request.reqId)
-    return result
+    _, reply = send_public_mint(looper, trustees, outputs, sender_client)[0]
+    return reply
 
 
 def xfer_request(inputs, outputs, extra_data=None):

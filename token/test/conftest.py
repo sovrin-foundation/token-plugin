@@ -5,7 +5,7 @@ from plenum.client.wallet import Wallet
 from plenum.server.plugin.token.src.main import update_node_obj
 from plenum.server.plugin.token.src.util import register_token_wallet_with_client
 from plenum.server.plugin.token.src.wallet import TokenWallet
-from plenum.test.plugin.helper import getPluginPath
+from plenum.test.conftest import *
 from plenum.server.plugin.token.test.helper import send_get_utxo, send_xfer, \
     do_public_minting
 
@@ -13,9 +13,16 @@ total_mint = 100
 seller_gets = 40
 
 
+# def build_wallets_from_data(name_seeds, looper, pool_name):
 def build_wallets_from_data(name_seeds):
     wallets = []
     for name, seed in name_seeds:
+        # wallet_handle = looper.loop.run_until_complete(
+        #     _gen_wallet_handler(pool_name, name))
+        # looper.loop.run_until_complete(
+        #     create_and_store_my_did(wallet_handle,
+        #                             json.dumps({'seed': seed})))
+        # wallets.append(wallet_handle)
         w = Wallet(name)
         w.addIdentifier(seed=seed.encode())
         wallets.append(w)
@@ -48,13 +55,8 @@ def seller_address(seller_token_wallet):
 
 
 @pytest.fixture(scope="module")
-def trustee_wallets(trustee_data):
+def trustee_wallets(trustee_data, looper, sdk_pool_name):
     return build_wallets_from_data(trustee_data)
-
-
-# @pytest.fixture(scope="module")
-# def allPluginsPath(allPluginsPath):
-#     return allPluginsPath + [getPluginPath('token')]
 
 
 @pytest.fixture(scope="module")
@@ -67,8 +69,16 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(tconf, do_post_node_creation, txnPoolNodeSet):
+def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSet):
     return txnPoolNodeSet
+
+
+@pytest.fixture(scope='module') # noqa
+def public_minting(nodeSetWithIntegratedTokenPlugin, looper, steward1,
+                   trustee_wallets, SF_address, seller_address):
+    return do_public_minting(looper, trustee_wallets, steward1, total_mint,
+                             total_mint - seller_gets, SF_address,
+                             seller_address)
 
 
 @pytest.fixture(scope="module")
