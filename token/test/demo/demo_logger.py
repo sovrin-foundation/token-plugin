@@ -1,26 +1,25 @@
+import os
 import logging
-from . import mute
-# from colors import color
+import py._io.terminalwriter as terminalwriter
 
 class DemoLogger():
 
-    def __init__(self):
+    def __init__(self, allow_colors=False):
         self._log_name = 'demo_logger'
-        self._log_level = logging.INFO
         self._logger = logging.getLogger(self._log_name)
-        self.unmute_loggers = mute.mute_loggers(protected=[self._log_name])
-        self.unmute_print = mute.mute_print()
+        if 'OUTPUT_NOT_CAPTURED' in os.environ and int(os.environ['OUTPUT_NOT_CAPTURED']):
+            self._tw = terminalwriter.TerminalWriter()
+            self._tw.hasmarkup = True
 
-    def unmute(self):
-        self.unmute_loggers()
-        self.unmute_print()
+    def log(self, msg, log_level = logging.INFO, color=None):
+        if color and hasattr(self, '_tw'):
+            msg = self._tw.markup(msg, **{color: 1})
+        self._logger.log(log_level, msg)
 
-    def log(self, msg, **kwargs):
-        # colored_msg = color("\n" + str(msg), **kwargs)
-        self._logger.log(self._log_level, msg)
 
     def log_green(self, msg):
-        self.log(msg, fg='green')
+        self.log(msg, color='green')
 
     def log_blue(self, msg):
-        self.log(msg, fg='blue')
+        self.log(msg, color='blue')
+
