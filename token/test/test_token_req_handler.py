@@ -325,7 +325,7 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
     # commit batch
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 1, 40)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60)]
-    token_handler_c.commit(1, state_root, txn_root)
+    token_handler_c.commit(1, state_root, txn_root, None)
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 2, 30)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60),
                                                                                   Output(VALID_ADDR_2, 2, 30)]

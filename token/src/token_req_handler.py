@@ -107,7 +107,6 @@ class TokenReqHandler(RequestHandler):
                                        "Invalid type in operation",
                                        operation[TXN_TYPE])
 
-
     def validate(self, request: Request):
         operation = request.operation
         error = ''

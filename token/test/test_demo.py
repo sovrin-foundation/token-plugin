@@ -27,7 +27,7 @@ def setup_teardown():
 @pytest.fixture(scope='module')
 def public_mint(trustee_wallets, looper, txnPoolNodeSet, client1, client1Connected):
     resp = do_public_minting(looper, trustee_wallets, client1, NEW_TOKENS,
-                      SF_RECEIVES, addresses["SF"], addresses["Sender"])
+                             SF_RECEIVES, addresses["SF"], addresses["Sender"])
     demo_logger.log_blue("You have minted {:,} tokens.".format(NEW_TOKENS))
     demo_logger.log_blue("The seller address, {} received {:,} tokens.".format(addresses["Sender"], SELLER_RECEIVES))
     demo_logger.log_blue("The SF address, {} received {:,} tokens".format(addresses["SF"], SF_RECEIVES))
