@@ -15,6 +15,7 @@ def wallet_total_amount_and_spent(wallet):
     spent = sum((value for address in addresses for value in address.outputs[1].values()), 0)
     return unspent,spent
 
+
 def create_wallet_with_default_identifier(name):
     w = TokenWallet(name)
     w.addIdentifier()

@@ -1,5 +1,6 @@
 from plenum.common.messages.fields import FieldBase, Base58Field, \
     FixedLengthField, TxnSeqNoField, SignatureField, IterableField
+from plenum.config import SIGNATURE_FIELD_LIMIT
 
 
 class PublicAddressField(FieldBase):
@@ -59,22 +60,20 @@ class PublicInputField(FixedLengthField):
     _base_types = (list, tuple)
     public_address_field = PublicAddressField()
     seq_no_field = TxnSeqNoField()
+    sig_field = SignatureField(max_length=SIGNATURE_FIELD_LIMIT)
 
     def __init__(self, **kwargs):
-        super().__init__(length=2, **kwargs)
+        super().__init__(length=3, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
             return error
 
-        addr_error = self.public_address_field.validate(val[0])
-        if addr_error:
-            return addr_error
-
-        seq_no_error = self.seq_no_field.validate(val[1])
-        if seq_no_error:
-            return seq_no_error
+        for (field, val) in zip((self.public_address_field, self.seq_no_field,
+                                 self.sig_field), val):
+            err = field.validate(val)
+            return err
 
 
 class PublicInputsField(IterableField):
@@ -86,7 +85,7 @@ class PublicInputsField(IterableField):
         if error:
             return error
 
-        if len(val) != len({(a, s) for a, s in val}):
+        if len(val) != len({(a, s) for a, s, _ in val}):
             error = 'Each input should be unique'
         if error:
             return error

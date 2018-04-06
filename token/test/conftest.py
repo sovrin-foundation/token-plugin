@@ -100,12 +100,12 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
                [user2_address, each_user_share],
                [user3_address, each_user_share],
                [seller_address, total_amount % 3]]
-    seq_no = send_xfer(looper, inputs, outputs, sdk_pool_handle)[F.seqNo.name]
+    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
+    seq_no = res[F.seqNo.name]
     for w, a in [(user1_token_wallet, user1_address),
                  (user2_token_wallet, user2_address),
                  (user3_token_wallet, user3_address)]:
-        # register_token_wallet_with_client(client1, w)
-        # send_get_utxo(looper, a, wallet1, client1)
         res = send_get_utxo(looper, a, sdk_wallet_client, sdk_pool_handle)
         update_token_wallet_with_result(w, res)
     return seq_no
