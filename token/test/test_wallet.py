@@ -182,7 +182,7 @@ def test_token_wallet_on_reply_from_network_success2(test_wallet, address0):
     req_id = 1517251781147288
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : address0.address,
-              "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1]],
+              "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1, '']],
               "type": "10001", "reqId" : 1517251781147288, "seqNo": 6}
     num_replies = 2
     test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
@@ -195,12 +195,13 @@ def test_token_wallet_on_reply_from_network_invalid_address2(test_wallet, addres
     req_id = 1517251781147288
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : invalid_address.address,
-              "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+              "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1, '']],
               "type": "10001", "reqId" : 1517251781147288, "seqNo": 6}
     num_replies = 2
     test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
     with pytest.raises(KeyError):
         assert address0.outputs[0][6] != 10000 and address0.outputs[1][1] != 50000
+
 
 def test_token_wallet_handle_get_utxo_response_success(test_wallet, address0):
     response = {"address": address0.address, "outputs": [[address0.address, 6, 10000]],
@@ -220,7 +221,7 @@ def test_token_wallet_handle_get_utxo_response_invalid_address(test_wallet, addr
 
 def test_token_wallet_handle_xfer_success(test_wallet, address0):
     response = {"address": address0.address,
-                "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1]],
+                "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1, '']],
                 "seqNo": 6,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
     test_wallet.handle_xfer(response)
     assert address0.outputs[0][6] == 10000 and address0.outputs[1][1] == 50000
@@ -229,7 +230,7 @@ def test_token_wallet_handle_xfer_success(test_wallet, address0):
 def test_token_wallet_handle_xfer_invalid_address(test_wallet, address0):
     invalid_address = Address()
     response = {"address": invalid_address.address,
-                "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+                "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1, '']],
                 "seqNo": 6,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
     test_wallet.handle_xfer(response)
     #Raises KeyError because (6, 10000) has been added to invalid_address obj not address0 obj

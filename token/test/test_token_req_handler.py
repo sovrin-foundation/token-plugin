@@ -86,7 +86,7 @@ def test_token_req_handler_MINT_PUBLIC_validate_missing_output(token_handler_a):
 def test_token_req_handler_XFER_PUBLIC_validate_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_2, 1, '']]}, None, SIGNATURES, 1)
     ret_val = token_handler_a._XFER_PUBLIC_validate(request)
     assert ret_val is None
 
@@ -135,7 +135,7 @@ def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_
 def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_2, 1, '']]}, None, SIGNATURES, 1)
     try:
         token_handler_a.doStaticValidation(request)
     except InvalidClientRequest:
@@ -166,7 +166,7 @@ def test_token_req_handler_doStaticValidation_invalid_txn_type(token_handler_a):
 def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_2, 1, '']]}, None, SIGNATURES, 1)
     try:
         token_handler_a.validate(request)
     except Exception:
@@ -218,7 +218,7 @@ def test_token_req_handler_validate_MINT_PUBLIC_invalid(token_handler_a):
 def test_token_req_handler_apply_xfer_public_success(public_minting, token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_2, 1, '']]}, None, SIGNATURES, 1)
     # test xfer now
     pre_apply_outputs_addr_1 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_1)
     pre_apply_outputs_addr_2 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_2)
@@ -235,7 +235,7 @@ def test_token_req_handler_apply_xfer_public_success(public_minting, token_handl
 def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 3]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_2, 3, '']]}, None, SIGNATURES, 1)
     # test xfer now
     # This raises a KeyError because the input transaction isn't already in the UTXO_Cache
     with pytest.raises(KeyError):
@@ -274,7 +274,7 @@ def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b
 def test_token_req_handler_updateState_XFER_PUBLIC_success(public_minting, token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_1, 1, '']]}, None, SIGNATURES, 1)
     txns = [reqToTxn(request, CONS_TIME)]
     txns_with_seqNo = txnsWithSeqNo(1, 1, txns)
     token_handler_b.validate(request)
@@ -315,7 +315,7 @@ def test_token_req_handler_onBatchRejected_success(token_handler_b):
 def test_token_req_handler_commit_success(public_minting, token_handler_c, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
+                                                      INPUTS: [[VALID_ADDR_1, 1, '']]}, None, SIGNATURES, 1)
     # apply transaction
     token_handler_c.apply(request, CONS_TIME)
     state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
@@ -378,7 +378,7 @@ def test_token_req_handler_sum_inputs_success(public_minting, token_handler_d):
     assert post_second_add_outputs == [Output(VALID_ADDR_4, 5, 150), Output(VALID_ADDR_4, 6, 100)]
 
     # Verify sum_inputs is working properly
-    inputs = [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
+    inputs = [[VALID_ADDR_4, 5, ''], [VALID_ADDR_4, 6, '']]
     sum_inputs = token_handler_d._sum_inputs(inputs)
     assert sum_inputs == 250
 

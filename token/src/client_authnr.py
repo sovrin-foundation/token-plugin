@@ -1,11 +1,13 @@
 from copy import deepcopy
 
+import base58
 from base58 import b58decode
 
 from common.serializers.serialization import serialize_msg_for_signing
 from plenum.common.constants import TXN_TYPE
-from plenum.common.exceptions import InsufficientCorrectSignatures
-from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION
+from plenum.common.exceptions import InsufficientCorrectSignatures, \
+    CouldNotAuthenticate, InvalidSignatureFormat
+from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from plenum.server.plugin.token.src import AcceptableWriteTypes, AcceptableQueryTypes
@@ -36,14 +38,37 @@ class TokenAuthNr(CoreAuthNr):
                                         verifier=verifier)
         if req_data[OPERATION][TXN_TYPE] == XFER_PUBLIC:
             verifier = verifier or AddressSigVerifier
-            correct_signers = super().authenticate(req_data, verifier=verifier)
-            input_addrs = {addr for addr, _ in req_data[OPERATION][INPUTS]}
-            missing_sigs_by = input_addrs.difference(set(correct_signers))
+            return self.authenticate_xfer(req_data, verifier=verifier)
+
+    def authenticate_xfer(self, req_data, verifier):
+        new_data = deepcopy(req_data)
+        new_data.pop(f.IDENTIFIER.nm, None)
+        correct_sigs_from = []
+        for inp in req_data[OPERATION][INPUTS]:
+            try:
+                sig = base58.b58decode(inp[-1])
+            except Exception as ex:
+                raise InvalidSignatureFormat from ex
+
+            new_data[OPERATION][INPUTS] = [inp[:2], ]
+            idr = inp[0]
+            ser = super().serializeForSig(new_data, identifier=idr,
+                                          topLevelKeysToIgnore=self.excluded_from_signing)
+            verkey = self.getVerkey(idr)
+
+            if verkey is None:
+                raise CouldNotAuthenticate(
+                    'Can not find verkey for {}'.format(idr))
+
+            vr = verifier(verkey)
+            if vr.verify(sig, ser):
+                correct_sigs_from.append(idr)
+
+        if len(correct_sigs_from) != len(req_data[OPERATION][INPUTS]):
             # All inputs should have signatures present
-            if missing_sigs_by:
-                raise InsufficientCorrectSignatures(len(missing_sigs_by),
-                                                    len(input_addrs))
-            return correct_signers
+            raise InsufficientCorrectSignatures(len(correct_sigs_from),
+                                                len(req_data[OPERATION][INPUTS]))
+        return correct_sigs_from
 
     def serializeForSig(self, msg, identifier=None, topLevelKeysToIgnore=None):
         if msg[OPERATION][TXN_TYPE] == MINT_PUBLIC:
@@ -63,6 +88,11 @@ class TokenAuthNr(CoreAuthNr):
     @staticmethod
     def _get_xfer_ser_data(req_data, identifier):
         new_data = deepcopy(req_data)
-        new_data[OPERATION][INPUTS] = [i for i in new_data[OPERATION][INPUTS]
+        new_data.pop(f.IDENTIFIER.nm, None)
+        new_data[OPERATION][INPUTS] = [i[:2] for i in new_data[OPERATION][INPUTS]
                                        if i[0] == identifier]
         return new_data
+
+    @staticmethod
+    def get_sigs(operation):
+        return [(a, sig) for a, _, sig in operation[INPUTS]]

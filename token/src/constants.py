@@ -5,6 +5,7 @@ OUTPUTS = 'outputs'
 EXTRA = 'extra'
 ADDRESS = 'address'
 
+# TODO: Rename to `PAYMENT_LEDGER_ID`
 TOKEN_LEDGER_ID = 1001
 
 MINT_PUBLIC = TokenTransactions.MINT_PUBLIC.value

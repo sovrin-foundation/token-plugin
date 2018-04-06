@@ -64,19 +64,17 @@ class TokenWallet(Wallet):
     def sign_using_output(self, id, seq_no, op: Dict=None,
                           request: Request=None):
         assert lxor(op, request)
-        # assert self.addresses[id].is_unspent(seq_no)
         if op:
             request = Request(reqId=Request.gen_req_id(), operation=op)
         existing_inputs = request.operation.get(INPUTS, [])
         request.operation[INPUTS] = [[id, seq_no], ]
         signature = self.addresses[id].signer.sign(request.signingState(id))
-        request.add_signature(id, signature)
-        request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
+        request.operation[INPUTS] = existing_inputs + [[id, seq_no, signature], ]
         return request
 
     def get_all_wallet_utxos(self):
         return {address: address.all_utxos
-                    for address in self.addresses.values()}
+                for address in self.addresses.values()}
 
     def get_all_address_utxos(self, address):
         if address in self.addresses:
@@ -107,7 +105,7 @@ class TokenWallet(Wallet):
         self._update_outputs(response[OUTPUTS], response[F.seqNo.name])
 
     def _update_inputs(self, inputs):
-        for addr, seq_no in inputs:
+        for addr, seq_no, _ in inputs:
             if addr in self.addresses:
                 self.addresses[addr].spent(seq_no)
 
@@ -124,7 +122,6 @@ class TokenWallet(Wallet):
             else:
                 raise ValueError('Cannot handle output {}'.format(output))
             if addr in self.addresses:
-                assert seq_no not in self.addresses[addr].outputs[0]
                 self.addresses[addr].add_utxo(seq_no, val)
 
     def get_min_utxo_ge(self, amount, address=None) -> Optional[Tuple]:

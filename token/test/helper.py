@@ -46,6 +46,8 @@ def xfer_request(inputs, outputs, extra_data=None):
     request = wallet.sign_using_output(address, seq_no, op=payload)
     for wallet, address, seq_no in inputs[1:]:
         wallet.sign_using_output(address, seq_no, request=request)
+    # Setting the `_identifier` to conform to the `Request` structure
+    request._identifier = address
     return request
 
 
