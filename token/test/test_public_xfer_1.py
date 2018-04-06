@@ -1,24 +1,27 @@
+import json
 from random import randint
 
 import pytest
 
 from ledger.util import F
+from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import f
-from plugin.token.src.constants import INPUTS
-from plugin.token.src.wallet import Address
-from plenum.test.helper import waitForSufficientRepliesForRequests
-from plugin.token.test.helper import xfer_request, \
+from plenum.server.plugin.token.src.constants import INPUTS
+from plenum.server.plugin.token.src.util import update_token_wallet_with_result
+from plenum.server.plugin.token.src.wallet import Address
+from plenum.test.helper import waitForSufficientRepliesForRequests, \
+    sdk_send_signed_requests, sdk_get_and_check_replies
+from plenum.server.plugin.token.test.helper import xfer_request, \
     inputs_outputs, send_xfer
-from plenum.test.pool_transactions.conftest import clientAndWallet1, \
-    client1, wallet1, client1Connected, looper
-from plugin.token.test.test_public_xfer_2 import public_minting, \
+
+from plenum.server.plugin.token.test.test_public_xfer_2 import \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 
 
 def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
                                                     looper,
-                                                    client1,
+                                                    sdk_pool_handle,
                                                     seller_address,
                                                     user1_token_wallet,
                                                     user2_token_wallet,
@@ -33,15 +36,15 @@ def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
     sigs = getattr(request, f.SIGS.nm)
     # Change signature for 2nd input, set it same as the 1st input's signature
     sigs[request.operation[INPUTS][1][0]] = sigs[request.operation[INPUTS][0][0]]
-    client1.submitReqs(request)
-    with pytest.raises(AssertionError):
-        waitForSufficientRepliesForRequests(looper, client1,
-                                            requests=[request])
+    reqs = sdk_send_signed_requests(sdk_pool_handle,
+                                    [json.dumps(request.as_dict), ])
+    with pytest.raises(RequestNackedException):
+        sdk_get_and_check_replies(looper, reqs)
 
 
 def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
                                             looper,
-                                            client1,
+                                            sdk_pool_handle,
                                             seller_address,
                                             user1_token_wallet,
                                             user2_token_wallet,
@@ -62,10 +65,10 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
     sigs = getattr(request, f.SIGS.nm)
     del sigs[request.operation[INPUTS][1][0]]
     assert len(sigs) == (len(inputs) - 1)
-    client1.submitReqs(request)
-    with pytest.raises(AssertionError):
-        waitForSufficientRepliesForRequests(looper, client1,
-                                            requests=[request])
+    reqs = sdk_send_signed_requests(sdk_pool_handle,
+                                    [json.dumps(request.as_dict), ])
+    with pytest.raises(RequestNackedException):
+        sdk_get_and_check_replies(looper, reqs)
 
     # Add signature from an address not present in input
     seq_no, _ = next(iter(
@@ -73,10 +76,10 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
     seller_token_wallet.sign_using_output(seller_address, seq_no,
                                           request=request)
     assert len(sigs) == len(inputs)
-    client1.submitReqs(request)
-    with pytest.raises(AssertionError):
-        waitForSufficientRepliesForRequests(looper, client1,
-                                            requests=[request])
+    reqs = sdk_send_signed_requests(sdk_pool_handle,
+                                    [json.dumps(request.as_dict), ])
+    with pytest.raises(RequestNackedException):
+        sdk_get_and_check_replies(looper, reqs)
 
 
 @pytest.fixture(scope='module')
@@ -100,7 +103,7 @@ def get_3_random_parts(total):
 @pytest.fixture(scope='module')
 def first_xfer_done(tokens_distributed, # noqa
                     looper,
-                    client1,
+                    sdk_pool_handle,
                     user1_token_wallet,
                     user2_token_wallet,
                     user3_token_wallet,
@@ -122,9 +125,10 @@ def first_xfer_done(tokens_distributed, # noqa
     part1, part2, part3 = get_3_random_parts(output_val)
     addr1, addr2, addr3 = added_addresses
     outputs = [[addr1, part1], [addr2, part2], [addr3, part3]]
-    req = send_xfer(looper, inputs, outputs, client1)
-    reply, _ = client1.getReply(req.identifier, req.reqId)
-    return reply[F.seqNo.name]
+    result = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    for w in [user1_token_wallet, user2_token_wallet, user3_token_wallet]:
+        update_token_wallet_with_result(w, result)
+    return result[F.seqNo.name]
 
 
 def test_multiple_inputs_outputs_without_change(first_xfer_done,
@@ -143,7 +147,7 @@ def test_multiple_inputs_outputs_without_change(first_xfer_done,
 
 def test_multiple_inputs_outputs_with_change(first_xfer_done,
                                              looper,
-                                             client1,
+                                             sdk_pool_handle,
                                              user1_token_wallet,
                                              user2_token_wallet,
                                              user3_token_wallet,
@@ -167,7 +171,9 @@ def test_multiple_inputs_outputs_with_change(first_xfer_done,
     user2_token_wallet.add_new_address(new_addr2)
     outputs = [[new_addr1.address, part1], [new_addr2.address, part2],
                [addr3, part3]]
-    send_xfer(looper, inputs, outputs, client1)
+    result = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    for w in [user1_token_wallet, user2_token_wallet, user3_token_wallet]:
+        update_token_wallet_with_result(w, result)
     assert user1_token_wallet.get_total_address_amount(addr1) == 0
     assert user2_token_wallet.get_total_address_amount(addr2) == 0
     assert user3_token_wallet.get_total_address_amount(addr3) == part3

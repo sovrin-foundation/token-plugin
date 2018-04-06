@@ -1,8 +1,10 @@
+import json
+
 from plenum.common.constants import TXN_TYPE
-from plenum.common.types import f
-from plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
-    EXTRA, INPUTS, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
-from plenum.test.helper import waitForSufficientRepliesForRequests
+from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
+    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
+from plenum.test.helper import sdk_send_signed_requests, \
+    sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
 
 
 def public_mint_request(trustees, outputs):
@@ -20,21 +22,18 @@ def public_mint_request(trustees, outputs):
     return request
 
 
-def send_public_mint(looper, trustees, outputs, sender_client):
+def send_public_mint(looper, trustees, outputs, sdk_pool_handle):
     request = public_mint_request(trustees, outputs)
-    sender_client.submitReqs(request)
-    waitForSufficientRepliesForRequests(looper, sender_client,
-                                        requests=[request])
-    return request
+    request = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict), ])
+    return sdk_get_and_check_replies(looper, request)
 
 
-def do_public_minting(looper, trustees, sender_client, total_mint,
+def do_public_minting(looper, trustees, sdk_pool_handle, total_mint,
                       sf_master_share, sf_address, seller_address):
     seller_share = total_mint - sf_master_share
     outputs = [[sf_address, sf_master_share], [seller_address, seller_share]]
-    request = send_public_mint(looper, trustees, outputs, sender_client)
-    result, _ = sender_client.getReply(request.identifier, request.reqId)
-    return result
+    _, reply = send_public_mint(looper, trustees, outputs, sdk_pool_handle)[0]
+    return reply['result']
 
 
 def xfer_request(inputs, outputs, extra_data=None):
@@ -50,12 +49,12 @@ def xfer_request(inputs, outputs, extra_data=None):
     return request
 
 
-def send_xfer(looper, inputs, outputs, sender_client, extra_data=None):
+def send_xfer(looper, inputs, outputs, sdk_pool_handle, extra_data=None):
     request = xfer_request(inputs, outputs, extra_data)
-    sender_client.submitReqs(request)
-    waitForSufficientRepliesForRequests(looper, sender_client,
-                                        requests=[request])
-    return request
+    request = sdk_send_signed_requests(sdk_pool_handle,
+                                       [json.dumps(request.as_dict), ])
+    _, rep = sdk_get_and_check_replies(looper, request)[0]
+    return rep['result']
 
 
 def check_output_val_on_all_nodes(nodes, address, amount):
@@ -66,21 +65,22 @@ def check_output_val_on_all_nodes(nodes, address, amount):
                                    address, is_committed=True)]
 
 
-def get_utxo_request(address, sender_wallet, sender_client):
+def get_utxo_request(address, sender_did):
     op = {
         TXN_TYPE: GET_UTXO,
         ADDRESS: address,
     }
-    request = sender_wallet.signOp(op)
-    sender_client.submitReqs(request)
+    request = sdk_gen_request(op, identifier=sender_did)
     return request
 
 
-def send_get_utxo(looper, address, sender_wallet, sender_client):
-    request = get_utxo_request(address, sender_wallet, sender_client)
-    waitForSufficientRepliesForRequests(looper, sender_client,
-                                        requests=[request])
-    return request
+def send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle):
+    _, sender_did = sdk_wallet_client
+    request = get_utxo_request(address, sender_did)
+    req_resp_json = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle,
+                                           sdk_wallet_client, request)
+    _, reply = sdk_get_and_check_replies(looper, [req_resp_json, ])[0]
+    return reply['result']
 
 
 def inputs_outputs(*input_token_wallets, output_addr, change_addr=None,

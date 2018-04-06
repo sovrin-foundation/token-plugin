@@ -1,6 +1,6 @@
 import pytest
 
-from plugin.token.src.wallet import TokenWallet, Address
+from plenum.server.plugin.token.src.wallet import TokenWallet, Address
 
 
 @pytest.fixture()
@@ -9,6 +9,7 @@ def address0():
     address.add_utxo(1, 50000)
     address.add_utxo(4, 60000)
     return address
+
 
 @pytest.fixture()
 def address1():
@@ -61,7 +62,7 @@ def test_address_spent(address2):
     assert not address2.is_unspent(1)
 
 
-def test_address_spent():
+def test_address_spent_1():
     address = Address()
     address.add_utxo(1,5000000000000000000)
     address.spent(1)
@@ -114,7 +115,7 @@ def test_token_wallet_get_all_utxos_success(test_wallet, address0, address1, add
 
 
 #TODO: Throws assertion error currently because of line 79 in wallet.py
-def test_token_wallet_get_all_utxos_success(test_wallet, address0):
+def test_token_wallet_get_all_utxos_failure(test_wallet, address0):
     with pytest.raises(AssertionError):
         address_utxos = test_wallet.get_all_address_utxos(address0.address)
         assert address_utxos == [(1, 50000), (4, 60000)]
@@ -252,6 +253,7 @@ def test_token_wallet_get_val_success(test_wallet, address0):
 def test_token_wallet_get_val_null(test_wallet, address0):
     with pytest.raises(KeyError):
         val = test_wallet.get_val(address0, None)
+
 
 def test_token_wallet_get_val_invalid_address(test_wallet):
     address0_not_in_wallet = Address()

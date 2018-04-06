@@ -2,16 +2,28 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
-from plugin.token.src.main import update_node_obj
-from plugin.token.src.util import register_token_wallet_with_client
-from plugin.token.src.wallet import TokenWallet
-from plenum.test.plugin.helper import getPluginPath
-from plugin.token.test.helper import send_get_utxo, send_xfer
+from plenum.server.plugin.token.src.main import update_node_obj
+from plenum.server.plugin.token.src.util import \
+    register_token_wallet_with_client, update_token_wallet_with_result
+from plenum.server.plugin.token.src.wallet import TokenWallet
 from plenum.test.conftest import *
+from plenum.server.plugin.token.test.helper import send_get_utxo, send_xfer, \
+    do_public_minting
 
+total_mint = 100
+seller_gets = 40
+
+
+# def build_wallets_from_data(name_seeds, looper, pool_name):
 def build_wallets_from_data(name_seeds):
     wallets = []
     for name, seed in name_seeds:
+        # wallet_handle = looper.loop.run_until_complete(
+        #     _gen_wallet_handler(pool_name, name))
+        # looper.loop.run_until_complete(
+        #     create_and_store_my_did(wallet_handle,
+        #                             json.dumps({'seed': seed})))
+        # wallets.append(wallet_handle)
         w = Wallet(name)
         w.addIdentifier(seed=seed.encode())
         wallets.append(w)
@@ -44,13 +56,8 @@ def seller_address(seller_token_wallet):
 
 
 @pytest.fixture(scope="module")
-def trustee_wallets(trustee_data):
+def trustee_wallets(trustee_data, looper, sdk_pool_name):
     return build_wallets_from_data(trustee_data)
-
-
-# @pytest.fixture(scope="module")
-# def allPluginsPath(allPluginsPath):
-#     return allPluginsPath + [getPluginPath('token')]
 
 
 @pytest.fixture(scope="module")
@@ -63,18 +70,27 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(tconf, do_post_node_creation, txnPoolNodeSet):
+def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSet):
     return txnPoolNodeSet
+
+
+@pytest.fixture(scope='module') # noqa
+def public_minting(nodeSetWithIntegratedTokenPlugin, looper, sdk_pool_handle,
+                   trustee_wallets, SF_address, seller_address):
+    return do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
+                             total_mint - seller_gets, SF_address,
+                             seller_address)
 
 
 @pytest.fixture(scope="module")
 def tokens_distributed(public_minting, seller_token_wallet, seller_address,
                        user1_address, user1_token_wallet,
                        user2_address, user2_token_wallet,
-                       user3_address, user3_token_wallet, looper, client1,
-                       wallet1, client1Connected):
-    register_token_wallet_with_client(client1, seller_token_wallet)
-    send_get_utxo(looper, seller_address, wallet1, client1)
+                       user3_address, user3_token_wallet, looper, sdk_pool_handle,
+                       sdk_wallet_client):
+    # register_token_wallet_with_client(client1, seller_token_wallet)
+    res = send_get_utxo(looper, seller_address, sdk_wallet_client, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
     total_amount = seller_token_wallet.get_total_address_amount(seller_address)
 
     inputs = [[seller_token_wallet, seller_address, seq_no] for seq_no, _ in
@@ -84,12 +100,12 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
                [user2_address, each_user_share],
                [user3_address, each_user_share],
                [seller_address, total_amount % 3]]
-    req = send_xfer(looper, inputs, outputs, client1)
+    seq_no = send_xfer(looper, inputs, outputs, sdk_pool_handle)[F.seqNo.name]
     for w, a in [(user1_token_wallet, user1_address),
                  (user2_token_wallet, user2_address),
                  (user3_token_wallet, user3_address)]:
-        register_token_wallet_with_client(client1, w)
-        send_get_utxo(looper, a, wallet1, client1)
-
-    reply, _ = client1.getReply(req.identifier, req.reqId)
-    return reply[F.seqNo.name]
+        # register_token_wallet_with_client(client1, w)
+        # send_get_utxo(looper, a, wallet1, client1)
+        res = send_get_utxo(looper, a, sdk_wallet_client, sdk_pool_handle)
+        update_token_wallet_with_result(w, res)
+    return seq_no

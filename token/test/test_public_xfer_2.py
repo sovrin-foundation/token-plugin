@@ -1,26 +1,18 @@
 import pytest
 
 from ledger.util import F
+from plenum.common.exceptions import RequestNackedException, \
+    RequestRejectedException
 from plenum.common.util import lxor
-from plugin.token.src.constants import OUTPUTS
-from plugin.token.src.util import register_token_wallet_with_client
-from plugin.token.src.wallet import TokenWallet, Address
-from plugin.token.test.helper import do_public_minting, send_xfer, \
+from plenum.server.plugin.token.src.constants import OUTPUTS
+from plenum.server.plugin.token.src.util import update_token_wallet_with_result
+from plenum.server.plugin.token.src.wallet import TokenWallet, Address
+from plenum.server.plugin.token.test.helper import send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
-from plenum.test.pool_transactions.conftest import clientAndWallet1, \
-    client1, wallet1, client1Connected, looper
-
-total_mint = 100
-seller_gets = 40
-
-
-@pytest.fixture(scope='module') # noqa
-def public_minting(looper, nodeSetWithIntegratedTokenPlugin, client1, # noqa
-                   wallet1, client1Connected, trustee_wallets,
-                   SF_address, seller_address):
-    return do_public_minting(looper, trustee_wallets, client1, total_mint,
-                             total_mint - seller_gets, SF_address,
-                             seller_address)
+from plenum.server.plugin.token.test.conftest import seller_gets, total_mint, \
+    json
+from plenum.test.helper import sdk_send_signed_requests, \
+    sdk_get_and_check_replies
 
 
 @pytest.fixture(scope="module")
@@ -59,100 +51,97 @@ def user3_address(user3_token_wallet):
     return next(iter(user3_token_wallet.addresses.keys()))
 
 
-def test_seller_xfer_invalid_outputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin,# noqa
-                                     client1, seller_token_wallet,
+def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
+                                     sdk_pool_handle, seller_token_wallet,
                                      seller_address, user1_address):
     """
     Address repeats in the output of transaction, hence it will be rejected
     """
-    global seller_gets
     seq_no = public_minting[F.seqNo.name]
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 10
     outputs = [[user1_address, 10], [seller_address, seller_remaining / 2],
                [seller_address, seller_remaining / 2]]
-    with pytest.raises(AssertionError):
-        send_xfer(looper, inputs, outputs, client1)
+    with pytest.raises(RequestNackedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
-def test_seller_xfer_float_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
-                                    client1, seller_token_wallet,
-                                    seller_address, user1_address):
+def test_seller_xfer_float_amount(public_minting, looper, # noqa
+                                  sdk_pool_handle, seller_token_wallet,
+                                  seller_address, user1_address):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is a floating point.
     """
-    global seller_gets
     seq_no = public_minting[F.seqNo.name]
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 5.5
     outputs = [[user1_address, 5.5], [seller_address, seller_remaining]]
-    with pytest.raises(AssertionError):
-        send_xfer(looper, inputs, outputs, client1)
+    with pytest.raises(RequestNackedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
-def test_seller_xfer_negative_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
-                                    client1, seller_token_wallet,
-                                    seller_address, user1_address):
+def test_seller_xfer_negative_amount(public_minting, looper, # noqa
+                                     sdk_pool_handle, seller_token_wallet,
+                                     seller_address, user1_address):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is negative.
     """
-    global seller_gets
     seq_no = public_minting[F.seqNo.name]
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets + 10
     outputs = [[user1_address, -10], [seller_address, seller_remaining]]
-    with pytest.raises(AssertionError):
-        send_xfer(looper, inputs, outputs, client1)
+    with pytest.raises(RequestNackedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
-def test_seller_xfer_invalid_amount(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
-                                    client1, seller_token_wallet,
+def test_seller_xfer_invalid_amount(public_minting, looper,     # noqa
+                                    sdk_pool_handle, seller_token_wallet,
                                     seller_address, user1_address):
     """
     Amount used in outputs greater than the amount held by inputs,
     hence it will be rejected
     """
-    global seller_gets
     seq_no = public_minting[F.seqNo.name]
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets + 10
     outputs = [[user1_address, 10], [seller_address, seller_remaining]]
-    with pytest.raises(AssertionError):
-        send_xfer(looper, inputs, outputs, client1)
+    with pytest.raises(RequestRejectedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
-def test_seller_xfer_invalid_inputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin, # noqa
-                                    client1, seller_token_wallet,
+def test_seller_xfer_invalid_inputs(public_minting, looper, # noqa
+                                    sdk_pool_handle, seller_token_wallet,
                                     seller_address, user1_address):
     """
     Address+seq_no repeats in the inputs of transaction, hence it will be rejected
     """
-    global seller_gets
     seq_no = public_minting[F.seqNo.name]
     inputs = [[seller_token_wallet, seller_address, seq_no],
               [seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 10
     outputs = [[user1_address, 10], [seller_address, seller_remaining]]
-    with pytest.raises(AssertionError):
-        send_xfer(looper, inputs, outputs, client1)
+    with pytest.raises(RequestNackedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
 @pytest.fixture(scope='module')     # noqa
-def valid_xfer_txn_done(public_minting, looper, nodeSetWithIntegratedTokenPlugin, client1,
+def valid_xfer_txn_done(public_minting, looper,
+                        nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
                         seller_token_wallet, seller_address, user1_address):
     global seller_gets
     seq_no = public_minting[F.seqNo.name]
     user1_gets = 10
-    seller_gets -= user1_gets
+    seller_remaining = seller_gets - user1_gets
     inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_gets]]
-    req = send_xfer(looper, inputs, outputs, client1)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_gets)
+    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
+    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_remaining)
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
-    result, _ = client1.getReply(req.identifier, req.reqId)
-    return result
+    seller_gets = seller_remaining
+    return res
 
 
 def test_seller_xfer_valid(valid_xfer_txn_done):
@@ -162,7 +151,8 @@ def test_seller_xfer_valid(valid_xfer_txn_done):
     pass
 
 
-def test_seller_xfer_double_spend_attempt(looper, nodeSetWithIntegratedTokenPlugin, client1,  # noqa
+def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
+                                          nodeSetWithIntegratedTokenPlugin,
                                           seller_token_wallet, seller_address,
                                           valid_xfer_txn_done, user1_address,
                                           user2_address):
@@ -181,29 +171,34 @@ def test_seller_xfer_double_spend_attempt(looper, nodeSetWithIntegratedTokenPlug
     seller_remaining -= user2_gets
     outputs2 = [[user2_address, user2_gets], [seller_address, seller_remaining]]
     r1 = xfer_request(inputs, outputs1)
-    client1.submitReqs(r1)
+    r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(r1.as_dict), ])
     r2 = xfer_request(inputs, outputs2)
-    client1.submitReqs(r2)
+    r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(r2.as_dict), ])
     # So that both requests are sent simultaneously
     looper.runFor(.2)
 
     # Both requests should not be successful, one and only one should be
-    sucess1, sucess2 = False, False
+    success1, success2 = False, False
     try:
-        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
-        sucess1 = True
+        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin,
+                                      user1_address, user1_gets)
+        success1 = True
     except Exception:
         pass
 
     try:
         check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user2_address, user2_gets)
-        sucess2 = True
+        success2 = True
     except Exception:
         pass
 
-    assert lxor(sucess1, sucess2)
+    assert lxor(success1, success2)
 
-    if sucess1:
+    request = r1 if success1 else r2
+    _, rep = sdk_get_and_check_replies(looper, request)[0]
+    update_token_wallet_with_result(seller_token_wallet, rep['result'])
+
+    if success1:
         check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
                                       seller_gets - user1_gets)
     else:
@@ -211,38 +206,37 @@ def test_seller_xfer_double_spend_attempt(looper, nodeSetWithIntegratedTokenPlug
                                       seller_gets - user2_gets)
 
 
-def test_query_utxo(looper, nodeSetWithIntegratedTokenPlugin, client1, wallet1, seller_token_wallet,  # noqa
+def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wallet,  # noqa
                     seller_address, valid_xfer_txn_done, user1_address):
     """
     The ledger is queried for all UTXOs of a given address.
     """
-    req1 = send_get_utxo(looper, seller_address, wallet1, client1)
-    rep1, _ = client1.getReply(wallet1.defaultId, req1.reqId)
-    assert rep1[OUTPUTS]
+    res1 = send_get_utxo(looper, seller_address, sdk_wallet_client,
+                         sdk_pool_handle)
+    assert res1[OUTPUTS]
 
-    req2 = send_get_utxo(looper, user1_address, wallet1, client1)
-    rep2, _ = client1.getReply(wallet1.defaultId, req2.reqId)
-    assert rep2[OUTPUTS]
+    res2 = send_get_utxo(looper, user1_address, sdk_wallet_client,
+                         sdk_pool_handle)
+
+    assert res2[OUTPUTS]
 
     # An query for UTXOs for empty address fails
-    with pytest.raises(AssertionError):
-        send_get_utxo(looper, '', wallet1, client1)
+    with pytest.raises(RequestNackedException):
+        send_get_utxo(looper, '', sdk_wallet_client, sdk_pool_handle)
 
     # An query for UTXOs for a new address returns 0 outputs
     address = Address()
-    req3 = send_get_utxo(looper, address.address, wallet1, client1)
-    rep3, _ = client1.getReply(wallet1.defaultId, req3.reqId)
-    assert len(rep3[OUTPUTS]) == 0
+    res3 = send_get_utxo(looper, address.address, sdk_wallet_client, sdk_pool_handle)
+    assert len(res3[OUTPUTS]) == 0
 
 
-def test_xfer_with_multiple_inputs(public_minting, looper, nodeSetWithIntegratedTokenPlugin,  # noqa
-                                   client1, wallet1, seller_token_wallet,
-                                   seller_address, user1_address):
+def test_xfer_with_multiple_inputs(public_minting, looper,  # noqa
+                                   sdk_pool_handle, sdk_wallet_client,
+                                   seller_token_wallet, seller_address, user1_address):
     """
     3 inputs are used to transfer tokens to a single output
     """
-    register_token_wallet_with_client(client1, seller_token_wallet)
-    send_get_utxo(looper, seller_address, wallet1, client1)
+    res = send_get_utxo(looper, seller_address, sdk_wallet_client, sdk_pool_handle)
     utxos = [_ for lst in seller_token_wallet.get_all_wallet_utxos().values()
              for _ in lst]
     assert utxos
@@ -257,11 +251,12 @@ def test_xfer_with_multiple_inputs(public_minting, looper, nodeSetWithIntegrated
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     outputs = [[addr.address, amount // 3] for addr in new_addrs]
     outputs[-1][1] += amount % 3
-    send_xfer(looper, inputs, outputs, client1)
+    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
 
     new_utxos = [_ for lst in seller_token_wallet.get_all_wallet_utxos().values()
                  for _ in lst]
-    # Since 1 existing UTXO is spent and 2 new created
+    # Since 1 existing UTXO is spent and 3 new created
     assert len(new_utxos) - old_count == 2
 
     new_seq_no = new_utxos[0][0]
@@ -270,7 +265,7 @@ def test_xfer_with_multiple_inputs(public_minting, looper, nodeSetWithIntegrated
     inputs = [[seller_token_wallet, addr.address, new_seq_no]
               for addr in new_addrs]
     outputs = [[user1_address, sum_utxo_val], ]
-    send_xfer(looper, inputs, outputs, client1)
-
+    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
     assert seller_token_wallet.get_total_wallet_amount() == seller_gets
 

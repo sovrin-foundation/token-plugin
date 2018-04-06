@@ -1,5 +1,5 @@
 import pytest
-from plugin.token.src.wallet import TokenWallet, Address
+from plenum.server.plugin.token.src.wallet import TokenWallet, Address
 
 
 @pytest.fixture(scope="module")
@@ -57,6 +57,7 @@ def test_wallet_get_total_amount_with_outputs_with_same_txn_seq_no(wallet,
     assert wallet.get_total_address_amount(address3.address) == 10
     assert wallet.get_total_wallet_amount() == 13
 
+
 #This test builds on the previous test
 def test_wallet_get_total_amount_with_outputs_with_diff_txn_seq_no(wallet,
                                                                    address1,
@@ -72,6 +73,7 @@ def test_wallet_get_total_amount_with_outputs_with_diff_txn_seq_no(wallet,
     assert wallet.get_total_address_amount(address2.address) == 4
     assert wallet.get_total_address_amount(address3.address) == 20
     assert wallet.get_total_wallet_amount() == 26
+
 
 #This test builds on the previous test
 def test_get_min_utxo_ge(wallet, address1, address2, address3):
@@ -96,6 +98,7 @@ def test_get_min_utxo_ge(wallet, address1, address2, address3):
            (address3.address, 3001, 10)
     assert wallet.get_min_utxo_ge(11, address=address3.address) == \
            (address3.address, 3005, 15)
+
 
 def test_wallet_update_outputs_repeating_address_with_same_txn_seq_no(wallet,
                                                                       address1,

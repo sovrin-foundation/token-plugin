@@ -8,17 +8,15 @@ from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientReq
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.persistence.util import txnsWithSeqNo
-from plugin.token.src.token_req_handler import TokenReqHandler
-from plugin.token.test.helper import do_public_minting
+from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler
 
-# Do not optimize these out, they are needed for public_minting to work
-from plugin.token.test.test_public_xfer_2 import public_minting
-from plenum.test.pool_transactions.conftest import clientAndWallet1, \
-    client1, wallet1, client1Connected, looper
+
+# from plenum.test.pool_transactions.conftest import clientAndWallet1, \
+#     client1, wallet1, client1Connected, looper
 
 # TEST CONSTANTS
-from plugin.token.src.token_types import Output
-from plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from plenum.server.plugin.token.src.types import Output
+from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
 VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
@@ -41,16 +39,6 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
                   'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
-
-@pytest.fixture(scope='module') # noqa
-def public_minting(looper, txnPoolNodeSet, client1, # noqa
-                   wallet1, client1Connected, trustee_wallets,
-                   SF_address, seller_address):
-    total_mint = 100
-    seller_gets = 40
-    return do_public_minting(looper, trustee_wallets, client1, total_mint,
-                             total_mint - seller_gets, SF_address,
-                             seller_address)
 
 
 @pytest.fixture
@@ -337,7 +325,7 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
     # commit batch
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 1, 40)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60)]
-    token_handler_c.commit(1, state_root, txn_root)
+    token_handler_c.commit(1, state_root, txn_root, None)
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 2, 30)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60),
                                                                                   Output(VALID_ADDR_2, 2, 30)]
