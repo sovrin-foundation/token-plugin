@@ -65,18 +65,21 @@ def check_output_val_on_all_nodes(nodes, address, amount):
                                    address, is_committed=True)]
 
 
-def get_utxo_request(address, sender_did):
+def get_utxo_request(addresses, sender_did):
     op = {
         TXN_TYPE: GET_UTXO,
-        ADDRESS: address,
+        ADDRESS: addresses,
     }
     request = sdk_gen_request(op, identifier=sender_did)
     return request
 
 
-def send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle):
+def send_get_utxo(looper, addresses, sdk_wallet_client, sdk_pool_handle):
+    if isinstance(addresses, str):
+        addresses = [addresses]
+
     _, sender_did = sdk_wallet_client
-    request = get_utxo_request(address, sender_did)
+    request = get_utxo_request(addresses, sender_did)
     req_resp_json = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle,
                                            sdk_wallet_client, request)
     _, reply = sdk_get_and_check_replies(looper, [req_resp_json, ])[0]

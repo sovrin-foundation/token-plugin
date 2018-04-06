@@ -39,6 +39,10 @@ class PublicOutputField(FixedLengthField):
         if amt_error:
             return amt_error
 
+class PublicAddressesField(IterableField):
+    def __init__(self, **kwargs):
+        super().__init__(inner_field_type=PublicAddressField(), **kwargs)
+
 
 class PublicOutputsField(IterableField):
     def __init__(self, **kwargs):

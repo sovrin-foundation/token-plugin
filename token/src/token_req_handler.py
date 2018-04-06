@@ -15,7 +15,7 @@ from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from plenum.server.plugin.token.src.messages.fields import PublicOutputField, \
-    PublicInputsField, PublicOutputsField
+    PublicInputsField, PublicOutputsField, PublicAddressesField
 from plenum.server.plugin.token.src.types import Output
 from plenum.server.plugin.token.src.utxo_cache import UTXOCache
 from plenum.server.req_handler import RequestHandler
@@ -28,6 +28,7 @@ class TokenReqHandler(RequestHandler):
     _public_output_validator = IterableField(PublicOutputField())
     _public_outputs_validator = PublicOutputsField()
     _public_inputs_validator = PublicInputsField()
+    _public_addresses_validator = PublicAddressesField()
     MinSendersForPublicMint = 4
 
     def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state):
@@ -81,8 +82,7 @@ class TokenReqHandler(RequestHandler):
         if ADDRESS not in operation:
             error = '{} needs to be provided'.format(ADDRESS)
         else:
-            error = self._public_output_validator.inner_field_type. \
-                public_address_field.validate(operation[ADDRESS])
+            error = self._public_addresses_validator.validate(operation[ADDRESS])
         if error:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId, error)
@@ -192,9 +192,13 @@ class TokenReqHandler(RequestHandler):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
 
     def get_all_utxo(self, request: Request):
-        address = request.operation[ADDRESS]
-        outputs = self.utxo_cache.get_unspent_outputs(address,
-                                                      is_committed=True)
+        addresses = request.operation[ADDRESS]
+        outputs = [
+            utxo
+            for address in addresses
+            for utxo in self.utxo_cache.get_unspent_outputs(address,is_committed=True)
+        ]
+
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, OUTPUTS: outputs}
         result.update(request.operation)

@@ -65,21 +65,26 @@ class UTXOCache(OptimisticKVStore):
         #     batch.append((self._store.REMOVE_OP, type2_key, None))
         self.do_ops_in_batch(batch, is_committed=is_committed)
 
+
     def get_unspent_outputs(self, address: str,
                             is_committed=False) -> List[Output]:
-        type2_key = self._create_type2_key(address)
+        seq_nos = self.get_unspent_seq_nos(address, is_committed)
+        return [
+            self.get_output(Output(address, seq_no, None), is_committed)
+            for seq_no in seq_nos
+        ]
+
+    def get_unspent_seq_nos(self, address: str, is_committed) -> List[int]:
         try:
+            type2_key = self._create_type2_key(address)
             seq_nos = self.get(type2_key, is_committed)
             if isinstance(seq_nos, (bytes, bytearray)):
                 seq_nos = seq_nos.decode()
-            seq_nos = self._parse_type2_val(seq_nos)
+
+            return [int(seq_no) for seq_no in self._parse_type2_val(seq_nos)]
         except KeyError:
             return []
-        if not seq_nos:
-            return []
-        outputs = [Output(address, int(seq_no), None) for seq_no in seq_nos]
-        return [updateNamedTuple(out, value=int(self.get(
-            self._create_type1_key(out), is_committed))) for out in outputs]
+
 
     @staticmethod
     def _create_type1_key(output: Output) -> str:
