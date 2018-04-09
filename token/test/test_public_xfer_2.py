@@ -230,6 +230,16 @@ def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wal
     assert len(res3[OUTPUTS]) == 0
 
 
+def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_pool_handle, seller_address, SF_address):
+    non_existent_address = Address().address
+    addresses_to_check = [seller_address, SF_address, non_existent_address]
+    resp = send_get_utxo(looper, addresses_to_check, sdk_wallet_client, sdk_pool_handle)
+    address_in_outputs = lambda a: any(filter(lambda utxo: utxo[0] == a, resp[OUTPUTS]))
+    assert address_in_outputs(seller_address)
+    assert address_in_outputs(SF_address)
+    assert not address_in_outputs(non_existent_address)
+
+
 def test_xfer_with_multiple_inputs(public_minting, looper,  # noqa
                                    sdk_pool_handle, sdk_wallet_client,
                                    seller_token_wallet, seller_address, user1_address):
