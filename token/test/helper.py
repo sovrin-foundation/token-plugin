@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import TXN_TYPE
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
-    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
+    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESSES
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
 
@@ -68,7 +68,7 @@ def check_output_val_on_all_nodes(nodes, address, amount):
 def get_utxo_request(addresses, sender_did):
     op = {
         TXN_TYPE: GET_UTXO,
-        ADDRESS: addresses,
+        ADDRESSES: addresses,
     }
     request = sdk_gen_request(op, identifier=sender_did)
     return request

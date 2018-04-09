@@ -13,7 +13,7 @@ from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESSES
 from plenum.server.plugin.token.src.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField, PublicAddressesField
 from plenum.server.plugin.token.src.types import Output
@@ -58,7 +58,7 @@ class TokenReqHandler(RequestHandler):
     def _GET_UTXO_validate(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == GET_UTXO:
-            return self._operation_address_validate(request)
+            return self._operation_addresses_validate(request)
 
     def _operation_outputs_validate(self, request: Request):
         operation = request.operation
@@ -77,12 +77,12 @@ class TokenReqHandler(RequestHandler):
                                        format(INPUTS))
         return self._public_inputs_validator.validate(operation[INPUTS])
 
-    def _operation_address_validate(self, request: Request):
+    def _operation_addresses_validate(self, request: Request):
         operation = request.operation
-        if ADDRESS not in operation:
-            error = '{} needs to be provided'.format(ADDRESS)
+        if ADDRESSES not in operation:
+            error = '{} needs to be provided'.format(ADDRESSES)
         else:
-            error = self._public_addresses_validator.validate(operation[ADDRESS])
+            error = self._public_addresses_validator.validate(operation[ADDRESSES])
         if error:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId, error)
@@ -192,7 +192,7 @@ class TokenReqHandler(RequestHandler):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
 
     def get_all_utxo(self, request: Request):
-        addresses = request.operation[ADDRESS]
+        addresses = request.operation[ADDRESSES]
         outputs = [
             utxo
             for address in addresses

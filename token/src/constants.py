@@ -3,7 +3,7 @@ from plenum.server.plugin.token.src.transactions import TokenTransactions
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'
 EXTRA = 'extra'
-ADDRESS = 'address'
+ADDRESSES = 'addresses'
 
 TOKEN_LEDGER_ID = 1001
 
