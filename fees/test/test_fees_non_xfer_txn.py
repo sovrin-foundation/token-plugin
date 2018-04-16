@@ -6,13 +6,11 @@ from ledger.util import F
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.types import f
-from plenum.server.plugin.fees.src.constants import FEES, REF
-from plenum.server.plugin.fees.test.helper import gen_nym_req_for_fees
+from plenum.server.plugin.fees import FEES, REF
+from plenum.server.plugin.fees import gen_nym_req_for_fees
 from plenum.server.plugin.token import TOKEN_LEDGER_ID
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_replies, sdk_check_reply, \
-    sdk_get_and_check_replies, sdk_send_and_check
-from plenum.server.plugin.fees.test.test_set_get_fees import fees_set
+from plenum.test.helper import sdk_send_and_check
 
 
 def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # noqa

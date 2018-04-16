@@ -7,7 +7,7 @@ from plenum.common.exceptions import InvalidSignatureFormat, \
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from plenum.server.plugin.fees import AcceptableWriteTypes, AcceptableQueryTypes
+from plenum.server.plugin.fees.src import AcceptableWriteTypes, AcceptableQueryTypes
 from plenum.server.plugin.fees.src.constants import FEE, FEES
 from plenum.server.plugin.token.src.client_authnr import AddressSigVerifier
 

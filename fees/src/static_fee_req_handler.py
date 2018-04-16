@@ -1,9 +1,8 @@
 from common.serializers.json_serializer import JsonSerializer
-from common.serializers.serialization import serialize_msg_for_signing
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest, InsufficientCorrectSignatures
+    InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
@@ -12,7 +11,6 @@ from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.plugin.fees.src.constants import FEE, GET_FEES, FEES, REF
 from plenum.server.plugin.fees.src.fee_req_handler import FeeReqHandler
 from plenum.server.plugin.fees.src.messages.fields import FeesStructureField
-from plenum.server.plugin.token.src.client_authnr import AddressSigVerifier
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC
 from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler

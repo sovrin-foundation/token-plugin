@@ -1,21 +1,10 @@
-import pytest
-
-from plenum.common.constants import NYM
 from plenum.server.plugin.fees.src.wallet import FeeSupportedWallet
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC
 from plenum.server.plugin.token.src.main import update_node_obj as enable_token
 from plenum.server.plugin.fees.src.main import update_node_obj as enable_fees
-from plenum.server.plugin.token.src.util import register_token_wallet_with_client
-from plenum.server.plugin.token.test.helper import send_get_utxo, send_xfer
 
 # fixtures, do not remove
 from plenum.test.conftest import *
-from plenum.server.plugin.token.test.conftest import trustee_wallets, SF_address, \
-    seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
-    tokens_distributed
-from plenum.server.plugin.token.test.test_public_xfer_1 import user1_address, \
-    user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
-    user3_token_wallet
 
 
 @pytest.fixture(scope="module")

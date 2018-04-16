@@ -2,7 +2,6 @@ from abc import abstractmethod
 
 
 from plenum.server.config_req_handler import ConfigReqHandler
-from plenum.server.plugin.fees.src.constants import FEE, GET_FEES
 from plenum.server.plugin.token.src.client_authnr import AddressSigVerifier
 
 
