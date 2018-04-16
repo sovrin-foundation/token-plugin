@@ -3,7 +3,7 @@ import pytest
 from plenum.common.constants import NYM, STEWARD
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
-from plenum.server.plugin.fees import get_fees_from_ledger, \
+from plenum.server.plugin.fees.test.helper import get_fees_from_ledger, \
     check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC
 from plenum.test.conftest import get_data_for_role

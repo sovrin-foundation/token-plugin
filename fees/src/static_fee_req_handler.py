@@ -1,8 +1,9 @@
 from common.serializers.json_serializer import JsonSerializer
+from common.serializers.serialization import serialize_msg_for_signing
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest
+    InvalidClientRequest, InsufficientCorrectSignatures
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f

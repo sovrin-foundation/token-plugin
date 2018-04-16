@@ -22,7 +22,7 @@ class ThreePhaseCommitHandler:
                         FEE_TXNS_IN_BATCH: self.fees_req_handler.fee_txns_in_current_batch,
                         f.STATE_ROOT.nm: self.master_replica.stateRootHash(
                             TOKEN_LEDGER_ID),
-                        f.TXN_ROOT: self.master_replica.txnRootHash(
+                        f.TXN_ROOT.nm: self.master_replica.txnRootHash(
                             TOKEN_LEDGER_ID)
                     }
                 }
@@ -31,7 +31,8 @@ class ThreePhaseCommitHandler:
         return pre_prepare
 
     def add_to_prepare(self, prepare, pre_prepare):
-        if pre_prepare.ledgerId != TOKEN_LEDGER_ID and self._has_plugin_fields(pre_prepare):
+        if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
+                self._has_plugin_fields(pre_prepare):
             # Make token ledger and state root part of pre-prepare
             pre_prepare_fees_data = pre_prepare.plugin_fields.get(FEES, {})
             if pre_prepare_fees_data:
@@ -42,7 +43,7 @@ class ThreePhaseCommitHandler:
                                 FEE_TXNS_IN_BATCH),
                             f.STATE_ROOT.nm: pre_prepare_fees_data.get(
                                 f.STATE_ROOT.nm),
-                            f.TXN_ROOT: pre_prepare_fees_data.get(f.TXN_ROOT.nm)
+                            f.TXN_ROOT.nm: pre_prepare_fees_data.get(f.TXN_ROOT.nm)
                         }
                     }
                 }
@@ -65,7 +66,7 @@ class ThreePhaseCommitHandler:
                                 FEE_TXNS_IN_BATCH),
                             f.STATE_ROOT.nm: pre_prepare_fees_data.get(
                                 f.STATE_ROOT.nm),
-                            f.TXN_ROOT: pre_prepare_fees_data.get(f.TXN_ROOT.nm)
+                            f.TXN_ROOT.nm: pre_prepare_fees_data.get(f.TXN_ROOT.nm)
                         }
                     }
                 }
@@ -73,8 +74,26 @@ class ThreePhaseCommitHandler:
         return ordered
 
     def check_recvd_pre_prepare(self, pre_prepare):
-        # TODO:
-        return
+        if pre_prepare.ledgerId != TOKEN_LEDGER_ID:
+            fee_txn_count = self.fees_req_handler.fee_txns_in_current_batch
+            if fee_txn_count > 0:
+                if not self._has_plugin_fields(pre_prepare):
+                    raise Exception('Expected plugin_fields in PRE-PREPARE')
+                fees = pre_prepare.plugin_fields.get(FEES)
+                if not fees:
+                    raise Exception('Expected fees in PRE-PREPARE')
+                if fees.get(FEE_TXNS_IN_BATCH) != fee_txn_count:
+                    raise Exception('Fee txn count mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(fee_txn_count, fees.get(FEE_TXNS_IN_BATCH)))
+                recvd_state_root = self.master_replica._state_root_serializer.deserialize(
+                        fees.get(f.STATE_ROOT.nm, '').encode())
+                if recvd_state_root != self.fees_req_handler.token_state.headHash:
+                    raise Exception('Fee state root mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(self.fees_req_handler.token_state.headHash, recvd_state_root))
+                recvd_txn_root = self.token_ledger.strToHash(fees.get(f.TXN_ROOT.nm, ''))
+                if recvd_txn_root != self.fees_req_handler.token_ledger.uncommittedRootHash:
+                    raise Exception('Fee txn root mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(self.fees_req_handler.token_ledger.uncommittedRootHash, recvd_txn_root))
 
     def check_recvd_prepare(self, prepare, pre_prepare):
         # TODO:

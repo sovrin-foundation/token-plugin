@@ -2,6 +2,7 @@ from typing import Tuple
 
 from plenum.common.request import Request
 from plenum.common.types import f
+from plenum.server.plugin.fees.src.constants import FEES
 from plenum.server.plugin.token.src.wallet import TokenWallet
 
 
