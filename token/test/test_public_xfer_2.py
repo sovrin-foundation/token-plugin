@@ -1,4 +1,5 @@
 import pytest
+import json
 
 from ledger.util import F
 from plenum.common.exceptions import RequestNackedException, \
@@ -9,8 +10,7 @@ from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.server.plugin.token.src.wallet import TokenWallet, Address
 from plenum.server.plugin.token.test.helper import send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
-from plenum.server.plugin.token.test.conftest import seller_gets, total_mint, \
-    json
+from plenum.server.plugin.token.test.conftest import seller_gets, total_mint
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies
 
@@ -242,11 +242,12 @@ def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_p
 
 def test_xfer_with_multiple_inputs(public_minting, looper,  # noqa
                                    sdk_pool_handle, sdk_wallet_client,
-                                   seller_token_wallet, seller_address, user1_address):
+                                   seller_token_wallet, seller_address,
+                                   user1_address):
     """
     3 inputs are used to transfer tokens to a single output
     """
-    res = send_get_utxo(looper, seller_address, sdk_wallet_client, sdk_pool_handle)
+    send_get_utxo(looper, seller_address, sdk_wallet_client, sdk_pool_handle)
     utxos = [_ for lst in seller_token_wallet.get_all_wallet_utxos().values()
              for _ in lst]
     assert utxos

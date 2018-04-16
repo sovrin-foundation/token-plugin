@@ -21,6 +21,7 @@ from plenum.server.plugin.token.src.utxo_cache import UTXOCache
 from plenum.server.req_handler import RequestHandler
 
 
+# TODO: Rename to `PaymentReqHandler`
 class TokenReqHandler(RequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
@@ -90,7 +91,8 @@ class TokenReqHandler(RequestHandler):
     def doStaticValidation(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] in (MINT_PUBLIC, XFER_PUBLIC, GET_UTXO):
-            # This is the python way of doing a switch statment. It seems cleaner than a stack of if/elif/else
+            # This is the python way of doing a switch statement.
+            # It seems cleaner than a stack of if/elif/else
             txn_type_switch = {
                 MINT_PUBLIC: self._MINT_PUBLIC_validate,
                 XFER_PUBLIC: self._XFER_PUBLIC_validate,
@@ -121,12 +123,14 @@ class TokenReqHandler(RequestHandler):
 
         if operation[TXN_TYPE] == XFER_PUBLIC:
             try:
-                sum_inputs = self._sum_inputs(operation[INPUTS],
-                                              is_committed=False)
+                sum_inputs, sum_outputs = self.get_sum_inputs_outputs(
+                    self.utxo_cache,
+                    operation[INPUTS],
+                    operation[OUTPUTS],
+                    is_committed=False)
             except Exception as ex:
-                error = 'Exception {} while processing inputs'.format(ex)
+                error = 'Exception {} while processing inputs/outputs'.format(ex)
             else:
-                sum_outputs = sum(o[1] for o in operation[OUTPUTS])
                 if sum_inputs < sum_outputs:
                     error = 'Insufficient funds, sum of inputs is {} and sum' \
                             ' of outputs is {}'.format(sum_inputs, sum_outputs)
@@ -161,7 +165,7 @@ class TokenReqHandler(RequestHandler):
                 self._add_new_output(Output(addr, txn[F.seqNo.name], amount),
                                      is_committed=is_committed)
         if txn[TXN_TYPE] == XFER_PUBLIC:
-            for addr, seq_no in txn[INPUTS]:
+            for addr, seq_no, _ in txn[INPUTS]:
                 self._spend_input(addr, seq_no, is_committed=is_committed)
             for addr, amount in txn[OUTPUTS]:
                 self._add_new_output(Output(addr, txn[F.seqNo.name], amount),
@@ -176,17 +180,14 @@ class TokenReqHandler(RequestHandler):
                             is_committed=is_committed)
 
     def onBatchCreated(self, state_root):
-        self.utxo_cache.create_batch_from_current(state_root)
+        self.on_batch_created(self.utxo_cache, state_root)
 
     def onBatchRejected(self):
-        self.utxo_cache.reject_batch()
+        self.on_batch_rejected(self.utxo_cache)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
-        r = super().commit(txnCount, stateRoot, txnRoot, pptime)
-        stateRoot = base58.b58decode(stateRoot.encode())
-        assert self.utxo_cache.first_batch_idr == stateRoot
-        self.utxo_cache.commit_batch()
-        return r
+        return self.__commit__(self.utxo_cache, self.ledger, self.state,
+                               txnCount, stateRoot, txnRoot, pptime)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -215,16 +216,22 @@ class TokenReqHandler(RequestHandler):
     @staticmethod
     def sum_inputs(utxo_cache: UTXOCache, inputs: Iterable,
                    is_committed=False) -> int:
-        return sum([utxo_cache.get_output(
-            Output(addr, seq_no, None), is_committed=is_committed).value
-                    for addr, seq_no in inputs])
+        output_val = 0
+        for addr, seq_no, _ in inputs:
+            try:
+                output_val += utxo_cache.get_output(
+                    Output(addr, seq_no, None),
+                    is_committed=is_committed).value
+            except KeyError:
+                continue
+        return output_val
 
     @staticmethod
     def spend_input(state, utxo_cache, address, seq_no, is_committed=False):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, b'')
         utxo_cache.spend_output(Output(address, seq_no, None),
-                                       is_committed=is_committed)
+                                is_committed=is_committed)
 
     @staticmethod
     def add_new_output(state, utxo_cache, output: Output, is_committed=False):
@@ -232,3 +239,34 @@ class TokenReqHandler(RequestHandler):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
+
+    @staticmethod
+    def get_sum_inputs_outputs(utxo_cache, inputs, outputs, is_committed=False):
+        sum_inputs = TokenReqHandler.sum_inputs(utxo_cache, inputs,
+                                                is_committed=is_committed)
+        sum_outputs = sum(o[1] for o in outputs)
+        return sum_inputs, sum_outputs
+
+    @staticmethod
+    def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
+                   ppTime, ignore_txn_root_check=False):
+        r = RequestHandler._commit(ledger, state, txnCount, stateRoot, txnRoot,
+                                   ppTime,
+                                   ignore_txn_root_check=ignore_txn_root_check)
+        TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
+        return r
+
+    @staticmethod
+    def _commit_to_utxo_cache(utxo_cache, state_root):
+        state_root = base58.b58decode(state_root.encode()) if isinstance(
+            state_root, str) else state_root
+        assert utxo_cache.first_batch_idr == state_root
+        utxo_cache.commit_batch()
+
+    @staticmethod
+    def on_batch_created(utxo_cache, state_root):
+        utxo_cache.create_batch_from_current(state_root)
+
+    @staticmethod
+    def on_batch_rejected(utxo_cache):
+        utxo_cache.reject_batch()
