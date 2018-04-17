@@ -1,5 +1,11 @@
-from plenum.server.plugin.fees.src.constants import FeesTransactions
+from plenum.server.plugin.fees.src.messages.fields import TxnFeesField
+from plenum.server.plugin.fees.src.transactions import FeesTransactions
 
-AcceptableWriteTypes = {FeesTransactions.FEE.value,}
+# TODO: Fix this, use a constant
+CLIENT_REQUEST_FIELDS = {
+    'fees': TxnFeesField(optional=True, nullable=True),
+}
+
+AcceptableWriteTypes = {FeesTransactions.FEE.value, }
 
 AcceptableQueryTypes = {FeesTransactions.GET_FEES.value, }
