@@ -49,9 +49,9 @@ def update_node_obj(node):
                                       three_pc_handler.add_to_prepare)
     node.master_replica.register_hook(ReplicaHooks.CREATE_ORD,
                                       three_pc_handler.add_to_ordered)
-    node.master_replica.register_hook(ReplicaHooks.RECV_PPR,
+    node.master_replica.register_hook(ReplicaHooks.APPLY_PPR,
                                       three_pc_handler.check_recvd_pre_prepare)
-    node.master_replica.register_hook(ReplicaHooks.RECV_CM,
+    node.master_replica.register_hook(ReplicaHooks.VALIDATE_PR,
                                       three_pc_handler.check_recvd_prepare)
     node.master_replica.register_hook(ReplicaHooks.BATCH_CREATED,
                                       three_pc_handler.batch_created)
