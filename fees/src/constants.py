@@ -4,5 +4,5 @@ FEES = 'fees'
 REF = 'ref'
 FEE_TXNS_IN_BATCH = 'fee_txns_in_batch'
 
-FEE = FeesTransactions.FEE.value
+SET_FEES = FeesTransactions.SET_FEES.value
 GET_FEES = FeesTransactions.GET_FEES.value

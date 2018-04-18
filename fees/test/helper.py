@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import TXN_TYPE
 from plenum.common.util import randomString
-from plenum.server.plugin.fees.src.constants import FEE, FEES, GET_FEES
+from plenum.server.plugin.fees.src.constants import SET_FEES, FEES, GET_FEES
 from plenum.test.helper import waitForSufficientRepliesForRequests, \
     sdk_send_signed_requests, sdk_get_and_check_replies, sdk_gen_request, \
     sdk_sign_and_submit_req_obj, sdk_sign_request_objects, \
@@ -14,7 +14,7 @@ from plenum.test.pool_transactions.helper import prepare_nym_request, \
 def set_fees_request(trustees, fees):
     signatures = {}
     op = {
-        TXN_TYPE: FEE,
+        TXN_TYPE: SET_FEES,
         FEES: fees,
     }
     first_trustee = trustees[0]
@@ -62,7 +62,7 @@ def get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle):
 
 def check_fee_req_handler_in_memory_map_updated(nodes, fees):
     for node in nodes:
-        assert node.get_req_handler(txn_type=FEE).fees == fees
+        assert node.get_req_handler(txn_type=SET_FEES).fees == fees
 
 
 def gen_nym_req_for_fees(looper, creators_wallet, seed=None):

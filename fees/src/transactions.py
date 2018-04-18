@@ -12,5 +12,5 @@ class FeesTransactions(Transactions):
     #  because that would break backwards compatibility with the ledger
     # Also the numeric constants CANNOT collide with other transactions hence a
     # prefix is used
-    FEE = PREFIX + '0'
+    SET_FEES = PREFIX + '0'
     GET_FEES = PREFIX + '1'

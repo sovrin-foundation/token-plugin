@@ -9,7 +9,7 @@ from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
 from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
-from plenum.server.plugin.fees.src.constants import FEE, GET_FEES, FEES, REF
+from plenum.server.plugin.fees.src.constants import SET_FEES, GET_FEES, FEES, REF
 from plenum.server.plugin.fees.src.fee_req_handler import FeeReqHandler
 from plenum.server.plugin.fees.src.messages.fields import FeesStructureField
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS, \
@@ -19,7 +19,7 @@ from plenum.server.plugin.token.src.types import Output
 
 
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {FEE, GET_FEES}
+    valid_txn_types = {SET_FEES, GET_FEES}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
     MinSendersForFees = 4
@@ -34,7 +34,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
 
-        # In-memory map of fees, changes on FEE txns
+        # In-memory map of fees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
 
         self.query_handlers = {
@@ -144,9 +144,9 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def doStaticValidation(self, request: Request):
         operation = request.operation
-        if operation[TXN_TYPE] in (FEE, GET_FEES):
+        if operation[TXN_TYPE] in (SET_FEES, GET_FEES):
             error = ''
-            if operation[TXN_TYPE] == FEE:
+            if operation[TXN_TYPE] == SET_FEES:
                 error = self._fees_validator.validate(operation.get(FEES))
             if error:
                 raise InvalidClientRequest(request.identifier, request.reqId,
@@ -156,7 +156,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def validate(self, req: Request):
         operation = req.operation
-        if operation[TXN_TYPE] == FEE:
+        if operation[TXN_TYPE] == SET_FEES:
             error = ''
             senders = req.all_identifiers
             if not all(DomainRequestHandler.get_role(
@@ -170,7 +170,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def apply(self, req: Request, cons_time: int):
         operation = req.operation
-        if operation[TXN_TYPE] == FEE:
+        if operation[TXN_TYPE] == SET_FEES:
             txn = reqToTxn(req, cons_time)
             (start, end), _ = self.ledger.appendTxns(
                 [self.transform_txn_for_ledger(txn)])
@@ -187,7 +187,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
 
     def _update_state_with_single_txn(self, txn, is_committed=False):
-        if txn.get(TXN_TYPE) == FEE:
+        if txn.get(TXN_TYPE) == SET_FEES:
             existing_fees = self._get_fees(is_committed=is_committed)
             existing_fees.update(txn[FEES])
             val = self.state_serializer.serialize(existing_fees)

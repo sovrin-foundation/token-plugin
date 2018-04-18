@@ -6,6 +6,6 @@ CLIENT_REQUEST_FIELDS = {
     'fees': TxnFeesField(optional=True, nullable=True),
 }
 
-AcceptableWriteTypes = {FeesTransactions.FEE.value, }
+AcceptableWriteTypes = {FeesTransactions.SET_FEES.value, }
 
 AcceptableQueryTypes = {FeesTransactions.GET_FEES.value, }
