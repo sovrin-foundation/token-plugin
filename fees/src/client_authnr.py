@@ -22,6 +22,7 @@ class FeesAuthNr(CoreAuthNr):
         super().__init__(state)
         self.token_authnr = token_authnr
 
+    # TODO this method is not used and can be deleted
     @staticmethod
     def get_fee_idrs(req_data):
         idrs = set()

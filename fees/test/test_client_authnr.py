@@ -1,12 +1,16 @@
 import pytest
 
-from plenum.common.exceptions import InvalidClientRequest
 from plenum.server.plugin.fees.src.client_authnr import FeesAuthNr
+from plenum.common.exceptions import InvalidSignatureFormat, \
+    InsufficientCorrectSignatures, InvalidClientRequest
+from plenum.common.constants import DOMAIN_LEDGER_ID
 
-#Constants
+# Constants
 from plenum.server.plugin.fees.src.constants import SET_FEES
 from plenum.server.plugin.token.src.client_authnr import TokenAuthNr
 from state.state import State
+from state.pruning_state import PruningState
+from storage.kv_in_memory import KeyValueStorageInMemory
 
 VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
 VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
@@ -29,31 +33,63 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
 
+@pytest.fixture
+def node(txnPoolNodeSet):
+    a, b, c, d = txnPoolNodeSet
+    nodes = [a, b, c, d]
+    return nodes
 
-def test_get_fee_idrs_success():
-    pass
 
-def test_get_fee_idrs_invalid_data():
-    pass
+def pruning_state():
+    return PruningState(KeyValueStorageInMemory())
 
-#TODO Needs work to fix this
+#  Lovesh feels we can remove the method get_fee_idrs and unit tests
+#  because the method is not used any where in our product
+#  next check in removes these tests and the function they were meant to test
+# def test_get_fee_idrs_success(node):
+#     fees_authenticator = FeesAuthNr(node[0].getState(DOMAIN_LEDGER_ID), None)
+#     req_data = {'signatures': SIGNATURES,
+#                 'reqId': VALID_REQID,
+#                 'operation': {'type': SET_FEES,
+#                               'fees': {'1': 4, '10001': 8}
+#                               }
+#                 }
+#
+#     idrs = fees_authenticator.get_fee_idrs(req_data)
+#     assert 0 != len(idrs)
+#
+#
+# def test_get_fee_idrs_invalid_data():
+#     fees_authenticator = FeesAuthNr(node[0].getState(DOMAIN_LEDGER_ID), None)
+#     req_data = {'signatures': SIGNATURES,
+#                 'reqId': VALID_REQID,
+#                 'operation': {'type': SET_FEES,
+#                               }
+#                 }
+#
+#     idrs = fees_authenticator.get_fee_idrs(req_data)
+#     assert 0 == len(idrs)
+
+
 def test_authenticate_success():
-    state = State()
-    token_authnr = TokenAuthNr()
-    fees_authenticator = FeesAuthNr(state, token_authnr )
-    req_data = {'signatures': SIGNATURES, 'reqId': VALID_REQID,
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+    req_data = {'signatures': SIGNATURES,
+                'reqId': VALID_REQID,
+                'identifier' : VALID_IDENTIFIER,
                 'operation': {'type': SET_FEES,
                               'fees': {'1': 4, '10001': 8}
                               }
                 }
-    identifier = VALID_IDENTIFIER
 
+    # fees_authenticator.addIdr(VALID_IDENTIFIER, "")
     value = fees_authenticator.authenticate(req_data, VALID_IDENTIFIER)
-    assert value == True
+    assert value is not None
+
 
 def test_authenticate_invalid():
-    token_authnr = TokenAuthNr()
-    fees_authenticator = FeesAuthNr(None, None)
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
     req_data = {'signatures': SIGNATURES, 'reqId': VALID_REQID,
                 'operation': {'type': 'INVALID_TXN_TYPE',
                               'fees': {'1': 4, '10001': 8}
@@ -62,8 +98,89 @@ def test_authenticate_invalid():
     with pytest.raises(InvalidClientRequest):
         fees_authenticator.authenticate(req_data, VALID_IDENTIFIER)
 
-def test_verify_signature_success():
-    pass
 
-def test_verify_signature_invalid():
-    pass
+def test_verify_signature_success():
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+    msg = {
+            'SafeRequest':
+            {
+                'protocolVersion': PROTOCOL_VERSION,
+                'reqId': 1524157076874856000,
+                'signatures':
+                {
+                    'MSjKTWkPLtYoPEaTF1TUDb': 'AzshWL4dqZMnH5pX5N4WkpL5x2yDHT3HDzvJHYSuuktS5og6ZScjhSUTtTqbkgANQLL3Ptwm3X4Lv9br3YU8osN'
+                },
+                'fees': [['GMBk8YVHnctVoCmXuxaAundKyfa5KDredBYE5WZaN5V2', 2, 'C4xbW4SRLA8MaBpPfWrHvuoN6VEb8tzc21a2WMYfVGGTjK7KhUBAQaQ36iGqekDxbWuuVdZTu2PE47weiMUrH6E'],
+                         ['GMBk8YVHnctVoCmXuxaAundKyfa5KDredBYE5WZaN5V2', 10]],
+                'operation':
+                {
+                    'alias': '93dd8f',
+                    'verkey': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'dest': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'type': '1'
+                }
+            }
+        }
+
+    fees_authenticator.verify_signature(msg)
+
+
+def test_verify_signature_no_fees():
+    # should just run, no exceptions
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+    msg = {
+            'SafeRequest':
+            {
+                'protocolVersion': PROTOCOL_VERSION,
+                'reqId': 1524157076874856000,
+                'signatures':
+                {
+                    'MSjKTWkPLtYoPEaTF1TUDb': 'AzshWL4dqZMnH5pX5N4WkpL5x2yDHT3HDzvJHYSuuktS5og6ZScjhSUTtTqbkgANQLL3Ptwm3X4Lv9br3YU8osN'
+                },
+                'operation':
+                {
+                    'alias': '93dd8f',
+                    'verkey': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'dest': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'type': '1'
+                }
+            }
+        }
+    fees_authenticator.verify_signature(msg)
+
+
+def test_verify_signature_invalid_signature_format(node):
+    fees_authenticator = FeesAuthNr(node[0].getState(DOMAIN_LEDGER_ID), None)
+    msg = {'fees': ['GMBk8YVHnctVoCmXuxaAundKyfa5KDredBYE5WZaN5V2', 2, 'C4xbW4SRLA8MaBpPfWrHvuoN6VEb8tzc21a2WMYfVGGTjK7KhUBAQaQ36iGqekDxbWuuVdZTu2PE47weiMUrH6E'] }
+    with pytest.raises(InvalidSignatureFormat):
+        fees_authenticator.verify_signature(msg)
+
+
+def test_verify_signature_incorrect_signatures():
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+    msg = {
+            'SafeRequest':
+            {
+                'protocolVersion': PROTOCOL_VERSION,
+                'reqId': 1524157076874856000,
+                'signatures':
+                {
+                    'MSjKTWkPLtYoPEaTF1TUDb': 'AzshWL4dqZMnH5pX5N4WkpL5x2yDHT3HDzvJHYSuuktS5og6ZScjhSUTtTqbkgANQLL3Ptwm3X4Lv9br3YU8osN'
+                },
+                'fees': [['00Bk8YVHnctVoCmXuxaAundKyfa5KDredBYE5WZaN5V2', 2, '00xbW4SRLA8MaBpPfWrHvuoN6VEb8tzc21a2WMYfVGGTjK7KhUBAQaQ36iGqekDxbWuuVdZTu2PE47weiMUrH6E'],
+                         ['00Bk8YVHnctVoCmXuxaAundKyfa5KDredBYE5WZaN5V2', 10]],
+                'operation':
+                {
+                    'alias': '93dd8f',
+                    'verkey': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'dest': 'EHLwcFvoV923Q73uCMDmBbGUdvpzGAv6fP2Mn9dmrGRK',
+                    'type': '1'
+                }
+            }
+        }
+    with pytest.raises(InsufficientCorrectSignatures):
+        fees_authenticator.verify_signature(msg)
+
