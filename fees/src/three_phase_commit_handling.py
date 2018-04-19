@@ -78,22 +78,26 @@ class ThreePhaseCommitHandler:
             fee_txn_count = self.fees_req_handler.fee_txns_in_current_batch
             if fee_txn_count > 0:
                 if not self._has_plugin_fields(pre_prepare):
-                    raise Exception('Expected plugin_fields in PRE-PREPARE')
+                    raise Exception('Expected {} in PRE-PREPARE', f.PLUGIN_FIELDS.nm)
                 fees = pre_prepare.plugin_fields.get(FEES)
                 if not fees:
-                    raise Exception('Expected fees in PRE-PREPARE')
+                    raise Exception('Expected {} in PRE-PREPARE', FEES)
                 if fees.get(FEE_TXNS_IN_BATCH) != fee_txn_count:
-                    raise Exception('Fee txn count mismatch in PRE-PREPARE '
-                                    'expected {}, found {}'.format(fee_txn_count, fees.get(FEE_TXNS_IN_BATCH)))
+                    raise Exception('{} mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(FEE_TXNS_IN_BATCH, fee_txn_count, fees.get(FEE_TXNS_IN_BATCH)))
                 recvd_state_root = self.master_replica._state_root_serializer.deserialize(
                         fees.get(f.STATE_ROOT.nm, '').encode())
                 if recvd_state_root != self.fees_req_handler.token_state.headHash:
-                    raise Exception('Fee state root mismatch in PRE-PREPARE '
-                                    'expected {}, found {}'.format(self.fees_req_handler.token_state.headHash, recvd_state_root))
+                    raise Exception('{} mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(
+                                                                f.STATE_ROOT.nm,
+                                                                self.fees_req_handler.token_state.headHash,
+                                                                recvd_state_root))
+
                 recvd_txn_root = self.token_ledger.strToHash(fees.get(f.TXN_ROOT.nm, ''))
                 if recvd_txn_root != self.fees_req_handler.token_ledger.uncommittedRootHash:
-                    raise Exception('Fee txn root mismatch in PRE-PREPARE '
-                                    'expected {}, found {}'.format(self.fees_req_handler.token_ledger.uncommittedRootHash, recvd_txn_root))
+                    raise Exception('{} mismatch in PRE-PREPARE '
+                                    'expected {}, found {}'.format(f.TXN_ROOT.nm, self.fees_req_handler.token_ledger.uncommittedRootHash, recvd_txn_root))
 
     def check_recvd_prepare(self, prepare, pre_prepare):
         # TODO:
