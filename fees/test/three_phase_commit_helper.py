@@ -152,7 +152,7 @@ class Prep:
     def create_prepare(pp):
         # Prepare has the following parameters
         prep_args = [
-            0,  # instId
+            pp.instId,
             pp.viewNo,
             pp.ppSeqNo,
             pp.ppTime,
@@ -170,7 +170,7 @@ class Ord:
     @staticmethod
     def create_ordered(pp):
         ord_args = [
-            0,  # instId
+            pp.instId,
             pp.viewNo,
             pp.reqIdr[:pp.discarded],
             pp.ppSeqNo,
