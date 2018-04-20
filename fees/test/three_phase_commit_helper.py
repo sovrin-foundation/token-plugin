@@ -34,6 +34,18 @@ def pp_valid(monkeypatch, three_phase_handler):
     return PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
 
 
+def pp_token_ledger(pp):
+    return PP.replace_fields(pp, {f.LEDGER_ID.nm: TOKEN_LEDGER_ID})
+
+
+def pp_remove_plugin_fields(pp):
+    return PP.remove_field(pp, f.PLUGIN_FIELDS.nm)
+
+
+def pp_remove_fees_field(pp):
+    return PP.replace_fields(pp, {f.PLUGIN_FIELDS.nm: {}})
+
+
 def tuple_fields_decorator(tuple_field_class):
     def tuple_fields_class_decorator(class_to_be_decorated):
         class TupleFieldsDecorator(class_to_be_decorated):
