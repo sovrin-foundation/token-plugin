@@ -22,17 +22,6 @@ class FeesAuthNr(CoreAuthNr):
         super().__init__(state)
         self.token_authnr = token_authnr
 
-    # TODO this method is not used and can be deleted
-    @staticmethod
-    def get_fee_idrs(req_data):
-        idrs = set()
-        if FEES in req_data:
-            if len(req_data[FEES]) == 2:
-                for idr, _, _ in req_data[FEES][0]:
-                    idrs.add(idr)
-
-        return idrs
-
     def authenticate(self, req_data, identifier: str = None,
                      signature: str = None, verifier=None):
         txn_type = req_data[OPERATION][TXN_TYPE]
@@ -68,3 +57,4 @@ class FeesAuthNr(CoreAuthNr):
         if correct_sigs_from != required_sigs_from:
             raise InsufficientCorrectSignatures(len(correct_sigs_from),
                                                 len(fees[0]))
+
