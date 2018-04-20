@@ -40,14 +40,6 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
 
-
-@pytest.fixture
-def node(txnPoolNodeSet):
-    a, b, c, d = txnPoolNodeSet
-    nodes = [a, b, c, d]
-    return nodes
-
-
 @pytest.fixture
 def token_handler_a(node):
     return node[0].ledger_to_req_handler[TOKEN_LEDGER_ID]
