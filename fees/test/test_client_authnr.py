@@ -6,6 +6,7 @@ from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
 from plenum.common.constants import DOMAIN_LEDGER_ID
 
+from plenum.server.plugin.fees.test.test_set_get_fees import fees_set
 
 # Constants
 from plenum.server.plugin.fees.src.constants import SET_FEES
@@ -61,26 +62,33 @@ def node(txnPoolNodeSet):
 
 
 # ------------------------------------------------------------------------------------
-# TODO This one works
-# the operation type is FEES, so the return is a list of fees
-def test_authenticate_success():
+# authenticate returns a list of authenticated signatures.  it should match the number
+# of inputted signatures since they are all valie
+def test_authenticate_success(fees_set, node):
 
-    state = pruning_state()
+    state = node[0].getState(DOMAIN_LEDGER_ID)
     fees_authenticator = FeesAuthNr(state, None)
-    req_data = {'signatures': {'M9BJDuS24bqbJNvBRsoGg3': '2NTMJMnhhZSghbVViTqy2TWoS272kH3apo8ckD4DQf9YXE4zP7g72jg2DLCEzX5ndxUzHmU74hNPjD3syZ8LuBko',
-                               'B8fV7naUqLATYocqu7yZ8W': '45rSNuKmfGmitsS2jRJaALkGBWDtXSfuuMdLzLkKUL8AS3xk8f4dM6oKDHvMLnGqVsqmd5z5NDvskj5XmwazrBFP',
-                               'CA4bVFDU4GLbX8xZju811o': '4WypVGy9PFKeUio5jAKcGJmsrpnVer9ekm6P2QmN15uRRVeKZux3LzWJ34b4UCdGQEhh7LEv8RbxTXj8Ah8keRBG',
-                               'E7QRhdcnhAwA6E46k9EtZo': '5edfnbZLDrz3QaEeuDp9KVMty9agHJpgeWY1PWHSToLfNqSqYrndsUqfbusPymYKRVojvT9uA65ye3bwioQcbMdi'},
-                'reqId': 1524252730845898,
-                'operation': {'type': '20000', 'fees': {'1': 4, '10001': 8}}
-                }
 
-    req_data = {'signatures': {'M9BJDuS24bqbJNvBRsoGg3': '2NTMJMnhhZSghbVViTqy2TWoS272kH3apo8ckD4DQf9YXE4zP7g72jg2DLCEzX5ndxUzHmU74hNPjD3syZ8LuBko'},
-                'reqId': 1524252730845898,
-                'operation': {'type': '20000', 'fees': {'1': 4, '10001': 8}}
-                }
+    req_data = {
+        'signatures':
+            {
+                'E7QRhdcnhAwA6E46k9EtZo': '32H37GfuchojdbNeMxwNUhZJwWyJCz48aP5u1AvN3xhNramVqrq74H4pE8LKMgZw7rAdyrPvHUWzWAZdB243fqhA',
+                'CA4bVFDU4GLbX8xZju811o': '3tkZU65KeybmkUcrA6HuovVTDD8vsVm2VvB7bpUhPt2MLpez6eRrRvysUutusJz6xryCtk7g1b115pKhNGcqRTss',
+                'M9BJDuS24bqbJNvBRsoGg3': '4QXHdWTeWYRpoyCAZgpM7qA7Ms2MRYu6NpasPagPQRGoUukE2NdSXGonu6dWgsPNgybqW7fotw9BjccXAy7BzMsY',
+                'B8fV7naUqLATYocqu7yZ8W': '2bq55hTSBafovXS9gTNkW1GM9vVF6Y4s2fLEsmew9DaN95rmZ5ZwXj74NgTmGeGszPomWXPsRr5QGNZb6GsG57PV'
+            },
+        'reqId': 1524500821797147,
+        'operation':
+            {
+                'fees': {'10001': 8, '1': 4},
+                'type': '20000'
+            },
+        'protocolVersion': 1
+    }
+
     value = fees_authenticator.authenticate(req_data)
     assert value is not None
+    assert 4 == len(value)
 
 
 # ------------------------------------------------------------------------------------
