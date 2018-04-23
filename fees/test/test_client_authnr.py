@@ -6,6 +6,7 @@ from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
 from plenum.common.constants import DOMAIN_LEDGER_ID
 
+
 # Constants
 from plenum.server.plugin.fees.src.constants import SET_FEES
 from plenum.server.plugin.token.src.client_authnr import TokenAuthNr
@@ -63,6 +64,7 @@ def node(txnPoolNodeSet):
 # TODO This one works
 # the operation type is FEES, so the return is a list of fees
 def test_authenticate_success():
+
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
     req_data = {'signatures': {'M9BJDuS24bqbJNvBRsoGg3': '2NTMJMnhhZSghbVViTqy2TWoS272kH3apo8ckD4DQf9YXE4zP7g72jg2DLCEzX5ndxUzHmU74hNPjD3syZ8LuBko',
@@ -73,12 +75,15 @@ def test_authenticate_success():
                 'operation': {'type': '20000', 'fees': {'1': 4, '10001': 8}}
                 }
 
+    req_data = {'signatures': {'M9BJDuS24bqbJNvBRsoGg3': '2NTMJMnhhZSghbVViTqy2TWoS272kH3apo8ckD4DQf9YXE4zP7g72jg2DLCEzX5ndxUzHmU74hNPjD3syZ8LuBko'},
+                'reqId': 1524252730845898,
+                'operation': {'type': '20000', 'fees': {'1': 4, '10001': 8}}
+                }
     value = fees_authenticator.authenticate(req_data)
     assert value is not None
 
 
 # ------------------------------------------------------------------------------------
-# This one works
 # the operation type is not FEES so the exception InvalidClientRequest is raised
 def test_authenticate_invalid():
     state = pruning_state()
@@ -93,7 +98,6 @@ def test_authenticate_invalid():
 
 
 # ------------------------------------------------------------------------------------
-# This one works
 # the signature and fees sections are populated with correct data
 def test_verify_signature_success():
     state = pruning_state()
@@ -109,7 +113,6 @@ def test_verify_signature_success():
 
 
 # ------------------------------------------------------------------------------------
-# This one works
 # Its pretty simple.  If verify_signature doesn't find a fee attribute, it just
 # returns, no return results and no exceptions
 def test_verify_signature_no_fees():
@@ -123,7 +126,6 @@ def test_verify_signature_no_fees():
 
 
 # ------------------------------------------------------------------------------------
-# this one works....
 # in the fees dictionary, array in element 0 has a signature that is not correct so the
 # exception InvalidSignatureFormat will get raised
 def test_verify_signature_invalid_signature_format(node):
@@ -138,8 +140,7 @@ def test_verify_signature_invalid_signature_format(node):
 
 
 # ------------------------------------------------------------------------------------
-# this one works
-# in this test, the signature in fees is not valid.  it is a valid signature but not valid for this data set
+# in this test, the signature in fees is not valid for the data set.  it is a valid signature and passes b58decode
 def test_verify_signature_incorrect_signatures():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
