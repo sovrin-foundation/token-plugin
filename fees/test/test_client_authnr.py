@@ -45,7 +45,7 @@ def node(txnPoolNodeSet):
 
 # ------------------------------------------------------------------------------------
 # authenticate returns a list of authenticated signatures.  it should match the number
-# of inputted signatures since they are all value
+# of inputted signatures since they are all valid
 def test_authenticate_success(node):
 
     state = node[0].getState(DOMAIN_LEDGER_ID)
@@ -72,6 +72,32 @@ def test_authenticate_success(node):
     assert value is not None
     assert 4 == len(value)
 
+
+# ------------------------------------------------------------------------------------
+# similar to the previous success test, authenticate returns a list of authenticated signatures.  it should match the number
+# of inputted signatures since they are all valid
+def test_authenticate_success_one_signature(node):
+
+    state = node[0].getState(DOMAIN_LEDGER_ID)
+    fees_authenticator = FeesAuthNr(state, None)
+
+    req_data = {
+        'signatures':
+            {
+                'E7QRhdcnhAwA6E46k9EtZo': '32H37GfuchojdbNeMxwNUhZJwWyJCz48aP5u1AvN3xhNramVqrq74H4pE8LKMgZw7rAdyrPvHUWzWAZdB243fqhA'
+            },
+        'reqId': 1524500821797147,
+        'operation':
+            {
+                'fees': {'10001': 8, '1': 4},
+                'type': '20000'
+            },
+        'protocolVersion': 1
+    }
+
+    value = fees_authenticator.authenticate(req_data)
+    assert value is not None
+    assert 1 == len(value)
 
 # ------------------------------------------------------------------------------------
 # only 2 of the 4 signatures are valid.  (hint: the last two are mucky)
