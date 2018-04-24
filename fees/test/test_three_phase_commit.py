@@ -20,7 +20,7 @@ class TestPrePrepare:
         assert pp_appended == PP.replace_fields(pp, {f.PLUGIN_FIELDS.nm: PP.plugin_data})
 
 
-class TestReceivedPrePrepare():
+class TestReceivedPrePrepare:
 
     def _bad_hash_unserialized(self):
         return b'this is a bad hash'
@@ -116,7 +116,7 @@ class TestAddToOrdered:
     def _test_no_changes(self, three_phase_handler, pp_valid, fn_pp_adapter):
         oc = Ord.create_ordered(pp_valid)
         pp_adapted = fn_pp_adapter(pp_valid)
-        prep_appended = three_phase_handler.add_to_prepare(oc, pp_adapted)
+        prep_appended = three_phase_handler.add_to_ordered(oc, pp_adapted)
         assert prep_appended == oc
 
     def test_no_action_if_token_ledger(self, three_phase_handler, pp_valid):
