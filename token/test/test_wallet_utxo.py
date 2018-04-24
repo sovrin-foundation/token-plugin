@@ -101,16 +101,6 @@ def test_get_min_utxo_ge(wallet, address1, address2, address3):
            (address3.address, 3005, 15)
 
 
-def test_wallet_update_outputs_repeating_address_with_same_txn_seq_no(wallet,
-                                                                      address1,
-                                                                      address2,
-                                                                      address3):
-    vals = [(address1.address, 1), (address1.address, 2),
-            (address3.address, 10)]
-    with pytest.raises(AssertionError):
-        wallet._update_outputs(outputs=vals, txn_seq_no=2)
-
-
 def test_update_multiple_address_outputs():
     wallet = TokenWallet()
     address1 = Address()
