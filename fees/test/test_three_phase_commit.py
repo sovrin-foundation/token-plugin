@@ -20,7 +20,7 @@ class TestPrePrepare:
         assert pp_appended == PP.replace_fields(pp, {f.PLUGIN_FIELDS.nm: PP.plugin_data})
 
 
-class TestReceivedPrePrepare():
+class TestReceivedPrePrepare:
 
     def _bad_hash_unserialized(self):
         return b'this is a bad hash'
@@ -98,10 +98,8 @@ class TestAddToPrepare:
     def test_no_action_if_token_ledger(self, three_phase_handler, pp_valid):
         self._test_no_changes(three_phase_handler, pp_valid, pp_token_ledger)
 
-    def test_exception_if_no_plugin_fields_field(self, three_phase_handler, pp_valid):
-        with pytest.raises(Exception) as exp:
-            self._test_no_changes(three_phase_handler, pp_valid, pp_remove_plugin_fields)
-        assert exp.match(f.PLUGIN_FIELDS.nm)
+    def test_no_action_if_no_plugin_fields(self, three_phase_handler, pp_valid):
+        self._test_no_changes(three_phase_handler, pp_valid, pp_remove_plugin_fields)
 
     def test_no_action_if_no_fees_field(self, three_phase_handler, pp_valid):
         self._test_no_changes(three_phase_handler, pp_valid, pp_remove_fees_field)
@@ -124,10 +122,8 @@ class TestAddToOrdered:
     def test_no_action_if_token_ledger(self, three_phase_handler, pp_valid):
         self._test_no_changes(three_phase_handler, pp_valid, pp_token_ledger)
 
-    def test_exception_if_no_plugin_fields_field(self, three_phase_handler, pp_valid):
-        with pytest.raises(Exception) as exp:
-            self._test_no_changes(three_phase_handler, pp_valid, pp_remove_plugin_fields)
-        assert exp.match(f.PLUGIN_FIELDS.nm)
+    def test_no_action_if_no_plugin_fields(self, three_phase_handler, pp_valid):
+        self._test_no_changes(three_phase_handler, pp_valid, pp_remove_plugin_fields)
 
     def test_no_action_if_no_fees_field(self, three_phase_handler, pp_valid):
         self._test_no_changes(three_phase_handler, pp_valid, pp_remove_fees_field)
