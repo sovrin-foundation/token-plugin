@@ -317,18 +317,22 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
                                                       OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
                                                       INPUTS: [[VALID_ADDR_1, 1, '']]}, None, SIGNATURES, 1)
     # apply transaction
-    token_handler_c.apply(request, CONS_TIME)
     state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     txn_root = node[2].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    token_handler_c.apply(request, CONS_TIME)
+    new_state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    new_txn_root = node[2].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     # add batch
-    token_handler_c.onBatchCreated(base58.b58decode(state_root.encode()))
+    token_handler_c.onBatchCreated(base58.b58decode(new_state_root.encode()))
     # commit batch
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 1, 40)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60)]
-    token_handler_c.commit(1, state_root, txn_root, None)
+    commit_ret_val = token_handler_c.commit(1, new_state_root, new_txn_root, None)
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 2, 30)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60),
-                                                                                  Output(VALID_ADDR_2, 2, 30)]
+                                                                                      Output(VALID_ADDR_2, 2, 30)]
+    assert new_state_root != state_root
+    assert new_txn_root != txn_root
 
 
 def test_token_req_handler_get_query_response_success(public_minting, token_handler_d):
