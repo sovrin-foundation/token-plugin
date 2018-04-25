@@ -123,7 +123,7 @@ def test_static_fee_req_handler_validate_invalid_signature(token_handler_a, node
 def test_static_fee_req_handler_apply(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES,
                                                       FEES: VALID_FEES},
-                      None, BADSIGNATURE, 1)
+                      None, SIGNATURES, 1)
 
     shandler = create_static_handler(token_handler_a, node)
     ret_value = shandler.apply(request, 10)
