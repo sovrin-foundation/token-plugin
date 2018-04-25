@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import base58
 import pytest
+from plenum.common.signer_simple import SimpleSigner
 
 from plenum.common.constants import TXN_TYPE
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
@@ -19,13 +20,11 @@ from plenum.server.plugin.token.src.types import Output
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESSES, TOKEN_LEDGER_ID
 
-VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
-VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
-VALID_ADDR_3 = '2LWr7i8bsnE3BgX7MNUNEBpiJYjn7uEA1HNyMSJyy59z'
-VALID_ADDR_4 = 'Dy7AxfksXZELTSxF1sUnEocJAJp98E6taMZ9hhLeDtZH'
-VALID_ADDR_5 = 'CDe3vTMgns7nXGFwbGkrz24m2VNghmBScdF3QRstF62g'
-VALID_ADDR_6 = '62tw4B64yEu7HmJyjMgZ2tE5wgyTtsXTpB7n8VAtfmjL'
-VALID_ADDR_7 = 'D2neNhD3mTgN28HKH8qmLBYnaadb9F2GtL5nAzQpkpR6'
+from plenum.server.plugin.token.src.util import verkey_to_address
+
+
+(VALID_ADDR_1, VALID_ADDR_2, VALID_ADDR_3, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, VALID_ADDR_7) = \
+    (verkey_to_address(SimpleSigner().verkey) for _ in range(7))
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
