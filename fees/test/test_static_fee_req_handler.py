@@ -55,21 +55,6 @@ def create_static_handler(token_handler, node):
     return static_fee_request_handler
 
 
-# Method returns None if required_fees = 0
-# TODO: can_pay_fees - refactor? (check the Logic)
-# TODO: not working right
-# - Static Fee Request Handler (can_pay_fees)
-def test_static_fee_req_handler_can_pay_fees(token_handler_a, node):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      INPUTS: VALID_INPUTS,
-                                                      OUTPUTS: VALID_OUTPUTS},
-                      None, SIGNATURES, 1)
-
-    shandler = create_static_handler(token_handler_a, node)
-    ret_value = shandler.can_pay_fees(request)
-    assert ret_value is None
-
-
 # Method returns None if it was successful -
 # TODO: Refactoring should be looked at to return a boolean
 # Instead of assuming that everything is good when the return value is None.
@@ -128,3 +113,14 @@ def test_static_fee_req_handler_apply(token_handler_a, node):
     shandler = create_static_handler(token_handler_a, node)
     ret_value = shandler.apply(request, 10)
     assert ret_value[0] == 1
+
+
+# - Static Fee Request Handler (apply)
+def test_static_fee_req_handler_apply_fails(token_handler_a, node):
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_FEES,
+                                                      FEES: VALID_FEES},
+                      None, SIGNATURES, 1)
+
+    shandler = create_static_handler(token_handler_a, node)
+    ret_value = shandler.apply(request, 10)
+    assert ret_value is None
