@@ -12,6 +12,7 @@ from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from plenum.server.plugin.token.src import AcceptableWriteTypes, AcceptableQueryTypes
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS
+from plenum.server.plugin.token.src.util import address_to_verkey
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
 
@@ -80,9 +81,11 @@ class TokenAuthNr(CoreAuthNr):
                                            topLevelKeysToIgnore=topLevelKeysToIgnore)
 
     def getVerkey(self, identifier):
-        if len(identifier) in (43, 44):
+        if len(identifier) not in (21, 22):
+            vk = address_to_verkey(identifier)
+            if len(vk) in (43, 44):
             # Address is the 32 byte verkey
-            return identifier
+                return vk
         return super().getVerkey(identifier)
 
     @staticmethod
