@@ -5,7 +5,7 @@ from plenum.config import SIGNATURE_FIELD_LIMIT
 
 class PublicAddressField(FieldBase):
     _base_types = (str, )
-    _public_address = Base58Field(byte_lengths=(32,))
+    _public_address = Base58Field(byte_lengths=(36,))
 
     def _specific_validation(self, val):
         return self._public_address.validate(val)

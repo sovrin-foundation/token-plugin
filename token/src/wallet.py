@@ -3,6 +3,7 @@ from operator import itemgetter
 from typing import Dict, Optional, Tuple
 
 import math
+import base58
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
@@ -18,7 +19,7 @@ from plenum.server.plugin.token.src.constants import INPUTS, GET_UTXO, OUTPUTS, 
 class Address:
     def __init__(self, seed=None):
         self.signer = SimpleSigner(seed=seed)
-        self.address = self.signer.verkey
+        self.address = base58.b58encode_check(self.signer.naclSigner.verraw)
         self.outputs = [{}, {}]  # Unspent and Spent
 
     def is_unspent(self, seq_no):
