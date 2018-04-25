@@ -34,6 +34,10 @@ class Address:
         self.outputs[0][seq_no] = val
 
     @property
+    def verkey(self) -> str:
+        return self.signer.verkey
+
+    @property
     def all_utxos(self):
         return [(seq_no, val) for seq_no, val in self.outputs[0].items()]
 
