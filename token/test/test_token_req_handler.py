@@ -22,9 +22,11 @@ from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
 
 from plenum.server.plugin.token.src.util import verkey_to_address
 
+VALID_ADDR_1, VALID_ADDR_2 = (None, None)
 
-(VALID_ADDR_1, VALID_ADDR_2, VALID_ADDR_3, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, VALID_ADDR_7) = \
-    (verkey_to_address(SimpleSigner().verkey) for _ in range(7))
+(VALID_ADDR_3, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, VALID_ADDR_7) = \
+    (verkey_to_address(SimpleSigner().verkey) for _ in range(5))
+
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
@@ -41,7 +43,13 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
 
 
 @pytest.fixture
-def node(txnPoolNodeSet):
+def setup(SF_address, seller_address):
+    global VALID_ADDR_1, VALID_ADDR_2
+    VALID_ADDR_1, VALID_ADDR_2 = seller_address, SF_address
+
+
+@pytest.fixture
+def node(setup, txnPoolNodeSet):
     a, b, c, d = txnPoolNodeSet
     nodes = [a, b, c, d]
     return nodes
@@ -363,7 +371,7 @@ def test_token_req_handler_get_all_utxo_success(public_minting, token_handler_d)
 
 def test_token_req_handler_create_state_key_success(token_handler_d):
     state_key = token_handler_d.create_state_key(VALID_ADDR_1, 40)
-    assert state_key == b'6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1:40'
+    assert state_key.decode() == '{}:40'.format(VALID_ADDR_1)
 
 
 # This test acts as a test for the static method of sum_inputs too
