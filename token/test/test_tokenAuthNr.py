@@ -1,12 +1,14 @@
 import pytest
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, TXN_TYPE
+from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures
 from plenum.server.plugin.token.src.client_authnr import TokenAuthNr
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, GET_UTXO, \
     INPUTS, OUTPUTS, ADDRESSES, EXTRA
 from plenum.common.request import Request
+from plenum.common.types import f, OPERATION
 
-#TEST DATA CONSTANTS
+# -------------------------VALID TEST CONSTANTS-------------------------------------------------------------------------
 VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
 VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
 VALID_ADDR_3 = '2LWr7i8bsnE3BgX7MNUNEBpiJYjn7uEA1HNyMSJyy59z'
@@ -17,35 +19,104 @@ VALID_ADDR_7 = 'D2neNhD3mTgN28HKH8qmLBYnaadb9F2GtL5nAzQpkpR6'
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
-CONS_TIME = 1518541344
 PROTOCOL_VERSION = 1
-SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
-                  '27BVCWvThxMV9pzqz3JepMLVKww7MmreweYjh15LkwvAH4qwYAMbZWeYr6E6LcQexYAikTHo212U1NKtG8Gr2PPP',
-              'M9BJDuS24bqbJNvBRsoGg3':
-                  '5BzS7J7uSuUePRzLdF5BL5LPvnXxzQyB5BqMT19Hz8QjEyb41Mum71TeNvPW9pKbhnDK12Pciqw9WRHUvsfwdYT5',
-              'E7QRhdcnhAwA6E46k9EtZo':
-                  'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
-              'CA4bVFDU4GLbX8xZju811o':
-                  '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
+SIGNATURES = {
+    'M9BJDuS24bqbJNvBRsoGg3': '5eJax8GW8gTRfZzhuta9s7hU2K3dkKpDWGE7SUsMqiRmQ2GzWXxJKaDzcPMKdZWqrA5Kn1vSHFND9oThsjaQLhHy',
+    'B8fV7naUqLATYocqu7yZ8W': 'AaGqjqGk67mj3MVua46RiqJ6mq6zoy99VriGvZJbpZekhrtju9k2NQrrJcdnMnps7cBZfFxLwhELnLZnTqfb9Ag',
+    'E7QRhdcnhAwA6E46k9EtZo': '2EBZxZ3E2r2ZjCCBwgD6ipnHbskZb4Y4Yqm6haYEsr7hdM1m36yqLFrmNSB7JPqjAsMx6qjw6dWV5sRou1DgiKrM',
+    'CA4bVFDU4GLbX8xZju811o': 'YJjXm8vfiy1sD586tecQ2Eh1Q3wFmLodaxctArasW7RNCujPiZa5CurdW5b8dRXMEBdX9YhsDGkahJXUnZaH8SC'}
 
-def test_authenticate(node):
+VALID_OPERATION = {'type': '10000', 'outputs':
+    [['8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL', 60],
+     ['6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1', 40]]}
+
+
+# -------------------------Test authenticate method---------------------------------------------------------------------
+
+
+def test_authenticate_invalid_signatures(node):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1, '']]}, None, SIGNATURES, 1)
+    INVALID_SIGNATURES = {
+        'M9BJDuS24bqbJNvBRsoGg3': 'INVALID_SIG1',
+        'B8fV7naUqLATYocqu7yZ8W': 'INVALID_SIG2',
+        'E7QRhdcnhAwA6E46k9EtZo': 'INVALID_SIG3',
+        'CA4bVFDU4GLbX8xZju811o': 'INVALID_SIG3'}
+    req_data = {f.PROTOCOL_VERSION.nm: PROTOCOL_VERSION,
+                f.REQ_ID.nm: VALID_REQID,
+                f.SIGS.nm: SIGNATURES,
+                OPERATION: VALID_OPERATION}
+    with pytest.raises(InsufficientCorrectSignatures):
+        token_authnr.authenticate(req_data)
+
+
+def test_authenticate_invalid_signatures1(node):
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    INVALID_SIGNATURES = {
+        'M9BJDuS24bqbJNvBRsoGg3': 'INVALID_SIG1',
+        'B8fV7naUqLATYocqu7yZ8W': 'INVALID_SIG2',
+        'E7QRhdcnhAwA6E46k9EtZo': 'INVALID_SIG3',
+        'CA4bVFDU4GLbX8xZju811o': 'INVALID_SIG3'}
+    req_data = {f.PROTOCOL_VERSION.nm: PROTOCOL_VERSION,
+                f.REQ_ID.nm: VALID_REQID,
+                f.SIGS.nm: SIGNATURES,
+                OPERATION: VALID_OPERATION}
+    with pytest.raises(InsufficientCorrectSignatures):
+        token_authnr.authenticate(req_data)
+
+
+# -------------------------Test authenticate_xfer method----------------------------------------------------------------
 
 
 def test_authenticate_xfer():
     pass
 
+
+# -------------------------Test serializeForSig method------------------------------------------------------------------
+
+
 def test_serializeForSig():
     pass
 
-def test_getVerkey():
-    pass
+
+# -------------------------Test getVerkey method------------------------------------------------------------------------
+
+
+def test_getVerkey_success(node):
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    ver_key = token_authnr.getVerkey(VALID_IDENTIFIER)
+    assert len(ver_key) == 23
+    assert ver_key[0] == '~'
+
+
+def test_getVerkey_43_len_success(node):
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    identifier_43 = '1234567891234567891234567891234567891234567'
+    ver_key = token_authnr.getVerkey(identifier_43)
+    assert ver_key == identifier_43
+
+
+def test_getVerkey_44_len_success(node):
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    identifier_44 = '12345678912345678912345678912345678912345678'
+    ver_key = token_authnr.getVerkey(identifier_44)
+    assert ver_key == identifier_44
+
+
+def test_getVerkey_invalid_identifier(node):
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    identifier_invalid = 'INVALID_IDENTIFIER'
+    with pytest.raises(UnknownIdentifier):
+        token_authnr.getVerkey(identifier_invalid)
+
+
+# -------------------------Test get_xfer_ser_data method----------------------------------------------------------------
+
 
 def test__get_xfer_ser_data():
     pass
+
+
+# -------------------------Test get_sigs method-------------------------------------------------------------------------
 
 def test_get_sigs():
     pass
