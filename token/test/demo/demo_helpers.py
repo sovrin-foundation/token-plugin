@@ -24,7 +24,7 @@ def create_wallet_with_default_identifier(name):
 def create_address_add_wallet_log(wallet):
     address = create_address_add_wallet(wallet)
     demo_logger.log_blue("The address {} was added to {} wallet".format(address, wallet._name))
-    return addressx
+    return address
 
 def create_address_add_wallet(wallet):
     address = Address()

@@ -21,8 +21,11 @@ class Plugin():
         self._unmute_output()
         print('Unmuted output')
 
-os.environ['OUTPUT_NOT_CAPTURED'] = '1'
-path_to_test_demo_file = os.path.abspath('../test_demo.py')
-args = ['-s', '--color', 'yes', path_to_test_demo_file]
+def run_demo(test_file):
+    indy_plenum_path = os.environ['INDY_PLENUM_PATH']
+    path_test_file = os.path.join(indy_plenum_path, test_file)
 
-pytest.main(args, plugins=[Plugin()])
+    os.environ['OUTPUT_NOT_CAPTURED'] = '1'
+    args = ['-s', '--color', 'yes', path_test_file]
+
+    pytest.main(args, plugins=[Plugin()])
