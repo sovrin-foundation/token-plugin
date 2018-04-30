@@ -2,6 +2,7 @@ from plenum.common.constants import NYM
 from plenum.server.plugin.fees.src.constants import FEES
 from plenum.server.plugin.fees.src.wallet import FeeSupportedWallet
 from plenum.server.plugin.token.src.constants import OUTPUTS, TOKEN_LEDGER_ID
+from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.server.plugin.token.src.wallet import Address
 from plenum.server.plugin.fees.test.demo_helper import methods
 from plenum.server.plugin.token.test.demo.demo_helpers import demo_logger
@@ -103,10 +104,11 @@ step5_info = """
 """
 def create_and_send_nym_request(methods, client_wallet, client_address):
     nym_request = methods.create_nym_request(client_wallet, client_address)
-    nym_reply = methods.send_nym_request(nym_request)
-    [reply_address, reply_tokens] = nym_reply['result'][FEES][1][0]
+    nym_result = methods.send_nym_request(nym_request)['result']
+    [reply_address, reply_tokens] = nym_result[FEES][1][0]
     assert reply_address == client_address.address
     assert reply_tokens == MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
+    update_token_wallet_with_result(client_wallet, nym_result)
 
     demo_logger.log_header(step5_info)
     demo_logger.log_blue("Sent NYM request:")
@@ -117,10 +119,12 @@ step6_info = """
     Tokens charged for fee are no longer in the client wallet.
 """
 def check_fee_tokens_removed_from_wallet(methods, client_wallet, client_address):
-    # assert methods.get_utxo_at_wallet_address(client_wallet, client_address) == [(2, MINT_TOKEN_AMOUNT - TXN_FEES[NYM])]
-    demo_logger.log_header(step6_info)
-    demo_logger.log_blue("Not implemented.")
+    utxo_at_client_wallet_address = methods.get_utxo_at_wallet_address(client_wallet, client_address)
+    assert utxo_at_client_wallet_address == [(2, MINT_TOKEN_AMOUNT - TXN_FEES[NYM])]
 
+    demo_logger.log_header(step6_info)
+    demo_logger.log_blue("Client wallet contained utxo at address {}:".format(client_address.address))
+    demo_logger.log_yellow(utxo_at_client_wallet_address)
 
 
 step7_info = """
