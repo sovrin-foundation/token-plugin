@@ -10,6 +10,7 @@ from plenum.server.plugin.fees.src.constants import FEES, REF
 from plenum.server.plugin.fees.test.helper import gen_nym_req_for_fees
 from plenum.server.plugin.token import TOKEN_LEDGER_ID
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS
+from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.test.helper import sdk_send_and_check
 from plenum.server.plugin.fees.test.test_set_get_fees import fees_set
 
@@ -120,8 +121,13 @@ def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
     req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
                                                  address=user1_address)
+    utxos_before = next(iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
     res = sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                              sdk_pool_handle, 5)[0][1]['result']
+    update_token_wallet_with_result(user1_token_wallet, res)
+    utxos_after = next(
+        iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
+    assert utxos_after != utxos_before
     return res
 
 
