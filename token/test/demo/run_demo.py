@@ -6,8 +6,7 @@ from plenum.server.plugin.token.test.demo import mute
 from plenum.server.plugin.token.test.demo import demo_logger
 
 
-
-class Plugin():
+class Plugin:
 
     def _mute_output(self):
         unmuters = (mute.mute_loggers(protected=['demo_logger']), mute.mute_print())
@@ -22,6 +21,7 @@ class Plugin():
     def pytest_unconfigure(self):
         self._unmute_output()
         print('Unmuted output')
+
 
 def run_demo(test_file):
     env_indy_path = 'INDY_PLENUM_PATH'

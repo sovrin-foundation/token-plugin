@@ -2,23 +2,21 @@ import pytest
 
 import json
 from plenum.common.constants import NYM
-from plenum.server.plugin.fees.src.constants import FEES
-from plenum.server.plugin.fees.src.wallet import FeeSupportedWallet
 from plenum.server.plugin.fees.test.helper import send_set_fees, get_fees_from_ledger, gen_nym_req_for_fees
 from plenum.server.plugin.token.src.util import update_token_wallet_with_result
-from plenum.server.plugin.token.src.wallet import Address
 from plenum.server.plugin.token.test.helper import send_public_mint, send_get_utxo
 from plenum.test.helper import sdk_send_and_check
 
 
 @pytest.fixture()
-def methods(looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
-    return DemoMethods(looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward)
+def methods(txnPoolNodeSet, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
+    return DemoMethods(txnPoolNodeSet, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward)
 
 
 class DemoMethods:
 
-    def __init__(self, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
+    def __init__(self, nodes, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
+        self.nodes = nodes
         self.looper = looper
         self.trustee_wallets = trustee_wallets
         self.fees = fees
@@ -61,3 +59,13 @@ class DemoMethods:
             self.sdk_pool_handle, 10)[0]
 
         return reply
+
+    def get_last_ledger_transaction_on_all_nodes(self, ledger_id):
+        transactions = []
+        for node in self.nodes:
+            ledger = node.getLedger(ledger_id)
+            last_sequence_number = ledger.size
+            transactions.append(ledger.getBySeqNo(last_sequence_number))
+
+        return transactions
+
