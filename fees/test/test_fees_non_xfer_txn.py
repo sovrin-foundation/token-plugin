@@ -152,10 +152,10 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     """
     fees_req = fees_paid
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
     paying_utxo = fees_req[FEES][0][0][:2]
-    req = user1_token_wallet.add_fees_to_request(req, paying_utxo=paying_utxo,
-                                                 fee_amount=fee_amount)
+    fees = user1_token_wallet.get_fees([paying_utxo, ],
+                                       fees_req[FEES][1])
+    req.__setattr__(f.FEES.nm, fees)
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
