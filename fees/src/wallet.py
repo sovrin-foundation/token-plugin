@@ -31,8 +31,6 @@ class FeeSupportedWallet(TokenWallet):
         fees = self.get_fees([[address, seq_no], ],
                              [[change_address, change_val], ])
         req.__setattr__(f.FEES.nm, fees)
-        # for addr, sig in sigs.items():
-        #     req.add_signature(addr, sig)
         return req
 
     def get_fees(self, inputs, outputs):
@@ -42,3 +40,11 @@ class FeeSupportedWallet(TokenWallet):
             sig = self.addresses[addr].signer.sign(to_sign)
             fees[0].append([addr, seq_no, sig])
         return fees
+
+    def on_reply_from_network(self, observer_name, req_id, frm, result,
+                              num_replies):
+        if FEES in result:
+            self._update_inputs(result[FEES][0])
+            self._update_outputs(result[FEES][1], result[FEES][2])
+        super().on_reply_from_network(observer_name, req_id, frm, result,
+                                      num_replies)
