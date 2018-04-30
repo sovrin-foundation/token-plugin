@@ -1,8 +1,10 @@
-import os
-
 import pytest
 
+import os
+import logging
 from plenum.server.plugin.token.test.demo import mute
+from plenum.server.plugin.token.test.demo import demo_logger
+
 
 
 class Plugin():
@@ -22,7 +24,14 @@ class Plugin():
         print('Unmuted output')
 
 def run_demo(test_file):
-    indy_plenum_path = os.environ['INDY_PLENUM_PATH']
+    env_indy_path = 'INDY_PLENUM_PATH'
+
+    try:
+        indy_plenum_path = os.environ[env_indy_path]
+    except KeyError:
+        dl = demo_logger.DemoLogger()
+        dl.log("{} environment variable needs to be set".format(env_indy_path), log_level=logging.ERROR)
+
     path_test_file = os.path.join(indy_plenum_path, test_file)
 
     os.environ['OUTPUT_NOT_CAPTURED'] = '1'
