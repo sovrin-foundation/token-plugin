@@ -1,11 +1,12 @@
-import os
-
 import pytest
 
+import os
+import logging
 from plenum.server.plugin.token.test.demo import mute
+from plenum.server.plugin.token.test.demo import demo_logger
 
 
-class Plugin():
+class Plugin:
 
     def _mute_output(self):
         unmuters = (mute.mute_loggers(protected=['demo_logger']), mute.mute_print())
@@ -21,8 +22,19 @@ class Plugin():
         self._unmute_output()
         print('Unmuted output')
 
-os.environ['OUTPUT_NOT_CAPTURED'] = '1'
-path_to_test_demo_file = os.path.abspath('../test_demo.py')
-args = ['-s', '--color', 'yes', path_to_test_demo_file]
 
-pytest.main(args, plugins=[Plugin()])
+def run_demo(test_file):
+    env_indy_path = 'INDY_PLENUM_PATH'
+
+    try:
+        indy_plenum_path = os.environ[env_indy_path]
+    except KeyError:
+        dl = demo_logger.DemoLogger()
+        dl.log("{} environment variable needs to be set".format(env_indy_path), log_level=logging.ERROR)
+
+    path_test_file = os.path.join(indy_plenum_path, test_file)
+
+    os.environ['OUTPUT_NOT_CAPTURED'] = '1'
+    args = ['-s', '--color', 'yes', path_test_file]
+
+    pytest.main(args, plugins=[Plugin()])
