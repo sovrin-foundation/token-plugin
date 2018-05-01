@@ -1,4 +1,5 @@
 from plenum.common.constants import NYM
+from plenum.common.types import f
 from plenum.server.plugin.fees.src.constants import FEES
 from plenum.server.plugin.fees.src.wallet import FeeSupportedWallet
 from plenum.server.plugin.token.src.constants import OUTPUTS, TOKEN_LEDGER_ID
@@ -35,7 +36,7 @@ The DemoMethods instance is passed into the test functions as the parameter "met
 
 '''
 
-MINT_TOKEN_AMOUNT = 10
+MINT_TOKEN_AMOUNT = 100
 
 TXN_FEES = {
     NYM: 5
@@ -90,7 +91,7 @@ def mint_tokens_to_client(methods, client_wallet, client_address):
     assert reply_address == client_address.address
     assert reply_tokens == MINT_TOKEN_AMOUNT
     utxo_at_client_wallet_address = methods.get_utxo_at_wallet_address(client_wallet, client_address)
-    assert utxo_at_client_wallet_address == [(1, 10)]
+    assert utxo_at_client_wallet_address == [(1, MINT_TOKEN_AMOUNT)]
 
     demo_logger.log_header(step4_info)
     demo_logger.log_blue("Minted {} tokens to Client".format(MINT_TOKEN_AMOUNT))
@@ -133,8 +134,9 @@ step7_info = """
 def check_fee_request_on_ledger(methods, client_address):
     transactions = methods.get_last_ledger_transaction_on_all_nodes(TOKEN_LEDGER_ID)
     for fees in transactions:
-        assert fees[OUTPUTS] == [[client_address.address, TXN_FEES[NYM]]]
+        assert fees[OUTPUTS] == [[client_address.address, MINT_TOKEN_AMOUNT - TXN_FEES[NYM]]]
         assert fees[FEES] == TXN_FEES[NYM]
+        assert fees[f.SEQ_NO.nm] == 2
 
     demo_logger.log_header(step7_info)
     demo_logger.log_blue("Transaction found on Token ledger:")
