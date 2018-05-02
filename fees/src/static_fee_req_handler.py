@@ -1,9 +1,8 @@
 from common.serializers.json_serializer import JsonSerializer
-from common.serializers.serialization import serialize_msg_for_signing
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest, InsufficientCorrectSignatures
+    InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
@@ -52,9 +51,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         # paying fees
         self.uncommitted_state_roots_for_batches = []
 
-    def get_txn_fees(self, request) -> int:
-        return self.fees.get(request.operation[TXN_TYPE], 0)
-
     @staticmethod
     def has_fees(request) -> bool:
         return hasattr(request, FEES) and isinstance(request.fees, list) \
@@ -69,51 +65,17 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_ref_for_txn_fees(ledger_id, seq_no):
         return '{}:{}'.format(ledger_id, seq_no)
 
+    def get_txn_fees(self, request) -> int:
+        return self.fees.get(request.operation[TXN_TYPE], 0)
+
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
         if required_fees:
-            error = None
-            operation = request.operation
-            if operation[TXN_TYPE] == XFER_PUBLIC:
+            if request.operation[TXN_TYPE] == XFER_PUBLIC:
                 # Fees in XFER_PUBLIC is part of operation[INPUTS]
-                try:
-                    sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
-                        self.utxo_cache,
-                        operation[INPUTS],
-                        operation[OUTPUTS],
-                        is_committed=False)
-                except Exception as ex:
-                    error = 'Exception {} while processing inputs/outputs'.format(
-                        ex)
-                else:
-                    required_sum_outputs = sum_outputs + required_fees
-                    if sum_inputs < required_sum_outputs:
-                        error = 'Insufficient funds, sum of inputs is {} ' \
-                                'but required is {} (sum of outputs: {}, ' \
-                                'fees: {})'.format(sum_inputs,
-                                                   required_sum_outputs,
-                                                   sum_outputs, required_fees)
-                    else:
-                        self.deducted_fees_xfer[request.key] = sum_inputs - sum_outputs
+                self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
             else:
-                if not self.has_fees(request):
-                    error = 'fees not present or improperly formed'
-                if not error:
-                    sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                            request.fees[0],
-                                                            is_committed=False)
-                    change_amount = sum([a for _, a in
-                                         self.get_change_for_fees(request)])
-                    # TODO: Reconsider, this forces the sender to pay the exact
-                    # amount of fees, not more, not less
-                    if sum_inputs != (change_amount + required_fees):
-                        error = 'Insufficient fees, sum of inputs is {} and sum ' \
-                                'of change and fees is {}'.format(
-                                 sum_inputs, change_amount+required_fees)
-            if error:
-                raise UnauthorizedClientRequest(request.identifier,
-                                                request.reqId,
-                                                error)
+                self._get_deducted_fees_non_xfer(request, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -138,7 +100,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                     TokenReqHandler.transform_txn_for_ledger(txn)])
                 self.updateState(txnsWithSeqNo(start, end, [txn]))
                 self.fee_txns_in_current_batch += 1
-
                 self.deducted_fees[seq_no] = fees
                 return txn
 
@@ -186,45 +147,12 @@ class StaticFeesReqHandler(FeeReqHandler):
         for txn in txns:
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
 
-    def _update_state_with_single_txn(self, txn, is_committed=False):
-        if txn.get(TXN_TYPE) == SET_FEES:
-            existing_fees = self._get_fees(is_committed=is_committed)
-            existing_fees.update(txn[FEES])
-            val = self.state_serializer.serialize(existing_fees)
-            self.state.set(self.fees_state_key, val)
-            self.fees = existing_fees
-        else:
-            for addr, seq_no, _ in txn[INPUTS]:
-                TokenReqHandler.spend_input(state=self.token_state,
-                                            utxo_cache=self.utxo_cache,
-                                            address=addr, seq_no=seq_no,
-                                            is_committed=is_committed)
-            for addr, amount in txn[OUTPUTS]:
-                TokenReqHandler.add_new_output(state=self.token_state,
-                                               utxo_cache=self.utxo_cache,
-                                               output=Output(
-                                                   addr,
-                                                   txn[F.seqNo.name],
-                                                   amount),
-                                               is_committed=is_committed)
-
     def get_fees(self, request: Request):
         fees = self._get_fees(is_committed=True)
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEES: fees}
         result.update(request.operation)
         return result
-
-    def _get_fees(self, is_committed=False):
-        fees = {}
-        try:
-            serz = self.state.get(self.fees_state_key,
-                                  isCommitted=is_committed)
-            if serz:
-                fees = self.state_serializer.deserialize(serz)
-        except KeyError:
-            pass
-        return fees
 
     def post_batch_created(self, ledger_id, state_root):
         if self.fee_txns_in_current_batch > 0:
@@ -256,3 +184,72 @@ class StaticFeesReqHandler(FeeReqHandler):
                 if txn[F.seqNo.name] in committed_seq_nos_with_fees:
                     txn[FEES].append(r[i][F.seqNo.name])
                     i += 1
+
+    def _get_deducted_fees_xfer(self, request, required_fees):
+        try:
+            sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
+                self.utxo_cache,
+                request.operation[INPUTS],
+                request.operation[OUTPUTS],
+                is_committed=False)
+        except Exception as ex:
+            error = 'Exception {} while processing inputs/outputs'.format(ex)
+        else:
+            required_sum_outputs = sum_outputs + required_fees
+            if sum_inputs < required_sum_outputs:
+                error = 'Insufficient funds, sum of inputs is {} ' \
+                    'but required is {} (sum of outputs: {}, ' \
+                    'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+            else:
+                deducted_fees = sum_inputs - sum_outputs
+                return deducted_fees
+
+        if error:
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+
+    def _get_deducted_fees_non_xfer(self, request, required_fees):
+        error = None
+        if not self.has_fees(request):
+            error = 'fees not preset or improperly formed'
+        if not error:
+            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
+            change_amount = sum([a for _, a in self.get_change_for_fees(request)])
+            # TODO: Reconsider, this forces the sender to pay the exact amount of fees, not more, not less
+            if sum_inputs != (change_amount + required_fees):
+                error = 'Insufficient fees, sum of inputs is {} and sum ' \
+                    'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
+
+        if error:
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+
+    def _get_fees(self, is_committed=False):
+        fees = {}
+        try:
+            serz = self.state.get(self.fees_state_key, isCommitted=is_committed)
+            if serz:
+                fees = self.state_serializer.deserialize(serz)
+        except KeyError:
+            pass
+        return fees
+
+    def _update_state_with_single_txn(self, txn, is_committed=False):
+        if txn.get(TXN_TYPE) == SET_FEES:
+            existing_fees = self._get_fees(is_committed=is_committed)
+            existing_fees.update(txn[FEES])
+            val = self.state_serializer.serialize(existing_fees)
+            self.state.set(self.fees_state_key, val)
+            self.fees = existing_fees
+        else:
+            for addr, seq_no, _ in txn[INPUTS]:
+                TokenReqHandler.spend_input(state=self.token_state,
+                                            utxo_cache=self.utxo_cache,
+                                            address=addr, seq_no=seq_no,
+                                            is_committed=is_committed)
+            for addr, amount in txn[OUTPUTS]:
+                TokenReqHandler.add_new_output(state=self.token_state,
+                                               utxo_cache=self.utxo_cache,
+                                               output=Output(
+                                                   addr,
+                                                   txn[F.seqNo.name],
+                                                   amount),
+                                               is_committed=is_committed)
