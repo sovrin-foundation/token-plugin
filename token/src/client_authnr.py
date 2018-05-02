@@ -95,3 +95,7 @@ class TokenAuthNr(CoreAuthNr):
         new_data[OPERATION][INPUTS] = [i[:2] for i in new_data[OPERATION][INPUTS]
                                        if i[0] == identifier]
         return new_data
+
+    @staticmethod
+    def get_sigs(operation):
+        return [(a, sig) for a, _, sig in operation[INPUTS]]
