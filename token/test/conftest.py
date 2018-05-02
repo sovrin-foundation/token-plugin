@@ -109,3 +109,9 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
         res = send_get_utxo(looper, a, sdk_wallet_client, sdk_pool_handle)
         update_token_wallet_with_result(w, res)
     return seq_no
+
+@pytest.fixture
+def node(txnPoolNodeSet):
+    a, b, c, d = txnPoolNodeSet
+    nodes = [a, b, c, d]
+    return nodes

@@ -41,7 +41,6 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
 
-
 @pytest.fixture
 def setup(SF_address, seller_address):
     global VALID_ADDR_1, VALID_ADDR_2
