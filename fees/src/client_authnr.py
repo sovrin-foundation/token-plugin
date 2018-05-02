@@ -10,6 +10,7 @@ from plenum.server.client_authn import CoreAuthNr
 from plenum.server.plugin.fees.src import AcceptableWriteTypes, AcceptableQueryTypes
 from plenum.server.plugin.fees.src.constants import SET_FEES, FEES
 from plenum.server.plugin.token.src.client_authnr import AddressSigVerifier
+from plenum.server.plugin.token.src.util import address_to_verkey
 
 
 class FeesAuthNr(CoreAuthNr):
@@ -51,7 +52,11 @@ class FeesAuthNr(CoreAuthNr):
 
             to_ser = [[addr, seq_no], outputs]
             serz = serialize_msg_for_signing(to_ser)
-            verifier = AddressSigVerifier(verkey=addr)
+            try:
+                verkey = address_to_verkey(addr)
+            except ValueError:
+                continue
+            verifier = AddressSigVerifier(verkey=verkey)
             if verifier.verify(sig, serz):
                 correct_sigs_from.add(addr)
         if correct_sigs_from != required_sigs_from:

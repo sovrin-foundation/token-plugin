@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import base58
 import pytest
+from plenum.common.signer_simple import SimpleSigner
 
 from plenum.common.constants import TXN_TYPE
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
@@ -19,13 +20,13 @@ from plenum.server.plugin.token.src.types import Output
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESSES, TOKEN_LEDGER_ID
 
-VALID_ADDR_1 = '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
-VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
-VALID_ADDR_3 = '2LWr7i8bsnE3BgX7MNUNEBpiJYjn7uEA1HNyMSJyy59z'
-VALID_ADDR_4 = 'Dy7AxfksXZELTSxF1sUnEocJAJp98E6taMZ9hhLeDtZH'
-VALID_ADDR_5 = 'CDe3vTMgns7nXGFwbGkrz24m2VNghmBScdF3QRstF62g'
-VALID_ADDR_6 = '62tw4B64yEu7HmJyjMgZ2tE5wgyTtsXTpB7n8VAtfmjL'
-VALID_ADDR_7 = 'D2neNhD3mTgN28HKH8qmLBYnaadb9F2GtL5nAzQpkpR6'
+from plenum.server.plugin.token.src.util import verkey_to_address
+
+VALID_ADDR_1, VALID_ADDR_2 = (None, None)
+
+(VALID_ADDR_3, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, VALID_ADDR_7) = \
+    (verkey_to_address(SimpleSigner().verkey) for _ in range(5))
+
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
@@ -39,6 +40,19 @@ SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
                   'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
               'CA4bVFDU4GLbX8xZju811o':
                   '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
+
+@pytest.fixture
+def setup(SF_address, seller_address):
+    global VALID_ADDR_1, VALID_ADDR_2
+    VALID_ADDR_1, VALID_ADDR_2 = seller_address, SF_address
+
+
+@pytest.fixture
+def node(setup, txnPoolNodeSet):
+    a, b, c, d = txnPoolNodeSet
+    nodes = [a, b, c, d]
+    return nodes
+
 
 @pytest.fixture
 def token_handler_a(node):
@@ -309,18 +323,22 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
                                                       OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
                                                       INPUTS: [[VALID_ADDR_1, 1, '']]}, None, SIGNATURES, 1)
     # apply transaction
-    token_handler_c.apply(request, CONS_TIME)
     state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     txn_root = node[2].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    token_handler_c.apply(request, CONS_TIME)
+    new_state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    new_txn_root = node[2].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     # add batch
-    token_handler_c.onBatchCreated(base58.b58decode(state_root.encode()))
+    token_handler_c.onBatchCreated(base58.b58decode(new_state_root.encode()))
     # commit batch
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 1, 40)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60)]
-    token_handler_c.commit(1, state_root, txn_root, None)
+    commit_ret_val = token_handler_c.commit(1, new_state_root, new_txn_root, None)
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_1, True) == [Output(VALID_ADDR_1, 2, 30)]
     assert token_handler_c.utxo_cache.get_unspent_outputs(VALID_ADDR_2, True) == [Output(VALID_ADDR_2, 1, 60),
-                                                                                  Output(VALID_ADDR_2, 2, 30)]
+                                                                                      Output(VALID_ADDR_2, 2, 30)]
+    assert new_state_root != state_root
+    assert new_txn_root != txn_root
 
 
 def test_token_req_handler_get_query_response_success(public_minting, token_handler_d):
@@ -356,7 +374,7 @@ def test_token_req_handler_get_all_utxo_success(public_minting, token_handler_d)
 
 def test_token_req_handler_create_state_key_success(token_handler_d):
     state_key = token_handler_d.create_state_key(VALID_ADDR_1, 40)
-    assert state_key == b'6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1:40'
+    assert state_key.decode() == '{}:40'.format(VALID_ADDR_1)
 
 
 # This test acts as a test for the static method of sum_inputs too

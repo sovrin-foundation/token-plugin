@@ -246,8 +246,13 @@ class StaticFeesReqHandler(FeeReqHandler):
         if len(committed_seq_nos_with_fees) > 0:
             state_root = self.uncommitted_state_roots_for_batches.pop(0)
             # Ignoring txn_root check
-            TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
-                                       self.token_state,
-                                       len(committed_seq_nos_with_fees),
-                                       state_root, None, pp_time,
-                                       ignore_txn_root_check=True)
+            r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
+                                           self.token_state,
+                                           len(committed_seq_nos_with_fees),
+                                           state_root, None, pp_time,
+                                           ignore_txn_root_check=True)
+            i = 0
+            for txn in committed_txns:
+                if txn[F.seqNo.name] in committed_seq_nos_with_fees:
+                    txn[FEES].append(r[i][F.seqNo.name])
+                    i += 1

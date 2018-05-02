@@ -29,4 +29,4 @@ def test_txn_with_0_fees_specified(tokens_distributed, looper, sdk_wallet_stewar
     req = user1_token_wallet.add_fees_to_request(req, fee_amount=0,
                                                  address=user1_address)
     res = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(req.__dict__)])
-    assert sdk_get_replies(looper, res)
+    assert sdk_get_replies(looper, res, timeout=20)
