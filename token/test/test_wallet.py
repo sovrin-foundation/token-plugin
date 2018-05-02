@@ -1,5 +1,7 @@
 import pytest
+from base58 import b58decode
 
+from plenum.server.plugin.token.src.messages.fields import PublicAddressField
 from plenum.server.plugin.token.src.wallet import TokenWallet, Address
 
 
@@ -17,11 +19,13 @@ def address1():
     address.add_utxo(2, 4000)
     return address
 
+
 @pytest.fixture()
 def address2():
     address = Address(b'Falcon00000000000000000000000000')
     address.add_utxo(3, 3001)
     return address
+
 
 @pytest.fixture()
 def test_wallet(address0, address1, address2):
@@ -30,6 +34,16 @@ def test_wallet(address0, address1, address2):
     wallet.add_new_address(address1)
     wallet.add_new_address(address2)
     return wallet
+
+
+def test_address_length(address0, address1, address2):
+    assert len(b58decode(address0.address.encode())) == PublicAddressField.length
+    assert len(b58decode(address1.address.encode())) == PublicAddressField.length
+    assert len(b58decode(address2.address.encode())) == PublicAddressField.length
+
+    assert len(b58decode(address0.verkey.encode())) == 32
+    assert len(b58decode(address1.verkey.encode())) == 32
+    assert len(b58decode(address2.verkey.encode())) == 32
 
 
 def test_address_create_with_seed():

@@ -2,10 +2,12 @@
 # Foundation and token seller platform. From then on, exchange will be
 # responsible for giving tokens to "users".
 import pytest
+from base58 import b58decode
 
 from plenum.common.constants import STEWARD
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
+from plenum.server.plugin.token.src.messages.fields import PublicAddressField
 from plenum.test.conftest import get_data_for_role
 from plenum.server.plugin.token.test.helper import send_public_mint, \
     do_public_minting, check_output_val_on_all_nodes
@@ -83,6 +85,10 @@ def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
     sf_master_gets = 60
     do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
                       sf_master_gets, SF_address, seller_address)
+
+    assert len(b58decode(seller_address)) == PublicAddressField.length
+    assert len(b58decode(SF_address)) == PublicAddressField.length
+
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, SF_address,
                                   sf_master_gets)
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,

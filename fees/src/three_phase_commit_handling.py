@@ -78,13 +78,19 @@ class ThreePhaseCommitHandler:
             fee_txn_count = self.fees_req_handler.fee_txns_in_current_batch
             if fee_txn_count > 0:
                 if not self._has_plugin_fields(pre_prepare):
-                    raise Exception('Expected {} in PRE-PREPARE', f.PLUGIN_FIELDS.nm)
+                    raise Exception('Expected {} in PRE-PREPARE'.format(f.PLUGIN_FIELDS.nm))
+
                 fees = pre_prepare.plugin_fields.get(FEES)
                 if not fees:
-                    raise Exception('Expected {} in PRE-PREPARE', FEES)
+                    raise Exception('Expected {} in PRE-PREPARE'.format(FEES))
+
                 if fees.get(FEE_TXNS_IN_BATCH) != fee_txn_count:
                     raise Exception('{} mismatch in PRE-PREPARE '
-                                    'expected {}, found {}'.format(FEE_TXNS_IN_BATCH, fee_txn_count, fees.get(FEE_TXNS_IN_BATCH)))
+                                    'expected {}, found {}'.format(
+                                                                FEE_TXNS_IN_BATCH,
+                                                                fee_txn_count,
+                                                                fees.get(FEE_TXNS_IN_BATCH)))
+
                 recvd_state_root = self.master_replica._state_root_serializer.deserialize(
                         fees.get(f.STATE_ROOT.nm, '').encode())
                 if recvd_state_root != self.fees_req_handler.token_state.headHash:
@@ -97,7 +103,10 @@ class ThreePhaseCommitHandler:
                 recvd_txn_root = self.token_ledger.strToHash(fees.get(f.TXN_ROOT.nm, ''))
                 if recvd_txn_root != self.fees_req_handler.token_ledger.uncommittedRootHash:
                     raise Exception('{} mismatch in PRE-PREPARE '
-                                    'expected {}, found {}'.format(f.TXN_ROOT.nm, self.fees_req_handler.token_ledger.uncommittedRootHash, recvd_txn_root))
+                                    'expected {}, found {}'.format(
+                                                                f.TXN_ROOT.nm,
+                                                                self.fees_req_handler.token_ledger.uncommittedRootHash,
+                                                                recvd_txn_root))
 
     def check_recvd_prepare(self, prepare, pre_prepare):
         # TODO:

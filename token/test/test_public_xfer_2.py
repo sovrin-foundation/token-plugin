@@ -51,6 +51,24 @@ def user3_address(user3_token_wallet):
     return next(iter(user3_token_wallet.addresses.keys()))
 
 
+@pytest.fixture(scope='module')     # noqa
+def valid_xfer_txn_done(public_minting, looper,
+                        nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
+                        seller_token_wallet, seller_address, user1_address):
+    global seller_gets
+    seq_no = public_minting[F.seqNo.name]
+    user1_gets = 10
+    seller_remaining = seller_gets - user1_gets
+    inputs = [[seller_token_wallet, seller_address, seq_no]]
+    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
+    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
+    update_token_wallet_with_result(seller_token_wallet, res)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_remaining)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
+    seller_gets = seller_remaining
+    return res
+
+
 def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
                                      sdk_pool_handle, seller_token_wallet,
                                      seller_address, user1_address):
@@ -124,24 +142,6 @@ def test_seller_xfer_invalid_inputs(public_minting, looper, # noqa
     outputs = [[user1_address, 10], [seller_address, seller_remaining]]
     with pytest.raises(RequestNackedException):
         send_xfer(looper, inputs, outputs, sdk_pool_handle)
-
-
-@pytest.fixture(scope='module')     # noqa
-def valid_xfer_txn_done(public_minting, looper,
-                        nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
-                        seller_token_wallet, seller_address, user1_address):
-    global seller_gets
-    seq_no = public_minting[F.seqNo.name]
-    user1_gets = 10
-    seller_remaining = seller_gets - user1_gets
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
-    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
-    update_token_wallet_with_result(seller_token_wallet, res)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_remaining)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
-    seller_gets = seller_remaining
-    return res
 
 
 def test_seller_xfer_valid(valid_xfer_txn_done):
