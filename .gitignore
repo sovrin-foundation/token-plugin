@@ -4,7 +4,101 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-# IDE settings
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+bin/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+env/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+*.eggs
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+pip-selfcheck.json
+
+# testing / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# others
+log/
+dist/*/*
+
+# PyCharm settings
 .idea/
-*/.idea/
 .vscode/
+
+# Dolphin file manager (KDE)
+.directory
+
+# Mac directory attributes
+*.DS_Store
+
+# temporary files
+*~
+
+# virtual environment
+include/
+
+# cli command history file
+.*-cli-history
+
+# generated doc files
+docs/source/api_docs/
+
+# hidden files
+.*
+
+# log files
+*.log
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Ipython Notebook
+.ipynb_checkpoints
+
+# Hidden files
+.*
