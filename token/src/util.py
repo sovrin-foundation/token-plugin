@@ -1,5 +1,7 @@
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
 
+from plenum.common.exceptions import UnknownIdentifier
+
 
 def register_token_wallet_with_client(client, token_wallet):
     client.registerObserver(token_wallet.on_reply_from_network)
@@ -15,7 +17,7 @@ def address_to_verkey(address):
     try:
         vk_bytes = b58decode_check(address)
     except ValueError:
-        raise ValueError('{} is not a valid base58check value'.format(address))
+        raise UnknownIdentifier('{} is not a valid base58check value'.format(address))
     return b58encode(vk_bytes)
 
 
