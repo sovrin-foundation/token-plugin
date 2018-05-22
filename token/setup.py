@@ -1,5 +1,6 @@
 import os
 import sys
+import plenum.server.plugin.token.metadata_helper as helper
 
 from setuptools import setup, find_packages
 
@@ -26,24 +27,26 @@ if SETUP_DIRNAME != '':
 
 SETUP_DIRNAME = os.path.abspath(SETUP_DIRNAME)
 
-METADATA = os.path.join(SETUP_DIRNAME, 'plugin', '__metadata__.py')
-# Load the metadata using exec() so we don't trigger an import of ioflo.__init__
-exec(compile(open(METADATA).read(), METADATA, 'exec'))
+METADATA = os.path.join(SETUP_DIRNAME, 'metadata.json')
 
 tests_require = ['pytest', 'pytest-xdist', 'python3-indy']
 
+with open(METADATA) as d:
+    md = helper.get_metadata(d.read(), ["version", "author", "license"])
+
 setup(
+
     name='sovrin-plugin',
-    version=__version__,
+    version= md["version"],
     # TODO: Change the field values below
     description='Plenum Byzantine Fault Tolerant Protocol',
     long_description='Plenum Byzantine Fault Tolerant Protocol',
     url='https://github.com/hyperledger/indy-plenum',
     download_url='https://github.com/hyperledger/indy-plenum/tarball/{}'.
-        format(__version__),
-    author=__author__,
+        format( md["version"]),
+    author= md["author"],
     author_email='hyperledger-indy@lists.hyperledger.org',
-    license=__license__,
+    license= md["license"],
     keywords='Byzantine Fault Tolerant Plenum',
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']) + [
         'data', ],
@@ -60,3 +63,4 @@ setup(
     tests_require=tests_require,
     scripts=[]
 )
+
