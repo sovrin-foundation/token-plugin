@@ -188,7 +188,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
-                               txnCount, stateRoot, txnRoot, pptime)
+                               txnCount, stateRoot, txnRoot, pptime, self.ts_store)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -250,10 +250,10 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
-                   ppTime, ignore_txn_root_check=False):
-        r = RequestHandler._commit(ledger, state, txnCount, stateRoot, txnRoot,
-                                   ppTime,
-                                   ignore_txn_root_check=ignore_txn_root_check)
+                   ppTime, ts_store=None, ignore_txn_root_check=False):
+        r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
+                                         txnRoot, ppTime, ts_store=ts_store,
+                                         ignore_txn_root_check=ignore_txn_root_check)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
         return r
 
