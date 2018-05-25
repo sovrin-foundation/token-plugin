@@ -3,7 +3,7 @@ from plenum.server.plugin.token.src.transactions import TokenTransactions
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'
 EXTRA = 'extra'
-ADDRESSES = 'addresses'
+ADDRESS = 'address'
 
 # TODO: Rename to `PAYMENT_LEDGER_ID`
 TOKEN_LEDGER_ID = 1001

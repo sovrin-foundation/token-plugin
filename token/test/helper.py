@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import TXN_TYPE
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
-    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESSES
+    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
 from plenum.server.plugin.token.src.util import address_to_verkey
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
@@ -68,23 +68,20 @@ def check_output_val_on_all_nodes(nodes, address, amount):
                                    address, is_committed=True)]
 
 
-def get_utxo_request(addresses, sender_did):
+def get_utxo_request(address, sender_did):
     op = {
         TXN_TYPE: GET_UTXO,
-        ADDRESSES: addresses,
+        ADDRESS: address,
     }
     request = sdk_gen_request(op, identifier=sender_did)
     return request
 
 
-def send_get_utxo(looper, addresses, sdk_wallet_client, sdk_pool_handle):
-    if isinstance(addresses, str):
-        addresses = [addresses]
-
+def send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle):
     _, sender_did = sdk_wallet_client
-    request = get_utxo_request(addresses, sender_did)
+    request = get_utxo_request(address, sender_did)
     req_resp_json = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle,
-                                           sdk_wallet_client, request)
+                                                sdk_wallet_client, request)
     _, reply = sdk_get_and_check_replies(looper, [req_resp_json, ])[0]
     return reply['result']
 
