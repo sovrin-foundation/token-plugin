@@ -19,7 +19,7 @@ from plenum.server.plugin.token.src.constants import INPUTS, GET_UTXO, OUTPUTS, 
 class Address:
     def __init__(self, seed=None):
         self.signer = SimpleSigner(seed=seed)
-        self.address = base58.b58encode_check(self.signer.naclSigner.verraw)
+        self.address = base58.b58encode_check(self.signer.naclSigner.verraw).decode()
         self.outputs = [{}, {}]  # Unspent and Spent
 
     def is_unspent(self, seq_no):

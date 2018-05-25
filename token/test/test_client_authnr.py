@@ -1,7 +1,6 @@
 import pytest
 import mock
 
-from build.lib.plenum.test.plugin.token.helper import xfer_request, public_mint_request
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
     CouldNotAuthenticate
@@ -10,9 +9,12 @@ from plenum.server.plugin.token.src.wallet import TokenWallet
 from plenum.server.plugin.token.src.client_authnr import TokenAuthNr, AddressSigVerifier
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS, EXTRA
 from plenum.common.types import f, OPERATION
+from plenum.server.plugin.token.test.helper import public_mint_request, \
+    xfer_request
 
 
 # -------------------------Class fixtures-------------------------------------------------------------------------------
+
 
 @pytest.fixture
 def node(txnPoolNodeSet):

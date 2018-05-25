@@ -33,6 +33,6 @@ def update_node_obj(node):
 
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
                                         node.states[DOMAIN_LEDGER_ID])
-    node.register_req_handler(TOKEN_LEDGER_ID, token_req_handler)
+    node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
 
     return node

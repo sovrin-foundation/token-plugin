@@ -1,6 +1,7 @@
 from typing import List, Iterable
 
 import base58
+from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE
@@ -22,7 +23,7 @@ from plenum.server.req_handler import RequestHandler
 
 
 # TODO: Rename to `PaymentReqHandler`
-class TokenReqHandler(RequestHandler):
+class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
 
