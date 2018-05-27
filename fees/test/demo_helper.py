@@ -15,7 +15,8 @@ def methods(txnPoolNodeSet, looper, trustee_wallets, fees, sdk_pool_handle, sdk_
 
 class DemoMethods:
 
-    def __init__(self, nodes, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
+    def __init__(self, nodes, looper, trustee_wallets, fees, sdk_pool_handle,
+                 sdk_wallet_client, sdk_wallet_steward):
         self.nodes = nodes
         self.looper = looper
         self.trustee_wallets = trustee_wallets
@@ -26,22 +27,26 @@ class DemoMethods:
 
     def mint_tokens(self, address, tokens):
         outputs = [[address, tokens]]
-        (_request, reply) = send_public_mint(self.looper, self.trustee_wallets, outputs, self.sdk_pool_handle)[0]
+        (_request, reply) = send_public_mint(self.looper, self.trustee_wallets,
+                                             outputs, self.sdk_pool_handle)[0]
         return reply
 
     def set_fees(self, fees):
-        (_request, reply) = send_set_fees(self.looper, self.trustee_wallets, fees, self.sdk_pool_handle)[0]
+        (_request, reply) = send_set_fees(self.looper, self.trustee_wallets,
+                                          fees, self.sdk_pool_handle)[0]
         return reply
 
     def get_fees(self):
-        resp = get_fees_from_ledger(self.looper, self.sdk_wallet_client, self.sdk_pool_handle)
+        resp = get_fees_from_ledger(self.looper, self.sdk_wallet_client,
+                                    self.sdk_pool_handle)
         return resp
 
     def update_wallet(self, wallet):
         wallet_addresses = list(wallet.addresses.keys())
         for addr in wallet_addresses:
             utxo_resp = send_get_utxo(self.looper, addr,
-                                      self.sdk_wallet_client, self.sdk_pool_handle)
+                                      self.sdk_wallet_client,
+                                      self.sdk_pool_handle)
             update_token_wallet_with_result(wallet, utxo_resp)
 
     def get_utxo_at_wallet_address(self, wallet, address):
