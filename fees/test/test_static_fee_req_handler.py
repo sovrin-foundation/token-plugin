@@ -7,7 +7,7 @@ from plenum.common.request import Request
 from plenum.common.constants import TXN_TYPE
 from plenum.server.plugin.fees.src.constants import SET_FEES, GET_FEES, FEES
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESSES, TOKEN_LEDGER_ID
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientRequest
 
 

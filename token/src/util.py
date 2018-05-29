@@ -18,10 +18,10 @@ def address_to_verkey(address):
         vk_bytes = b58decode_check(address)
     except ValueError:
         raise UnknownIdentifier('{} is not a valid base58check value'.format(address))
-    return b58encode(vk_bytes)
+    return b58encode(vk_bytes).decode()
 
 
 def verkey_to_address(verkey):
     if isinstance(verkey, str):
         verkey = verkey.encode()
-    return b58encode_check(b58decode(verkey))
+    return b58encode_check(b58decode(verkey)).decode()

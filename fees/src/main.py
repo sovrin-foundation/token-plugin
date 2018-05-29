@@ -30,7 +30,7 @@ def update_node_obj(node):
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID))
     node.clientAuthNr.register_authenticator(fees_authnr)
-    node.register_req_handler(CONFIG_LEDGER_ID, fees_req_handler)
+    node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
     node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
     node.register_hook(NodeHooks.POST_REQUEST_APPLICATION, fees_req_handler.deduct_fees)

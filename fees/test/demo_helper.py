@@ -39,8 +39,10 @@ class DemoMethods:
 
     def update_wallet(self, wallet):
         wallet_addresses = list(wallet.addresses.keys())
-        utxo_resp = send_get_utxo(self.looper, wallet_addresses, self.sdk_wallet_client, self.sdk_pool_handle)
-        update_token_wallet_with_result(wallet, utxo_resp)
+        for addr in wallet_addresses:
+            utxo_resp = send_get_utxo(self.looper, addr,
+                                      self.sdk_wallet_client, self.sdk_pool_handle)
+            update_token_wallet_with_result(wallet, utxo_resp)
 
     def get_utxo_at_wallet_address(self, wallet, address):
         self.update_wallet(wallet)
@@ -49,7 +51,8 @@ class DemoMethods:
     def create_nym_request(self, wallet, fees_address):
         nym_request = gen_nym_req_for_fees(self.looper, self.sdk_wallet_steward)
         fees = self.get_fees()
-        return wallet.add_fees_to_request(nym_request, fee_amount=fees[NYM], address=fees_address.address)
+        return wallet.add_fees_to_request(nym_request, fee_amount=fees[NYM],
+                                          address=fees_address.address)
 
     def send_nym_request(self, nym_request):
         (_request, reply) = sdk_send_and_check(

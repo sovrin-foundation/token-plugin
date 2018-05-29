@@ -18,7 +18,7 @@ from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler
 # TEST CONSTANTS
 from plenum.server.plugin.token.src.types import Output
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESSES, TOKEN_LEDGER_ID
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
 from plenum.server.plugin.token.src.util import verkey_to_address
 
@@ -113,7 +113,7 @@ def test_token_req_handler_XFER_PUBLIC_validate_missing_input(token_handler_a):
         token_handler_a._XFER_PUBLIC_validate(request)
 
 
-def test_token_req_handler_GET_UTXO_validate_missing_addresses(token_handler_a):
+def test_token_req_handler_GET_UTXO_validate_missing_address(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO},
                       None, SIGNATURES, 1)
     with pytest.raises(InvalidClientRequest):
@@ -121,7 +121,8 @@ def test_token_req_handler_GET_UTXO_validate_missing_addresses(token_handler_a):
 
 
 def test_token_req_handler_GET_UTXO_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESSES: [VALID_ADDR_1]},
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO,
+                                                      ADDRESS: VALID_ADDR_1},
                       None, SIGNATURES, 1)
     ret_val = token_handler_a._GET_UTXO_validate(request)
     assert ret_val is None
@@ -152,7 +153,7 @@ def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(token_handler_
 
 
 def test_token_req_handler_doStaticValidation_GET_UTXO_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESSES: [VALID_ADDR_1]},
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESS: VALID_ADDR_1},
                       None, SIGNATURES, 1)
     try:
         token_handler_a.doStaticValidation(request)
@@ -163,7 +164,7 @@ def test_token_req_handler_doStaticValidation_GET_UTXO_success(token_handler_a):
 
 
 def test_token_req_handler_doStaticValidation_invalid_txn_type(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: 'INVALID TXN_TYPE', ADDRESSES: VALID_ADDR_1},
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: 'INVALID TXN_TYPE', ADDRESS: VALID_ADDR_1},
                       None, SIGNATURES, 1)
     with pytest.raises(InvalidClientRequest):
         token_handler_a.doStaticValidation(request)
@@ -343,9 +344,9 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
 
 
 def test_token_req_handler_get_query_response_success(public_minting, token_handler_d):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESSES: [VALID_ADDR_1]}, None, SIGNATURES, 1)
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESS: VALID_ADDR_1}, None, SIGNATURES, 1)
     results = token_handler_d.get_query_response(request)
-    assert results == {ADDRESSES: [VALID_ADDR_1], TXN_TYPE: GET_UTXO,
+    assert results == {ADDRESS: VALID_ADDR_1, TXN_TYPE: GET_UTXO,
                        OUTPUTS: [Output(address=VALID_ADDR_1, seq_no=1, value=40)],
                        'identifier': VALID_IDENTIFIER, 'reqId': VALID_REQID}
 
@@ -361,14 +362,13 @@ def test_token_req_handler_get_query_response_invalid_txn_type(public_minting, t
 
 def test_token_req_handler_get_all_utxo_success(public_minting, token_handler_d):
     request = Request(VALID_IDENTIFIER, VALID_REQID,
-                      {TXN_TYPE: GET_UTXO, ADDRESSES: [VALID_ADDR_1, VALID_ADDR_2]},
+                      {TXN_TYPE: GET_UTXO, ADDRESS: VALID_ADDR_1},
                       None, SIGNATURES, 1)
 
     results = token_handler_d.get_query_response(request)
-    assert results == {ADDRESSES: [VALID_ADDR_1, VALID_ADDR_2], TXN_TYPE: GET_UTXO,
+    assert results == {ADDRESS: VALID_ADDR_1, TXN_TYPE: GET_UTXO,
                        OUTPUTS: [
-                           Output(address=VALID_ADDR_1, seq_no=1, value=40),
-                           Output(address=VALID_ADDR_2, seq_no=1, value=60)
+                           Output(address=VALID_ADDR_1, seq_no=1, value=40)
                        ],
                        'identifier': VALID_IDENTIFIER, 'reqId': VALID_REQID}
 

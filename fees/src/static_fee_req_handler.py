@@ -19,6 +19,7 @@ from plenum.server.plugin.token.src.types import Output
 
 class StaticFeesReqHandler(FeeReqHandler):
     valid_txn_types = {SET_FEES, GET_FEES}
+    write_types = {SET_FEES, }
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
     MinSendersForFees = 4
