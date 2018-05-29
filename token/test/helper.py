@@ -1,11 +1,14 @@
 import json
 
+from common.serializers.serialization import proof_nodes_serializer
+
 from plenum.common.constants import TXN_TYPE
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
     EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
 from plenum.server.plugin.token.src.util import address_to_verkey
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
+from state.trie.pruning_trie import Trie
 
 
 def public_mint_request(trustees, outputs):
@@ -103,3 +106,8 @@ def inputs_outputs(*input_token_wallets, output_addr, change_addr=None,
     if change_addr:
         outputs.append([change_addr, change_amount])
     return inputs, outputs
+
+
+def decode_proof(proof):
+    proof = proof_nodes_serializer.deserialize(proof)
+    return Trie.deserialize_proof(proof)

@@ -1,11 +1,24 @@
 import pytest
+from plenum.server.plugin.fees.src.static_fee_req_handler import \
+    StaticFeesReqHandler
 
-from plenum.common.constants import NYM, STEWARD
+from common.serializers.serialization import state_roots_serializer
+
+from state.db.persistent_db import PersistentDB
+
+from state.trie.pruning_trie import Trie, rlp_encode
+from storage.kv_in_memory import KeyValueStorageInMemory
+
+from plenum.common.constants import NYM, STEWARD, STATE_PROOF, PROOF_NODES, \
+    ROOT_HASH
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
+from plenum.server.plugin.fees.src.constants import FEES
 from plenum.server.plugin.fees.test.helper import get_fees_from_ledger, \
-    check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees
+    check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
+    send_get_fees
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC
+from plenum.server.plugin.token.test.helper import decode_proof
 from plenum.test.conftest import get_data_for_role
 from plenum.server.plugin.token.test.conftest import build_wallets_from_data
 
@@ -82,3 +95,20 @@ def test_change_fees(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
     assert new_fees != fees
     check_fee_req_handler_in_memory_map_updated(nodeSetWithIntegratedTokenPlugin,
                                                 updated_fees)
+
+
+def test_get_fees_with_proof(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
+                             sdk_wallet_client, sdk_pool_handle, fees):
+    """
+    Get the fees from the ledger
+    """
+    res = send_get_fees(looper, sdk_wallet_client, sdk_pool_handle)
+    fees = res[FEES]
+    state_proof = res[STATE_PROOF]
+    assert state_proof
+    proof_nodes = decode_proof(res[STATE_PROOF][PROOF_NODES])
+    client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))
+    fees = rlp_encode([StaticFeesReqHandler.state_serializer.serialize(fees)])
+    assert client_trie.verify_spv_proof(
+        state_roots_serializer.deserialize(res[STATE_PROOF][ROOT_HASH]),
+        StaticFeesReqHandler.fees_state_key, fees, proof_nodes)

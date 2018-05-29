@@ -1,10 +1,14 @@
 from typing import List, Iterable
 
 import base58
+from common.serializers.serialization import proof_nodes_serializer, \
+    state_roots_serializer
+
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from ledger.util import F
-from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF
+from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
+    PROOF_NODES
 from plenum.common.exceptions import InvalidClientRequest, \
     UnauthorizedClientRequest
 from plenum.common.messages.fields import IterableField
@@ -193,16 +197,20 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def get_all_utxo(self, request: Request):
         address = request.operation[ADDRESS]
-        proof, val = self.state.generate_state_proof_for_key_prfx(address,
-                                                                  get_value=True)
-        res = {}
-        for key_str, value in val:
-            key = self.state._trie.nibble_key_str_to_bin(key_str)
-            res[key] = value
         outputs = self.utxo_cache.get_unspent_outputs(address,
                                                       is_committed=True)
+        encoded_root_hash = state_roots_serializer.serialize(
+            bytes(self.state.committedHeadHash))
+        proof = self.state.generate_state_proof_for_keys_with_prefix(address,
+                                                                     serialize=True, get_value=True)
+        encoded_proof = proof_nodes_serializer.serialize(proof)
+        proof = {
+            ROOT_HASH: encoded_root_hash,
+            PROOF_NODES: encoded_proof
+        }
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs, STATE_PROOF: None}
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs,
+                  STATE_PROOF: proof}
         result.update(request.operation)
         return result
 

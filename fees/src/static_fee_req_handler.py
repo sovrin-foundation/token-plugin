@@ -1,6 +1,10 @@
+from common.serializers.serialization import proof_nodes_serializer, \
+    state_roots_serializer
+
 from common.serializers.json_serializer import JsonSerializer
 from ledger.util import F
-from plenum.common.constants import TXN_TYPE, TRUSTEE
+from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
+    STATE_PROOF
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
@@ -15,6 +19,7 @@ from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC
 from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler
 from plenum.server.plugin.token.src.types import Output
+from state.trie.pruning_trie import rlp_decode
 
 
 class StaticFeesReqHandler(FeeReqHandler):
@@ -149,9 +154,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
 
     def get_fees(self, request: Request):
-        fees = self._get_fees(is_committed=True)
+        fees, proof = self._get_fees(is_committed=True, with_proof=True)
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, FEES: fees}
+                  f.REQ_ID.nm: request.reqId, FEES: fees, STATE_PROOF: proof}
         result.update(request.operation)
         return result
 
@@ -223,14 +228,32 @@ class StaticFeesReqHandler(FeeReqHandler):
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
 
-    def _get_fees(self, is_committed=False):
+    def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
+        proof = None
         try:
-            serz = self.state.get(self.fees_state_key, isCommitted=is_committed)
+            if with_proof:
+                proof, serz = self.state.generate_state_proof(self.fees_state_key,
+                                                              serialize=True,
+                                                              get_value=True)
+                if serz:
+                    serz = rlp_decode(serz)[0]
+                encoded_proof = proof_nodes_serializer.serialize(proof)
+                root_hash = self.state.committedHeadHash if is_committed else self.state.headHash
+                encoded_root_hash = state_roots_serializer.serialize(bytes(root_hash))
+                proof = {
+                    ROOT_HASH: encoded_root_hash,
+                    PROOF_NODES: encoded_proof
+                }
+            else:
+                serz = self.state.get(self.fees_state_key,
+                                      isCommitted=is_committed)
             if serz:
                 fees = self.state_serializer.deserialize(serz)
         except KeyError:
             pass
+        if with_proof:
+            return fees, proof
         return fees
 
     def _update_state_with_single_txn(self, txn, is_committed=False):
