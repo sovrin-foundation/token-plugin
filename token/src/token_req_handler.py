@@ -26,6 +26,9 @@ from plenum.server.plugin.token.src.utxo_cache import UTXOCache
 
 
 # TODO: Rename to `PaymentReqHandler`
+from state.trie.pruning_trie import rlp_decode
+
+
 class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
@@ -197,17 +200,24 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def get_all_utxo(self, request: Request):
         address = request.operation[ADDRESS]
-        outputs = self.utxo_cache.get_unspent_outputs(address,
-                                                      is_committed=True)
         encoded_root_hash = state_roots_serializer.serialize(
             bytes(self.state.committedHeadHash))
-        proof = self.state.generate_state_proof_for_keys_with_prefix(address,
-                                                                     serialize=True, get_value=True)
+        proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
+                                                                         serialize=True,
+                                                                         get_value=True)
         encoded_proof = proof_nodes_serializer.serialize(proof)
         proof = {
             ROOT_HASH: encoded_root_hash,
             PROOF_NODES: encoded_proof
         }
+        outputs = []
+        for k, v in rv.items():
+            addr, seq_no = self.parse_state_key(k.decode())
+            amount = rlp_decode(v)[0]
+            if not amount:
+                continue
+            outputs.append(Output(addr, int(seq_no), int(amount)))
+
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, OUTPUTS: outputs,
                   STATE_PROOF: proof}
@@ -221,6 +231,10 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def create_state_key(address: str, seq_no: int) -> bytes:
         return ':'.join([address, str(seq_no)]).encode()
+
+    @staticmethod
+    def parse_state_key(key: str) -> List[str]:
+        return key.split(':')
 
     @staticmethod
     def sum_inputs(utxo_cache: UTXOCache, inputs: Iterable,

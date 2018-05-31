@@ -65,7 +65,6 @@ class UTXOCache(OptimisticKVStore):
         #     batch.append((self._store.REMOVE_OP, type2_key, None))
         self.do_ops_in_batch(batch, is_committed=is_committed)
 
-
     def get_unspent_outputs(self, address: str,
                             is_committed=False) -> List[Output]:
         seq_nos = self.get_unspent_seq_nos(address, is_committed)
