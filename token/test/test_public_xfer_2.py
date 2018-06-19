@@ -1,9 +1,9 @@
 import pytest
 import json
 
-from ledger.util import F
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
+from plenum.common.txn_util import get_seq_no
 from plenum.common.util import lxor
 from plenum.server.plugin.token.src.constants import OUTPUTS
 from plenum.server.plugin.token.src.util import update_token_wallet_with_result
@@ -56,7 +56,7 @@ def valid_xfer_txn_done(public_minting, looper,
                         nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
                         seller_token_wallet, seller_address, user1_address):
     global seller_gets
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     user1_gets = 10
     seller_remaining = seller_gets - user1_gets
     inputs = [[seller_token_wallet, seller_address, seq_no]]
@@ -75,7 +75,7 @@ def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
     """
     Address repeats in the output of transaction, hence it will be rejected
     """
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 10
     outputs = [[user1_address, 10], [seller_address, seller_remaining / 2],
@@ -91,7 +91,7 @@ def test_seller_xfer_float_amount(public_minting, looper, # noqa
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is a floating point.
     """
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 5.5
     outputs = [[user1_address, 5.5], [seller_address, seller_remaining]]
@@ -106,7 +106,7 @@ def test_seller_xfer_negative_amount(public_minting, looper, # noqa
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is negative.
     """
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets + 10
     outputs = [[user1_address, -10], [seller_address, seller_remaining]]
@@ -121,7 +121,7 @@ def test_seller_xfer_invalid_amount(public_minting, looper,     # noqa
     Amount used in outputs greater than the amount held by inputs,
     hence it will be rejected
     """
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     inputs = [[seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets + 10
     outputs = [[user1_address, 10], [seller_address, seller_remaining]]
@@ -135,7 +135,7 @@ def test_seller_xfer_invalid_inputs(public_minting, looper, # noqa
     """
     Address+seq_no repeats in the inputs of transaction, hence it will be rejected
     """
-    seq_no = public_minting[F.seqNo.name]
+    seq_no = get_seq_no(public_minting)
     inputs = [[seller_token_wallet, seller_address, seq_no],
               [seller_token_wallet, seller_address, seq_no]]
     seller_remaining = seller_gets - 10
@@ -162,7 +162,7 @@ def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
     greater than the sum of outputs in both txns, since one UTXO can be used
     only once
     """
-    seq_no = valid_xfer_txn_done[F.seqNo.name]
+    seq_no = get_seq_no(valid_xfer_txn_done)
     user1_gets = 3
     user2_gets = 5
     inputs = [[seller_token_wallet, seller_address, seq_no]]

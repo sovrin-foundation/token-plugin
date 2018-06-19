@@ -43,7 +43,7 @@ class FeesAuthNr(CoreAuthNr):
         correct_sigs_from = set()
         required_sigs_from = set()
         outputs = fees[1]
-        for addr, seq_no, sig in fees[0]:
+        for (addr, seq_no), sig in zip(fees[0], fees[2]):
             required_sigs_from.add(addr)
             try:
                 sig = base58.b58decode(sig.encode())

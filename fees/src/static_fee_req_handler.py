@@ -4,19 +4,19 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.json_serializer import JsonSerializer
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF
+    STATE_PROOF, TXN_METADATA
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn
+from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
 from plenum.common.types import f
-from plenum.persistence.util import txnsWithSeqNo
+# from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.plugin.fees.src.constants import SET_FEES, GET_FEES, FEES, REF
 from plenum.server.plugin.fees.src.fee_req_handler import FeeReqHandler
 from plenum.server.plugin.fees.src.messages.fields import FeesStructureField
 from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC
+    XFER_PUBLIC, SIGS
 from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler
 from plenum.server.plugin.token.src.types import Output
 from state.trie.pruning_trie import rlp_decode
@@ -65,7 +65,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     @staticmethod
     def get_change_for_fees(request) -> list:
-        return request.fees[1] if len(request.fees) == 2 else []
+        return request.fees[1] if len(request.fees) >= 2 else []
 
     @staticmethod
     def get_ref_for_txn_fees(ledger_id, seq_no):
@@ -92,7 +92,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 self.deducted_fees[seq_no] = self.deducted_fees_xfer.pop(request.key)
         else:
             if self.has_fees(request):
-                inputs, outputs = getattr(request, f.FEES.nm)
+                inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
@@ -100,11 +100,14 @@ class StaticFeesReqHandler(FeeReqHandler):
                     INPUTS: inputs,
                     OUTPUTS: outputs,
                     REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
-                    FEES: fees
+                    FEES: fees,
+                    SIGS: signatures,
+                    TXN_METADATA: {}
                 }
-                (start, end), _ = self.token_ledger.appendTxns([
-                    TokenReqHandler.transform_txn_for_ledger(txn)])
-                self.updateState(txnsWithSeqNo(start, end, [txn]))
+
+                self.ledger.append_txns_metadata([txn], txn_time=cons_time)
+                _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
+                self.updateState(txns)
                 self.fee_txns_in_current_batch += 1
                 self.deducted_fees[seq_no] = fees
                 return txn
@@ -135,16 +138,16 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             super().validate(req)
 
-    def apply(self, req: Request, cons_time: int):
-        operation = req.operation
-        if operation[TXN_TYPE] == SET_FEES:
-            txn = reqToTxn(req, cons_time)
-            (start, end), _ = self.ledger.appendTxns(
-                [self.transform_txn_for_ledger(txn)])
-            self.updateState(txnsWithSeqNo(start, end, [txn]))
-            return start, txn
-        else:
-            return super().apply(req, cons_time)
+    # def apply(self, req: Request, cons_time: int):
+    #     operation = req.operation
+    #     if operation[TXN_TYPE] == SET_FEES:
+    #         txn = reqToTxn(req, cons_time)
+    #         (start, end), _ = self.ledger.appendTxns(
+    #             [self.transform_txn_for_ledger(txn)])
+    #         self.updateState(txnsWithSeqNo(start, end, [txn]))
+    #         return start, txn
+    #     else:
+    #         return super().apply(req, cons_time)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -174,21 +177,21 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
-        committed_seq_nos_with_fees = [t[F.seqNo.name] for t in committed_txns
-                                       if t[F.seqNo.name] in self.deducted_fees
-                                       and t[TXN_TYPE] != XFER_PUBLIC]
+        committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
+                                       if get_seq_no(t) in self.deducted_fees
+                                       and get_type(t) != XFER_PUBLIC]
         if len(committed_seq_nos_with_fees) > 0:
             state_root = self.uncommitted_state_roots_for_batches.pop(0)
             # Ignoring txn_root check
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
-                                           state_root, None, pp_time,
+                                           state_root, txn_root, pp_time,
                                            ignore_txn_root_check=True)
             i = 0
             for txn in committed_txns:
-                if txn[F.seqNo.name] in committed_seq_nos_with_fees:
-                    txn[FEES].append(r[i][F.seqNo.name])
+                if get_seq_no(txn) in committed_seq_nos_with_fees:
+                    txn[FEES] = r[i]
                     i += 1
 
     def _get_deducted_fees_xfer(self, request, required_fees):
@@ -257,23 +260,27 @@ class StaticFeesReqHandler(FeeReqHandler):
         return fees
 
     def _update_state_with_single_txn(self, txn, is_committed=False):
-        if txn.get(TXN_TYPE) == SET_FEES:
-            existing_fees = self._get_fees(is_committed=is_committed)
-            existing_fees.update(txn[FEES])
-            val = self.state_serializer.serialize(existing_fees)
-            self.state.set(self.fees_state_key, val)
-            self.fees = existing_fees
-        else:
-            for addr, seq_no, _ in txn[INPUTS]:
+        try:
+            typ = get_type(txn)
+            if typ == SET_FEES:
+                payload = get_payload_data(txn)
+                existing_fees = self._get_fees(is_committed=is_committed)
+                existing_fees.update(payload[FEES])
+                val = self.state_serializer.serialize(existing_fees)
+                self.state.set(self.fees_state_key, val)
+                self.fees = existing_fees
+        except KeyError:
+            for addr, seq_no in txn[INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
                                             address=addr, seq_no=seq_no,
                                             is_committed=is_committed)
+            seq_no = get_seq_no(txn)
             for addr, amount in txn[OUTPUTS]:
                 TokenReqHandler.add_new_output(state=self.token_state,
                                                utxo_cache=self.utxo_cache,
                                                output=Output(
                                                    addr,
-                                                   txn[F.seqNo.name],
+                                                   seq_no,
                                                    amount),
                                                is_committed=is_committed)

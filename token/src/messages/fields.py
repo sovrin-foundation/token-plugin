@@ -66,18 +66,17 @@ class PublicInputField(FixedLengthField):
     _base_types = (list, tuple)
     public_address_field = PublicAddressField()
     seq_no_field = TxnSeqNoField()
-    sig_field = SignatureField(max_length=SIGNATURE_FIELD_LIMIT)
+    # sig_field = SignatureField(max_length=SIGNATURE_FIELD_LIMIT)
 
     def __init__(self, **kwargs):
-        super().__init__(length=3, **kwargs)
+        super().__init__(length=2, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
             return error
 
-        for (field, val) in zip((self.public_address_field, self.seq_no_field,
-                                 self.sig_field), val):
+        for (field, val) in zip((self.public_address_field, self.seq_no_field), val):
             err = field.validate(val)
             return err
 
@@ -91,7 +90,7 @@ class PublicInputsField(IterableField):
         if error:
             return error
 
-        if len(val) != len({(a, s) for a, s, _ in val}):
+        if len(val) != len({(a, s) for a, s in val}):
             error = 'Each input should be unique'
         if error:
             return error

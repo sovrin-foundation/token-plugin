@@ -3,6 +3,7 @@ from ledger.util import F
 
 import pytest
 
+from plenum.common.txn_util import get_seq_no
 from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.server.plugin.token.test.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
 
@@ -23,7 +24,7 @@ addresses = {wallet_name:create_address_add_wallet_log(wallet) for wallet_name,w
 def setup_teardown(looper, sdk_pool_handle, sdk_wallet_client, trustee_wallets):
     demo_logger.log_green('Starting test\n')
     resp = public_mint(looper, sdk_pool_handle, sdk_wallet_client, trustee_wallets)
-    xfer_partial_amount(looper, sdk_pool_handle, resp[F.seqNo.name])
+    xfer_partial_amount(looper, sdk_pool_handle, get_seq_no(resp))
     yield
     demo_logger.log_green('Test ended')
 

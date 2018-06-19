@@ -3,22 +3,20 @@ from typing import List, Iterable
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
+from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, add_sigs_to_txn
 
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
-from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES
+    PROOF_NODES, ED25519
 from plenum.common.exceptions import InvalidClientRequest, \
     UnauthorizedClientRequest
 from plenum.common.messages.fields import IterableField
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn
 from plenum.common.types import f
-from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
 from plenum.server.plugin.token.src.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
 from plenum.server.plugin.token.src.types import Output
@@ -47,58 +45,84 @@ class TokenReqHandler(LedgerRequestHandler):
             GET_UTXO: self.get_all_utxo,
         }
 
-    def _MINT_PUBLIC_validate(self, request: Request):
+    @staticmethod
+    def _MINT_PUBLIC_validate(request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == MINT_PUBLIC:
-            return self._operation_outputs_validate(request)
+            return TokenReqHandler._operation_outputs_validate(request)
 
-    def _XFER_PUBLIC_validate(self, request: Request):
+    @staticmethod
+    def _XFER_PUBLIC_validate(request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == XFER_PUBLIC:
-            error = self._operation_outputs_validate(request)
+            error = TokenReqHandler._operation_outputs_validate(request)
             if error:
                 return error
             else:
-                error = self._operation_inputs_validate(request)
+                error = TokenReqHandler._operation_inputs_validate(request)
             return error
 
-    def _GET_UTXO_validate(self, request: Request):
+    @staticmethod
+    def _GET_UTXO_validate(request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == GET_UTXO:
-            return self._operation_address_validate(request)
+            return TokenReqHandler._operation_address_validate(request)
 
-    def _operation_outputs_validate(self, request: Request):
+    @staticmethod
+    def _operation_outputs_validate(request: Request):
         operation = request.operation
         if OUTPUTS not in operation:
             raise InvalidClientRequest(request.identifier, request.reqId,
                                        "{} needs to be present".
                                        format(OUTPUTS))
-        return self._public_outputs_validator.validate(operation[OUTPUTS])
+        return TokenReqHandler._public_outputs_validator.validate(operation[OUTPUTS])
 
-    def _operation_inputs_validate(self, request: Request):
+    @staticmethod
+    def _operation_inputs_validate(request: Request):
         operation = request.operation
         if INPUTS not in operation:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId,
                                        "{} needs to be present".
                                        format(INPUTS))
-        return self._public_inputs_validator.validate(operation[INPUTS])
+        if SIGS not in operation:
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId,
+                                       "{} needs to be present".
+                                       format(SIGS))
+        # THIS IS TEMPORARY. The new format of requests will take an array of signatures
+        if len(operation[INPUTS]) != len(operation[SIGS]):
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId,
+                                       "all inputs should have signatures")
+        return TokenReqHandler._public_inputs_validator.validate(operation[INPUTS])
 
-    def _operation_address_validate(self, request: Request):
+    @staticmethod
+    def _operation_address_validate(request: Request):
         operation = request.operation
         if ADDRESS not in operation:
             error = '{} needs to be provided'.format(ADDRESS)
         else:
-            error = self._public_output_validator.inner_field_type.public_address_field.validate(operation[ADDRESS])
+            error = TokenReqHandler._public_output_validator.inner_field_type.public_address_field.validate(operation[ADDRESS])
         if error:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId, error)
+
+    def _reqToTxn(self, req: Request):
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = req.operation.pop(SIGS)
+        txn = reqToTxn(req)
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
+            add_sigs_to_txn(txn, sigs, sig_type=ED25519)
+        return txn
 
     def doStaticValidation(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] in (MINT_PUBLIC, XFER_PUBLIC, GET_UTXO):
             # This is the python way of doing a switch statement.
             # It seems cleaner than a stack of if/elif/else
+            # TODO: This should be moved outside the function, should be created once.
             txn_type_switch = {
                 MINT_PUBLIC: self._MINT_PUBLIC_validate,
                 XFER_PUBLIC: self._XFER_PUBLIC_validate,
@@ -146,12 +170,12 @@ class TokenReqHandler(LedgerRequestHandler):
                                             request.reqId,
                                             error)
 
-    def apply(self, req: Request, cons_time: int):
-        txn = reqToTxn(req, cons_time)
-        (start, end), _ = self.ledger.appendTxns(
-            [self.transform_txn_for_ledger(txn)])
-        self.updateState(txnsWithSeqNo(start, end, [txn]))
-        return start, txn
+    # def apply(self, req: Request, cons_time: int):
+    #     txn = reqToTxn(req, cons_time)
+    #     (start, end), _ = self.ledger.appendTxns(
+    #         [self.transform_txn_for_ledger(txn)])
+    #     self.updateState(txnsWithSeqNo(start, end, [txn]))
+    #     return start, txn
 
     @staticmethod
     def transform_txn_for_ledger(txn):
@@ -166,15 +190,20 @@ class TokenReqHandler(LedgerRequestHandler):
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
 
     def _update_state_with_single_txn(self, txn, is_committed=False):
-        if txn[TXN_TYPE] == MINT_PUBLIC:
-            for addr, amount in txn[OUTPUTS]:
-                self._add_new_output(Output(addr, txn[F.seqNo.name], amount),
+        typ = get_type(txn)
+        if typ == MINT_PUBLIC:
+            payload = get_payload_data(txn)
+            seq_no = get_seq_no(txn)
+            for addr, amount in payload[OUTPUTS]:
+                self._add_new_output(Output(addr, seq_no, amount),
                                      is_committed=is_committed)
-        if txn[TXN_TYPE] == XFER_PUBLIC:
-            for addr, seq_no, _ in txn[INPUTS]:
+        if typ == XFER_PUBLIC:
+            payload = get_payload_data(txn)
+            for addr, seq_no in payload[INPUTS]:
                 self._spend_input(addr, seq_no, is_committed=is_committed)
-            for addr, amount in txn[OUTPUTS]:
-                self._add_new_output(Output(addr, txn[F.seqNo.name], amount),
+            for addr, amount in payload[OUTPUTS]:
+                seq_no = get_seq_no(txn)
+                self._add_new_output(Output(addr, seq_no, amount),
                                      is_committed=is_committed)
 
     def _spend_input(self, address, seq_no, is_committed=False):
@@ -240,7 +269,7 @@ class TokenReqHandler(LedgerRequestHandler):
     def sum_inputs(utxo_cache: UTXOCache, inputs: Iterable,
                    is_committed=False) -> int:
         output_val = 0
-        for addr, seq_no, _ in inputs:
+        for addr, seq_no in inputs:
             try:
                 output_val += utxo_cache.get_output(
                     Output(addr, seq_no, None),

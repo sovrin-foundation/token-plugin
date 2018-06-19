@@ -5,6 +5,7 @@ import pytest
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
+from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
 from plenum.server.plugin.fees.src.constants import FEES, REF
 from plenum.server.plugin.fees.test.helper import gen_nym_req_for_fees
@@ -41,9 +42,9 @@ def test_fees_incorrect_sig(tokens_distributed, looper, sdk_wallet_steward,  # n
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
     req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
                                                  address=user1_address)
-    fee_inputs = getattr(req, f.FEES.nm)[0]
+    fees = getattr(req, f.FEES.nm)
     # reverse the signatures to make them incorrect
-    setattr(req, f.FEES.nm, [[a, s, sig[::-1]] for a, s, sig in fee_inputs])
+    setattr(req, f.FEES.nm, [fees[0], fees[1], [sig[::-1] for sig in fees[2]]])
     with pytest.raises(RequestNackedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
@@ -69,10 +70,8 @@ def test_invalid_fees_valid_payload(tokens_distributed, looper, sdk_wallet_stewa
     existing_fees = getattr(req, f.FEES.nm)
     fees = seller_token_wallet.get_fees([[seller_address, utxo[0]]],
                                         existing_fees[1])
-    updated_fees = [existing_fees[0] + fees[0], existing_fees[1]]
+    updated_fees = [existing_fees[0] + fees[0], existing_fees[1], existing_fees[2] + fees[2]]
     setattr(req, f.FEES.nm, updated_fees)
-    # for addr, sig in sigs.items():
-    #     req.add_signature(addr, sig)
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
@@ -139,10 +138,10 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin):
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)
         assert len(token_ledger.uncommittedTxns) == 0
         fee_txn = token_ledger.getBySeqNo(token_ledger.size)
-        assert fee_txn[INPUTS] == fees_paid[FEES][0]
-        assert fee_txn[OUTPUTS] == fees_paid[FEES][1]
+        assert fee_txn[INPUTS] == fees_paid[FEES][INPUTS]
+        assert fee_txn[OUTPUTS] == fees_paid[FEES][OUTPUTS]
         assert fee_txn[REF] == '{}:{}'.format(DOMAIN_LEDGER_ID,
-                                              fees_paid[F.seqNo.name])
+                                              get_seq_no(fees_paid))
 
 
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
@@ -152,9 +151,9 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     """
     fees_req = fees_paid
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    paying_utxo = fees_req[FEES][0][0][:2]
+    paying_utxo = fees_req[FEES][INPUTS][0]
     fees = user1_token_wallet.get_fees([paying_utxo, ],
-                                       fees_req[FEES][1])
+                                       fees_req[FEES][OUTPUTS])
     req.__setattr__(f.FEES.nm, fees)
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,

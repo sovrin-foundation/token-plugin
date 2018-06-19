@@ -2,6 +2,7 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
+from plenum.common.txn_util import get_seq_no
 from plenum.server.plugin.token.src.main import update_node_obj
 from plenum.server.plugin.token.src.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
@@ -102,7 +103,7 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
                [seller_address, total_amount % 3]]
     res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
     update_token_wallet_with_result(seller_token_wallet, res)
-    seq_no = res[F.seqNo.name]
+    seq_no = get_seq_no(res)
     for w, a in [(user1_token_wallet, user1_address),
                  (user2_token_wallet, user2_address),
                  (user3_token_wallet, user3_address)]:

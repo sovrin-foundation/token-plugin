@@ -4,6 +4,7 @@ INPUTS = 'inputs'
 OUTPUTS = 'outputs'
 EXTRA = 'extra'
 ADDRESS = 'address'
+SIGS = 'signatures'
 
 # TODO: Rename to `PAYMENT_LEDGER_ID`
 TOKEN_LEDGER_ID = 1001

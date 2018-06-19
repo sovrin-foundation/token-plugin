@@ -1,6 +1,7 @@
 import json
 
 from plenum.common.constants import TXN_TYPE
+from plenum.common.txn_util import get_payload_data
 from plenum.common.util import randomString
 from plenum.server.plugin.fees.src.constants import SET_FEES, FEES, GET_FEES
 from plenum.test.helper import waitForSufficientRepliesForRequests, \
@@ -35,7 +36,7 @@ def send_set_fees(looper, trustees, fees, sdk_pool_handle):
 
 def set_fees(looper, trustees, fees, sdk_pool_handle):
     _, rep = send_set_fees(looper, trustees, fees, sdk_pool_handle)[0]
-    return rep['result']
+    return get_payload_data(rep['result'])
 
 
 def get_fees_request(sender_did):

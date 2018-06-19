@@ -4,7 +4,7 @@ from common.serializers.serialization import proof_nodes_serializer
 
 from plenum.common.constants import TXN_TYPE
 from plenum.server.plugin.token.src.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
-    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS
+    EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS, SIGS
 from plenum.server.plugin.token.src.util import address_to_verkey
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
@@ -45,6 +45,7 @@ def xfer_request(inputs, outputs, extra_data=None):
         TXN_TYPE: XFER_PUBLIC,
         OUTPUTS: outputs,
         EXTRA: extra_data,
+        SIGS: []
     }
     wallet, address, seq_no = inputs[0]
     request = wallet.sign_using_output(address, seq_no, op=payload)

@@ -84,7 +84,6 @@ class UTXOCache(OptimisticKVStore):
         except KeyError:
             return []
 
-
     @staticmethod
     def _create_type1_key(output: Output) -> str:
         return '0:{}:{}'.format(output.address, output.seq_no)

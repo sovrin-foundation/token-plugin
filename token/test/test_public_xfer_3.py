@@ -1,4 +1,5 @@
 from ledger.util import F
+from plenum.common.txn_util import get_seq_no
 from plenum.server.plugin.token.src.constants import OUTPUTS
 from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.server.plugin.token.test.helper import send_xfer, send_get_utxo
@@ -37,7 +38,7 @@ def test_same_input_address_multiple_seq_nos(tokens_distributed, looper,  # noqa
         output_amount += amt
 
     outputs = [[user3_address, output_amount]]
-    new_seq_no = send_xfer(looper, inputs, outputs, sdk_pool_handle)[F.seqNo.name]
+    new_seq_no = get_seq_no(send_xfer(looper, inputs, outputs, sdk_pool_handle))
 
     res2 = send_get_utxo(looper, user3_address, sdk_wallet_client,
                          sdk_pool_handle)

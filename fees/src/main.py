@@ -9,8 +9,6 @@ from plenum.server.plugin.token.src.client_authnr import TokenAuthNr
 
 
 def update_node_obj(node):
-    if 'token' not in node.config.ENABLED_PLUGINS:
-        raise ModuleNotFoundError('token plugin should be enabled') # noqa
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
         raise ModuleNotFoundError('token plugin should be loaded, ' # noqa

@@ -1,5 +1,6 @@
 from plenum.common.messages.fields import FieldBase, Base58Field, MapField, \
-    NonNegativeNumberField, NonEmptyStringField, FixedLengthField
+    NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField
+from plenum.config import SIGNATURE_FIELD_LIMIT
 from plenum.server.plugin.token.src.messages.fields import PublicInputsField, \
     PublicOutputsField
 
@@ -14,9 +15,10 @@ class TxnFeesField(FixedLengthField):
     _base_types = (list, tuple)
     inputs_validator = PublicInputsField()
     outputs_validator = PublicOutputsField()
+    signatures_validator = IterableField(SignatureField(max_length=SIGNATURE_FIELD_LIMIT))
 
     def __init__(self, **kwargs):
-        super().__init__(length=2, **kwargs)
+        super().__init__(length=3, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
@@ -28,5 +30,9 @@ class TxnFeesField(FixedLengthField):
             return error
 
         error = self.outputs_validator.validate(val[1])
+        if error:
+            return error
+
+        error = self.signatures_validator.validate(val[2])
         if error:
             return error

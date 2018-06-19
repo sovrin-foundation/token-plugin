@@ -3,14 +3,13 @@ from random import randint
 
 import pytest
 
-from ledger.util import F
 from plenum.common.exceptions import RequestNackedException
-from plenum.common.types import f, OPERATION
-from plenum.server.plugin.token.src.constants import INPUTS
+from plenum.common.txn_util import get_seq_no
+from plenum.common.types import OPERATION
+from plenum.server.plugin.token.src.constants import INPUTS, SIGS
 from plenum.server.plugin.token.src.util import update_token_wallet_with_result
 from plenum.server.plugin.token.src.wallet import Address
-from plenum.test.helper import waitForSufficientRepliesForRequests, \
-    sdk_send_signed_requests, sdk_get_and_check_replies
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
 from plenum.server.plugin.token.test.helper import xfer_request, \
     inputs_outputs, send_xfer
 
@@ -35,15 +34,13 @@ def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
     request = xfer_request(inputs, outputs)
     operation = getattr(request, OPERATION)
     # Change signature for 2nd input, set it same as the 1st input's signature
-    operation[INPUTS][1][-1] = operation[INPUTS][0][-1]
+    operation[SIGS][1] = operation[SIGS][0]
     reqs = sdk_send_signed_requests(sdk_pool_handle,
                                     [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
         sdk_get_and_check_replies(looper, reqs)
 
 
-# TODO: Remove
-@pytest.mark.skip(reason='INPUT structure changed')
 def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
                                             looper,
                                             sdk_pool_handle,
@@ -64,9 +61,8 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
 
     # Remove signature for 2nd input
     request = xfer_request(inputs, outputs)
-    sigs = getattr(request, f.SIGS.nm)
-    del sigs[request.operation[INPUTS][1][0]]
-    assert len(sigs) == (len(inputs) - 1)
+    request.operation[SIGS].pop()
+    assert len(request.operation[SIGS]) == (len(inputs) - 1)
     reqs = sdk_send_signed_requests(sdk_pool_handle,
                                     [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
@@ -77,7 +73,7 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
         seller_token_wallet.get_all_address_utxos(seller_address).values()))[0]
     seller_token_wallet.sign_using_output(seller_address, seq_no,
                                           request=request)
-    assert len(sigs) == len(inputs)
+    assert len(request.operation[SIGS]) == len(inputs)
     reqs = sdk_send_signed_requests(sdk_pool_handle,
                                     [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
@@ -130,7 +126,7 @@ def first_xfer_done(tokens_distributed, # noqa
     result = send_xfer(looper, inputs, outputs, sdk_pool_handle)
     for w in [user1_token_wallet, user2_token_wallet, user3_token_wallet]:
         update_token_wallet_with_result(w, result)
-    return result[F.seqNo.name]
+    return get_seq_no(result)
 
 
 def test_multiple_inputs_outputs_without_change(first_xfer_done,

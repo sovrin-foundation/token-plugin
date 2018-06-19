@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from operator import itemgetter
+from copy import deepcopy
 from typing import Dict, Optional, Tuple
 
 import math
@@ -12,8 +12,10 @@ from plenum.common.did_method import DidMethods
 from plenum.common.messages.fields import TxnSeqNoField
 from plenum.common.request import Request
 from plenum.common.signer_simple import SimpleSigner
+from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
+from plenum.common.types import OPERATION
 from plenum.common.util import lxor
-from plenum.server.plugin.token.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC
+from plenum.server.plugin.token.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC, SIGS
 
 
 class Address:
@@ -73,8 +75,12 @@ class TokenWallet(Wallet):
             request = Request(reqId=Request.gen_req_id(), operation=op)
         existing_inputs = request.operation.get(INPUTS, [])
         request.operation[INPUTS] = [[id, seq_no], ]
-        signature = self.addresses[id].signer.sign(request.signingState(id))
-        request.operation[INPUTS] = existing_inputs + [[id, seq_no, signature], ]
+        payload = deepcopy(request.signingState(id))
+        # TEMPORARY
+        payload[OPERATION].pop(SIGS)
+        signature = self.addresses[id].signer.sign(payload)
+        request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
+        request.operation[SIGS].append(signature)
         return request
 
     def get_all_wallet_utxos(self):
@@ -98,7 +104,11 @@ class TokenWallet(Wallet):
 
     def on_reply_from_network(self, observer_name, req_id, frm, result,
                               num_replies):
-        typ = result.get(TXN_TYPE)
+        try:
+            typ = get_type(result)
+        except KeyError:
+            # For queries
+            typ = result[TXN_TYPE]
         if typ and typ in self.reply_handlers:
             self.reply_handlers[typ](result)
 
@@ -106,11 +116,13 @@ class TokenWallet(Wallet):
         self._update_outputs(response[OUTPUTS])
 
     def handle_xfer(self, response):
-        self._update_inputs(response[INPUTS])
-        self._update_outputs(response[OUTPUTS], response[F.seqNo.name])
+        data = get_payload_data(response)
+        seq_no = get_seq_no(response)
+        self._update_inputs(data[INPUTS])
+        self._update_outputs(data[OUTPUTS], seq_no)
 
     def _update_inputs(self, inputs):
-        for addr, seq_no, _ in inputs:
+        for addr, seq_no in inputs:
             if addr in self.addresses:
                 self.addresses[addr].spent(seq_no)
 

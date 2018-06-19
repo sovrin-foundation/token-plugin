@@ -1,8 +1,10 @@
 from typing import Tuple
 
 from plenum.common.request import Request
+from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
 from plenum.server.plugin.fees.src.constants import FEES
+from plenum.server.plugin.token.src.constants import INPUTS, OUTPUTS
 from plenum.server.plugin.token.src.wallet import TokenWallet
 
 
@@ -34,17 +36,18 @@ class FeeSupportedWallet(TokenWallet):
         return req
 
     def get_fees(self, inputs, outputs):
-        fees = [[], outputs]
+        fees = [[], outputs, []]
         for addr, seq_no in inputs:
             to_sign = [[addr, seq_no], outputs]
             sig = self.addresses[addr].signer.sign(to_sign)
-            fees[0].append([addr, seq_no, sig])
+            fees[0].append([addr, seq_no])
+            fees[-1].append(sig)
         return fees
 
     def on_reply_from_network(self, observer_name, req_id, frm, result,
                               num_replies):
         if FEES in result:
-            self._update_inputs(result[FEES][0])
-            self._update_outputs(result[FEES][1], result[FEES][2])
+            self._update_inputs(result[FEES][INPUTS])
+            self._update_outputs(result[FEES][OUTPUTS], get_seq_no(result[FEES]))
         super().on_reply_from_network(observer_name, req_id, frm, result,
                                       num_replies)
