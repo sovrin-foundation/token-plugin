@@ -12,12 +12,7 @@ def update_token_wallet_with_result(wallet, result):
 
 
 def address_to_verkey(address):
-    if isinstance(address, str):
-        address = address.encode()
-    try:
-        vk_bytes = b58decode_check(address)
-    except ValueError:
-        raise UnknownIdentifier('{} is not a valid base58check value'.format(address))
+    vk_bytes = decode_address_to_vk_bytes(address)
     return b58encode(vk_bytes).decode()
 
 
@@ -25,3 +20,12 @@ def verkey_to_address(verkey):
     if isinstance(verkey, str):
         verkey = verkey.encode()
     return b58encode_check(b58decode(verkey)).decode()
+
+
+def decode_address_to_vk_bytes(address):
+    if isinstance(address, str):
+        address = address.encode()
+    try:
+        return b58decode_check(address)
+    except ValueError:
+        raise UnknownIdentifier('{} is not a valid base58check value'.format(address))

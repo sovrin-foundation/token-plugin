@@ -1,15 +1,20 @@
+from base58 import b58decode_check
+
 from plenum.common.messages.fields import FieldBase, Base58Field, \
-    FixedLengthField, TxnSeqNoField, SignatureField, IterableField
-from plenum.config import SIGNATURE_FIELD_LIMIT
+    FixedLengthField, TxnSeqNoField, IterableField
+from plenum.server.plugin.token.src.util import decode_address_to_vk_bytes
 
 
 class PublicAddressField(FieldBase):
-    length = 36
     _base_types = (str, )
-    _public_address = Base58Field(byte_lengths=(length,))
 
     def _specific_validation(self, val):
-        return self._public_address.validate(val)
+        try:
+            vk = decode_address_to_vk_bytes(val)
+            if len(vk) != 32:
+                return 'Not a valid address as it resolves to {} byte verkey'.format(len(vk))
+        except ValueError as ex:
+            return str(ex)
 
 
 class PublicAmountField(FieldBase):
@@ -66,7 +71,6 @@ class PublicInputField(FixedLengthField):
     _base_types = (list, tuple)
     public_address_field = PublicAddressField()
     seq_no_field = TxnSeqNoField()
-    # sig_field = SignatureField(max_length=SIGNATURE_FIELD_LIMIT)
 
     def __init__(self, **kwargs):
         super().__init__(length=2, **kwargs)
