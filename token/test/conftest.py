@@ -3,7 +3,7 @@ import pytest
 from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.common.txn_util import get_seq_no
-from plenum.server.plugin.token.src.main import update_node_obj
+from plenum.server.plugin.token.src.main import integrate_plugin_in_node
 from plenum.server.plugin.token.src.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
 from plenum.server.plugin.token.src.wallet import TokenWallet
@@ -65,7 +65,7 @@ def trustee_wallets(trustee_data, looper, sdk_pool_name):
 def do_post_node_creation():
     # Integrate plugin into each node.
     def _post_node_creation(node):
-        update_node_obj(node)
+        integrate_plugin_in_node(node)
 
     return _post_node_creation
 

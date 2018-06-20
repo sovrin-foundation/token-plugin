@@ -8,7 +8,7 @@ from plenum.server.plugin.token import TOKEN_LEDGER_ID
 from plenum.server.plugin.token.src.client_authnr import TokenAuthNr
 
 
-def update_node_obj(node):
+def integrate_plugin_in_node(node):
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
         raise ModuleNotFoundError('token plugin should be loaded, ' # noqa

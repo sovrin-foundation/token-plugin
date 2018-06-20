@@ -34,9 +34,3 @@ def create_address_add_wallet(wallet):
     address = Address()
     wallet.add_new_address(address)
     return address.address
-
-
-def create_address_add_wallet_log(wallet):
-    address = create_address_add_wallet(wallet)
-    demo_logger.log_blue("The address {} was added to {} wallet".format(address, wallet._name))
-    return address

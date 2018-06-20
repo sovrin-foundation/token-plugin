@@ -7,7 +7,7 @@ from plenum.server.plugin.token.src.storage import get_token_hash_store, \
 from plenum.server.plugin.token.src.token_req_handler import TokenReqHandler
 
 
-def update_node_obj(node):
+def integrate_plugin_in_node(node):
     node.config = get_config(node.config)
 
     token_authnr = TokenAuthNr(node.states[DOMAIN_LEDGER_ID])

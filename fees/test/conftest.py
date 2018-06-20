@@ -3,8 +3,8 @@ import pytest
 from plenum.common.constants import NYM
 from plenum.server.plugin.fees.src.wallet import FeeSupportedWallet
 from plenum.server.plugin.token.src.constants import XFER_PUBLIC
-from plenum.server.plugin.token.src.main import update_node_obj as enable_token
-from plenum.server.plugin.fees.src.main import update_node_obj as enable_fees
+from plenum.server.plugin.token.src.main import integrate_plugin_in_node as enable_token
+from plenum.server.plugin.fees.src.main import integrate_plugin_in_node as enable_fees
 from plenum.server.plugin.token.src.util import register_token_wallet_with_client
 from plenum.server.plugin.token.test.helper import send_get_utxo, send_xfer
 
