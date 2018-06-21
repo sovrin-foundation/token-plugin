@@ -1,5 +1,5 @@
 from common.serializers.serialization import proof_nodes_serializer, \
-    state_roots_serializer
+    state_roots_serializer, txn_root_serializer
 
 from common.serializers.json_serializer import JsonSerializer
 from ledger.util import F
@@ -53,7 +53,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.deducted_fees = {}
         # Since inputs are spent in XFER. FIND A BETTER SOLUTION
         self.deducted_fees_xfer = {}
-        # Tracks state root for each batch with at least 1 transaction
+        # Tracks txn and state root for each batch with at least 1 transaction
         # paying fees
         self.uncommitted_state_roots_for_batches = []
 
@@ -138,17 +138,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             super().validate(req)
 
-    # def apply(self, req: Request, cons_time: int):
-    #     operation = req.operation
-    #     if operation[TXN_TYPE] == SET_FEES:
-    #         txn = reqToTxn(req, cons_time)
-    #         (start, end), _ = self.ledger.appendTxns(
-    #             [self.transform_txn_for_ledger(txn)])
-    #         self.updateState(txnsWithSeqNo(start, end, [txn]))
-    #         return start, txn
-    #     else:
-    #         return super().apply(req, cons_time)
-
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
 
@@ -166,7 +155,8 @@ class StaticFeesReqHandler(FeeReqHandler):
     def post_batch_created(self, ledger_id, state_root):
         if self.fee_txns_in_current_batch > 0:
             state_root = self.token_state.headHash
-            self.uncommitted_state_roots_for_batches.append(state_root)
+            txn_root = self.token_ledger.uncommittedRootHash
+            self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
             TokenReqHandler.on_batch_created(self.utxo_cache, state_root)
             self.fee_txns_in_current_batch = 0
 
@@ -181,13 +171,12 @@ class StaticFeesReqHandler(FeeReqHandler):
                                        if get_seq_no(t) in self.deducted_fees
                                        and get_type(t) != XFER_PUBLIC]
         if len(committed_seq_nos_with_fees) > 0:
-            state_root = self.uncommitted_state_roots_for_batches.pop(0)
-            # Ignoring txn_root check
+            txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
-                                           state_root, txn_root, pp_time,
-                                           ignore_txn_root_check=True)
+                                           state_root, txn_root_serializer.serialize(txn_root),
+                                           pp_time)
             i = 0
             for txn in committed_txns:
                 if get_seq_no(txn) in committed_seq_nos_with_fees:

@@ -170,13 +170,6 @@ class TokenReqHandler(LedgerRequestHandler):
                                             request.reqId,
                                             error)
 
-    # def apply(self, req: Request, cons_time: int):
-    #     txn = reqToTxn(req, cons_time)
-    #     (start, end), _ = self.ledger.appendTxns(
-    #         [self.transform_txn_for_ledger(txn)])
-    #     self.updateState(txnsWithSeqNo(start, end, [txn]))
-    #     return start, txn
-
     @staticmethod
     def transform_txn_for_ledger(txn):
         """
@@ -301,10 +294,9 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
-                   ppTime, ts_store=None, ignore_txn_root_check=False):
+                   ppTime, ts_store=None):
         r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
-                                         txnRoot, ppTime, ts_store=ts_store,
-                                         ignore_txn_root_check=ignore_txn_root_check)
+                                         txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
         return r
 
