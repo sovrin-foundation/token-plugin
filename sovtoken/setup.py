@@ -1,6 +1,6 @@
 import os
 import sys
-import sovtoken.metadata_helper as helper
+import metadata_helper as helper
 
 from setuptools import setup, find_packages
 
@@ -41,9 +41,9 @@ setup(
     # TODO: Change the field values below
     description='Token Plugin For Indy Plenum',
     long_description='',
-    author=__author__,
+    author=md['author'],
     author_email='',
-    license=__license__,
+    license=md['license'],
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={

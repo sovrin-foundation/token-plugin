@@ -1,6 +1,6 @@
 import os
 import sys
-import sovtoken.metadata_helper as helper
+import metadata_helper as helper
 
 from setuptools import setup, find_packages
 
