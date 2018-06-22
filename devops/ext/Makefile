@@ -25,8 +25,10 @@ docker_from_tag = $(call check_non_empty,$(shell grep -oP '^FROM $(1):\K.*' $(2)
 					"Tag for FROM $(1) not found in dockerfile $(2)")
 docker_from_version = $(firstword $(subst -, ,$(call docker_from_tag,$(1),$(2))))
 
+# TODO DRY refactor: make common callable logic
 BASE_DOCKERFILE_PATH = $(_THIS_MK_ABS_DIR)/docker/base/$(OSNAME)/Dockerfile.$(BASE_DOCKER_VERSION)
 RUST_DOCKERFILE_PATH = $(_THIS_MK_ABS_DIR)/docker/rust/$(OSNAME)/Dockerfile.$(RUST_DOCKER_VERSION)
+PYTHON3_DOCKERFILE_PATH = $(_THIS_MK_ABS_DIR)/docker/python3/$(OSNAME)/Dockerfile.$(PYTHON3_DOCKER_VERSION)
 
 # required for in-docker targets
 DOCKER_NAME ?=
@@ -85,6 +87,11 @@ image_rust_base_version:
 	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'evernym/base',$(RUST_DOCKERFILE_PATH)))
 	echo $(BASE_DOCKER_VERSION)
 
+image_python3_base_version:
+	$(call check_defined,PYTHON3_DOCKER_VERSION)
+	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'evernym/base',$(PYTHON3_DOCKERFILE_PATH)))
+	echo $(BASE_DOCKER_VERSION)
+
 # TODO refactor that once compose provides support for images
 # build oreder: https://github.com/docker/compose/issues/5228
 image_base:
@@ -95,6 +102,10 @@ image_base:
 image_rust: image_rust_base_version image_base
 	RUST_DOCKER_VERSION=$(RUST_DOCKER_VERSION) \
 		docker-compose -f $(_THIS_MK_ABS_DIR)/docker/docker-compose.yml build rust
+
+image_python3: image_python3_base_version image_base
+	PYTHON3_DOCKER_VERSION=$(PYTHON3_DOCKER_VERSION) \
+		docker-compose -f $(_THIS_MK_ABS_DIR)/docker/docker-compose.yml build python3
 
 %_in_docker: image_%
 	echo "Re-running goal $* in docker $(DOCKER_NAME):$(DOCKER_TAG)"
