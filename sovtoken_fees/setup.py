@@ -48,7 +48,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
-             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sov_payment']},
+             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
     include_package_data=True,
     setup_requires=['pytest-runner'],
     install_requires=['sovtoken'],
