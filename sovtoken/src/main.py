@@ -32,7 +32,7 @@ def integrate_plugin_in_node(node):
     node.clientAuthNr.register_authenticator(token_authnr)
 
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
-                                        node.states[DOMAIN_LEDGER_ID])
+                                        node.states[DOMAIN_LEDGER_ID], node.bls_bft.bls_store)
     node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
 
     return node

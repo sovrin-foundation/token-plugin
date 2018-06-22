@@ -8,7 +8,7 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, ED25519
+    PROOF_NODES, ED25519, MULTI_SIGNATURE
 from plenum.common.exceptions import InvalidClientRequest, \
     UnauthorizedClientRequest
 from plenum.common.messages.fields import IterableField
@@ -36,10 +36,11 @@ class TokenReqHandler(LedgerRequestHandler):
     _public_inputs_validator = PublicInputsField()
     MinSendersForPublicMint = 4
 
-    def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state):
+    def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
+        self.bls_store = bls_store
 
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
@@ -227,11 +228,17 @@ class TokenReqHandler(LedgerRequestHandler):
         proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
                                                                          serialize=True,
                                                                          get_value=True)
-        encoded_proof = proof_nodes_serializer.serialize(proof)
-        proof = {
-            ROOT_HASH: encoded_root_hash,
-            PROOF_NODES: encoded_proof
-        }
+        multi_sig = self.bls_store.get(encoded_root_hash)
+        if multi_sig:
+            encoded_proof = proof_nodes_serializer.serialize(proof)
+            proof = {
+                MULTI_SIGNATURE: multi_sig.as_dict(),
+                ROOT_HASH: encoded_root_hash,
+                PROOF_NODES: encoded_proof
+            }
+        else:
+            proof = {}
+
         outputs = []
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())

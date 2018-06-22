@@ -4,11 +4,11 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.json_serializer import JsonSerializer
 from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, TXN_METADATA
+    STATE_PROOF, TXN_METADATA, TXN_SIGNATURE, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
+from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, add_sigs_to_txn
 from plenum.common.types import f
 # from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
@@ -32,12 +32,13 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state):
+                 domain_state, bls_store):
         super().__init__(ledger, state)
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
+        self.bls_store = bls_store
 
         # In-memory map of sovtoken_fees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
@@ -101,11 +102,13 @@ class StaticFeesReqHandler(FeeReqHandler):
                     OUTPUTS: outputs,
                     REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
                     FEES: fees,
-                    SIGS: signatures,
+                    TXN_SIGNATURE: {},
                     TXN_METADATA: {}
                 }
 
                 self.ledger.append_txns_metadata([txn], txn_time=cons_time)
+                sigs = [(i[0], s) for i, s in zip(inputs, signatures)]
+                add_sigs_to_txn(txn, sigs)
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
                 self.updateState(txns)
                 self.fee_txns_in_current_batch += 1
@@ -230,13 +233,18 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                               get_value=True)
                 if serz:
                     serz = rlp_decode(serz)[0]
-                encoded_proof = proof_nodes_serializer.serialize(proof)
                 root_hash = self.state.committedHeadHash if is_committed else self.state.headHash
                 encoded_root_hash = state_roots_serializer.serialize(bytes(root_hash))
-                proof = {
-                    ROOT_HASH: encoded_root_hash,
-                    PROOF_NODES: encoded_proof
-                }
+                multi_sig = self.bls_store.get(encoded_root_hash)
+                if multi_sig:
+                    encoded_proof = proof_nodes_serializer.serialize(proof)
+                    proof = {
+                        MULTI_SIGNATURE: multi_sig.as_dict(),
+                        ROOT_HASH: encoded_root_hash,
+                        PROOF_NODES: encoded_proof
+                    }
+                else:
+                    proof = {}
             else:
                 serz = self.state.get(self.fees_state_key,
                                       isCommitted=is_committed)

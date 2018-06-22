@@ -15,4 +15,3 @@ def test_address_to_verkey_and_vice_versa():
         assert len(b58decode(verkey)) == 32
         assert signer.naclSigner.verraw == b58decode(verkey)
         assert signer.verkey == verkey
-        print(address, verkey)
