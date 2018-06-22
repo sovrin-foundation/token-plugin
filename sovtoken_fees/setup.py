@@ -36,7 +36,7 @@ with open(METADATA) as d:
 
 setup(
 
-    name='sovtoken_fees',
+    name='sovtoken-fees',
     version= md["version"],
     # TODO: Change the field values below
     description='Fees Plugin For Indy Plenum',
