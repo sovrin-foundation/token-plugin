@@ -1,7 +1,7 @@
 from base58 import b58decode_check
 
 from plenum.common.messages.fields import FieldBase, FixedLengthField, TxnSeqNoField, IterableField
-from plenum.server.plugin.sovtoken.src.util import decode_address_to_vk_bytes
+from sovtoken.src.util import decode_address_to_vk_bytes
 
 
 class PublicAddressField(FieldBase):

@@ -1,7 +1,7 @@
 from base58 import b58decode
 
 from plenum.common.signer_simple import SimpleSigner
-from plenum.server.plugin.sovtoken.src.util import verkey_to_address, \
+from sovtoken.src.util import verkey_to_address, \
     address_to_verkey
 
 

@@ -3,12 +3,12 @@ import pytest
 from plenum.common.constants import CONFIG_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException
 from plenum.common.txn_util import get_seq_no
-from plenum.server.plugin.sovtoken_fees.src.constants import FEES
-from plenum.server.plugin.sovtoken.src.constants import XFER_PUBLIC
-from plenum.server.plugin.sovtoken.src.util import update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.test.helper import send_xfer
-from plenum.server.plugin.sovtoken.test.conftest import seller_gets
-from plenum.server.plugin.sovtoken_fees.test.test_set_get_fees import fees_set
+from sovtoken_fees.src.constants import FEES
+from sovtoken.src.constants import XFER_PUBLIC
+from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.test.helper import send_xfer
+from sovtoken.test.conftest import seller_gets
+from sovtoken_fees.test.test_set_get_fees import fees_set
 
 
 def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,

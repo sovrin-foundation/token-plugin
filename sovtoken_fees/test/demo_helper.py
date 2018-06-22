@@ -2,9 +2,9 @@ import pytest
 
 import json
 from plenum.common.constants import NYM
-from plenum.server.plugin.sovtoken_fees.test.helper import send_set_fees, get_fees_from_ledger, gen_nym_req_for_fees
-from plenum.server.plugin.sovtoken.src.util import update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.test.helper import send_public_mint, send_get_utxo
+from sovtoken_fees.test.helper import send_set_fees, get_fees_from_ledger, gen_nym_req_for_fees
+from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.test.helper import send_public_mint, send_get_utxo
 from plenum.test.helper import sdk_send_and_check
 
 

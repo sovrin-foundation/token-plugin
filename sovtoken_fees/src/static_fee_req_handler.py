@@ -12,13 +12,13 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
 from plenum.common.types import f
 # from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
-from plenum.server.plugin.sovtoken_fees.src.constants import SET_FEES, GET_FEES, FEES, REF
-from plenum.server.plugin.sovtoken_fees.src.fee_req_handler import FeeReqHandler
-from plenum.server.plugin.sovtoken_fees.src.messages.fields import FeesStructureField
-from plenum.server.plugin.sovtoken.src.constants import INPUTS, OUTPUTS, \
+from sovtoken_fees.src.constants import SET_FEES, GET_FEES, FEES, REF
+from sovtoken_fees.src.fee_req_handler import FeeReqHandler
+from sovtoken_fees.src.messages.fields import FeesStructureField
+from sovtoken.src.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, SIGS
-from plenum.server.plugin.sovtoken.src.token_req_handler import TokenReqHandler
-from plenum.server.plugin.sovtoken.src.types import Output
+from sovtoken.src.token_req_handler import TokenReqHandler
+from sovtoken.src.types import Output
 from state.trie.pruning_trie import rlp_decode
 
 

@@ -1,6 +1,6 @@
 import pytest
-from plenum.server.plugin.sovtoken.src.wallet import TokenWallet, Address
-from plenum.server.plugin.sovtoken.src.constants import OUTPUTS
+from sovtoken.src.wallet import TokenWallet, Address
+from sovtoken.src.constants import OUTPUTS
 
 
 @pytest.fixture(scope="module")

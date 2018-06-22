@@ -1,4 +1,4 @@
-from plenum.server.plugin.sovtoken_fees.test.three_phase_commit_helper import *
+from sovtoken_fees.test.three_phase_commit_helper import *
 
 
 class TestPrePrepare:

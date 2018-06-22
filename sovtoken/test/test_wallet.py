@@ -1,8 +1,8 @@
 import pytest
 from base58 import b58decode
 
-from plenum.server.plugin.sovtoken.src.messages.fields import PublicAddressField
-from plenum.server.plugin.sovtoken.src.wallet import TokenWallet, Address
+from sovtoken.src.messages.fields import PublicAddressField
+from sovtoken.src.wallet import TokenWallet, Address
 
 
 @pytest.fixture()

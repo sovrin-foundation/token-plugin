@@ -1,8 +1,8 @@
 from plenum.common.txn_util import get_seq_no
-from plenum.server.plugin.sovtoken.src.constants import OUTPUTS
-from plenum.server.plugin.sovtoken.src.util import update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.test.helper import send_xfer, send_get_utxo
-from plenum.server.plugin.sovtoken.test.test_public_xfer_2 import \
+from sovtoken.src.constants import OUTPUTS
+from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.test.helper import send_xfer, send_get_utxo
+from sovtoken.test.test_public_xfer_2 import \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 

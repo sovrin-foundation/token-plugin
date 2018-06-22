@@ -1,6 +1,6 @@
 import os
 import sys
-import plenum.server.plugin.sovtoken.metadata_helper as helper
+import sovtoken.metadata_helper as helper
 
 from setuptools import setup, find_packages
 
@@ -37,24 +37,20 @@ with open(METADATA) as d:
 setup(
 
     name='sovtoken',
-    version= md["version"],
+    version=md["version"],
     # TODO: Change the field values below
-    description='Plenum Byzantine Fault Tolerant Protocol',
-    long_description='Plenum Byzantine Fault Tolerant Protocol',
-    url='https://github.com/hyperledger/indy-plenum',
-    download_url='https://github.com/hyperledger/indy-plenum/tarball/{}'.
-        format( md["version"]),
-    author= md["author"],
-    author_email='hyperledger-indy@lists.hyperledger.org',
-    license= md["license"],
-    keywords='Byzantine Fault Tolerant Plenum',
-    packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']) + [
-        'data', ],
+    description='Token Plugin For Indy Plenum',
+    long_description='',
+    author=__author__,
+    author_email='',
+    license=__license__,
+    keywords='',
+    packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
-             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'src']},
+             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
     include_package_data=True,
-    install_requires=['indy-plenum-dev==1.2.242',],
+    install_requires=['indy-plenum'],
     setup_requires=['pytest-runner'],
     extras_require={
         'tests': tests_require,

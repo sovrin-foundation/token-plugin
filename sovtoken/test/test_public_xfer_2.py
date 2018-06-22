@@ -5,12 +5,12 @@ from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.util import lxor
-from plenum.server.plugin.sovtoken.src.constants import OUTPUTS
-from plenum.server.plugin.sovtoken.src.util import update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.src.wallet import TokenWallet, Address
-from plenum.server.plugin.sovtoken.test.helper import send_xfer, \
+from sovtoken.src.constants import OUTPUTS
+from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.src.wallet import TokenWallet, Address
+from sovtoken.test.helper import send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
-from plenum.server.plugin.sovtoken.test.conftest import seller_gets, total_mint
+from sovtoken.test.conftest import seller_gets, total_mint
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies
 

@@ -15,12 +15,12 @@ from plenum.common.messages.fields import IterableField
 from plenum.common.request import Request
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
-from plenum.server.plugin.sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
-from plenum.server.plugin.sovtoken.src.messages.fields import PublicOutputField, \
+from sovtoken.src.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
-from plenum.server.plugin.sovtoken.src.types import Output
-from plenum.server.plugin.sovtoken.src.utxo_cache import UTXOCache
+from sovtoken.src.types import Output
+from sovtoken.src.utxo_cache import UTXOCache
 
 
 # TODO: Rename to `PaymentReqHandler`

@@ -10,9 +10,9 @@ from plenum.common.exceptions import InsufficientCorrectSignatures, \
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from plenum.server.plugin.sovtoken.src import AcceptableWriteTypes, AcceptableQueryTypes
-from plenum.server.plugin.sovtoken.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS, SIGS
-from plenum.server.plugin.sovtoken.src.util import address_to_verkey
+from sovtoken.src import AcceptableWriteTypes, AcceptableQueryTypes
+from sovtoken.src.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS, SIGS
+from sovtoken.src.util import address_to_verkey
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
 

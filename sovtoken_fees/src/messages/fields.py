@@ -1,7 +1,7 @@
 from plenum.common.messages.fields import MapField, \
     NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField
 from plenum.config import SIGNATURE_FIELD_LIMIT
-from plenum.server.plugin.sovtoken.src.messages.fields import PublicInputsField, \
+from sovtoken.src.messages.fields import PublicInputsField, \
     PublicOutputsField
 
 
