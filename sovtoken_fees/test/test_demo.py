@@ -1,12 +1,12 @@
 from plenum.common.constants import NYM
 from plenum.common.types import f
-from plenum.server.plugin.sovtoken_fees.src.constants import FEES
-from plenum.server.plugin.sovtoken_fees.src.wallet import FeeSupportedWallet
-from plenum.server.plugin.sovtoken.src.constants import OUTPUTS, TOKEN_LEDGER_ID
-from plenum.server.plugin.sovtoken.src.util import update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.src.wallet import Address
-from plenum.server.plugin.sovtoken_fees.test.demo_helper import methods
-from plenum.server.plugin.sovtoken.test.demo.demo_helpers import demo_logger
+from sovtoken_fees.src.constants import FEES
+from sovtoken_fees.src.wallet import FeeSupportedWallet
+from sovtoken.src.constants import OUTPUTS, TOKEN_LEDGER_ID
+from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.src.wallet import Address
+from sovtoken_fees.test.demo_helper import methods
+from sovtoken.test.demo.demo_helpers import demo_logger
 
 
 ''' 

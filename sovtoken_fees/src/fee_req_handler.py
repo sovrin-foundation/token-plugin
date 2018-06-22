@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 
 from plenum.server.config_req_handler import ConfigReqHandler
-from plenum.server.plugin.sovtoken.src.client_authnr import AddressSigVerifier
+from sovtoken.src.client_authnr import AddressSigVerifier
 
 
 class FeeReqHandler(ConfigReqHandler):

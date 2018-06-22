@@ -2,8 +2,8 @@ import pytest
 
 import os
 import logging
-from plenum.server.plugin.sovtoken.test.demo import mute
-from plenum.server.plugin.sovtoken.test.demo import demo_logger
+from sovtoken.test.demo import mute
+from sovtoken.test.demo import demo_logger
 
 
 class Plugin:

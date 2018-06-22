@@ -1,11 +1,11 @@
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
-from plenum.server.plugin.sovtoken_fees.src.client_authnr import FeesAuthNr
-from plenum.server.plugin.sovtoken_fees.src.static_fee_req_handler import StaticFeesReqHandler
-from plenum.server.plugin.sovtoken_fees.src.three_phase_commit_handling import \
+from sovtoken_fees.src.client_authnr import FeesAuthNr
+from sovtoken_fees.src.static_fee_req_handler import StaticFeesReqHandler
+from sovtoken_fees.src.three_phase_commit_handling import \
     ThreePhaseCommitHandler
-from plenum.server.plugin.sovtoken import TOKEN_LEDGER_ID
-from plenum.server.plugin.sovtoken.src.client_authnr import TokenAuthNr
+from sovtoken import TOKEN_LEDGER_ID
+from sovtoken.src.client_authnr import TokenAuthNr
 
 
 def integrate_plugin_in_node(node):

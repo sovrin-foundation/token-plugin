@@ -1,4 +1,4 @@
-from plenum.server.plugin.sovtoken.src.wallet import TokenWallet, Address
+from sovtoken.src.wallet import TokenWallet, Address
 from .demo_logger import DemoLogger
 
 demo_logger = DemoLogger()

@@ -6,8 +6,8 @@ from collections import defaultdict
 import pytest
 
 from plenum.common.util import randomString
-from plenum.server.plugin.sovtoken.src.types import Output
-from plenum.server.plugin.sovtoken.src.utxo_cache import UTXOCache
+from sovtoken.src.types import Output
+from sovtoken.src.utxo_cache import UTXOCache
 from storage.test.conftest import parametrised_storage
 
 # Test Constants

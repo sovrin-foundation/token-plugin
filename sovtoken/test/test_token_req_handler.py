@@ -9,18 +9,18 @@ from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientReq
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
 from plenum.persistence.util import txnsWithSeqNo
-from plenum.server.plugin.sovtoken.src.token_req_handler import TokenReqHandler
+from sovtoken.src.token_req_handler import TokenReqHandler
 
 
 # from plenum.test.pool_transactions.conftest import clientAndWallet1, \
 #     client1, wallet1, client1Connected, looper
 
 # TEST CONSTANTS
-from plenum.server.plugin.sovtoken.src.types import Output
-from plenum.server.plugin.sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from sovtoken.src.types import Output
+from sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
-from plenum.server.plugin.sovtoken.src.util import verkey_to_address
+from sovtoken.src.util import verkey_to_address
 
 VALID_ADDR_1, VALID_ADDR_2 = (None, None)
 

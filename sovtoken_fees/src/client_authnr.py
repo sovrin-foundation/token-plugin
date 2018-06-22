@@ -7,10 +7,10 @@ from plenum.common.exceptions import InvalidSignatureFormat, \
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from plenum.server.plugin.sovtoken_fees.src import AcceptableWriteTypes, AcceptableQueryTypes
-from plenum.server.plugin.sovtoken_fees.src.constants import SET_FEES, FEES
-from plenum.server.plugin.sovtoken.src.client_authnr import AddressSigVerifier
-from plenum.server.plugin.sovtoken.src.util import address_to_verkey
+from sovtoken_fees.src import AcceptableWriteTypes, AcceptableQueryTypes
+from sovtoken_fees.src.constants import SET_FEES, FEES
+from sovtoken.src.client_authnr import AddressSigVerifier
+from sovtoken.src.util import address_to_verkey
 
 
 class FeesAuthNr(CoreAuthNr):

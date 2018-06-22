@@ -1,7 +1,7 @@
 from plenum.common.types import f
 from plenum.common.util import updateNamedTuple
-from plenum.server.plugin.sovtoken_fees.src.constants import FEES, FEE_TXNS_IN_BATCH
-from plenum.server.plugin.sovtoken import TOKEN_LEDGER_ID
+from sovtoken_fees.src.constants import FEES, FEE_TXNS_IN_BATCH
+from sovtoken import TOKEN_LEDGER_ID
 
 
 class ThreePhaseCommitHandler:

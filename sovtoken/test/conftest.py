@@ -3,12 +3,12 @@ import pytest
 from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.common.txn_util import get_seq_no
-from plenum.server.plugin.sovtoken.src.main import integrate_plugin_in_node
-from plenum.server.plugin.sovtoken.src.util import \
+from sovtoken.src.main import integrate_plugin_in_node
+from sovtoken.src.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
-from plenum.server.plugin.sovtoken.src.wallet import TokenWallet
+from sovtoken.src.wallet import TokenWallet
 from plenum.test.conftest import *
-from plenum.server.plugin.sovtoken.test.helper import send_get_utxo, send_xfer, \
+from sovtoken.test.helper import send_get_utxo, send_xfer, \
     do_public_minting
 
 total_mint = 100
