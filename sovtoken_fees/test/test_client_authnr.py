@@ -17,7 +17,7 @@ SIGNATURES = {'M9BJDuS24bqbJNvBRsoGg3': '5eJax8GW8gTRfZzhuta9s7hU2K3dkKpDWGE7SUs
 
 
 # ------------------------------------------------------------------------------------
-# this class is used to help build up sovtoken_fees data for testing
+# this class is used to help build up fees data for testing
 class FeeData:
     def __init__(self):
         self.protocolVersion = PROTOCOL_VERSION
@@ -62,7 +62,7 @@ def test_authenticate_success(node):
         'reqId': 1524500821797147,
         'operation':
             {
-                'sovtoken_fees': {'10001': 8, '1': 4},
+                'fees': {'10001': 8, '1': 4},
                 'type': '20000'
             },
         'protocolVersion': 1
@@ -89,7 +89,7 @@ def test_authenticate_success_one_signature(node):
         'reqId': 1524500821797147,
         'operation':
             {
-                'sovtoken_fees': {'10001': 8, '1': 4},
+                'fees': {'10001': 8, '1': 4},
                 'type': '20000'
             },
         'protocolVersion': 1
@@ -117,7 +117,7 @@ def test_authenticate_errors_on_invalid_inputs(node):
         'reqId': 1524500821797147,
         'operation':
             {
-                'sovtoken_fees': {'10001': 8, '1': 4},
+                'fees': {'10001': 8, '1': 4},
                 'type': '20000'
             },
         'protocolVersion': 1
@@ -134,7 +134,7 @@ def test_authenticate_invalid():
     fees_authenticator = FeesAuthNr(state, None)
     req_data = {'signatures': SIGNATURES, 'reqId': VALID_REQID,
                 'operation': {'type': 'INVALID_TXN_TYPE',
-                              'sovtoken_fees': {'1': 4, '10001': 8}
+                              'fees': {'1': 4, '10001': 8}
                               }
                 }
     with pytest.raises(InvalidClientRequest):
@@ -142,7 +142,7 @@ def test_authenticate_invalid():
 
 
 # ------------------------------------------------------------------------------------
-# the signature and sovtoken_fees sections are populated with correct data
+# the signature and fees sections are populated with correct data
 def test_verify_signature_success():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
@@ -152,7 +152,7 @@ def test_verify_signature_success():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "sovtoken_fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '3xekKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
+    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '3xekKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
                            ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
 
     fees_authenticator.verify_signature(msg)
@@ -172,14 +172,14 @@ def test_verify_signature_no_fees():
 
 
 # ------------------------------------------------------------------------------------
-# in the sovtoken_fees dictionary, array in element 0 has a signature that is not correct so the
+# in the fees dictionary, array in element 0 has a signature that is not correct so the
 # exception InvalidSignatureFormat will get raised
 def test_verify_signature_invalid_signature_format(node):
     fees_authenticator = FeesAuthNr(node[0].getState(DOMAIN_LEDGER_ID), None)
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "sovtoken_fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
+    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
                            ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
 
     with pytest.raises(InvalidSignatureFormat):
@@ -187,14 +187,14 @@ def test_verify_signature_invalid_signature_format(node):
 
 
 # ------------------------------------------------------------------------------------
-# in this test, the signature in sovtoken_fees is not valid for the data set.  it is a valid signature and passes b58decode
+# in this test, the signature in fees is not valid for the data set.  it is a valid signature and passes b58decode
 def test_verify_signature_incorrect_signatures():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "sovtoken_fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']],
+    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']],
                            ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
 
     with pytest.raises(InsufficientCorrectSignatures):

@@ -20,7 +20,7 @@ The DemoMethods instance is passed into the test functions as the parameter "met
 ## Methods
     mint_tokens(address, tokens)
 
-    set_fees(sovtoken_fees)
+    set_fees(fees)
 
     get_fees()
 
@@ -71,14 +71,14 @@ def set_fee_for_nym_transactions(methods):
 
 
 step3_info = """
-    Get current sovtoken_fees and assert the fee is set for nym transactions.
+    Get current fees and assert the fee is set for nym transactions.
 """
 def check_fee_set_for_nym_transactions(methods):
     fees = methods.get_fees()
     assert fees[NYM] == TXN_FEES[NYM]
 
     demo_logger.log_header(step3_info)
-    demo_logger.log_blue("Ledger's sovtoken_fees equaled:")
+    demo_logger.log_blue("Ledger's fees equaled:")
     demo_logger.log_yellow(TXN_FEES)
 
 
@@ -145,7 +145,7 @@ def check_fee_request_on_ledger(methods, client_address):
 
 # TODO Sovrin foundation collects sovtoken_fees
 step8_info = """
-    Sovrin foundation collects sovtoken_fees.
+    Sovrin foundation collects fees.
 """
 def sovrin_foundation_collects_fees(methods):
     demo_logger.log_header(step8_info)

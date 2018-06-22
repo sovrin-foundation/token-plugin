@@ -28,7 +28,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
     MinSendersForFees = 4
-    fees_state_key = b'sovtoken_fees'
+    fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
@@ -197,7 +197,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             if sum_inputs < required_sum_outputs:
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
-                    'sovtoken_fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+                    'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
             else:
                 deducted_fees = sum_inputs - sum_outputs
                 return deducted_fees
@@ -208,14 +208,14 @@ class StaticFeesReqHandler(FeeReqHandler):
     def _get_deducted_fees_non_xfer(self, request, required_fees):
         error = None
         if not self.has_fees(request):
-            error = 'sovtoken_fees not preset or improperly formed'
+            error = 'fees not preset or improperly formed'
         if not error:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
             change_amount = sum([a for _, a in self.get_change_for_fees(request)])
             # TODO: Reconsider, this forces the sender to pay the exact amount of sovtoken_fees, not more, not less
             if sum_inputs != (change_amount + required_fees):
-                error = 'Insufficient sovtoken_fees, sum of inputs is {} and sum ' \
-                    'of change and sovtoken_fees is {}'.format(sum_inputs, change_amount + required_fees)
+                error = 'Insufficient fees, sum of inputs is {} and sum ' \
+                    'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

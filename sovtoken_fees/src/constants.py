@@ -1,6 +1,6 @@
 from plenum.server.plugin.sovtoken_fees.src.transactions import FeesTransactions
 
-FEES = 'sovtoken_fees'
+FEES = 'fees'
 REF = 'ref'
 FEE_TXNS_IN_BATCH = 'fee_txns_in_batch'
 # Its "seqNo" and not "seq_no" to be consistent with the current replies
