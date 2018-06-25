@@ -98,6 +98,7 @@ test: $(SRC_DIR) pipenv_version clean_pycache
 
 pre_package: python_version | $(BUILD_DIR)
 	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)
+	rm -rf $(SRC_DIR)/build
 
 
 $(BUILD_DIR):
@@ -111,3 +112,4 @@ clean_pycache:
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(SRC_DIR)/build
