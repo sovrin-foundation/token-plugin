@@ -8,7 +8,8 @@ from plenum.common.constants import TXN_TYPE
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn
-from plenum.persistence.util import txnsWithSeqNo
+# TODO fix that for newer plenum version
+#from plenum.persistence.util import txnsWithSeqNo
 from sovtoken.src.token_req_handler import TokenReqHandler
 
 
