@@ -1,7 +1,6 @@
 #TODO
 # - docker-compose re-runs build always (it's fast because of cache but anyway)
 
-RELEASE ?= 1
 OSNAME ?= xenial
 
 ifndef PROJECT_DIR
@@ -39,9 +38,22 @@ DOCKER_NAME ?= evernym/plugin
 DOCKER_TAG ?=
 CI_DOCKERFILE_PATH = docker/ci/$(OSNAME)/Dockerfile
 
-EXPORT_ENV += OSNAME
+# pytest related variables
+PYTEST_ARGS ?=
 
-.PHONY: all python_version test pre_package clean
+PYTEST_LOCALS ?= 1
+ifeq ($(PYTEST_LOCALS),1)
+PYTEST_ARGS += --showlocals
+endif
+
+ifneq ($(PYTEST_JUNIT_XML),)
+PYTEST_ARGS += --junit-xml=$(PYTEST_JUNIT_XML)
+endif
+
+
+EXPORT_ENV += OSNAME SRC_DIR_NAME PYTEST_ARGS
+
+.PHONY: all python_version test pre_package clean_pycache clean
 
 all: test_dry test package
 
@@ -69,14 +81,20 @@ CI_IMAGE_BASED_TARGETS = test package clean
 
 $(patsubst %,image_%, $(CI_IMAGE_BASED_TARGETS)): image_ci
 
-python_version:
-	python3 --version
-	pip3 --version
-	python3 -m pytest --version
+pipenv_version:
+	pipenv --version
 
-test: $(SRC_DIR) python_version
+# TODO
+# clean_pycache needs only when mixinf in-docker and host testing
+# needs to optimze to leave cache otherwise
+test: $(SRC_DIR) pipenv_version clean_pycache
 	echo "Running tests"
-	cd $< && python -m pytest
+# TODO improve usage of pipenv (remove pip completely)
+# seems pipenv has some bugs regarding extras
+	cd $< \
+		&& pipenv --three \
+		&& pipenv run pip install .[tests] \
+		&& PYTHONPATH=.. pipenv run python -m pytest $(PYTEST_ARGS)
 
 pre_package: python_version | $(BUILD_DIR)
 	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)
@@ -84,6 +102,12 @@ pre_package: python_version | $(BUILD_DIR)
 
 $(BUILD_DIR):
 	mkdir -p $@
+
+clean_pycache:
+	find $(SRC_DIR) \
+		-name '__pycache__' -delete -print \
+		-o \
+		-name '*.pyc' -delete -print
 
 clean:
 	rm -rf $(BUILD_DIR)
