@@ -8,6 +8,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+devops/_build
 .Python
 bin/
 build/

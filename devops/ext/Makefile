@@ -72,11 +72,17 @@ export $(EXPORT_ENV)
 
 # PACKAGING ROUTINE
 _check_fpm_args:
+ifeq ($(FPM_P_INPUT_TYPE),dir)
+
 ifeq ($(FPM_P_NAME),)
 	$(error Package name is not specified)
-else ifeq ($(FPM_P_VERSION),)
+endif
+ifeq ($(FPM_P_VERSION),)
 	$(error Package version is not specified)
 endif
+
+endif
+
 
 # TODO deps with versions like "package (>= 1.0)"
 package: _check_fpm_args $(PRE_PACKAGE_GOALS)

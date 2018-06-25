@@ -14,36 +14,23 @@ if sys.version_info < (3, 5):
     print("NOTE: Installation failed. Run setup.py using python3")
     sys.exit(1)
 
-# Change to ioflo's source directory prior to running any command
-try:
-    SETUP_DIRNAME = os.path.dirname(__file__)
-except NameError:
-    # We're probably being frozen, and __file__ triggered this NameError
-    # Work around this
-    SETUP_DIRNAME = os.path.dirname(sys.argv[0])
+here = os.path.abspath(os.path.dirname(__file__))
 
-if SETUP_DIRNAME != '':
-    os.chdir(SETUP_DIRNAME)
-
-SETUP_DIRNAME = os.path.abspath(SETUP_DIRNAME)
-
-METADATA = os.path.join(SETUP_DIRNAME, 'metadata.json')
+metadata = {}
+with open(os.path.join(here, '__metadata__.py'), 'r') as f:
+    exec(f.read(), metadata)
 
 tests_require = ['pytest', 'pytest-xdist', 'python3-indy']
 
-with open(METADATA) as d:
-    md = helper.get_metadata(d.read(), ["version", "author", "license"])
-
 setup(
-
-    name='sovtoken',
-    version=md["version"],
-    # TODO: Change the field values below
-    description='Token Plugin For Indy Plenum',
-    long_description='',
-    author=md['author'],
-    author_email='',
-    license=md['license'],
+    name=metadata['__title__'],
+    version=metadata['__version__'],
+    description=metadata['__description__'],
+    long_description=metadata['__long_description__'],
+    url=metadata['__url__'],
+    author=metadata['__author__'],
+    author_email=metadata['__author_email__'],
+    license=metadata['__license__'],
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={
