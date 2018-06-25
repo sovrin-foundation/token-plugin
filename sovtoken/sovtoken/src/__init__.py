@@ -1,5 +1,5 @@
-from sovtoken.src.constants import TOKEN_LEDGER_ID
-from sovtoken.src.transactions import TokenTransactions
+from constants import TOKEN_LEDGER_ID
+from transactions import TokenTransactions
 
 
 LEDGER_IDS = {TOKEN_LEDGER_ID, }

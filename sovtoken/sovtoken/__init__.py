@@ -1,2 +1,2 @@
-from .__metadata__ import *
+from __metadata__ import *
 from sovtoken.src import *

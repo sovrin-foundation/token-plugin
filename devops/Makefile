@@ -31,6 +31,8 @@ FPM_ARGS = --python-package-name-prefix "python3" \
 		   --python-bin "/usr/bin/python3" \
 		   --exclude "*.pyc" \
 		   --exclude "*.pyo" \
+		   --after-install "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/postinst" \
+           --before-remove "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/prerm" \
 		   $(SRC_DIR)
 
 # docker related variables
