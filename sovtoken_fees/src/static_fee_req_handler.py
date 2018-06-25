@@ -9,6 +9,9 @@ from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, add_sigs_to_txn
+# TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
+# (should be imported from plenum.common.txn_util)
+from sovtoken.src.txn_util import add_sigs_to_txn
 from plenum.common.types import f
 # from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
