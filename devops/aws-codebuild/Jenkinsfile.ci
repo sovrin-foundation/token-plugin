@@ -48,6 +48,7 @@ pipelineWrapper({
                     envv = [
                         [name: 'OSNAME', value: "$osname"],
                         [name: 'MAKE_GOALS', value: "${goals.join(' ')}"],
+                        [name: 'PYTEST_JUNIT_XML', value: "/tmp/artifacts/logs/test.xml"],
                     ]
 
                     // build spec for env image
@@ -68,6 +69,8 @@ pipelineWrapper({
                                 truncate = true
                                 allowEmptyArchive = true
                             }
+
+                            junit 'logs/test.xml' // TODO variable for that
                         }
                     }
                 }
