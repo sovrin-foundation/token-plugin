@@ -16,7 +16,7 @@ if sys.version_info < (3, 5):
 here = os.path.abspath(os.path.dirname(__file__))
 
 metadata = {}
-with open(os.path.join(here, 'sovtoken' '__metadata__.py'), 'r') as f:
+with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
 tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.4.0-dev-586']
