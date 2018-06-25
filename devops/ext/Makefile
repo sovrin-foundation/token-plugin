@@ -19,9 +19,9 @@ check_non_empty = $(if $(1),$(1),$(error $(2)))
 check_defined = $(if $(value $1),, $(error Undefined $1$(if $2,	($2))$(if $(value @), \
                     required by target '$@')))
 
-docker_env_value = $(call check_non_empty,$(shell grep -oP '^ENV $(1)=\K.*' $(2)), \
+docker_env_value = $(call check_non_empty,$(shell grep '^ENV $(1)=' $(2) | cut -d '=' -f 2), \
 				   "Value for ENV $(1) not found in dockerfile $(2)")
-docker_from_tag = $(call check_non_empty,$(shell grep -oP '^FROM $(1):\K.*' $(2)), \
+docker_from_tag = $(call check_non_empty,$(shell grep '^FROM $(1):' $(2) | cut -d ':' -f 2), \
 					"Tag for FROM $(1) not found in dockerfile $(2)")
 docker_from_version = $(firstword $(subst -, ,$(call docker_from_tag,$(1),$(2))))
 
@@ -99,7 +99,7 @@ image_python3_base_version:
 	echo $(BASE_DOCKER_VERSION)
 
 # TODO refactor that once compose provides support for images
-# build oreder: https://github.com/docker/compose/issues/5228
+# build order: https://github.com/docker/compose/issues/5228
 image_base:
 	$(call check_defined,BASE_DOCKER_VERSION)
 	BASE_DOCKER_VERSION=$(BASE_DOCKER_VERSION) \
