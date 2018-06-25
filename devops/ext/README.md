@@ -77,6 +77,7 @@ Variables to config packaing using [fpm][a1feb9f1] tool:
   - `FPM_P_INPUT_TYPE`: value for fpm's `--input-type` option. Default: `dir`
   - `FPM_P_OUTPUT_TYPE`: value for fpm's `--output-type` option. Default: `deb` if `OSNAME=xenial`, `rpm` if `OSNAME=centos7`, otherwise - not set
   - `FPM_P_OUTPUT_DIR`: value for fpm's `--package` option. Default: not set
+  - `FPM_P_ARCH`: value for fpm's `--architecture` option. Default: not set
   - `FPM_P_MAINTAINER`: value for fpm's `--maintainer` option. Default: not set
   - `FPM_P_URL`: value for fpm's `--url` option. Default: not set
   - `FPM_P_LICENSE`: value for fpm's `--license` option. Default: not set
