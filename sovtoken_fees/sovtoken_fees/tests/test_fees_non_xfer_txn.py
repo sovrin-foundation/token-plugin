@@ -7,13 +7,13 @@ from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
-from sovtoken_fees.src.constants import FEES, REF
-from sovtoken_fees.test.helper import gen_nym_req_for_fees
+from sovtoken_fees.constants import FEES, REF
+from sovtoken_fees.tests.helper import gen_nym_req_for_fees
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.src.constants import INPUTS, OUTPUTS
-from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.constants import INPUTS, OUTPUTS
+from sovtoken.util import update_token_wallet_with_result
 from plenum.test.helper import sdk_send_and_check
-from sovtoken_fees.test.test_set_get_fees import fees_set
+from sovtoken_fees.tests.test_set_get_fees import fees_set
 
 
 def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # noqa

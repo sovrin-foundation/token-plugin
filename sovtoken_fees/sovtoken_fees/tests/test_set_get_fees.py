@@ -1,5 +1,5 @@
 import pytest
-from sovtoken_fees.src.static_fee_req_handler import \
+from sovtoken_fees.static_fee_req_handler import \
     StaticFeesReqHandler
 
 from common.serializers.serialization import state_roots_serializer
@@ -13,14 +13,14 @@ from plenum.common.constants import NYM, STEWARD, STATE_PROOF, PROOF_NODES, \
     ROOT_HASH
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
-from sovtoken_fees.src.constants import FEES
-from sovtoken_fees.test.helper import get_fees_from_ledger, \
+from sovtoken_fees.constants import FEES
+from sovtoken_fees.tests.helper import get_fees_from_ledger, \
     check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
     send_get_fees
-from sovtoken.src.constants import XFER_PUBLIC
-from sovtoken.test.helper import decode_proof
+from sovtoken.constants import XFER_PUBLIC
+from sovtoken.tests.helper import decode_proof
 from plenum.test.conftest import get_data_for_role
-from sovtoken.test.conftest import build_wallets_from_data
+from sovtoken.tests.conftest import build_wallets_from_data
 
 
 def test_get_fees_when_no_fees_set(looper, nodeSetWithIntegratedTokenPlugin,

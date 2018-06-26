@@ -1,4 +1,4 @@
-from sovtoken_fees.src.transactions import FeesTransactions
+from sovtoken_fees.transactions import FeesTransactions
 
 FEES = 'fees'
 REF = 'ref'

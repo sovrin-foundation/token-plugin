@@ -3,9 +3,9 @@ from typing import Tuple
 from plenum.common.request import Request
 from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
-from sovtoken_fees.src.constants import FEES
-from sovtoken.src.constants import INPUTS, OUTPUTS
-from sovtoken.src.wallet import TokenWallet
+from sovtoken_fees.constants import FEES
+from sovtoken.constants import INPUTS, OUTPUTS
+from sovtoken.wallet import TokenWallet
 
 
 class FeeSupportedWallet(TokenWallet):

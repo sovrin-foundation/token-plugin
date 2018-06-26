@@ -1,6 +1,6 @@
 import pytest
 
-from sovtoken_fees.src.client_authnr import FeesAuthNr
+from sovtoken_fees.client_authnr import FeesAuthNr
 from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
 from plenum.common.constants import DOMAIN_LEDGER_ID

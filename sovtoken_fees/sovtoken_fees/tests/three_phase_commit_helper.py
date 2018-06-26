@@ -1,14 +1,14 @@
 from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE
 from plenum.common.types import f
-from sovtoken_fees.src.constants import FEE_TXNS_IN_BATCH, FEES
-from sovtoken_fees.test.helper import gen_nym_req_for_fees
+from sovtoken_fees.constants import FEE_TXNS_IN_BATCH, FEES
+from sovtoken_fees.tests.helper import gen_nym_req_for_fees
 from sovtoken import TOKEN_LEDGER_ID
 from state.trie.pruning_trie import BLANK_ROOT
 from common.serializers.serialization import state_roots_serializer
 from plenum.common.messages.node_messages import PrePrepare, Prepare, Ordered
 from plenum.common.util import get_utc_epoch
-from sovtoken_fees.src.three_phase_commit_handling import ThreePhaseCommitHandler
-from sovtoken_fees.test.test_set_get_fees import fees_set
+from sovtoken_fees.three_phase_commit_handling import ThreePhaseCommitHandler
+from sovtoken_fees.tests.test_set_get_fees import fees_set
 
 import pytest
 

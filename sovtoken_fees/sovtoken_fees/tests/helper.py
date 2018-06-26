@@ -3,7 +3,7 @@ import json
 from plenum.common.constants import TXN_TYPE
 from plenum.common.txn_util import get_payload_data
 from plenum.common.util import randomString
-from sovtoken_fees.src.constants import SET_FEES, FEES, GET_FEES
+from sovtoken_fees.constants import SET_FEES, FEES, GET_FEES
 from plenum.test.helper import waitForSufficientRepliesForRequests, \
     sdk_send_signed_requests, sdk_get_and_check_replies, sdk_gen_request, \
     sdk_sign_and_submit_req_obj, sdk_sign_request_objects, \

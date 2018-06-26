@@ -1,12 +1,12 @@
 
 import pytest
 
-from sovtoken_fees.src.static_fee_req_handler import StaticFeesReqHandler
+from sovtoken_fees.static_fee_req_handler import StaticFeesReqHandler
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
 from plenum.common.request import Request
 from plenum.common.constants import TXN_TYPE
-from sovtoken_fees.src.constants import SET_FEES, GET_FEES, FEES
-from sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from sovtoken_fees.constants import SET_FEES, GET_FEES, FEES
+from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientRequest
 

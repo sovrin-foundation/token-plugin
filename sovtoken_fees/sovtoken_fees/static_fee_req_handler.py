@@ -11,17 +11,17 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, add_sigs_to_txn
 # TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
-from sovtoken.src.txn_util import add_sigs_to_txn
+from sovtoken.txn_util import add_sigs_to_txn
 from plenum.common.types import f
 # from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
-from sovtoken_fees.src.constants import SET_FEES, GET_FEES, FEES, REF
-from sovtoken_fees.src.fee_req_handler import FeeReqHandler
-from sovtoken_fees.src.messages.fields import FeesStructureField
-from sovtoken.src.constants import INPUTS, OUTPUTS, \
+from sovtoken_fees.constants import SET_FEES, GET_FEES, FEES, REF
+from sovtoken_fees.fee_req_handler import FeeReqHandler
+from sovtoken_fees.messages.fields import FeesStructureField
+from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, SIGS
-from sovtoken.src.token_req_handler import TokenReqHandler
-from sovtoken.src.types import Output
+from sovtoken.token_req_handler import TokenReqHandler
+from sovtoken.types import Output
 from state.trie.pruning_trie import rlp_decode
 
 

@@ -1,6 +1,6 @@
 from plenum.common.types import f
 from plenum.common.util import updateNamedTuple
-from sovtoken_fees.src.constants import FEES, FEE_TXNS_IN_BATCH
+from sovtoken_fees.constants import FEES, FEE_TXNS_IN_BATCH
 from sovtoken import TOKEN_LEDGER_ID
 
 
