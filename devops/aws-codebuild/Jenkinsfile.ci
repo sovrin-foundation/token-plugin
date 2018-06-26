@@ -30,55 +30,53 @@ pipelineWrapper({
 
         Map builds = projects.collectEntries { proj ->
             osnames.collectEntries { osname ->
+                ["$proj:$osname": {
+                    def ciImageTag
+                    def prTag = "ci-$osname-$proj"
 
-            ["$proj:$osname": {
-                def ciImageTag
-                def prTag = "ci-$osname-$proj"
+                    stage("$osname:$proj: Resolve image tag") {
+                        def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
+                        ciImageTag = "$_imgVersion-$osname-$proj-ci"
+                        logger.info("CI docker image tag: $ciImageTag")
+                    }
 
-                stage("$osname:$proj: Resolve image tag") {
-                    def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-                    ciImageTag = "$_imgVersion-$osname-$proj-ci"
-                    logger.info("CI docker image tag: $ciImageTag")
-                }
+                    awsCBHelper.build() {
+                        projectTag = prTag
 
-                awsCBHelper.build() {
-                    projectTag = prTag
+                        // env and build spec
+                        imageTag = ciImageTag
+                        buildspec = 'devops/aws-codebuild/buildspec.yml'
+                        envv = [
+                            [name: 'OSNAME', value: osname],
+                            [name: 'MAKE_GOALS', value: goals.join(' ')],
+                            [name: 'SRC_DIR_NAME', value: proj],
+                            [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
+                        ]
 
-                    // env and build spec
-                    imageTag = ciImageTag
-                    buildspec = 'devops/aws-codebuild/buildspec.yml'
-                    envv = [
-                        [name: 'OSNAME', value: osname],
-                        [name: 'MAKE_GOALS', value: goals.join(' ')],
-                        [name: 'SRC_DIR_NAME', value: proj],
-                        [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
-                    ]
+                        // build spec for env image
+                        envBuildSrc = ['devops'] // TODO make more accurate
+                        envBuildCmds = [
+                            'export PROJECT_DIR=$PWD',
+                            'make -C devops image_ci'
+                        ]
+                        envBuildEnvv = [
+                            [name: 'OSNAME', value: osname],
+                            [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
+                            [name: 'DOCKER_TAG', value: ciImageTag],
+                        ]
 
-                    // build spec for env image
-                    envBuildSrc = ['devops'] // TODO make more accurate
-                    envBuildCmds = [
-                        'export PROJECT_DIR=$PWD',
-                        'make -C devops image_ci'
-                    ]
-                    envBuildEnvv = [
-                        [name: 'OSNAME', value: osname],
-                        [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
-                        [name: 'DOCKER_TAG', value: ciImageTag],
-                    ]
+                        onArtifacts = {
+                            this.stage("$osname:$proj: Archive artifacts") {
+                                utils.archiveArtifacts("logs/*.out*") {
+                                    truncate = true
+                                    allowEmptyArchive = true
+                                }
 
-                    onArtifacts = {
-                        this.stage("$osname:$proj: Archive artifacts") {
-                            utils.archiveArtifacts("logs/*.out*") {
-                                truncate = true
-                                allowEmptyArchive = true
+                                this.junit "logs/test.${proj}.xml" // TODO variable for that
                             }
-
-                            this.junit "logs/test.${proj}.xml" // TODO variable for that
                         }
                     }
-                }
-            }]
-
+                }]
             }
         }
 
