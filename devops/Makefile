@@ -25,7 +25,7 @@ PRE_PACKAGE_GOALS := pre_package
 FPM_P_INPUT_TYPE := python
 FPM_P_ARCH := amd64
 # TODO seems fpm ignores __maintainer__ field in setup.py
-FPM_P_MAINTAINER := $(shell PYTHONPATH=$(SRC_DIR) python -c "from __metadata__ import __maintainer__; print(__maintainer__)")
+FPM_P_MAINTAINER := $(shell PYTHONPATH=$(SRC_DIR) python -c "from $(SRC_DIR_NAME) import __maintainer__; print(__maintainer__)")
 FPM_P_OUTPUT_DIR = $(BUILD_DIR)
 FPM_ARGS = --no-python-fix-name \
 		   --python-bin "/usr/bin/python3" \
