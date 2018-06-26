@@ -5,11 +5,11 @@ from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
     CouldNotAuthenticate
 from plenum.server.client_authn import CoreAuthNr
-from sovtoken.src.wallet import TokenWallet
-from sovtoken.src.client_authnr import TokenAuthNr, AddressSigVerifier
-from sovtoken.src.constants import INPUTS, OUTPUTS, EXTRA
+from sovtoken.wallet import TokenWallet
+from sovtoken.client_authnr import TokenAuthNr, AddressSigVerifier
+from sovtoken.constants import INPUTS, OUTPUTS, EXTRA
 from plenum.common.types import f, OPERATION
-from sovtoken.test.helper import public_mint_request, \
+from sovtoken.tests.helper import public_mint_request, \
     xfer_request
 
 

@@ -2,7 +2,7 @@ from ledger.compact_merkle_tree import CompactMerkleTree
 from plenum.common.ledger import Ledger
 from plenum.persistence.db_hash_store import DbHashStore
 from storage.helper import initKeyValueStorage
-from sovtoken.src.utxo_cache import UTXOCache
+from sovtoken.utxo_cache import UTXOCache
 from state.pruning_state import PruningState
 
 

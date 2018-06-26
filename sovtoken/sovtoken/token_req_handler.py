@@ -6,7 +6,7 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
 # TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
-from sovtoken.src.txn_util import add_sigs_to_txn
+from sovtoken.txn_util import add_sigs_to_txn
 
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
@@ -18,12 +18,12 @@ from plenum.common.messages.fields import IterableField
 from plenum.common.request import Request
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
-from sovtoken.src.constants import XFER_PUBLIC, MINT_PUBLIC, \
+from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
-from sovtoken.src.messages.fields import PublicOutputField, \
+from sovtoken.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
-from sovtoken.src.types import Output
-from sovtoken.src.utxo_cache import UTXOCache
+from sovtoken.types import Output
+from sovtoken.utxo_cache import UTXOCache
 
 
 # TODO: Rename to `PaymentReqHandler`

@@ -2,17 +2,17 @@ from storage.kv_in_memory import KeyValueStorageInMemory
 
 from state.db.persistent_db import PersistentDB
 
-from sovtoken.src.token_req_handler import TokenReqHandler
+from sovtoken.token_req_handler import TokenReqHandler
 
 from common.serializers.serialization import state_roots_serializer
 
 from plenum.common.constants import STATE_PROOF, PROOF_NODES, ROOT_HASH
-from sovtoken.src.constants import OUTPUTS
-from sovtoken.src.util import update_token_wallet_with_result
+from sovtoken.constants import OUTPUTS
+from sovtoken.util import update_token_wallet_with_result
 
-from sovtoken.test.helper import send_get_utxo, send_xfer, \
+from sovtoken.tests.helper import send_get_utxo, send_xfer, \
     decode_proof
-from sovtoken.test.test_public_xfer_2 import user1_token_wallet, user1_address
+from sovtoken.tests.test_public_xfer_2 import user1_token_wallet, user1_address
 from state.trie.pruning_trie import Trie, rlp_encode
 
 

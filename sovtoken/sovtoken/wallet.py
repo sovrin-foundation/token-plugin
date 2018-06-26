@@ -15,7 +15,7 @@ from plenum.common.signer_simple import SimpleSigner
 from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
 from plenum.common.types import OPERATION, f
 from plenum.common.util import lxor
-from sovtoken.src.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC, SIGS
+from sovtoken.constants import INPUTS, GET_UTXO, OUTPUTS, XFER_PUBLIC, SIGS
 
 
 class Address:

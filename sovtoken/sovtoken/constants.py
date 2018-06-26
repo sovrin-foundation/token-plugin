@@ -1,4 +1,4 @@
-from sovtoken.src.transactions import TokenTransactions
+from sovtoken.transactions import TokenTransactions
 
 INPUTS = 'inputs'
 OUTPUTS = 'outputs'

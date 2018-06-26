@@ -1,10 +1,10 @@
 from plenum.common.constants import DOMAIN_LEDGER_ID
-from sovtoken.src.client_authnr import TokenAuthNr
-from sovtoken.src.config import get_config
-from sovtoken.src.constants import TOKEN_LEDGER_ID
-from sovtoken.src.storage import get_token_hash_store, \
+from sovtoken.client_authnr import TokenAuthNr
+from sovtoken.config import get_config
+from sovtoken.constants import TOKEN_LEDGER_ID
+from sovtoken.storage import get_token_hash_store, \
     get_token_ledger, get_token_state, get_utxo_cache
-from sovtoken.src.token_req_handler import TokenReqHandler
+from sovtoken.token_req_handler import TokenReqHandler
 
 
 def integrate_plugin_in_node(node):

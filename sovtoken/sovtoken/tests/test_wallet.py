@@ -1,8 +1,8 @@
 import pytest
 from base58 import b58decode
 
-from sovtoken.src.messages.fields import PublicAddressField
-from sovtoken.src.wallet import TokenWallet, Address
+from sovtoken.messages.fields import PublicAddressField
+from sovtoken.wallet import TokenWallet, Address
 
 
 @pytest.fixture()

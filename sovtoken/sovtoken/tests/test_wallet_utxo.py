@@ -1,6 +1,6 @@
 import pytest
-from sovtoken.src.wallet import TokenWallet, Address
-from sovtoken.src.constants import OUTPUTS
+from sovtoken.wallet import TokenWallet, Address
+from sovtoken.constants import OUTPUTS
 
 
 @pytest.fixture(scope="module")
