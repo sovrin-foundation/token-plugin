@@ -29,7 +29,7 @@ pipelineWrapper({
         }
 
         Map builds = projects.collectEntries { proj ->
-            osname.collectEntries { osname ->
+            osnames.collectEntries { osname ->
 
             ["$proj:$osname": {
                 def ciImageTag
@@ -63,7 +63,7 @@ pipelineWrapper({
                     envBuildEnvv = [
                         [name: 'OSNAME', value: osname],
                         [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
-                        [name: 'DOCKER_TAG', value: $ciImageTag],
+                        [name: 'DOCKER_TAG', value: ciImageTag],
                     ]
 
                     onArtifacts = {
