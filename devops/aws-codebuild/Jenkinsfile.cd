@@ -129,6 +129,11 @@ pipelineWrapper({
 
             }]
         }
+
+        stage("Package and publish") {
+            builds.failFast = false
+            utils.parallel builds
+        }
     }
 }, { err ->
     if (err) {
