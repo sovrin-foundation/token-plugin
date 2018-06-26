@@ -41,17 +41,7 @@ DOCKER_TAG ?=
 CI_DOCKERFILE_PATH = docker/ci/$(OSNAME)/Dockerfile
 
 # pytest related variables
-PYTEST_ARGS ?=
-
-PYTEST_LOCALS ?= 1
-ifeq ($(PYTEST_LOCALS),1)
-PYTEST_ARGS += --showlocals
-endif
-
-ifneq ($(PYTEST_JUNIT_XML),)
-PYTEST_ARGS += --junit-xml=$(PYTEST_JUNIT_XML)
-endif
-
+PYTEST_ARGS ?= --showlocals
 
 EXPORT_ENV += OSNAME SRC_DIR_NAME PYTEST_ARGS
 
@@ -87,7 +77,7 @@ pipenv_version:
 	pipenv --version
 
 # TODO
-# clean_pycache needs only when mixinf in-docker and host testing
+# clean_pycache needs only when mixing in-docker and host testing
 # needs to optimze to leave cache otherwise
 test: $(SRC_DIR) pipenv_version clean_pycache
 	echo "Running tests"
