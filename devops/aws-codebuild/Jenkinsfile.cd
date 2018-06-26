@@ -35,6 +35,7 @@ pipelineWrapper({
 
             ["$proj:$osname": {
 
+                def prTag = "ci-$osname-$proj" // use ci project
                 def srcVersion
                 def lastRevision
                 def debPVersion
@@ -81,7 +82,7 @@ pipelineWrapper({
                 }
 
                 awsCBHelper.build() {
-                    projectTag = "ci-$osname-$proj" // use ci project
+                    projectTag = prTag
 
                     // TODO shouldn't create/update CodeBuild project assuming that CI did this before
                     // and no changes in settings have appeared
