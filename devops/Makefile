@@ -95,8 +95,9 @@ test: $(SRC_DIR) pipenv_version clean_pycache
 # seems pipenv has some bugs regarding extras
 	cd $< \
 		&& pipenv --three \
+		&& pipenv run pip install -U -e ../sovtoken \
 		&& pipenv run pip install .[tests] \
-		&& PYTHONPATH=.. pipenv run python -m pytest $(PYTEST_ARGS)
+		&& pipenv run python -m pytest $(PYTEST_ARGS)
 
 pre_package: python_version | $(BUILD_DIR)
 	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)

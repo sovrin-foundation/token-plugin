@@ -4,6 +4,7 @@ import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
+#, add_sigs_to_txn
 # TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
