@@ -12,7 +12,7 @@ pipelineWrapper({
 
     nodeWrapper {
         def osname = 'xenial'
-        List projects = [['sovtoken', 'sovtoken'], ['sovtoken_fees', 'sovtoken_fees']]
+        List projects = [['sovtoken', 'sovtoken'], ['sovtoken_fees', 'sovtoken-fees']]
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -93,7 +93,7 @@ pipelineWrapper({
                         [name: 'OSNAME', value: osname],
                         [name: 'MAKE_GOALS', value: 'package'],
                         [name: 'SRC_DIR_NAME', value: proj],
-                        [name: 'ARTIFACTS', value: "_build/$proj/*$packageName*.*"], // TODO more accurate here
+                        [name: 'ARTIFACTS', value: "devops/_build/$proj/*$packageName*.*"], // TODO more accurate here
                         [name: 'FPM_P_VERSION', value: debPVersion],
                     ]
 
