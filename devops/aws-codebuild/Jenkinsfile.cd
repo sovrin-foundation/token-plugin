@@ -41,9 +41,6 @@ pipelineWrapper({
                 def goals = ['package']
 
                 def ciImageTag
-                def osname = 'xenial'
-
-                def ciImageTag
 
                 stage('Resolve current source version') {
                     // TODO
