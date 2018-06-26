@@ -12,30 +12,32 @@ pipelineWrapper({
     nodeWrapper {
 
         List osnames = ['xenial']
-        def goals = ['test']
+        List projects = ['sovtoken', 'sovtoken_fees']
+        List goals = ['test']
 
         stage('Checkout from SCM') {
             checkout scm
         }
 
         def utils = evLibrary.Utils.new(this)
-        // TODO Cargo.toml is necessary only for variable in makefile which is not used for that context, thus
-        // shouldn't be taken into account when deciding to rebuild docker images
-        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin', ['devops', 'sovtoken/__metadata__.py', 'sovtoken_fees/__metadata__.py'])
+        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+            ['devops', 'sovtoken/__metadata__.py', 'sovtoken_fees/__metadata__.py'])
         def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
         stage('Upload source to S3') {
             awsCBHelper.uploadSourceToS3()
         }
 
-        Map builds = osnames.collectEntries { osname ->
-            [(osname): {
-                def ciImageTag
-                def prTag = "ci-$osname"
+        Map builds = projects.collectEntries { proj ->
+            osname.collectEntries { osname ->
 
-                stage("$osname: Resolve image tag") {
+            ["$proj:$osname": {
+                def ciImageTag
+                def prTag = "ci-$osname-$proj"
+
+                stage("$osname:$proj: Resolve image tag") {
                     def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-                    ciImageTag = "${_imgVersion}-${osname}-ci"
+                    ciImageTag = "$_imgVersion-$osname-$proj-ci"
                     logger.info("CI docker image tag: $ciImageTag")
                 }
 
@@ -46,9 +48,10 @@ pipelineWrapper({
                     imageTag = ciImageTag
                     buildspec = 'devops/aws-codebuild/buildspec.yml'
                     envv = [
-                        [name: 'OSNAME', value: "$osname"],
-                        [name: 'MAKE_GOALS', value: "${goals.join(' ')}"],
-                        [name: 'PYTEST_JUNIT_XML', value: "/tmp/artifacts/logs/test.xml"],
+                        [name: 'OSNAME', value: osname],
+                        [name: 'MAKE_GOALS', value: goals.join(' ')],
+                        [name: 'SRC_DIR_NAME', value: proj],
+                        [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
                     ]
 
                     // build spec for env image
@@ -58,23 +61,25 @@ pipelineWrapper({
                         'make -C devops image_ci'
                     ]
                     envBuildEnvv = [
-                        [name: 'OSNAME', value: "$osname"],
-                        [name: 'DOCKER_NAME', value: "$awsCBHelper.buildCtx.projectName"],
-                        [name: 'DOCKER_TAG', value: "$ciImageTag"],
+                        [name: 'OSNAME', value: osname],
+                        [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
+                        [name: 'DOCKER_TAG', value: $ciImageTag],
                     ]
 
                     onArtifacts = {
-                        this.stage("$osname: Archive artifacts") {
+                        this.stage("$osname:$proj: Archive artifacts") {
                             utils.archiveArtifacts("logs/*.out*") {
                                 truncate = true
                                 allowEmptyArchive = true
                             }
 
-                            junit 'logs/test.xml' // TODO variable for that
+                            this.junit "logs/test/test.${proj}.xml" // TODO variable for that
                         }
                     }
                 }
             }]
+
+            }
         }
 
         stage("Build and test") {
