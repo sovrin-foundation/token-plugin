@@ -12,7 +12,7 @@ pipelineWrapper({
     nodeWrapper {
 
         List osnames = ['xenial']
-        List projects = ['sovtoken', 'sovtoken_fees']
+        List projects = ['sovtoken', 'sovtokenfees']
         List goals = ['test']
 
         stage('Checkout from SCM') {
@@ -21,7 +21,7 @@ pipelineWrapper({
 
         def utils = evLibrary.Utils.new(this)
         def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
-            ['devops', 'sovtoken/__metadata__.py', 'sovtoken_fees/__metadata__.py'])
+            ['devops', 'sovtoken/__metadata__.py', 'sovtokenfees/__metadata__.py'])
         def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
         stage('Upload source to S3') {

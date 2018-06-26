@@ -1,2 +1,2 @@
 pip install sovtoken/
-pip install sovtoken_fees/
+pip install sovtokenfees/

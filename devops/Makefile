@@ -12,8 +12,8 @@ ifndef SRC_DIR_NAME
 SRC_DIR_NAME := sovtoken
 endif
 
-ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtoken_fees),)
-$(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtoken_fees' but is '$(SRC_DIR_NAME)'")
+ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtokenfees),)
+$(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtokenfees' but is '$(SRC_DIR_NAME)'")
 endif
 
 SRC_DIR := $(PROJECT_DIR)/$(SRC_DIR_NAME)
@@ -29,6 +29,7 @@ FPM_P_MAINTAINER := $(shell PYTHONPATH=$(SRC_DIR) python -c "from $(SRC_DIR_NAME
 FPM_P_OUTPUT_DIR = $(BUILD_DIR)
 FPM_ARGS = --no-python-fix-name \
 		   --python-bin "/usr/bin/python3" \
+		   --no-python-fix-dependencies \
 		   --exclude "*.pyc" \
 		   --exclude "*.pyo" \
 		   --after-install "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/postinst" \
