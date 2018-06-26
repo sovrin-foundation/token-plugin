@@ -11,17 +11,8 @@ logger.setGlobalLevel('TRACE')
 pipelineWrapper({
 
     nodeWrapper {
-        // TODO parallel build for sovtoken and sovtoken_fees
-        def packageName = 'sovtoken'
-        def srcVersion
-        def lastRevision
-        def debPVersion
-        def cratePVersion
-        def goals = ['package']
-
-        def ciImageTag
         def osname = 'xenial'
-        def prTag = "ci-$osname" // use ci project
+        List projects = [['sovtoken', 'sovtoken'], ['sovtoken_fees', 'sovtoken_fees']]
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -29,95 +20,117 @@ pipelineWrapper({
 
         def evernymRepo = evLibrary.EvernymRepo.new(this)
         def utils = evLibrary.Utils.new(this)
-        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin')
+        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+            ['devops', 'sovtoken/__metadata__.py', 'sovtoken_fees/__metadata__.py'])
         def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
-        stage('Resolve current source version') {
-            // TODO
-            srcVersion = '0.1.0'
-            //utils.srcVersion(projectType: 'rust')
-            logger.info("Current source version: $srcVersion")
-        }
-
-        stage('Resolve last revision') {
-            lastRevision = evernymRepo.getLastRevision {
-                delegate.packageName = packageName
-                packageSrcVersion = srcVersion
-                repoDistr = 'agency-dev'
-            }
-
-            if (lastRevision) {
-                logger.info("Found last revision number: $lastRevision")
-            } else {
-                logger.info("No previous revision was found")
-            }
-        }
-
-        stage('Set release parameters') {
-            def releaseVersion = "${lastRevision ? lastRevision[0] + 1: 1}.$BUILD_NUMBER"
-
-            debPVersion = utils.packageVersion('deb-kraken', srcVersion, releaseVersion)
-            logger.info("Package version for evernym repo: $debPVersion")
-
-            // TODO crate and rpm
-            //cratePVersion = utils.packageVersion('crate', srcVersion, releaseVersion)
-            //logger.info("Package version for rust registry: $cratePVersion")
-        }
-
-        stage("$osname: Resolve image tag") {
-            def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-            ciImageTag = "${_imgVersion}-${osname}-ci"
-            logger.info("CI docker image tag: $ciImageTag")
-        }
 
         stage('Upload source to S3') {
             awsCBHelper.uploadSourceToS3()
         }
 
-        awsCBHelper.build() {
-            projectTag = "ci-$osname"
+        Map builds = projects.collectEntries {
+            def proj = it[0]
+            def packageName = it[1]
 
-            // TODO shouldn't create/update CodeBuild project assuming that CI did this before
-            // and no changes in settings have appeared
+            ["$proj:$osname": {
 
-            // env and build spec
-            imageTag = ciImageTag
-            buildspec = 'devops/aws-codebuild/buildspec.yml'
-            envv = [
-                [name: 'OSNAME', value: "$osname"],
-                [name: 'MAKE_GOALS', value: "${goals.join(' ')}"],
-                [name: 'ARTIFACTS', value: "_build/*$packageName*.*"], // TODO more accurate here
-                [name: 'FPM_P_VERSION', value: debPVersion],
-            ]
+                def srcVersion
+                def lastRevision
+                def debPVersion
+                def goals = ['package']
 
-            onArtifacts = {
-                this.stage("$osname: Archive logs") {
-                    utils.archiveArtifacts("logs/*.out*") {
-                        truncate = true
-                        allowEmptyArchive = true
+                def ciImageTag
+                def osname = 'xenial'
+
+                def ciImageTag
+
+                stage('Resolve current source version') {
+                    // TODO
+                    srcVersion = '0.1.0'
+                    //utils.srcVersion(projectType: 'rust')
+                    logger.info("Current source version: $srcVersion")
+                }
+
+                stage('Resolve last revision') {
+                    lastRevision = evernymRepo.getLastRevision {
+                        delegate.packageName = packageName
+                        packageSrcVersion = srcVersion
+                        repoDistr = 'agency-dev'
+                    }
+
+                    if (lastRevision) {
+                        logger.info("Found last revision number: $lastRevision")
+                    } else {
+                        logger.info("No previous revision was found")
                     }
                 }
-            }
-        }
 
-        stage('Upload deb to Evernym repo') {
-            String debName
+                stage('Set release parameters') {
+                    def releaseVersion = "${lastRevision ? lastRevision[0] + 1: 1}.$BUILD_NUMBER"
 
-            dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
-                debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
+                    debPVersion = utils.packageVersion('deb-kraken', srcVersion, releaseVersion)
+                    logger.info("Package version for evernym repo: $debPVersion")
 
-                logger.info("Uploading debian package '$debName' to evernym repo")
-                evernymRepo.upload {
-                    repoDistr = 'agency_dev'
-                    packagePath = debName
+                    // TODO crate and rpm
+                    //cratePVersion = utils.packageVersion('crate', srcVersion, releaseVersion)
+                    //logger.info("Package version for rust registry: $cratePVersion")
                 }
-            }
 
-            notifier.email {
-                subject = '$PROJECT_NAME - Build # $BUILD_NUMBER: ' + "new deb '$debName' was published"
-                body = ("New debian package '$debName' was built and published" +
-                    '\n\nCheck console output at $BUILD_URL to view the results.')
-            }
+                stage("$osname:$proj: Resolve image tag") {
+                    def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
+                    ciImageTag = "$_imgVersion-$osname-$proj-ci"
+                    logger.info("CI docker image tag: $ciImageTag")
+                }
+
+                awsCBHelper.build() {
+                    projectTag = "ci-$osname-$proj" // use ci project
+
+                    // TODO shouldn't create/update CodeBuild project assuming that CI did this before
+                    // and no changes in settings have appeared
+
+                    // env and build spec
+                    imageTag = ciImageTag
+                    buildspec = 'devops/aws-codebuild/buildspec.yml'
+                    envv = [
+                        [name: 'OSNAME', value: osname],
+                        [name: 'MAKE_GOALS', value: 'package'],
+                        [name: 'SRC_DIR_NAME', value: proj],
+                        [name: 'ARTIFACTS', value: "_build/$proj/*$packageName*.*"], // TODO more accurate here
+                        [name: 'FPM_P_VERSION', value: debPVersion],
+                    ]
+
+                    onArtifacts = {
+                        this.stage("$osname:$proj: Archive logs") {
+                            utils.archiveArtifacts("logs/*.out*") {
+                                truncate = true
+                                allowEmptyArchive = true
+                            }
+                        }
+                    }
+                }
+
+                stage('Upload deb to Evernym repo') {
+                    String debName
+
+                    dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
+                        debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
+
+                        logger.info("Uploading debian package '$debName' to evernym repo")
+                        evernymRepo.upload {
+                            repoDistr = 'agency_dev'
+                            packagePath = debName
+                        }
+                    }
+
+                    notifier.email {
+                        subject = '$PROJECT_NAME - Build # $BUILD_NUMBER: ' + "new deb '$debName' was published"
+                        body = ("New debian package '$debName' was built and published" +
+                            '\n\nCheck console output at $BUILD_URL to view the results.')
+                    }
+                }
+
+            }]
         }
     }
 }, { err ->
