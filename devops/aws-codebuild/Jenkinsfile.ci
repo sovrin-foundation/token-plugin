@@ -73,7 +73,7 @@ pipelineWrapper({
                                 allowEmptyArchive = true
                             }
 
-                            this.junit "logs/test/test.${proj}.xml" // TODO variable for that
+                            this.junit "logs/test.${proj}.xml" // TODO variable for that
                         }
                     }
                 }
