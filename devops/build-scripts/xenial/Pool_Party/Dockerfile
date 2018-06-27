@@ -2,7 +2,8 @@
 ##  Use this to create a pool of nodes that uses 
 ##  the payment plugins with plenum
 ##
-##  find the missing deb pkgs in google drive token-team
+##  find the missing deb pkgs in google drive 
+##  token-team/builds/dev
 ##  
 ##  place required deb pkgs in the same folder as this
 ##  dockerfile then run the following commands
