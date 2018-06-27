@@ -65,10 +65,6 @@ pipelineWrapper({
 
                     debPVersion = utils.packageVersion('deb', srcVersion, releaseVersion)
                     logger.info("Package version for evernym repo: $debPVersion")
-
-                    // TODO crate and rpm
-                    //cratePVersion = utils.packageVersion('crate', srcVersion, releaseVersion)
-                    //logger.info("Package version for rust registry: $cratePVersion")
                 }
 
                 stage("$osname:$project: Resolve image tag") {
