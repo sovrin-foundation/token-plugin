@@ -16,17 +16,24 @@ ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtokenfees),)
 $(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtokenfees' but is '$(SRC_DIR_NAME)'")
 endif
 
+SRC_MODULE_NAME ?= $(SRC_DIR_NAME)
 SRC_DIR := $(PROJECT_DIR)/$(SRC_DIR_NAME)
+SRC_METADATA := $(SRC_DIR)/$(SRC_MODULE_NAME)/__metadata__.py
 
 BUILD_DIR := _build/$(SRC_DIR_NAME)
+
+metadata_value = $(call check_non_empty,$(shell python -c "md={}; exec(open('$(SRC_METADATA)', 'r').read(), md); print(md['$1'])"), \
+				   "Metadata value for '$(1)' not found in $(SRC_METADATA)")
 
 # package related variables
 PRE_PACKAGE_GOALS := pre_package
 FPM_P_INPUT_TYPE := python
 FPM_P_ARCH := amd64
-# TODO seems fpm ignores __maintainer__ field in setup.py
-FPM_P_MAINTAINER := $(shell PYTHONPATH=$(SRC_DIR) python -c "from $(SRC_DIR_NAME) import __maintainer__; print(__maintainer__)")
-FPM_P_OUTPUT_DIR = $(BUILD_DIR)
+# TODO seems fpm ignores maintainer field in setup.py
+# TODO delayed (recursive) expansion since 'check_non_empty' is available only after
+# ext/Makefile include statement
+FPM_P_MAINTAINER = $(call metadata_value,__maintainer__)
+FPM_P_OUTPUT_DIR := $(BUILD_DIR)
 FPM_ARGS = --no-python-fix-name \
 		   --python-bin "/usr/bin/python3" \
 		   --no-python-fix-dependencies \
@@ -53,6 +60,9 @@ all: test_dry test package
 include ext/Makefile
 
 export OSNAME
+
+src_version:
+	echo $(call metadata_value,__version__)
 
 image_ci_base_version:
 	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'evernym/python3',$(CI_DOCKERFILE_PATH)))

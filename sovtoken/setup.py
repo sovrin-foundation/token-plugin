@@ -29,6 +29,7 @@ setup(
     url=metadata['__url__'],
     author=metadata['__author__'],
     author_email=metadata['__author_email__'],
+    maintainer=metadata['__maintainer__'],
     license=metadata['__license__'],
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
