@@ -15,7 +15,7 @@
 
 
     Running the command `docker ps` will show the container id If you want to
-    connect to the shell of the containeryou can use the following exec command
+    connect to the shell of the container you can use the following exec command
     replacing the <container_id> with the id of the running container
 
     #+BEGIN_SRC bash 
