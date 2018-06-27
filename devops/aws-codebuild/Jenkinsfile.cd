@@ -42,7 +42,7 @@ pipelineWrapper({
                 def ciImageTag
 
                 stage('Get source version') {
-                    srcVersion = = utils.shStdout("SRC_DIR_NAME=$project make -C devops src_version -s")
+                    srcVersion = utils.shStdout("SRC_DIR_NAME=$project make -C devops src_version -s")
                     logger.info("Current source version: $srcVersion")
                 }
 
