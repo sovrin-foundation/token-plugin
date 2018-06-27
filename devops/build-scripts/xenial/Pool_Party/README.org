@@ -1,0 +1,23 @@
+#+author: Cam Parra
+
+* How to run this docker file
+  Use this to create a pool of nodes that uses the payment plugins with plenum
+
+  find the missing deb pkgs in google drive token-team
+
+  place required deb pkgs in the same folder as this dockerfile then run the
+  following commands
+
+    #+BEGIN_SRC bash
+     docker build -t indy_pool .
+     docker run -itd -p 9701-9708:9701-9708 indy_pool
+    #+END_SRC
+
+
+    Running the command `docker ps` will show the container id If you want to
+    connect to the shell of the containeryou can use the following exec command
+    replacing the <container_id> with the id of the running container
+
+    #+BEGIN_SRC bash 
+     docker exec -it <container_id> /bin/bash
+    #+END_SRC
