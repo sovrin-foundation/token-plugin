@@ -114,6 +114,7 @@ pipelineWrapper({
                     }
 
                     notifier.email {
+                        to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
                         subject = '$PROJECT_NAME - Build # $BUILD_NUMBER: ' + "new deb '$debName' was published"
                         body = ("New debian package '$debName' was built and published" +
                             '\n\nCheck console output at $BUILD_URL to view the results.')
@@ -134,6 +135,8 @@ pipelineWrapper({
     }
 
     stage("Build result notification") {
-        notifier.email()
+        notifier.email {
+            to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
+        }
     }
 })
