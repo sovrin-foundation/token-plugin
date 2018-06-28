@@ -1,8 +1,5 @@
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
 
-from plenum.common.exceptions import UnknownIdentifier
-
-
 def register_token_wallet_with_client(client, token_wallet):
     client.registerObserver(token_wallet.on_reply_from_network)
 
@@ -23,6 +20,8 @@ def verkey_to_address(verkey):
 
 
 def decode_address_to_vk_bytes(address):
+    from plenum.common.exceptions import UnknownIdentifier
+
     if isinstance(address, str):
         address = address.encode()
     try:
