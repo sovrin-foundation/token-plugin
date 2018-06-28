@@ -57,3 +57,4 @@ def integrate_plugin_in_node(node):
                                       three_pc_handler.batch_created)
     node.master_replica.register_hook(ReplicaHooks.BATCH_REJECTED,
                                       three_pc_handler.batch_rejected)
+    return node
