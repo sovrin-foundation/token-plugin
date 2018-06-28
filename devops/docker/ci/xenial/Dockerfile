@@ -9,20 +9,31 @@ RUN apt-get update && apt-get install -y \
         software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
+# rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
     && add-apt-repository "deb https://repo.sovrin.org/deb xenial master" \
-    && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial stable" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
         zlib1g-dev \
         liblz4-dev \
         libsnappy-dev \
         rocksdb=5.8.8 \
-        libindy \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -U \
-        indy-plenum-dev
+# libindy and libindy-crypto
+RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
+    && apt-get update && apt-get install -y \
+        libindy-crypto=0.4.1~46 \
+        libindy=1.4.0~586 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install -U pipenv
+
+# TODO workaround (suggested by http://click.pocoo.org/5/python3/)
+# to use pipenv's dependency 'click' (http://click.pocoo.org)
+# check for alternatives
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 RUN useradd -ms /bin/bash -u $u_id $u_name
 USER $u_name
@@ -30,4 +41,4 @@ USER $u_name
 # TODO CMD ENTRYPOINT ...
 WORKDIR /home/$u_name
 
-ENV CI_ENV_VERSION=0.1.0
+ENV CI_ENV_VERSION=0.2.0

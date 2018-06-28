@@ -1,7 +1,6 @@
 #TODO
 # - docker-compose re-runs build always (it's fast because of cache but anyway)
 
-RELEASE ?= 1
 OSNAME ?= xenial
 
 ifndef PROJECT_DIR
@@ -13,32 +12,35 @@ ifndef SRC_DIR_NAME
 SRC_DIR_NAME := sovtoken
 endif
 
-ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtoken_fees),)
-$(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtoken_fees' but is '$(SRC_DIR_NAME)'")
+ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtokenfees),)
+$(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtokenfees' but is '$(SRC_DIR_NAME)'")
 endif
 
+SRC_MODULE_NAME ?= $(SRC_DIR_NAME)
 SRC_DIR := $(PROJECT_DIR)/$(SRC_DIR_NAME)
-# TODO fix project strucure and update that
-SRC_VERSION := $(shell PYTHONPATH=$(SRC_DIR) python -c "from __metadata__ import __version__; print(__version__)")
+SRC_METADATA := $(SRC_DIR)/$(SRC_MODULE_NAME)/__metadata__.py
 
-BUILD_DIR := _build
+BUILD_DIR := _build/$(SRC_DIR_NAME)
+
+metadata_value = $(call check_non_empty,$(shell python -c "md={}; exec(open('$(SRC_METADATA)', 'r').read(), md); print(md['$1'])"), \
+				   "Metadata value for '$(1)' not found in $(SRC_METADATA)")
 
 # package related variables
 PRE_PACKAGE_GOALS := pre_package
-FPM_P_INPUT_TYPE=python
-FPM_P_MAINTAINER := Evernym
-FPM_P_URL := https://github.com/evernym/plugin
-FPM_P_LICENSE := Apache License 2.0
-FPM_P_VENDOR := Evernym
-# TODO conditional: fees or payments
-FPM_P_DESCRIPTION := Sovrin Ledger plugins
-FPM_P_NAME = $(SRC_DIR_NAME)
-FPM_P_VERSION ?= $(SRC_VERSION)
-FPM_P_OUTPUT_DIR = $(BUILD_DIR)
-FPM_ARGS = --python-package-name-prefix "python3" \
+FPM_P_INPUT_TYPE := python
+FPM_P_ARCH := amd64
+# TODO seems fpm ignores maintainer field in setup.py
+# TODO delayed (recursive) expansion since 'check_non_empty' is available only after
+# ext/Makefile include statement
+FPM_P_MAINTAINER = $(call metadata_value,__maintainer__)
+FPM_P_OUTPUT_DIR := $(BUILD_DIR)
+FPM_ARGS = --no-python-fix-name \
 		   --python-bin "/usr/bin/python3" \
+		   --no-python-fix-dependencies \
 		   --exclude "*.pyc" \
 		   --exclude "*.pyo" \
+		   --after-install "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/postinst" \
+           --before-remove "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/prerm" \
 		   $(SRC_DIR)
 
 # docker related variables
@@ -46,15 +48,21 @@ DOCKER_NAME ?= evernym/plugin
 DOCKER_TAG ?=
 CI_DOCKERFILE_PATH = docker/ci/$(OSNAME)/Dockerfile
 
-EXPORT_ENV += OSNAME
+# pytest related variables
+PYTEST_ARGS ?= --showlocals
 
-.PHONY: all python_version test pre_package clean
+EXPORT_ENV += OSNAME SRC_DIR_NAME PYTEST_ARGS
+
+.PHONY: all python_version test pre_package clean_pycache clean
 
 all: test_dry test package
 
 include ext/Makefile
 
 export OSNAME
+
+src_version:
+	echo $(call metadata_value,__version__)
 
 image_ci_base_version:
 	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'evernym/python3',$(CI_DOCKERFILE_PATH)))
@@ -76,17 +84,36 @@ CI_IMAGE_BASED_TARGETS = test package clean
 
 $(patsubst %,image_%, $(CI_IMAGE_BASED_TARGETS)): image_ci
 
-python_version:
-	python --version
-	pip --version
-	pytest --version
+pipenv_version:
+	pipenv --version
 
-test: $(SRC_DIR) python_version
+# TODO
+# clean_pycache needs only when mixing in-docker and host testing
+# needs to optimze to leave cache otherwise
+test: $(SRC_DIR) pipenv_version clean_pycache
 	echo "Running tests"
-	cd $< && python -m pytest
+# TODO improve usage of pipenv (remove pip completely)
+# seems pipenv has some bugs regarding extras
+	cd $< \
+		&& pipenv --three \
+		&& pipenv run pip install -U -e ../sovtoken \
+		&& pipenv run pip install .[tests] \
+		&& pipenv run python -m pytest $(PYTEST_ARGS)
 
-pre_package:
-	rm -f $(BUILD_DIR)/$(LIBNAME)*$(SRC_VERSION)*.$(FPM_P_OUTPUT_TYPE)
+pre_package: python_version | $(BUILD_DIR)
+	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)
+	rm -rf $(SRC_DIR)/build
+
+
+$(BUILD_DIR):
+	mkdir -p $@
+
+clean_pycache:
+	find $(SRC_DIR) \
+		-name '__pycache__' -delete -print \
+		-o \
+		-name '*.pyc' -delete -print
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf $(SRC_DIR)/build

@@ -14,22 +14,20 @@ if sys.version_info < (3, 5):
     sys.exit(1)
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-metadata = {}
-with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
+metadata={}
+with open(os.path.join(here, 'sovtokenfees', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.4.0-dev-586']
+tests_require = ['pytest', 'pytest-xdist', 'python3-indy==1.4.0-dev-586']
 
 setup(
+
     name=metadata['__title__'],
-    version=metadata['__version__'],
+    version= metadata['__version__'],
     description=metadata['__description__'],
     long_description=metadata['__long_description__'],
-    url=metadata['__url__'],
     author=metadata['__author__'],
     author_email=metadata['__author_email__'],
-    maintainer=metadata['__maintainer__'],
     license=metadata['__license__'],
     keywords='',
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
@@ -37,8 +35,8 @@ setup(
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
     include_package_data=True,
-    install_requires=['indy-plenum-dev==1.4.420'],
     setup_requires=['pytest-runner'],
+    install_requires=['sovtoken'],
     extras_require={
         'tests': tests_require,
         'benchmark': ['pympler']
@@ -46,3 +44,4 @@ setup(
     tests_require=tests_require,
     scripts=[]
 )
+
