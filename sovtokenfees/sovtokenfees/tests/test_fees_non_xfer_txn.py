@@ -2,7 +2,6 @@ import json
 
 import pytest
 
-from ledger.util import F
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no

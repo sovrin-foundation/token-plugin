@@ -1,14 +1,15 @@
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
-from sovtokenfees.client_authnr import FeesAuthNr
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
-from sovtokenfees.three_phase_commit_handling import \
-    ThreePhaseCommitHandler
-from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.client_authnr import TokenAuthNr
 
 
 def integrate_plugin_in_node(node):
+    from sovtokenfees.client_authnr import FeesAuthNr
+    from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+    from sovtokenfees.three_phase_commit_handling import \
+        ThreePhaseCommitHandler
+    from sovtoken import TOKEN_LEDGER_ID
+    from sovtoken.client_authnr import TokenAuthNr
+
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
         raise ModuleNotFoundError('sovtoken plugin should be loaded, ' # noqa

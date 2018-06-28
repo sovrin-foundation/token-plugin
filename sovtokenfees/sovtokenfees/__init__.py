@@ -1,7 +1,7 @@
 from sovtokenfees.__metadata__ import *
 
-from sovtokenfees.messages.fields import TxnFeesField
 from sovtokenfees.transactions import FeesTransactions
+from sovtokenfees.messages.fields import TxnFeesField
 
 # TODO: Fix this, use a constant
 CLIENT_REQUEST_FIELDS = {
@@ -11,3 +11,11 @@ CLIENT_REQUEST_FIELDS = {
 AcceptableWriteTypes = {FeesTransactions.SET_FEES.value, }
 
 AcceptableQueryTypes = {FeesTransactions.GET_FEES.value, }
+
+
+# TODO: Find a better way to import all members of this module
+__all__ = [
+    CLIENT_REQUEST_FIELDS,
+    AcceptableQueryTypes,
+    AcceptableWriteTypes
+]
