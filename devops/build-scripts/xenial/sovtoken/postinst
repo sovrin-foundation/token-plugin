@@ -6,19 +6,19 @@ if which py3compile >/dev/null 2>&1; then
 fi
 # End automatically added section
 
-PLENUM_CONFIG_PATH="/etc/indy/plenum_config.py"
+INDY_CONFIG_PATH="/etc/indy/indy_config.py"
 
 add_plugin_if_missing()
 {
-	mkdir -p $(dirname $PLENUM_CONFIG_PATH)
-	touch $PLENUM_CONFIG_PATH
+	mkdir -p $(dirname $INDY_CONFIG_PATH)
+	touch $INDY_CONFIG_PATH
 
-	if [ $(grep -c "ENABLED_PLUGINS" $PLENUM_CONFIG_PATH) -eq 0 ]; then 
-		echo "ENABLED_PLUGINS=[]" >> $PLENUM_CONFIG_PATH	
+	if [ $(grep -c "ENABLED_PLUGINS" $INDY_CONFIG_PATH) -eq 0 ]; then 
+		echo "ENABLED_PLUGINS=[]" >> $INDY_CONFIG_PATH	
 	fi
 
-	if [ $(grep -c "ENABLED_PLUGINS.*$1" $PLENUM_CONFIG_PATH) -eq 0 ]; then 
-		echo "ENABLED_PLUGINS.append('$1')" >> $PLENUM_CONFIG_PATH	
+	if [ $(grep -c "ENABLED_PLUGINS.*$1" $INDY_CONFIG_PATH) -eq 0 ]; then 
+		echo "ENABLED_PLUGINS.append('$1')" >> $INDY_CONFIG_PATH	
 	fi
 }
 
