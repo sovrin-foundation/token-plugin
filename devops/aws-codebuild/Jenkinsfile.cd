@@ -76,8 +76,17 @@ pipelineWrapper({
                 awsCBHelper.build() {
                     projectTag = prTag
 
-                    // TODO shouldn't create/update CodeBuild project assuming that CI did this before
-                    // and no changes in settings have appeared
+                    // build spec for env image
+                    envBuildSrc = ['devops'] // TODO make more accurate
+                    envBuildCmds = [
+                        'export PROJECT_DIR=$PWD',
+                        'make -C devops image_ci'
+                    ]
+                    envBuildEnvv = [
+                        [name: 'OSNAME', value: osname],
+                        [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
+                        [name: 'DOCKER_TAG', value: ciImageTag],
+                    ]
 
                     // env and build spec
                     imageTag = ciImageTag
