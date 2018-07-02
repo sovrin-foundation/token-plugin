@@ -37,7 +37,7 @@ setup(
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
     include_package_data=True,
-    install_requires=['indy-plenum-dev==1.4.420'],
+    install_requires=['indy-plenum==1.4.426'],
     setup_requires=['pytest-runner'],
     extras_require={
         'tests': tests_require,
