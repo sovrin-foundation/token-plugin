@@ -9,7 +9,7 @@ __long_description__ = ''
 __maintainer__ = 'Evernym'
 __title__ = 'sovtokenfees'
 __url__ = 'https://github.com/evernym/plugin/tree/master/sovtokenfees'
-__version_info__ = (1, 2, 0)
+__version_info__ = (0, 7, 0)
 __version__ = '.'.join(map(str, __version_info__))
 
 __all__ = ['__title__',
