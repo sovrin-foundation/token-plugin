@@ -44,45 +44,36 @@ RUN pip3 install -U \
 	pip==9.0.3 \
 	setuptools
 
-RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $uid indy
-RUN usermod -aG sudo indy
+RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $uid indy; usermod -aG sudo indy
+
+ARG indy_stream=master
 
 ARG indy_anoncreds_ver=1.0.32
-ARG indy_node_ver=1.4.482
+ARG indy_node_ver=1.4.487
 ARG python3_indy_crypto_ver=0.4.1
 ARG indy_crypto_ver=0.4.0
-ARG indy_plenum_ver=1.4.420
+ARG indy_plenum_ver=1.4.426
 
-ARG indy_node_pkg_name=indy-node_1.4_plugins_amd64.deb
-ARG indy_plenum_pkg_name=indy-plenum_1.4.420_amd64.deb
-ARG sovtoken_pkg_name=sovtoken_1.2.0_amd64.deb
-ARG sovtoken_fees_pkg_name=sovtokenfees_1.2.0_amd64.deb
+ARG sovtoken_pkg_name=sovtoken_0.7.0_amd64.deb
+ARG sovtoken_fees_pkg_name=sovtokenfees_0.7.0_amd64.deb
 
-COPY ${indy_node_pkg_name} /root
-#COPY ${indy_plenum_pkg_name} /root
 COPY ${sovtoken_pkg_name} /root
 COPY ${sovtoken_fees_pkg_name} /root
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
-ARG indy_stream=master-latest
 RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
-
-#indy-node=${indy_node_ver} \
-#indy-plenum=${indy_plenum_ver} \
 
 RUN apt-get update -y && apt-get install -y \
         indy-plenum=${indy_plenum_ver} \        
+		indy-node=${indy_node_ver} \
         indy-anoncreds=${indy_anoncreds_ver} \
         python3-indy-crypto=${python3_indy_crypto_ver} \
         libindy-crypto=${indy_crypto_ver} \
         vim sudo
 
-RUN apt-get install /root/${indy_node_pkg_name} -y 
-#RUN apt-get install /root/${indy_plenum_pkg_name} -y
 RUN dpkg -i /root/${sovtoken_pkg_name}
 RUN dpkg -i /root/${sovtoken_fees_pkg_name}
 
-RUN sed -i "/from __metadata__ import */d" /usr/local/lib/python3.5/dist-packages/plenum/__init__.py
 
 
 RUN echo "[supervisord]\n\
