@@ -21,7 +21,7 @@ pipelineWrapper({
         def evernymRepo = evLibrary.EvernymRepo.new(this)
         def utils = evLibrary.Utils.new(this)
         def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
-            ['devops', 'sovtoken/__metadata__.py', 'sovtokenfees/__metadata__.py'])
+            ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
 
@@ -77,13 +77,14 @@ pipelineWrapper({
                     projectTag = prTag
 
                     // build spec for env image
-                    envBuildSrc = ['devops'] // TODO make more accurate
+                    envBuildSrc = ['devops', "${proj}/${proj}/__metadata__.py"] // TODO make more accurate
                     envBuildCmds = [
                         'export PROJECT_DIR=$PWD',
                         'make -C devops image_ci'
                     ]
                     envBuildEnvv = [
                         [name: 'OSNAME', value: osname],
+                        [name: 'SRC_DIR_NAME', value: proj],
                         [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
                         [name: 'DOCKER_TAG', value: ciImageTag],
                     ]
