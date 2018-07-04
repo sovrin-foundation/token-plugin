@@ -6,9 +6,9 @@ from plenum.common.txn_util import get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.tests.helper import send_xfer
-from sovtoken.tests.conftest import seller_gets
-from sovtokenfees.tests.test_set_get_fees import fees_set
+from sovtoken.test.helper import send_xfer
+from sovtoken.test.conftest import seller_gets
+from sovtokenfees.test.test_set_get_fees import fees_set
 
 
 def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,

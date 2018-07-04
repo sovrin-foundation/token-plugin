@@ -2,9 +2,9 @@ import pytest
 
 from plenum.common.txn_util import get_seq_no
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.tests.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
+from sovtoken.test.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
 
-from sovtoken.tests.demo.demo_helpers import *
+from sovtoken.test.demo.demo_helpers import *
 demo_logger.log_green('Performing some setup')
 
 NEW_TOKENS = 100000

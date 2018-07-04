@@ -1,4 +1,4 @@
-from sovtokenfees.tests.three_phase_commit_helper import *
+from sovtokenfees.test.three_phase_commit_helper import *
 
 
 class TestPrePrepare:

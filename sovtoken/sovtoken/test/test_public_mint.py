@@ -9,9 +9,9 @@ from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
 from sovtoken.messages.fields import PublicAddressField
 from plenum.test.conftest import get_data_for_role
-from sovtoken.tests.helper import send_public_mint, \
+from sovtoken.test.helper import send_public_mint, \
     do_public_minting, check_output_val_on_all_nodes
-from sovtoken.tests.conftest import build_wallets_from_data
+from sovtoken.test.conftest import build_wallets_from_data
 
 
 def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, # noqa

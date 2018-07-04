@@ -1,16 +1,18 @@
-# fixtures, do not remove
-from plenum.test.conftest import *
-from sovtoken.tests.conftest import trustee_wallets, SF_address, \
-    seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
-    tokens_distributed
-from sovtoken.tests.test_public_xfer_1 import user1_address, \
-    user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
-    user3_token_wallet
-
-from sovtokenfees.wallet import FeeSupportedWallet
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.main import integrate_plugin_in_node as enable_token
+from sovtokenfees.wallet import FeeSupportedWallet
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
+
+# fixtures, do not remove
+from plenum.test.conftest import *
+
+
+from sovtoken.test.conftest import trustee_wallets, SF_address, \
+    seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
+    tokens_distributed
+from sovtoken.test.test_public_xfer_1 import user1_address, \
+    user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
+    user3_token_wallet
 
 
 @pytest.fixture(scope="module")

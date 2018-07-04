@@ -73,15 +73,19 @@ class TokenWallet(Wallet):
         assert lxor(op, request)
         if op:
             request = Request(reqId=Request.gen_req_id(), operation=op, protocolVersion=CURRENT_PROTOCOL_VERSION)
-        existing_inputs = request.operation.get(INPUTS, [])
-        request.operation[INPUTS] = [[id, seq_no], ]
-        payload = deepcopy(request.signingState(id))
-        # TEMPORARY
-        payload[OPERATION].pop(SIGS)
-        payload.pop(f.IDENTIFIER.nm)
-
+        # existing_inputs = request.operation.get(INPUTS, [])
+        # request.operation[INPUTS] = [[id, seq_no], ]
+        # payload = deepcopy(request.signingState(id))
+        # # TEMPORARY
+        # payload[OPERATION].pop(SIGS)
+        # payload.pop(f.IDENTIFIER.nm)
+        #
+        # signature = self.addresses[id].signer.sign(payload)
+        # request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
+        # TODO: Account for `extra` field
+        payload = [[[id, seq_no], ], request.operation[OUTPUTS]]
         signature = self.addresses[id].signer.sign(payload)
-        request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
+        request.operation[INPUTS] = request.operation.get(INPUTS, []) + [[id, seq_no], ]
         request.operation[SIGS].append(signature)
         return request
 

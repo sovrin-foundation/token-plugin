@@ -10,10 +10,10 @@ from sovtoken.constants import INPUTS, SIGS
 from sovtoken.util import update_token_wallet_with_result
 from sovtoken.wallet import Address
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
-from sovtoken.tests.helper import xfer_request, \
+from sovtoken.test.helper import xfer_request, \
     inputs_outputs, send_xfer
 
-from sovtoken.tests.test_public_xfer_2 import \
+from sovtoken.test.test_public_xfer_2 import \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 

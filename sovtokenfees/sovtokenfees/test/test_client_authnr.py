@@ -29,13 +29,13 @@ class FeeData:
 
 
 # ------------------------------------------------------------------------------------
-# creates state instance that will be good enough for some of the tests below
+# creates state instance that will be good enough for some of the test below
 def pruning_state():
     return PruningState(KeyValueStorageInMemory())
 
 
 # ------------------------------------------------------------------------------------
-# gets nodes properly setup, required for some of the tests
+# gets nodes properly setup, required for some of the test
 @pytest.fixture
 def node(txnPoolNodeSet):
     a, b, c, d = txnPoolNodeSet
