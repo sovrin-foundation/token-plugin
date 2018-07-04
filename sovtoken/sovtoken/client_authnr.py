@@ -56,7 +56,7 @@ class TokenAuthNr(CoreAuthNr):
                 raise InvalidSignatureFormat from ex
 
             # TODO: Account for `extra` field
-            new_data = [[inp, ], req_data[OPERATION][OUTPUTS]]
+            new_data = [inp, req_data[OPERATION][OUTPUTS]]
             idr = inp[0]
             ser = serialize_msg_for_signing(new_data, topLevelKeysToIgnore=self.excluded_from_signing)
 
