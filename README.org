@@ -4,10 +4,6 @@
 
 * How to prepare debian packages 
 
-  
-
-** macOS
-
    To make the sovtoken and sovtokenfees debian files run this command inside
    the evernym plugin directory
 
