@@ -13,8 +13,8 @@
 
    #+BEGIN_SRC bash  :tangle build_indy_pool.sh
      MAKE=/usr/bin/make
-     SRC_DIR_NAME=sovtoken make -C devops/ package_in_docker sovtoken 
-     SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_docker sovtokenfees
+     SRC_DIR_NAME=sovtoken make -C devops/ package_in_docker 
+     SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_docker
    #+END_SRC
 
    This will output the debian package to devops/_build
