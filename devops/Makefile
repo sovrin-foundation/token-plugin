@@ -103,6 +103,9 @@ test: $(SRC_DIR) pipenv_version clean_pycache
 pre_package: python_version | $(BUILD_DIR)
 	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)
 	rm -rf $(SRC_DIR)/build
+# This replace is taken from indy-node preprepare
+	sed -i -r s~indy-plenum-[a-z]+~indy-plenum~ $(BUILD_DIR)/setup.py
+
 
 
 $(BUILD_DIR):
