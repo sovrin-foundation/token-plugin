@@ -11,7 +11,7 @@ from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import Verifier, DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from sovtoken import AcceptableWriteTypes, AcceptableQueryTypes
-from sovtoken.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS, SIGS
+from sovtoken.constants import MINT_PUBLIC, XFER_PUBLIC, INPUTS, SIGS, OUTPUTS
 from sovtoken.util import address_to_verkey
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
@@ -42,11 +42,11 @@ class TokenAuthNr(CoreAuthNr):
             return self.authenticate_xfer(req_data, verifier=verifier)
 
     def authenticate_xfer(self, req_data, verifier):
-        new_data = {
-            f.PROTOCOL_VERSION.nm: req_data[f.PROTOCOL_VERSION.nm],
-            f.REQ_ID.nm: req_data[f.REQ_ID.nm],
-            OPERATION: {k: deepcopy(req_data[OPERATION][k]) for k in req_data[OPERATION] if k != SIGS}
-        }
+        # new_data = {
+        #     f.PROTOCOL_VERSION.nm: req_data[f.PROTOCOL_VERSION.nm],
+        #     f.REQ_ID.nm: req_data[f.REQ_ID.nm],
+        #     OPERATION: {k: deepcopy(req_data[OPERATION][k]) for k in req_data[OPERATION] if k != SIGS}
+        # }
         correct_sigs_from = []
         for inp, sig in zip(req_data[OPERATION][INPUTS],
                             req_data[OPERATION][SIGS]):
@@ -55,7 +55,8 @@ class TokenAuthNr(CoreAuthNr):
             except Exception as ex:
                 raise InvalidSignatureFormat from ex
 
-            new_data[OPERATION][INPUTS] = [inp, ]
+            # TODO: Account for `extra` field
+            new_data = [inp, req_data[OPERATION][OUTPUTS]]
             idr = inp[0]
             ser = serialize_msg_for_signing(new_data, topLevelKeysToIgnore=self.excluded_from_signing)
 

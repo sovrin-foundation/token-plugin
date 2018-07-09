@@ -14,13 +14,13 @@ from plenum.common.constants import NYM, STEWARD, STATE_PROOF, PROOF_NODES, \
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
 from sovtokenfees.constants import FEES
-from sovtokenfees.tests.helper import get_fees_from_ledger, \
+from sovtokenfees.test.helper import get_fees_from_ledger, \
     check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
     send_get_fees
 from sovtoken.constants import XFER_PUBLIC
-from sovtoken.tests.helper import decode_proof
+from sovtoken.test.helper import decode_proof
 from plenum.test.conftest import get_data_for_role
-from sovtoken.tests.conftest import build_wallets_from_data
+from sovtoken.test.conftest import build_wallets_from_data
 
 
 def test_get_fees_when_no_fees_set(looper, nodeSetWithIntegratedTokenPlugin,

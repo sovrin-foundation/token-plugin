@@ -33,12 +33,12 @@ setup(
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
-             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
+             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtokenfees']},
     include_package_data=True,
     setup_requires=['pytest-runner'],
     install_requires=['sovtoken'],
     extras_require={
-        'tests': tests_require,
+        'test': tests_require,
         'benchmark': ['pympler']
     },
     tests_require=tests_require,

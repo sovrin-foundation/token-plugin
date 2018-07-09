@@ -35,12 +35,12 @@ setup(
     packages=find_packages(exclude=['test', 'test.*', 'docs', 'docs*']),
     package_data={
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
-             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL']},
+             '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
     install_requires=['indy-plenum-dev==1.4.426'],
     setup_requires=['pytest-runner'],
     extras_require={
-        'tests': tests_require,
+        'test': tests_require,
         'benchmark': ['pympler']
     },
     tests_require=tests_require,

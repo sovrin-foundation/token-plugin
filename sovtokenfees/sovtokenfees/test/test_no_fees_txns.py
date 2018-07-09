@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import NYM
 from plenum.common.util import randomString
-from sovtokenfees.tests.helper import gen_nym_req_for_fees
+from sovtokenfees.test.helper import gen_nym_req_for_fees
 from sovtoken.constants import XFER_PUBLIC
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_replies
 from plenum.test.pool_transactions.helper import sdk_add_new_nym
@@ -12,7 +12,7 @@ TXN_FEES = {
     XFER_PUBLIC: 8
 }
 
-from sovtokenfees.tests.test_set_get_fees import fees_set
+from sovtokenfees.test.test_set_get_fees import fees_set
 
 
 def test_txn_with_no_fees_specified(tokens_distributed, looper, sdk_wallet_steward,  # noqa

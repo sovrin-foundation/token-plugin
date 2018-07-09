@@ -9,7 +9,7 @@ from sovtoken.wallet import TokenWallet
 from sovtoken.client_authnr import TokenAuthNr, AddressSigVerifier
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA
 from plenum.common.types import f, OPERATION
-from sovtoken.tests.helper import public_mint_request, \
+from sovtoken.test.helper import public_mint_request, \
     xfer_request
 
 
@@ -227,7 +227,7 @@ def test_serializeForSig_MINT_PUBLIC_path(node, SF_address, user1_address, trust
 # -------------------------Test getVerkey method------------------------------------------------------------------------
 
 
-# This tests that a valid verkey of a DID is returned
+# This test that a valid verkey of a DID is returned
 def test_getVerkey_success(node):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     ver_key = token_authnr.getVerkey(VALID_IDENTIFIER)
@@ -235,7 +235,7 @@ def test_getVerkey_success(node):
     assert ver_key[0] == '~'
 
 
-# this tests that if the identifier is a payment address with a checksum, then a payment verkey is returned
+# this test that if the identifier is a payment address with a checksum, then a payment verkey is returned
 def test_getVerkey_pay_address_success(node):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     # TODO change these to indicate they are addresses
@@ -244,7 +244,7 @@ def test_getVerkey_pay_address_success(node):
     assert ver_key == '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
 
 
-# this tests that an exception is returned if an Unknown identifier is submitted
+# this test that an exception is returned if an Unknown identifier is submitted
 def test_getVerkey_invalid_identifier(node):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     identifier_invalid = 'INVALID_IDENTIFIER'

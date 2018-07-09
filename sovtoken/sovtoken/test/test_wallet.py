@@ -147,7 +147,7 @@ def test_token_wallet_get_total_amount_all_success(test_wallet):
 
 def test_token_wallet_get_total_amount_subset_invalid(test_wallet, address0, address1):
     #TypeError expected here because this method cannot handle a subset
-    # This refactor has been removed because it breaks other tests and is unnecessary
+    # This refactor has been removed because it breaks other test and is unnecessary
     with pytest.raises(TypeError):
         total = test_wallet.get_total_address_amount([address0, address1])
 

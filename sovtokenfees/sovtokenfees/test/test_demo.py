@@ -5,8 +5,8 @@ from sovtokenfees.wallet import FeeSupportedWallet
 from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID
 from sovtoken.util import update_token_wallet_with_result
 from sovtoken.wallet import Address
-from sovtokenfees.tests.demo_helper import methods
-from sovtoken.tests.demo.demo_helpers import demo_logger
+from sovtokenfees.test.demo_helper import methods
+from sovtoken.test.demo.demo_helpers import demo_logger
 
 
 ''' 
