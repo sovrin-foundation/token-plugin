@@ -1,45 +1,14 @@
-* plugin
+* Sovrin Ledger Payment plugins
   
-  source code and tests for Sovrin Ledger plugins
+  This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
 
-* How to prepare debian packages 
+** Install
 
-   To make the sovtoken and sovtokenfees debian files run this command inside
-   the evernym plugin directory
+  run the following command: 
 
-   #+BEGIN_SRC bash  :tangle build_indy_pool.sh
-    MAKE=/usr/bin/make SRC_DIR_NAME=sovtoken make -C devops/ package_in_docker 
-    MAKE=/usr/bin/make SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_docker
-   #+END_SRC
-
-   This will output the debian package to devops/_build
-* Building the payment ledger pool
-
-** Moving 
-
-   Now we want to move these files into the correct directories for the payment
-   ledger pool
-
-   #+BEGIN_SRC bash :tangle build_indy_pool.sh
-     mv devops/_build/sovtoken/*.deb devops/build-scripts/xenial/Pool_Party/.
-     mv devops/_build/sovtokenfees/*.deb devops/build-scripts/xenial/Pool_Party/.
-   #+END_SRC
-
-** Building 
-
-   After moving the debian files you want to be in the pool director and then
-   run the docker build script
-
-   #+BEGIN_SRC bash :tangle build_indy_pool.sh
-     cd devops/build-scripts/xenial/Pool_Party/
-     docker build -t indy_pool .
-   #+END_SRC
-
-** Running
-
-   
-   #+BEGIN_SRC bash  :tangle build_indy_pool.sh
-     docker run -itd -p 9701-9708:9701-9708 indy_pool
-   #+END_SRC
+  #+BEGIN_SRC bash
+    ./install_payment_plugins.sh
+  #+END_SRC
+  
 
    
