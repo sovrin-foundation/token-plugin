@@ -7,7 +7,7 @@
   run the following command: 
 
   #+BEGIN_SRC bash
-    ./install_payment_plugins.sh
+    ./build_indy_pool.sh
   #+END_SRC
   
 
