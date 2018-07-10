@@ -252,8 +252,10 @@ class TokenReqHandler(LedgerRequestHandler):
             outputs.append(Output(addr, int(seq_no), int(amount)))
 
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs,
-                  STATE_PROOF: proof}
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs}
+        if proof:
+            result[STATE_PROOF] = proof
+
         result.update(request.operation)
         return result
 
