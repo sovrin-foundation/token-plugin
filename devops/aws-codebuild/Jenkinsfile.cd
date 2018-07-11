@@ -29,11 +29,11 @@ pipelineWrapper({
             awsCBHelper.uploadSourceToS3()
         }
 
-        Map builds = projects.collectEntries { project ->
-            ["$osname:$project": {
+        Map builds = projects.collectEntries { proj ->
+            ["$osname:$proj": {
 
-                def packageName = project
-                def prTag = "ci-$osname-$project" // use ci project
+                def packageName = proj
+                def prTag = "ci-$osname-$proj" // use ci project
                 def srcVersion
                 def lastRevision
                 def debPVersion
@@ -42,7 +42,7 @@ pipelineWrapper({
                 def ciImageTag
 
                 stage('Get source version') {
-                    srcVersion = utils.shStdout("SRC_DIR_NAME=$project make -C devops src_version -s")
+                    srcVersion = utils.shStdout("SRC_DIR_NAME=$proj make -C devops src_version -s")
                     logger.info("Current source version: $srcVersion")
                 }
 
@@ -67,9 +67,9 @@ pipelineWrapper({
                     logger.info("Package version for evernym repo: $debPVersion")
                 }
 
-                stage("$osname:$project: Resolve image tag") {
+                stage("$osname:$proj: Resolve image tag") {
                     def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-                    ciImageTag = "$_imgVersion-$osname-$project-ci"
+                    ciImageTag = "$_imgVersion-$osname-$proj-ci"
                     logger.info("CI docker image tag: $ciImageTag")
                 }
 
@@ -95,13 +95,13 @@ pipelineWrapper({
                     envv = [
                         [name: 'OSNAME', value: osname],
                         [name: 'MAKE_GOALS', value: 'package'],
-                        [name: 'SRC_DIR_NAME', value: project],
-                        [name: 'ARTIFACTS', value: "devops/_build/$project/*$packageName*.*"], // TODO more accurate here
+                        [name: 'SRC_DIR_NAME', value: proj],
+                        [name: 'ARTIFACTS', value: "devops/_build/$proj/*$packageName*.*"], // TODO more accurate here
                         [name: 'FPM_P_VERSION', value: debPVersion],
                     ]
 
                     onArtifacts = {
-                        this.stage("$osname:$project: Archive logs") {
+                        this.stage("$osname:$proj: Archive logs") {
                             utils.archiveArtifacts("logs/*.out*") {
                                 truncate = true
                                 allowEmptyArchive = true

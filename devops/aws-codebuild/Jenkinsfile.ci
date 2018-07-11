@@ -30,7 +30,7 @@ pipelineWrapper({
 
         Map builds = projects.collectEntries { proj ->
             osnames.collectEntries { osname ->
-                ["$proj:$osname": {
+                ["$osname:$proj": {
                     def ciImageTag
                     def prTag = "ci-$osname-$proj"
 
