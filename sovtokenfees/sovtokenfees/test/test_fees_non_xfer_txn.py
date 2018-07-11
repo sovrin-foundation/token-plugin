@@ -6,6 +6,7 @@ from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
+from sovtoken.test.helper import send_get_utxo
 from sovtokenfees.constants import FEES, REF
 from sovtokenfees.test.helper import gen_nym_req_for_fees
 from sovtoken import TOKEN_LEDGER_ID
@@ -129,7 +130,8 @@ def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
     return res
 
 
-def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin):
+def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper,
+                             user1_address, sdk_wallet_client, sdk_pool_handle):
     """
     Provide sufficient sovtokenfees for transaction with correct signatures and payload
     """
@@ -141,6 +143,11 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin):
         assert fee_txn[OUTPUTS] == fees_paid[FEES][OUTPUTS]
         assert fee_txn[REF] == '{}:{}'.format(DOMAIN_LEDGER_ID,
                                               get_seq_no(fees_paid))
+    res = send_get_utxo(looper, user1_address, sdk_wallet_client,
+                        sdk_pool_handle)
+    assert user1_address in res[OUTPUTS][0]
+    assert get_seq_no(fee_txn) in res[OUTPUTS][0]
+    assert fees_paid[FEES][OUTPUTS][0][-1] in res[OUTPUTS][0]
 
 
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,

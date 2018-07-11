@@ -23,7 +23,7 @@
 ##
 ########################################################
 
-FROM ubuntu:16.04
+FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib
 
 ARG uid=1000
 
@@ -39,6 +39,8 @@ RUN apt-get update -y && apt-get install -y \
 	ca-certificates \
 	supervisor \ 
 	sudo
+
+
 
 RUN pip3 install -U \
 	pip==9.0.3 \
