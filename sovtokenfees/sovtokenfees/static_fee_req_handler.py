@@ -5,25 +5,22 @@ from common.serializers.base58_serializer import Base58Serializer
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
-from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
     STATE_PROOF, TXN_METADATA, TXN_SIGNATURE, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
-#, add_sigs_to_txn
 # TODO remove that once https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
 from plenum.common.types import f
-# from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC, SIGS
+    XFER_PUBLIC
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from state.trie.pruning_trie import rlp_decode

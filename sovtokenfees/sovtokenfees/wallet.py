@@ -26,12 +26,15 @@ class FeeSupportedWallet(TokenWallet):
                 assert utxo, 'No utxo to pay {}'.format(fee_amount)
                 address, seq_no, val = utxo
 
-        if change_address is None:
-            change_address = address
-
         change_val = val - fee_amount
+        if change_val > 0:
+            if change_address is None:
+                change_address = address
+            outputs = [[change_address, change_val], ]
+        else:
+            outputs = []
         fees = self.get_fees([[address, seq_no], ],
-                             [[change_address, change_val], ])
+                             outputs)
         req.__setattr__(f.FEES.nm, fees)
         return req
 
