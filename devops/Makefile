@@ -34,7 +34,8 @@ FPM_P_ARCH := amd64
 # ext/Makefile include statement
 FPM_P_MAINTAINER = $(call metadata_value,__maintainer__)
 FPM_P_OUTPUT_DIR := $(BUILD_DIR)
-FPM_ARGS = --no-python-fix-name \
+
+FPM_ARGS := --no-python-fix-name \
 		   --python-bin "/usr/bin/python3" \
 		   --no-python-fix-dependencies \
 		   --exclude "*.pyc" \
@@ -42,6 +43,18 @@ FPM_ARGS = --no-python-fix-name \
 		   --after-install "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/postinst" \
            --before-remove "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/prerm" \
 		   $(SRC_DIR)
+
+ifeq ($(SRC_DIR_NAME),sovtoken)
+# TODO duplication with setup.py
+# necessary since indy-plenum from master is published as:
+# 	pypi: indy-plenum-dev
+# 	apt: indy-plenum (master component)
+# remove that once sovtoken starts using indy-plenum from stable:
+# 	pypi: indy-plenum
+# 	apt: indy-plenum (stable component)
+FPM_P_DEPENDS := indy-plenum(>=1.4.442)
+FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
+endif
 
 # docker related variables
 DOCKER_NAME ?= evernym/plugin
