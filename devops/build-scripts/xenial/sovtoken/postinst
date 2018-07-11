@@ -2,7 +2,7 @@
 
 # Automatically added from template:
 if which py3compile >/dev/null 2>&1; then
-	py3compile -O -p sovtoken /usr/local/lib/python3.5/dist-packages/
+    py3compile -O -p sovtoken /usr/local/lib/python3.5/dist-packages/
 fi
 # End automatically added section
 
@@ -10,16 +10,16 @@ INDY_CONFIG_PATH="/etc/indy/indy_config.py"
 
 add_plugin_if_missing()
 {
-	mkdir -p $(dirname $INDY_CONFIG_PATH)
-	touch $INDY_CONFIG_PATH
+    mkdir -p $(dirname $INDY_CONFIG_PATH)
+    touch $INDY_CONFIG_PATH
 
-	if [ $(grep -c "ENABLED_PLUGINS" $INDY_CONFIG_PATH) -eq 0 ]; then 
-		echo "ENABLED_PLUGINS=[]" >> $INDY_CONFIG_PATH	
-	fi
+    if [ $(grep -c "ENABLED_PLUGINS" $INDY_CONFIG_PATH) -eq 0 ]; then
+        echo -e "\n\nENABLED_PLUGINS=[]" >> $INDY_CONFIG_PATH
+    fi
 
-	if [ $(grep -c "ENABLED_PLUGINS.*$1" $INDY_CONFIG_PATH) -eq 0 ]; then 
-		echo "ENABLED_PLUGINS.append('$1')" >> $INDY_CONFIG_PATH	
-	fi
+    if [ $(grep -c "ENABLED_PLUGINS.*$1" $INDY_CONFIG_PATH) -eq 0 ]; then
+        echo -e "\nENABLED_PLUGINS.append('$1')" >> $INDY_CONFIG_PATH
+    fi
 }
 
 add_plugin_if_missing sovtoken

@@ -1,3 +1,4 @@
+#+author: Cam Parra
 * Sovrin Ledger Payment plugins
   
   This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
@@ -7,7 +8,7 @@
   run the following command: 
 
   #+BEGIN_SRC bash
-    ./build_indy_pool.sh
+    ./build_indy_pool
   #+END_SRC
   
 
