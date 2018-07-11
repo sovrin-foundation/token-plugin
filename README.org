@@ -8,7 +8,7 @@
   run the following command: 
 
   #+BEGIN_SRC bash
-    ./build_indy_pool.sh
+    ./build_indy_pool
   #+END_SRC
   
 
