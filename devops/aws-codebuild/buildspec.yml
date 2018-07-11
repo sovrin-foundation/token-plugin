@@ -1,0 +1,45 @@
+version: 0.2
+
+env:
+  variables:
+    # expected
+    OSNAME: ""
+    SRC_DIR_NAME: ""
+    MAKE_GOALS: ""
+    # optional
+    ARTIFACTS: ""
+
+phases:
+
+  pre_build:
+    commands:
+      - echo Pre-Build started on `date`
+      - mkdir -p /tmp/artifacts/logs
+  build:
+    commands:
+      - echo Build started on `date`
+      - printenv
+      - export PROJECT_DIR="$PWD"
+      - |
+        set -ex
+        for goal in $MAKE_GOALS; do
+            echo "Making '$goal'"
+            /bin/bash -c "set -o pipefail; make -C devops $goal 2>&1 | tee /tmp/artifacts/logs/${SRC_DIR_NAME}.${OSNAME}.${goal}.out"
+        done
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Preparing artifacts
+      - |
+        set -ex
+        for art in $ARTIFACTS; do
+            cp -vR -t /tmp/artifacts $art
+        done
+      - find /tmp/artifacts
+
+artifacts:
+  # (for now CodeBuild doesn't allow to use env variables in artifacts phase)
+  # https://forums.aws.amazon.com/thread.jspa?threadID=250742
+  base-directory: /tmp/artifacts
+  files:
+      - '**/*'
