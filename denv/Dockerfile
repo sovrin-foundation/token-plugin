@@ -1,4 +1,4 @@
-FROM solita/ubuntu-systemd
+FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib
 
 ARG INDY_NODE_VERSION
 ARG POOL_IP
@@ -36,16 +36,10 @@ RUN apt-get update -y && apt-get install -y \
 RUN pip3 install -U \
     setuptools \
     'pip<10.0.0' \
-    setuptools
+    setuptools \
+    pytest
+    
 
-RUN rm -rf /var/lib/apt/lists/*
-
-# install ROCKSDB 
-RUN git clone https://github.com/facebook/rocksdb.git
-
-WORKDIR rocksdb/ 
-
-RUN make all 
 
 WORKDIR /home/indy
 

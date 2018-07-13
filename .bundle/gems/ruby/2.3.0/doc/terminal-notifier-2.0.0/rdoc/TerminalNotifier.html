@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>module TerminalNotifier - terminal-notifier-2.0.0 Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+<body id="top" role="document" class="module">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="./index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="./table_of_contents.html#pages">Pages</a>
+    <a href="./table_of_contents.html#classes">Classes</a>
+    <a href="./table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    
+    
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-available-3F">::available?</a>
+    
+    <li ><a href="#method-c-execute">::execute</a>
+    
+    <li ><a href="#method-c-list">::list</a>
+    
+    <li ><a href="#method-c-notify">::notify</a>
+    
+    <li ><a href="#method-c-notify_result">::notify_result</a>
+    
+    <li ><a href="#method-c-remove">::remove</a>
+    
+    <li ><a href="#method-c-version">::version</a>
+    
+    <li ><a href="#method-i-list">#list</a>
+    
+    <li ><a href="#method-i-notify">#notify</a>
+    
+    <li ><a href="#method-i-notify_result">#notify_result</a>
+    
+    <li ><a href="#method-i-remove">#remove</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="module-TerminalNotifier">
+  <h1 id="module-TerminalNotifier" class="module">
+    module TerminalNotifier
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="BIN_PATH">BIN_PATH
+        
+        <dd>
+        
+      
+        <dt id="LIST_FIELDS">LIST_FIELDS
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-available-3F" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">available?</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Returns wether or not the current platform is macOS 10.10, or higher.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="available-3F-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 9</span>
+<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">available?</span>
+  <span class="ruby-ivar">@available</span> <span class="ruby-operator">||=</span> (<span class="ruby-regexp">/darwin|mac os/</span> <span class="ruby-operator">=~</span> <span class="ruby-constant">RbConfig</span><span class="ruby-operator">::</span><span class="ruby-constant">CONFIG</span>[<span class="ruby-string">&#39;host_os&#39;</span>]) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-constant">Gem</span><span class="ruby-operator">::</span><span class="ruby-constant">Version</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">version</span>) <span class="ruby-operator">&gt;</span> <span class="ruby-constant">Gem</span><span class="ruby-operator">::</span><span class="ruby-constant">Version</span>.<span class="ruby-identifier">new</span>(<span class="ruby-string">&#39;10.10&#39;</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-execute" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">execute</span><span
+            class="method-args">(verbose, options)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="execute-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 17</span>
+<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-identifier">options</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">available?</span>
+    <span class="ruby-identifier">command</span> = [<span class="ruby-constant">BIN_PATH</span>, <span class="ruby-operator">*</span><span class="ruby-identifier">options</span>.<span class="ruby-identifier">map</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">k</span>,<span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">v</span> = <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span>; [<span class="ruby-node">&quot;-#{k}&quot;</span>, <span class="ruby-node">&quot;#{v[0] == &quot;-&quot; ? &quot; &quot; : &quot;&quot;}#{Shellwords.escape(v[0,1])}#{v[1..-1]}&quot;</span>] }.<span class="ruby-identifier">flatten</span>]
+    <span class="ruby-identifier">command</span> = <span class="ruby-constant">Shellwords</span>.<span class="ruby-identifier">join</span>(<span class="ruby-identifier">command</span>) <span class="ruby-keyword">if</span> <span class="ruby-constant">RUBY_VERSION</span> <span class="ruby-operator">&lt;</span> <span class="ruby-string">&#39;1.9&#39;</span>
+    <span class="ruby-identifier">result</span> = <span class="ruby-string">&#39;&#39;</span>
+    <span class="ruby-constant">IO</span>.<span class="ruby-identifier">popen</span>(<span class="ruby-identifier">command</span>) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">stdout</span><span class="ruby-operator">|</span>
+      <span class="ruby-identifier">output</span> = <span class="ruby-identifier">stdout</span>.<span class="ruby-identifier">read</span>
+      <span class="ruby-constant">STDOUT</span>.<span class="ruby-identifier">print</span> <span class="ruby-identifier">output</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">verbose</span>
+      <span class="ruby-identifier">result</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">output</span>
+    <span class="ruby-keyword">end</span>
+    <span class="ruby-identifier">result</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-constant">STDERR</span>.<span class="ruby-identifier">print</span> <span class="ruby-string">&quot;terminal-notifier is only supported on macOS 10.10, or higher.&quot;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-list" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">list</span><span
+            class="method-args">(group = 'ALL', verbose = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>If a ‘group’ ID is given, and a notification for that group exists, returns
+a hash with details about the notification.</p>
+
+<p>If no ‘group’ ID is given, an array of hashes describing all notifications.</p>
+
+<p>If no information is available this will return `nil`.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="list-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 108</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">list</span>(<span class="ruby-identifier">group</span> = <span class="ruby-string">&#39;ALL&#39;</span>, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-identifier">output</span> = <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-value">:list</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">group</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">output</span>.<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">empty?</span>
+
+  <span class="ruby-identifier">require</span> <span class="ruby-string">&#39;time&#39;</span>
+  <span class="ruby-identifier">notifications</span> = <span class="ruby-identifier">output</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;\n&quot;</span>)[<span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>].<span class="ruby-identifier">map</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
+    <span class="ruby-constant">LIST_FIELDS</span>.<span class="ruby-identifier">zip</span>(<span class="ruby-identifier">line</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;\t&quot;</span>)).<span class="ruby-identifier">inject</span>({}) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">hash</span>, (<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)<span class="ruby-operator">|</span>
+      <span class="ruby-identifier">hash</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">key</span> <span class="ruby-operator">==</span> <span class="ruby-value">:delivered_at</span> <span class="ruby-operator">?</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">value</span>) <span class="ruby-operator">:</span> (<span class="ruby-identifier">value</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">value</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;(null)&#39;</span>)
+      <span class="ruby-identifier">hash</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">group</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;ALL&#39;</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">notifications</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">notifications</span>.<span class="ruby-identifier">first</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-notify" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">notify</span><span
+            class="method-args">(message, options = {}, verbose = false, always_string = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Sends a User Notification and returns whether or not it was a success.</p>
+
+<p>The available options are `:title`, `:group`, `:activate`, `:open`,
+`:execute`, `:sender`, and `:sound`. For a description of each option see:</p>
+
+<pre class="ruby"><span class="ruby-identifier">https</span>:<span class="ruby-operator">/</span><span class="ruby-regexp">/github.com/</span><span class="ruby-identifier">julienXX</span><span class="ruby-operator">/</span><span class="ruby-identifier">terminal</span><span class="ruby-operator">-</span><span class="ruby-identifier">notifier</span><span class="ruby-operator">/</span><span class="ruby-identifier">blob</span><span class="ruby-operator">/</span><span class="ruby-identifier">master</span><span class="ruby-operator">/</span><span class="ruby-constant">README</span>.<span class="ruby-identifier">markdown</span>
+</pre>
+
+<p>Examples are:</p>
+
+<pre class="ruby"><span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">title</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;Ruby&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">group</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Process</span>.<span class="ruby-identifier">pid</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">activate</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;com.apple.Safari&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">open</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;http://twitter.com/julienXX&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">execute</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;say &quot;OMG&quot;&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">sender</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;com.apple.Safari&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">sound</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;default&#39;</span>)
+</pre>
+
+<p>Raises if not supported on the current platform.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="notify-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 83</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">notify</span>(<span class="ruby-identifier">message</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>, <span class="ruby-identifier">always_string</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-identifier">result</span> = <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-value">:message</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">message</span>))
+  <span class="ruby-identifier">$?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">$?</span>.<span class="ruby-identifier">success?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">notify_result</span>(<span class="ruby-identifier">result</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">always_string</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-notify_result" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">notify_result</span><span
+            class="method-args">(result, options, always_string = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Cleans up the result of a notification, making it easier to work it</p>
+
+<p>The result of a notification is downcased, then groups of 1 or more
+non-word characters are replaced with an underscore, before being
+symbolised.</p>
+
+<p>If the reply option was given, then instead of going through the above
+process, the result is returned with no changes as a string.</p>
+
+<p>If the always_string param is set to true, a the result is returned with no
+changes as a string, like above.</p>
+
+<p>Examples are:</p>
+
+<p><a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;Test&#39;,
+{}) #=&gt; :test <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;No,
+sir&#39;, {}) #=&gt; :no_sir <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@timeout&#39;,
+{}) #=&gt; :_timeout <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@closeaction&#39;,
+{}) #=&gt; :_closeaction <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+like pie&#39;, {reply: true}) #=&gt; &#39;I like pie&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+do not like pie&#39;, {&#39;reply&#39; =&gt; true}) #=&gt; &#39;I do not
+like pie&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@timeout&#39;,
+{&#39;reply&#39; =&gt; true}) #=&gt; &#39;@timeout&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+may like pie&#39;, {}) #=&gt; :i_may_like_pie</p>
+          
+          
+
+          
+          <div class="method-source-code" id="notify_result-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 55</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">notify_result</span>(<span class="ruby-identifier">result</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">always_string</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-value">:reply</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">options</span>[<span class="ruby-string">&#39;reply&#39;</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">always_string</span>
+    <span class="ruby-identifier">result</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">result</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">downcase</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp">/\W+/</span>,<span class="ruby-string">&#39;_&#39;</span>).<span class="ruby-identifier">to_sym</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-remove" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">remove</span><span
+            class="method-args">(group = 'ALL', verbose = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Removes a notification that was previously sent with the specified ‘group’
+ID, if one exists.</p>
+
+<p>If no ‘group’ ID is given, all notifications are removed.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="remove-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 93</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">remove</span>(<span class="ruby-identifier">group</span> = <span class="ruby-string">&#39;ALL&#39;</span>, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-value">:remove</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">group</span>)
+  <span class="ruby-identifier">$?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">$?</span>.<span class="ruby-identifier">success?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-c-version" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">version</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="version-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 13</span>
+<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">version</span>
+  <span class="ruby-ivar">@version</span> <span class="ruby-operator">||=</span> <span class="ruby-value">%x`uname`</span>.<span class="ruby-identifier">strip</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;Darwin&#39;</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-value">%x`sw_vers -productVersion`</span>.<span class="ruby-identifier">strip</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="private-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Private Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-list" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">list</span><span
+            class="method-args">(group = 'ALL', verbose = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>If a ‘group’ ID is given, and a notification for that group exists, returns
+a hash with details about the notification.</p>
+
+<p>If no ‘group’ ID is given, an array of hashes describing all notifications.</p>
+
+<p>If no information is available this will return `nil`.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="list-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 108</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">list</span>(<span class="ruby-identifier">group</span> = <span class="ruby-string">&#39;ALL&#39;</span>, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-identifier">output</span> = <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-value">:list</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">group</span>)
+  <span class="ruby-keyword">return</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">output</span>.<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">empty?</span>
+
+  <span class="ruby-identifier">require</span> <span class="ruby-string">&#39;time&#39;</span>
+  <span class="ruby-identifier">notifications</span> = <span class="ruby-identifier">output</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;\n&quot;</span>)[<span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-value">-1</span>].<span class="ruby-identifier">map</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">line</span><span class="ruby-operator">|</span>
+    <span class="ruby-constant">LIST_FIELDS</span>.<span class="ruby-identifier">zip</span>(<span class="ruby-identifier">line</span>.<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;\t&quot;</span>)).<span class="ruby-identifier">inject</span>({}) <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">hash</span>, (<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)<span class="ruby-operator">|</span>
+      <span class="ruby-identifier">hash</span>[<span class="ruby-identifier">key</span>] = <span class="ruby-identifier">key</span> <span class="ruby-operator">==</span> <span class="ruby-value">:delivered_at</span> <span class="ruby-operator">?</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">value</span>) <span class="ruby-operator">:</span> (<span class="ruby-identifier">value</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">value</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;(null)&#39;</span>)
+      <span class="ruby-identifier">hash</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-identifier">group</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;ALL&#39;</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">notifications</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">notifications</span>.<span class="ruby-identifier">first</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-notify" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">notify</span><span
+            class="method-args">(message, options = {}, verbose = false, always_string = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Sends a User Notification and returns whether or not it was a success.</p>
+
+<p>The available options are `:title`, `:group`, `:activate`, `:open`,
+`:execute`, `:sender`, and `:sound`. For a description of each option see:</p>
+
+<pre class="ruby"><span class="ruby-identifier">https</span>:<span class="ruby-operator">/</span><span class="ruby-regexp">/github.com/</span><span class="ruby-identifier">julienXX</span><span class="ruby-operator">/</span><span class="ruby-identifier">terminal</span><span class="ruby-operator">-</span><span class="ruby-identifier">notifier</span><span class="ruby-operator">/</span><span class="ruby-identifier">blob</span><span class="ruby-operator">/</span><span class="ruby-identifier">master</span><span class="ruby-operator">/</span><span class="ruby-constant">README</span>.<span class="ruby-identifier">markdown</span>
+</pre>
+
+<p>Examples are:</p>
+
+<pre class="ruby"><span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">title</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;Ruby&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">group</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-constant">Process</span>.<span class="ruby-identifier">pid</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">activate</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;com.apple.Safari&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">open</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;http://twitter.com/julienXX&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">execute</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;say &quot;OMG&quot;&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">sender</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;com.apple.Safari&#39;</span>)
+<span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(<span class="ruby-string">&#39;Hello World&#39;</span>, :<span class="ruby-identifier">sound</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-string">&#39;default&#39;</span>)
+</pre>
+
+<p>Raises if not supported on the current platform.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="notify-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 83</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">notify</span>(<span class="ruby-identifier">message</span>, <span class="ruby-identifier">options</span> = {}, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>, <span class="ruby-identifier">always_string</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-identifier">result</span> = <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-identifier">options</span>.<span class="ruby-identifier">merge</span>(<span class="ruby-value">:message</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">message</span>))
+  <span class="ruby-identifier">$?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">$?</span>.<span class="ruby-identifier">success?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">notify_result</span>(<span class="ruby-identifier">result</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">always_string</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-notify_result" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">notify_result</span><span
+            class="method-args">(result, options, always_string = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Cleans up the result of a notification, making it easier to work it</p>
+
+<p>The result of a notification is downcased, then groups of 1 or more
+non-word characters are replaced with an underscore, before being
+symbolised.</p>
+
+<p>If the reply option was given, then instead of going through the above
+process, the result is returned with no changes as a string.</p>
+
+<p>If the always_string param is set to true, a the result is returned with no
+changes as a string, like above.</p>
+
+<p>Examples are:</p>
+
+<p><a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;Test&#39;,
+{}) #=&gt; :test <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;No,
+sir&#39;, {}) #=&gt; :no_sir <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@timeout&#39;,
+{}) #=&gt; :_timeout <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@closeaction&#39;,
+{}) #=&gt; :_closeaction <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+like pie&#39;, {reply: true}) #=&gt; &#39;I like pie&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+do not like pie&#39;, {&#39;reply&#39; =&gt; true}) #=&gt; &#39;I do not
+like pie&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;@timeout&#39;,
+{&#39;reply&#39; =&gt; true}) #=&gt; &#39;@timeout&#39; <a
+href="TerminalNotifier.html#method-i-notify_result">#notify_result</a>(&#39;I
+may like pie&#39;, {}) #=&gt; :i_may_like_pie</p>
+          
+          
+
+          
+          <div class="method-source-code" id="notify_result-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 55</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">notify_result</span>(<span class="ruby-identifier">result</span>, <span class="ruby-identifier">options</span>, <span class="ruby-identifier">always_string</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">options</span>[<span class="ruby-value">:reply</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">options</span>[<span class="ruby-string">&#39;reply&#39;</span>] <span class="ruby-operator">||</span> <span class="ruby-identifier">always_string</span>
+    <span class="ruby-identifier">result</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">result</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">result</span>.<span class="ruby-identifier">downcase</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-regexp">/\W+/</span>,<span class="ruby-string">&#39;_&#39;</span>).<span class="ruby-identifier">to_sym</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-remove" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">remove</span><span
+            class="method-args">(group = 'ALL', verbose = false)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>Removes a notification that was previously sent with the specified ‘group’
+ID, if one exists.</p>
+
+<p>If no ‘group’ ID is given, all notifications are removed.</p>
+          
+          
+
+          
+          <div class="method-source-code" id="remove-source">
+            <pre><span class="ruby-comment"># File lib/terminal-notifier.rb, line 93</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">remove</span>(<span class="ruby-identifier">group</span> = <span class="ruby-string">&#39;ALL&#39;</span>, <span class="ruby-identifier">verbose</span> = <span class="ruby-keyword">false</span>)
+  <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">execute</span>(<span class="ruby-identifier">verbose</span>, <span class="ruby-value">:remove</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">group</span>)
+  <span class="ruby-identifier">$?</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">$?</span>.<span class="ruby-identifier">success?</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://docs.seattlerb.org/rdoc/">RDoc</a> 4.2.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

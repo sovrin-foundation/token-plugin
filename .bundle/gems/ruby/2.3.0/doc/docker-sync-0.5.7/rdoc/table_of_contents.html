@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>Table of Contents - docker-sync-0.5.7 Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "./";
+</script>
+
+<script src="./js/jquery.js"></script>
+<script src="./js/darkfish.js"></script>
+
+<link href="./css/fonts.css" rel="stylesheet">
+<link href="./css/rdoc.css" rel="stylesheet">
+
+
+
+<body id="top" class="table-of-contents">
+<main role="main">
+<h1 class="class">Table of Contents - docker-sync-0.5.7 Documentation</h1>
+
+
+<h2 id="classes">Classes and Modules</h2>
+<ul>
+  <li class="class">
+    <a href="ComposeManager.html">ComposeManager</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync.html">DockerSync</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/ConfigLocator.html">DockerSync::ConfigLocator</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/ConfigSerializer.html">DockerSync::ConfigSerializer</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies.html">DockerSync::Dependencies</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Docker.html">DockerSync::Dependencies::Docker</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Docker/Driver.html">DockerSync::Dependencies::Docker::Driver</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Fswatch.html">DockerSync::Dependencies::Fswatch</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/PackageManager.html">DockerSync::Dependencies::PackageManager</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/Apt.html">DockerSync::Dependencies::PackageManager::Apt</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html">DockerSync::Dependencies::PackageManager::Base</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/Brew.html">DockerSync::Dependencies::PackageManager::Brew</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/None.html">DockerSync::Dependencies::PackageManager::None</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/Pkg.html">DockerSync::Dependencies::PackageManager::Pkg</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/Dependencies/PackageManager/Yum.html">DockerSync::Dependencies::PackageManager::Yum</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Rsync.html">DockerSync::Dependencies::Rsync</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Unison.html">DockerSync::Dependencies::Unison</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Dependencies/Unox.html">DockerSync::Dependencies::Unox</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/Environment.html">DockerSync::Environment</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/GlobalConfig.html">DockerSync::GlobalConfig</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/ProjectConfig.html">DockerSync::ProjectConfig</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncManager.html">DockerSync::SyncManager</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncProcess.html">DockerSync::SyncProcess</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/SyncStrategy.html">DockerSync::SyncStrategy</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncStrategy/Native.html">DockerSync::SyncStrategy::Native</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html">DockerSync::SyncStrategy::NativeOsx</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncStrategy/Rsync.html">DockerSync::SyncStrategy::Rsync</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/SyncStrategy/Unison.html">DockerSync::SyncStrategy::Unison</a>
+  </li>
+  <li class="module">
+    <a href="DockerSync/WatchStrategy.html">DockerSync::WatchStrategy</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/WatchStrategy/Dummy.html">DockerSync::WatchStrategy::Dummy</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/WatchStrategy/Fswatch.html">DockerSync::WatchStrategy::Fswatch</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html">DockerSync::WatchStrategy::Remote_logs</a>
+  </li>
+  <li class="class">
+    <a href="DockerSync/WatchStrategy/Unison.html">DockerSync::WatchStrategy::Unison</a>
+  </li>
+  <li class="module">
+    <a href="Execution.html">Execution</a>
+  </li>
+  <li class="class">
+    <a href="UpdateChecker.html">UpdateChecker</a>
+  </li>
+  <li class="class">
+    <a href="UpgradeChecker.html">UpgradeChecker</a>
+  </li>
+</ul>
+
+<h2 id="methods">Methods</h2>
+<ul>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Rsync.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Brew.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Brew</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unison.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Docker.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Docker</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Pkg.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Pkg</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Apt.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Apt</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Fswatch.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Yum.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Yum</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/None.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::None</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unox.html#method-c-available-3F">::available?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unox</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unox.html#method-c-cleanup_non_brew_version-21">::cleanup_non_brew_version!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unox</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigLocator.html#method-c-current_global_config_path">::current_global_config_path</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigLocator</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigSerializer.html#method-c-default_deserializer_file">::default_deserializer_file</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigSerializer</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigSerializer.html#method-c-default_deserializer_string">::default_deserializer_string</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigSerializer</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigSerializer.html#method-c-deserialize_config">::deserialize_config</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigSerializer</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Docker/Driver.html#method-c-docker_for_mac-3F">::docker_for_mac?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Docker::Driver</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Docker/Driver.html#method-c-docker_toolbox-3F">::docker_toolbox?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Docker::Driver</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Brew.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Brew</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/None.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::None</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unox.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unox</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unison.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Rsync.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Fswatch.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Yum.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Yum</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Apt.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Apt</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Docker.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Docker</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Pkg.html#method-c-ensure-21">::ensure!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Pkg</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies.html#method-c-ensure_all-21">::ensure_all!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies.html#method-c-ensure_all_for_freebsd-21">::ensure_all_for_freebsd!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies.html#method-c-ensure_all_for_linux-21">::ensure_all_for_linux!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies.html#method-c-ensure_all_for_mac-21">::ensure_all_for_mac!</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigLocator.html#method-c-escape_globs">::escape_globs</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigLocator</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigSerializer.html#method-c-expand_env_variables">::expand_env_variables</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigSerializer</span>
+
+  <li class="method">
+    <a href="DockerSync/Environment.html#method-c-freebsd-3F">::freebsd?</a>
+    &mdash;
+    <span class="container">DockerSync::Environment</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-c-get_current_version">::get_current_version</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigLocator.html#method-c-globs_for_project_config">::globs_for_project_config</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigLocator</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-c-install_package">::install_package</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="DockerSync/Environment.html#method-c-linux-3F">::linux?</a>
+    &mdash;
+    <span class="container">DockerSync::Environment</span>
+
+  <li class="method">
+    <a href="DockerSync/GlobalConfig.html#method-c-load">::load</a>
+    &mdash;
+    <span class="container">DockerSync::GlobalConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigSerializer.html#method-c-load_dotenv">::load_dotenv</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigSerializer</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigLocator.html#method-c-lookup_project_config_path">::lookup_project_config_path</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigLocator</span>
+
+  <li class="method">
+    <a href="DockerSync/Environment.html#method-c-mac-3F">::mac?</a>
+    &mdash;
+    <span class="container">DockerSync::Environment</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="DockerSync/GlobalConfig.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::GlobalConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-c-new">::new</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Unox.html#method-c-non_brew_version_installed-3F">::non_brew_version_installed?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Unox</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager.html#method-c-package_manager">::package_manager</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager</span>
+
+  <li class="method">
+    <a href="DockerSync/ConfigLocator.html#method-c-project_config_find">::project_config_find</a>
+    &mdash;
+    <span class="container">DockerSync::ConfigLocator</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/Docker.html#method-c-running-3F">::running?</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::Docker</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager.html#method-c-supported_package_managers">::supported_package_managers</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-apply_filepath">#apply_filepath</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-apply_filepaths">#apply_filepaths</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-apply_path_settings">#apply_path_settings</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-i-ask_user_confirmation">#ask_user_confirmation</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-i-check_and_warn">#check_and_warn</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-check_and_warn">#check_and_warn</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-check_rsync_image">#check_rsync_image</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-check_unison_image">#check_unison_image</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-clean">#clean</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-create_sync">#create_sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-create_volume">#create_volume</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-default_sync_strategy">#default_sync_strategy</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-default_watch_strategy">#default_watch_strategy</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-delete_volume">#delete_volume</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-docker_sync_update_check">#docker_sync_update_check</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-i-docker_sync_update_check">#docker_sync_update_check</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-error_missing_given_config">#error_missing_given_config</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-expand_ignore_strings">#expand_ignore_strings</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-expand_ignore_strings">#expand_ignore_strings</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-expand_path">#expand_path</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/GlobalConfig.html#method-i-first_run-3F">#first_run?</a>
+    &mdash;
+    <span class="container">DockerSync::GlobalConfig</span>
+
+  <li class="method">
+    <a href="Execution.html#method-i-fork_exec">#fork_exec</a>
+    &mdash;
+    <span class="container">Execution</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-fswatch_required-3F">#fswatch_required?</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-get_container_name">#get_container_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-get_container_name">#get_container_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-get_container_name">#get_container_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-get_current_version">#get_current_version</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-get_docker_env">#get_docker_env</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-get_group_mapping">#get_group_mapping</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-get_host_ip_default">#get_host_ip_default</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-get_host_port">#get_host_port</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-get_sync_cli_call">#get_sync_cli_call</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-get_sync_points">#get_sync_points</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-get_user_mapping">#get_user_mapping</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-get_volume_name">#get_volume_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-get_volume_name">#get_volume_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-get_volume_name">#get_volume_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-get_volume_name">#get_volume_name</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-global_options">#global_options</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-has_internet-3F">#has_internet?</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-increase_watcher_limit">#increase_watcher_limit</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-init_sync_processes">#init_sync_processes</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Pkg.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Pkg</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Yum.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Yum</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/None.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::None</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Brew.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Brew</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Apt.html#method-i-install_cmd">#install_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Apt</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-i-install_package">#install_package</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-join_threads">#join_threads</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-i-last_upgraded_version">#last_upgraded_version</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-load_configuration">#load_configuration</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/GlobalConfig.html#method-i-load_global_config">#load_global_config</a>
+    &mdash;
+    <span class="container">DockerSync::GlobalConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-load_project_config">#load_project_config</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-normalize_config-21">#normalize_config!</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-normalize_options_config-21">#normalize_options_config!</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-normalize_sync_config">#normalize_sync_config</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/Dependencies/PackageManager/Base.html#method-i-perform_installation">#perform_installation</a>
+    &mdash;
+    <span class="container">DockerSync::Dependencies::PackageManager::Base</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-project_root">#project_root</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-reset_container">#reset_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-reset_container">#reset_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-reset_container">#reset_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-rsync_required-3F">#rsync_required?</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-run">#run</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-run_cmd">#run_cmd</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-set_sync_strategy">#set_sync_strategy</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-set_watch_strategy">#set_watch_strategy</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="UpdateChecker.html#method-i-should_run">#should_run</a>
+    &mdash;
+    <span class="container">UpdateChecker</span>
+
+  <li class="method">
+    <a href="UpgradeChecker.html#method-i-should_run">#should_run</a>
+    &mdash;
+    <span class="container">UpgradeChecker</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-start_container">#start_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="ComposeManager.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">ComposeManager</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-stop">#stop</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-stop_container">#stop_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-stop_container">#stop_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-stop_container">#stop_container</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Native.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Native</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-sync">#sync</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Rsync.html#method-i-sync_options">#sync_options</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Rsync</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-sync_options">#sync_options</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-sync_prefer">#sync_prefer</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-sync_prefer">#sync_prefer</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-sync_strategy_for">#sync_strategy_for</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="Execution.html#method-i-thread_exec">#thread_exec</a>
+    &mdash;
+    <span class="container">Execution</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-unison_required-3F">#unison_required?</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/GlobalConfig.html#method-i-update-21">#update!</a>
+    &mdash;
+    <span class="container">DockerSync::GlobalConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-upgrade_syncs_config">#upgrade_syncs_config</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-use_config_path_for_project_root-3F">#use_config_path_for_project_root?</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-validate_config-21">#validate_config!</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-validate_sync_config">#validate_sync_config</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-validate_syncs_config-21">#validate_syncs_config!</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/Unison.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncStrategy/NativeOsx.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::SyncStrategy::NativeOsx</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-watch">#watch</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-watch_fork">#watch_fork</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-watch_fork">#watch_fork</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-watch_fork">#watch_fork</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-watch_fork">#watch_fork</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-watch_fork">#watch_fork</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-watch_options">#watch_options</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-watch_options">#watch_options</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-watch_options">#watch_options</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-watch_options">#watch_options</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-watch_start">#watch_start</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncManager.html#method-i-watch_stop">#watch_stop</a>
+    &mdash;
+    <span class="container">DockerSync::SyncManager</span>
+
+  <li class="method">
+    <a href="DockerSync/ProjectConfig.html#method-i-watch_strategy_for">#watch_strategy_for</a>
+    &mdash;
+    <span class="container">DockerSync::ProjectConfig</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Remote_logs.html#method-i-watch_thread">#watch_thread</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Remote_logs</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Unison.html#method-i-watch_thread">#watch_thread</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Unison</span>
+
+  <li class="method">
+    <a href="DockerSync/SyncProcess.html#method-i-watch_thread">#watch_thread</a>
+    &mdash;
+    <span class="container">DockerSync::SyncProcess</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Dummy.html#method-i-watch_thread">#watch_thread</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Dummy</span>
+
+  <li class="method">
+    <a href="DockerSync/WatchStrategy/Fswatch.html#method-i-watch_thread">#watch_thread</a>
+    &mdash;
+    <span class="container">DockerSync::WatchStrategy::Fswatch</span>
+
+  <li class="method">
+    <a href="Execution.html#method-i-with_time">#with_time</a>
+    &mdash;
+    <span class="container">Execution</span>
+</ul>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://docs.seattlerb.org/rdoc/">RDoc</a> 4.2.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

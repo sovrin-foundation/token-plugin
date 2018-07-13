@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+
+<title>class DockerSync::SyncStrategy::Unison - docker-sync-0.5.7 Documentation</title>
+
+<script type="text/javascript">
+  var rdoc_rel_prefix = "../../";
+</script>
+
+<script src="../../js/jquery.js"></script>
+<script src="../../js/darkfish.js"></script>
+
+<link href="../../css/fonts.css" rel="stylesheet">
+<link href="../../css/rdoc.css" rel="stylesheet">
+
+
+
+<body id="top" role="document" class="class">
+<nav role="navigation">
+  <div id="project-navigation">
+    <div id="home-section" role="region" title="Quick navigation" class="nav-section">
+  <h2>
+    <a href="../../index.html" rel="home">Home</a>
+  </h2>
+
+  <div id="table-of-contents-navigation">
+    <a href="../../table_of_contents.html#pages">Pages</a>
+    <a href="../../table_of_contents.html#classes">Classes</a>
+    <a href="../../table_of_contents.html#methods">Methods</a>
+  </div>
+</div>
+
+    <div id="search-section" role="search" class="project-section initially-hidden">
+  <form action="#" method="get" accept-charset="utf-8">
+    <div id="search-field-wrapper">
+      <input id="search-field" role="combobox" aria-label="Search"
+             aria-autocomplete="list" aria-controls="search-results"
+             type="text" name="search" placeholder="Search" spellcheck="false"
+             title="Type to search, Up and Down to navigate, Enter to load">
+    </div>
+
+    <ul id="search-results" aria-label="Search Results"
+        aria-busy="false" aria-expanded="false"
+        aria-atomic="false" class="initially-hidden"></ul>
+  </form>
+</div>
+
+  </div>
+
+  
+
+  <div id="class-metadata">
+    
+    <div id="parent-class-section" class="nav-section">
+  <h3>Parent</h3>
+
+  
+  <p class="link">Object
+  
+</div>
+
+    <div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  
+  
+    <li><span class="include">Thor::Shell</span>
+  
+  
+  
+    <li><a class="include" href="../../Execution.html">Execution</a>
+  
+  
+  </ul>
+</div>
+
+    
+    <!-- Method Quickref -->
+<div id="method-list-section" class="nav-section">
+  <h3>Methods</h3>
+
+  <ul class="link-list" role="directory">
+    
+    <li ><a href="#method-c-new">::new</a>
+    
+    <li ><a href="#method-i-clean">#clean</a>
+    
+    <li ><a href="#method-i-expand_ignore_strings">#expand_ignore_strings</a>
+    
+    <li ><a href="#method-i-get_container_name">#get_container_name</a>
+    
+    <li ><a href="#method-i-get_host_port">#get_host_port</a>
+    
+    <li ><a href="#method-i-get_volume_name">#get_volume_name</a>
+    
+    <li ><a href="#method-i-increase_watcher_limit">#increase_watcher_limit</a>
+    
+    <li ><a href="#method-i-reset_container">#reset_container</a>
+    
+    <li ><a href="#method-i-run">#run</a>
+    
+    <li ><a href="#method-i-start_container">#start_container</a>
+    
+    <li ><a href="#method-i-stop">#stop</a>
+    
+    <li ><a href="#method-i-stop_container">#stop_container</a>
+    
+    <li ><a href="#method-i-sync">#sync</a>
+    
+    <li ><a href="#method-i-sync_options">#sync_options</a>
+    
+    <li ><a href="#method-i-sync_prefer">#sync_prefer</a>
+    
+    <li ><a href="#method-i-watch">#watch</a>
+    
+  </ul>
+</div>
+
+  </div>
+</nav>
+
+<main role="main" aria-labelledby="class-DockerSync::SyncStrategy::Unison">
+  <h1 id="class-DockerSync::SyncStrategy::Unison" class="class">
+    class DockerSync::SyncStrategy::Unison
+  </h1>
+
+  <section class="description">
+    
+  </section>
+
+  
+  
+  
+  <section id="5Buntitled-5D" class="documentation-section">
+    
+
+    
+
+    
+    <section class="constants-list">
+      <header>
+        <h3>Constants</h3>
+      </header>
+      <dl>
+      
+        <dt id="UNISON_CONTAINER_PORT">UNISON_CONTAINER_PORT
+        
+        <dd>
+        
+      
+      </dl>
+    </section>
+    
+
+    
+
+    
+     <section id="public-class-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Class Methods</h3>
+       </header>
+
+    
+      <div id="method-c-new" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">new</span><span
+            class="method-args">(sync_name, options)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="new-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 18</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">sync_name</span>, <span class="ruby-identifier">options</span>)
+  <span class="ruby-ivar">@options</span> = <span class="ruby-identifier">options</span>
+  <span class="ruby-ivar">@sync_name</span> = <span class="ruby-identifier">sync_name</span>
+  <span class="ruby-comment"># if a custom image is set, apply it</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;image&#39;</span>)
+    <span class="ruby-ivar">@docker_image</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;image&#39;</span>]
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-ivar">@docker_image</span> = <span class="ruby-string">&#39;eugenmayer/unison:2.51.2.1&#39;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">begin</span>
+    <span class="ruby-constant">Dependencies</span><span class="ruby-operator">::</span><span class="ruby-constant">Unison</span>.<span class="ruby-identifier">ensure!</span>
+  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">StandardError</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;error&#39;</span>, <span class="ruby-node">&quot;#{@sync_name} has been configured to sync with unison, but no unison available&quot;</span>, <span class="ruby-value">:red</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;error&#39;</span>, <span class="ruby-identifier">e</span>.<span class="ruby-identifier">message</span>, <span class="ruby-value">:red</span>
+    <span class="ruby-identifier">exit</span> <span class="ruby-value">1</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+     <section id="public-instance-5Buntitled-5D-method-details" class="method-section">
+       <header>
+         <h3>Public Instance Methods</h3>
+       </header>
+
+    
+      <div id="method-i-clean" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">clean</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="clean-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 253</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">clean</span>
+  <span class="ruby-identifier">reset_container</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-expand_ignore_strings" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">expand_ignore_strings</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="expand_ignore_strings-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 94</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">expand_ignore_strings</span>
+  <span class="ruby-identifier">expanded_ignore_strings</span> = []
+
+  <span class="ruby-identifier">exclude_type</span> = <span class="ruby-string">&#39;Name&#39;</span>
+  <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_excludes_type&#39;</span>].<span class="ruby-identifier">nil?</span>
+    <span class="ruby-identifier">exclude_type</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_excludes_type&#39;</span>]
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-keyword">unless</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_excludes&#39;</span>].<span class="ruby-identifier">nil?</span>
+    <span class="ruby-identifier">expanded_ignore_strings</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_excludes&#39;</span>].<span class="ruby-identifier">map</span> <span class="ruby-keyword">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">pattern</span><span class="ruby-operator">|</span>
+      <span class="ruby-keyword">if</span> <span class="ruby-identifier">exclude_type</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;none&#39;</span>
+        <span class="ruby-comment"># the ignore type like Name / Path are part of the pattern</span>
+        <span class="ruby-identifier">ignore_string</span> = <span class="ruby-node">&quot;#{pattern}&quot;</span>
+      <span class="ruby-keyword">else</span>
+        <span class="ruby-identifier">ignore_string</span> = <span class="ruby-node">&quot;#{exclude_type} #{pattern}&quot;</span>
+      <span class="ruby-keyword">end</span>
+      <span class="ruby-node">&quot;-ignore=&#39;#{ignore_string}&#39;&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">expanded_ignore_strings</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-get_container_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">get_container_name</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="get_container_name-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 235</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">get_container_name</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-node">&quot;#{@sync_name}&quot;</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-get_host_port" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">get_host_port</span><span
+            class="method-args">(container_name, container_port)</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>noinspection RubyUnusedLocalVariable</p>
+          
+          
+
+          
+          <div class="method-source-code" id="get_host_port-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 223</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">get_host_port</span>(<span class="ruby-identifier">container_name</span>, <span class="ruby-identifier">container_port</span>)
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-string">&#39;docker inspect --format=\{{(index (index .NetworkSettings.Ports &quot;5000/tcp&quot;) 0).HostPort}}\ &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">container_name</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+  <span class="ruby-identifier">stdout</span>, <span class="ruby-identifier">stderr</span>, <span class="ruby-identifier">exit_status</span> = <span class="ruby-constant">Open3</span>.<span class="ruby-identifier">capture3</span>(<span class="ruby-identifier">cmd</span>)
+  <span class="ruby-keyword">unless</span> <span class="ruby-identifier">exit_status</span>.<span class="ruby-identifier">success?</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;error&#39;</span>, <span class="ruby-node">&quot;Error getting mapped port, exit code #{$?.exitstatus}&quot;</span>, <span class="ruby-value">:red</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;message&#39;</span>, <span class="ruby-identifier">stderr</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">stdout</span>.<span class="ruby-identifier">gsub</span>(<span class="ruby-string">&quot;\n&quot;</span>,<span class="ruby-string">&#39;&#39;</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-get_volume_name" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">get_volume_name</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="get_volume_name-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 239</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">get_volume_name</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-ivar">@sync_name</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-increase_watcher_limit" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">increase_watcher_limit</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="increase_watcher_limit-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 42</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">increase_watcher_limit</span>
+  <span class="ruby-identifier">current_max_files_per_proc</span> = <span class="ruby-value">%x`sysctl kern.maxfilesperproc | awk &#39;{print $2}&#39;`</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">current_max_files_per_proc</span>.<span class="ruby-identifier">to_f</span> <span class="ruby-operator">&lt;</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>]
+    <span class="ruby-identifier">cmd</span> = <span class="ruby-string">&#39;sudo sysctl -w kern.maxfilesperproc=&#39;</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>].<span class="ruby-identifier">to_s</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span>
+    <span class="ruby-node">%x`#{cmd}`</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">raise</span>(<span class="ruby-string">&#39;Unable to increase maxfilesperproc&#39;</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-string">&#39;Current maxfilesperproc set to &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">current_max_files_per_proc</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-value">:white</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">current_max_files</span> = <span class="ruby-value">%x`sysctl kern.maxfiles | awk &#39;{print $2}&#39;`</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">current_max_files</span>.<span class="ruby-identifier">to_f</span> <span class="ruby-operator">&lt;</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>]
+    <span class="ruby-identifier">cmd</span> = <span class="ruby-string">&#39;sudo sysctl -w kern.maxfiles=&#39;</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>].<span class="ruby-identifier">to_s</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span>
+    <span class="ruby-node">%x`#{cmd}`</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">raise</span>(<span class="ruby-string">&#39;Unable to increase maxfiles&#39;</span>)
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-string">&#39;Current maxfiles set to &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">current_max_files</span>.<span class="ruby-identifier">to_s</span>, <span class="ruby-value">:white</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-reset_container" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">reset_container</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="reset_container-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 247</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">reset_container</span>
+  <span class="ruby-identifier">stop_container</span>
+  <span class="ruby-node">%x`docker ps -a | grep #{get_container_name} &amp;&amp; docker rm #{get_container_name}`</span>
+  <span class="ruby-node">%x`docker volume ls -q | grep #{get_volume_name} &amp;&amp; docker volume rm #{get_volume_name}`</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-run" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">run</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="run-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 36</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">run</span>
+  <span class="ruby-identifier">increase_watcher_limit</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;max_inotify_watches&#39;</span>)
+  <span class="ruby-identifier">start_container</span>
+  <span class="ruby-identifier">sync</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-start_container" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">start_container</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="start_container-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 144</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">start_container</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;Starting unison for sync #{@sync_name}&quot;</span>, <span class="ruby-value">:white</span>
+
+  <span class="ruby-identifier">container_name</span> = <span class="ruby-identifier">get_container_name</span>
+  <span class="ruby-identifier">volume_name</span> = <span class="ruby-identifier">get_volume_name</span>
+  <span class="ruby-identifier">env</span> = {}
+  <span class="ruby-identifier">raise</span> <span class="ruby-string">&#39;sync_user is no longer supported, since it ise no needed, use sync_userid only please&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;sync_user&#39;</span>)
+
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISON_SRC&#39;</span>] = <span class="ruby-string">&#39;-socket 5000&#39;</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISON_DEST&#39;</span>] = <span class="ruby-string">&#39;/app_sync&#39;</span>
+
+
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;MONIT_ENABLE&#39;</span>] = <span class="ruby-string">&#39;false&#39;</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;MONIT_INTERVAL&#39;</span>] = <span class="ruby-string">&#39;&#39;</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;MONIT_HIGH_CPU_CYCLES&#39;</span>] = <span class="ruby-string">&#39;&#39;</span>
+
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISON_ARGS&#39;</span>] = <span class="ruby-string">&#39;&#39;</span>
+  <span class="ruby-identifier">ignore_strings</span> = <span class="ruby-identifier">expand_ignore_strings</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISON_ARGS&#39;</span>] <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">ignore_strings</span>.<span class="ruby-identifier">join</span>(<span class="ruby-string">&#39; &#39;</span>)
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISON_WATCH_ARGS&#39;</span>] = <span class="ruby-string">&#39;&#39;</span>
+
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;MAX_INOTIFY_WATCHES&#39;</span>] = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>] <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;max_inotify_watches&#39;</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_userid&#39;</span>] <span class="ruby-operator">==</span> <span class="ruby-string">&#39;from_host&#39;</span>
+    <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;OWNER_UID&#39;</span>] = <span class="ruby-constant">Process</span>.<span class="ruby-identifier">uid</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;OWNER_UID&#39;</span>] = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_userid&#39;</span>] <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;sync_userid&#39;</span>)
+  <span class="ruby-keyword">end</span>
+
+  <span class="ruby-comment"># start unison-image in unison socket mode mode</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;HOSTSYNC_ENABLE&#39;</span>]=<span class="ruby-value">0</span>
+  <span class="ruby-identifier">env</span>[<span class="ruby-string">&#39;UNISONSOCKET_ENABLE&#39;</span>]=<span class="ruby-value">1</span>
+
+  <span class="ruby-identifier">additional_docker_env</span> = <span class="ruby-identifier">env</span>.<span class="ruby-identifier">map</span>{ <span class="ruby-operator">|</span><span class="ruby-identifier">key</span>,<span class="ruby-identifier">value</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;-e #{key}=\&quot;#{value}\&quot;&quot;</span> }.<span class="ruby-identifier">join</span>(<span class="ruby-string">&#39; &#39;</span>)
+  <span class="ruby-identifier">running</span> = <span class="ruby-node">%x`docker ps --filter &#39;status=running&#39; --filter &#39;name=#{container_name}&#39; --format &quot;{{.Names}}&quot; | grep &#39;^#{container_name}$&#39;`</span>
+  <span class="ruby-keyword">if</span> <span class="ruby-identifier">running</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;&#39;</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;#{container_name} container not running&quot;</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+    <span class="ruby-identifier">exists</span> = <span class="ruby-node">%x`docker ps --filter &quot;status=exited&quot; --filter &quot;name=#{container_name}&quot; --format &quot;{{.Names}}&quot; | grep &#39;^#{container_name}$&#39;`</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-identifier">exists</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;&#39;</span>
+      <span class="ruby-identifier">run_privileged</span> = <span class="ruby-string">&#39;&#39;</span>
+      <span class="ruby-identifier">run_privileged</span> = <span class="ruby-string">&#39;--privileged&#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;max_inotify_watches&#39;</span>) <span class="ruby-comment">#TODO: replace by the minimum capabilities required</span>
+      <span class="ruby-identifier">tz_expression</span> = <span class="ruby-string">&#39;-e TZ=$(basename $(dirname `readlink /etc/localtime`))/$(basename `readlink /etc/localtime`)&#39;</span>
+      <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-string">&#39;Starting precopy&#39;</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+      <span class="ruby-comment"># we just run the precopy script and remove the container</span>
+      <span class="ruby-identifier">cmd</span> = <span class="ruby-node">&quot;docker run --rm -v \&quot;#{volume_name}:#{@options[&#39;dest&#39;]}\&quot; -e APP_VOLUME=#{@options[&#39;dest&#39;]} #{tz_expression} #{additional_docker_env} #{run_privileged} --name #{container_name} #{@docker_image} /usr/local/bin/precopy_appsync&quot;</span>
+      <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;precopy&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+      <span class="ruby-identifier">system</span>(<span class="ruby-identifier">cmd</span>) <span class="ruby-operator">||</span> <span class="ruby-identifier">raise</span>(<span class="ruby-string">&#39;Precopy failed&#39;</span>)
+
+      <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;creating #{container_name} container&quot;</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+      <span class="ruby-identifier">cmd</span> = <span class="ruby-node">&quot;docker run -p &#39;#{@options[&#39;sync_host_ip&#39;]}::#{UNISON_CONTAINER_PORT}&#39; -v #{volume_name}:#{@options[&#39;dest&#39;]} -e APP_VOLUME=#{@options[&#39;dest&#39;]} #{tz_expression} #{additional_docker_env} #{run_privileged} --name #{container_name} -d #{@docker_image}&quot;</span>
+    <span class="ruby-keyword">else</span>
+      <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;starting #{container_name} container&quot;</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+      <span class="ruby-identifier">cmd</span> = <span class="ruby-node">&quot;docker start #{container_name} &amp;&amp; docker exec #{container_name} supervisorctl restart unison&quot;</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;#{container_name} container still running, restarting unison in container&quot;</span>, <span class="ruby-value">:blue</span>
+    <span class="ruby-identifier">cmd</span> = <span class="ruby-node">&quot;docker exec #{container_name} supervisorctl restart unison&quot;</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+  <span class="ruby-node">%x`#{cmd}`</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">raise</span>(<span class="ruby-string">&#39;Start failed&#39;</span>)
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;starting initial sync of #{container_name}&quot;</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+  <span class="ruby-comment"># wait until container is started, then sync:</span>
+  <span class="ruby-identifier">sync_host_port</span> = <span class="ruby-identifier">get_host_port</span>(<span class="ruby-identifier">get_container_name</span>, <span class="ruby-constant">UNISON_CONTAINER_PORT</span>)
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-node">&quot;unison -testserver #{@options[&#39;dest&#39;]} \&quot;socket://#{@options[&#39;sync_host_ip&#39;]}:#{sync_host_port}\&quot;&quot;</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+  <span class="ruby-identifier">attempt</span> = <span class="ruby-value">0</span>
+  <span class="ruby-identifier">max_attempt</span> = <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_attempt&#39;</span>] <span class="ruby-operator">||</span> <span class="ruby-value">5</span>
+  <span class="ruby-identifier">loop</span> <span class="ruby-keyword">do</span>
+    <span class="ruby-comment"># noinspection RubyUnusedLocalVariable</span>
+    <span class="ruby-identifier">stdout</span>, <span class="ruby-identifier">stderr</span>, <span class="ruby-identifier">exit_status</span> = <span class="ruby-constant">Open3</span>.<span class="ruby-identifier">capture3</span>(<span class="ruby-identifier">cmd</span>)
+    <span class="ruby-keyword">break</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">exit_status</span> <span class="ruby-operator">==</span> <span class="ruby-value">0</span>
+    <span class="ruby-identifier">attempt</span> <span class="ruby-operator">+=</span> <span class="ruby-value">1</span>
+    <span class="ruby-identifier">raise</span> <span class="ruby-node">&quot;Failed to start unison container in time, try to increase max_attempt (currently #{max_attempt}) in your configuration. See https://github.com/EugenMayer/docker-sync/wiki/2.-Configuration for more informations&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">attempt</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">max_attempt</span>
+    <span class="ruby-identifier">sleep</span> <span class="ruby-value">1</span>
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-identifier">sync</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;success&#39;</span>, <span class="ruby-string">&#39;Unison server started&#39;</span>, <span class="ruby-value">:green</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-stop" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">stop</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="stop-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 257</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">stop</span>
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;Stopping sync container #{get_container_name}&quot;</span>
+  <span class="ruby-keyword">begin</span>
+    <span class="ruby-identifier">stop_container</span>
+  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">StandardError</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;error&#39;</span>, <span class="ruby-node">&quot;Stopping failed of #{get_container_name}:&quot;</span>, <span class="ruby-value">:red</span>
+    <span class="ruby-identifier">puts</span> <span class="ruby-identifier">e</span>.<span class="ruby-identifier">message</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-stop_container" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">stop_container</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="stop_container-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 243</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">stop_container</span>
+  <span class="ruby-node">%x`docker ps | grep #{get_container_name} &amp;&amp; docker stop #{get_container_name} &amp;&amp; docker wait #{get_container_name}`</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-sync" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">sync</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="sync-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 72</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">sync</span>
+  <span class="ruby-identifier">args</span> = <span class="ruby-identifier">sync_options</span>
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-string">&#39;unison &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">join</span>(<span class="ruby-string">&#39; &#39;</span>)
+
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+
+  <span class="ruby-identifier">stdout</span>, <span class="ruby-identifier">stderr</span>, <span class="ruby-identifier">exit_status</span> = <span class="ruby-constant">Open3</span>.<span class="ruby-identifier">capture3</span>(<span class="ruby-identifier">cmd</span>)
+  <span class="ruby-keyword">if</span> <span class="ruby-keyword">not</span> <span class="ruby-identifier">exit_status</span>.<span class="ruby-identifier">success?</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;error&#39;</span>, <span class="ruby-node">&quot;Error starting sync, exit code #{$?.exitstatus}&quot;</span>, <span class="ruby-value">:red</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;message&#39;</span>, <span class="ruby-identifier">stdout</span>
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;message&#39;</span>, <span class="ruby-identifier">stderr</span>
+  <span class="ruby-keyword">else</span>
+    <span class="ruby-constant">TerminalNotifier</span>.<span class="ruby-identifier">notify</span>(
+        <span class="ruby-node">&quot;Synced #{@options[&#39;src&#39;]}&quot;</span>, <span class="ruby-value">:title</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-ivar">@sync_name</span>
+    ) <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;notify_terminal&#39;</span>]
+    <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;ok&#39;</span>, <span class="ruby-node">&quot;Synced #{@options[&#39;src&#39;]}&quot;</span>, <span class="ruby-value">:white</span>
+    <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+      <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;output&#39;</span>, <span class="ruby-identifier">stdout</span>
+    <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-sync_options" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">sync_options</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="sync_options-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 116</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">sync_options</span>
+  <span class="ruby-identifier">args</span> = []
+  <span class="ruby-identifier">args</span> = <span class="ruby-identifier">expand_ignore_strings</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">args</span>
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-node">&quot;&#39;#{@options[&#39;src&#39;]}&#39;&quot;</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-string">&#39;-auto&#39;</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-string">&#39;-batch&#39;</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-identifier">sync_prefer</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;sync_args&#39;</span>]) <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;sync_args&#39;</span>)
+  <span class="ruby-identifier">sync_host_port</span> = <span class="ruby-identifier">get_host_port</span>(<span class="ruby-identifier">get_container_name</span>, <span class="ruby-constant">UNISON_CONTAINER_PORT</span>)
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-node">&quot;socket://#{@options[&#39;sync_host_ip&#39;]}:#{sync_host_port}&quot;</span>)
+
+  <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;sync_group&#39;</span>) <span class="ruby-operator">||</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;sync_groupid&#39;</span>)
+    <span class="ruby-identifier">raise</span>(<span class="ruby-string">&#39;Unison does not support sync_group, sync_groupid - please use rsync if you need that&#39;</span>)
+  <span class="ruby-keyword">end</span>
+  <span class="ruby-keyword">return</span> <span class="ruby-identifier">args</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-sync_prefer" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">sync_prefer</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          <p>cares about conflict resolution</p>
+          
+          
+
+          
+          <div class="method-source-code" id="sync_prefer-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 134</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">sync_prefer</span>
+  <span class="ruby-keyword">case</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">fetch</span>(<span class="ruby-string">&#39;sync_prefer&#39;</span>, <span class="ruby-string">&#39;default&#39;</span>)
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;default&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-node">&quot;-prefer &#39;#{@options[&#39;src&#39;]}&#39; -copyonconflict&quot;</span> <span class="ruby-comment"># thats our default, if nothing is set</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;src&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-node">&quot;-prefer &#39;#{@options[&#39;src&#39;]}&#39;&quot;</span>
+    <span class="ruby-keyword">when</span> <span class="ruby-string">&#39;dest&#39;</span> <span class="ruby-keyword">then</span> <span class="ruby-node">&quot;-prefer &#39;socket://#{@options[&#39;sync_host_ip&#39;]}:#{sync_host_port}&#39;&quot;</span>
+    <span class="ruby-keyword">else</span> <span class="ruby-node">&quot;-prefer &#39;#{@options[&#39;sync_prefer&#39;]}&#39;&quot;</span>
+  <span class="ruby-keyword">end</span>
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+      <div id="method-i-watch" class="method-detail ">
+        
+        <div class="method-heading">
+          <span class="method-name">watch</span><span
+            class="method-args">()</span>
+          
+          <span class="method-click-advice">click to toggle source</span>
+          
+        </div>
+        
+
+        <div class="method-description">
+          
+          
+          
+          
+
+          
+          <div class="method-source-code" id="watch-source">
+            <pre><span class="ruby-comment"># File lib/docker-sync/sync_strategy/unison.rb, line 61</span>
+<span class="ruby-keyword">def</span> <span class="ruby-identifier">watch</span>
+  <span class="ruby-identifier">args</span> = <span class="ruby-identifier">sync_options</span>
+  <span class="ruby-identifier">args</span>.<span class="ruby-identifier">push</span>(<span class="ruby-string">&quot;-repeat watch&quot;</span>)
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-string">&#39;&#39;</span>
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-identifier">cmd</span> <span class="ruby-operator">+</span> <span class="ruby-string">&#39;ulimit -n &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;max_inotify_watches&#39;</span>].<span class="ruby-identifier">to_s</span> <span class="ruby-operator">+</span> <span class="ruby-string">&#39; &amp;&amp; &#39;</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>.<span class="ruby-identifier">key?</span>(<span class="ruby-string">&#39;max_inotify_watches&#39;</span>)
+  <span class="ruby-identifier">cmd</span> = <span class="ruby-identifier">cmd</span> <span class="ruby-operator">+</span> <span class="ruby-string">&#39;unison &#39;</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">args</span>.<span class="ruby-identifier">join</span>(<span class="ruby-string">&#39; &#39;</span>)
+
+  <span class="ruby-identifier">say_status</span> <span class="ruby-string">&#39;command&#39;</span>, <span class="ruby-identifier">cmd</span>, <span class="ruby-value">:white</span> <span class="ruby-keyword">if</span> <span class="ruby-ivar">@options</span>[<span class="ruby-string">&#39;verbose&#39;</span>]
+  <span class="ruby-identifier">fork_exec</span>(<span class="ruby-identifier">cmd</span>, <span class="ruby-node">&quot;Sync #{@sync_name}&quot;</span>, <span class="ruby-value">:blue</span>)
+<span class="ruby-keyword">end</span></pre>
+          </div>
+          
+        </div>
+
+        
+
+        
+      </div>
+
+    
+    </section>
+  
+  </section>
+</main>
+
+
+<footer id="validator-badges" role="contentinfo">
+  <p><a href="http://validator.w3.org/check/referer">Validate</a>
+  <p>Generated by <a href="http://docs.seattlerb.org/rdoc/">RDoc</a> 4.2.1.
+  <p>Based on <a href="http://deveiate.org/projects/Darkfish-RDoc/">Darkfish</a> by <a href="http://deveiate.org">Michael Granger</a>.
+</footer>
+

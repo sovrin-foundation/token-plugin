@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 from setuptools import setup, find_packages
 
 v = sys.version_info
@@ -37,7 +38,7 @@ setup(
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
-    install_requires=['indy-plenum==1.4.442'],
+    install_requires=['indy-plenum-dev==1.4.442'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,

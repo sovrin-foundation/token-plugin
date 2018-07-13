@@ -1,10 +1,9 @@
 version: '2'
 
 services:
-  pycharm-dev:
+  plugin:
     volumes:
-      - plugin-dev-sync:/home/indy/
+      - .:/home/indy/
 volumes:
-  plugin-dev-sync:
-    external: true 
+  .:
     

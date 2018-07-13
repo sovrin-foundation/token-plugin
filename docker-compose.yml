@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  plugin:
+    build:
+      context: denv
+      dockerfile: Dockerfile
