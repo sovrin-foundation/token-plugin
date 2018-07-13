@@ -25,7 +25,7 @@ from sovtoken.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
-
+from sovtoken.exceptions import InsufficientFundsError
 
 # TODO: Rename to `PaymentReqHandler`
 from state.trie.pruning_trie import rlp_decode
@@ -153,7 +153,7 @@ class TokenReqHandler(LedgerRequestHandler):
                     self.domain_state, idr, TRUSTEE) for idr in senders):
                 error = 'only Trustees can send this transaction'
             if len(senders) < self.MinSendersForPublicMint:
-                error = 'Need at least {} but only {} found'.\
+                error = 'Need at least {} but only {} found'. \
                     format(self.MinSendersForPublicMint, len(senders))
 
         if operation[TXN_TYPE] == XFER_PUBLIC:
@@ -169,6 +169,9 @@ class TokenReqHandler(LedgerRequestHandler):
                 if sum_inputs < sum_outputs:
                     error = 'Insufficient funds, sum of inputs is {} and sum' \
                             ' of outputs is {}'.format(sum_inputs, sum_outputs)
+                    raise InsufficientFundsError(request.identifier,
+                                                 request.reqId,
+                                                 error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier,
