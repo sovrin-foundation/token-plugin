@@ -35,10 +35,10 @@ RUN pip3 install -U pipenv
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
-RUN useradd -ms /bin/bash -u $u_id $u_name
-USER $u_name
+RUN if [ "$u_id" != "0" ]; then \
+        useradd -ms /bin/bash -u $u_id $u_name; \
+    fi
+USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-WORKDIR /home/$u_name
-
-ENV CI_ENV_VERSION=0.2.0
+ENV CI_ENV_VERSION=0.3.0
