@@ -6,7 +6,7 @@ from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
-from sovtoken.test.helper import send_get_utxo
+from sovtoken.test.helper import send_get_utxo, do_public_minting
 from sovtokenfees.constants import FEES, REF
 from sovtokenfees.test.helper import gen_nym_req_for_fees
 from sovtoken import TOKEN_LEDGER_ID
@@ -164,3 +164,13 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
+
+
+def test_mint_after_paying_fees(fees_paid, looper, nodeSetWithIntegratedTokenPlugin,
+                             trustee_wallets, SF_address, seller_address,
+                             sdk_pool_handle):
+    # Try another minting after doing some txns with fees
+    total_mint = 100
+    sf_master_gets = 60
+    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
+                      sf_master_gets, SF_address, seller_address)
