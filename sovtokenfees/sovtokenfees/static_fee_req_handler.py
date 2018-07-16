@@ -23,7 +23,6 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -208,7 +207,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
                     'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
-                raise InsufficientFundsError(request.identifier, request.reqId, error)
             else:
                 deducted_fees = sum_inputs - sum_outputs
                 return deducted_fees
@@ -227,7 +225,6 @@ class StaticFeesReqHandler(FeeReqHandler):
             if sum_inputs != (change_amount + required_fees):
                 error = 'Insufficient fees, sum of inputs is {} and sum ' \
                     'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
-                raise InsufficientFundsError(request.identifier, request.reqId, error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
