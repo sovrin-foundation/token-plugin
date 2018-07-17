@@ -18,7 +18,7 @@ from sovtokenfees.test.helper import get_fees_from_ledger, \
     check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
     send_get_fees
 from sovtoken.constants import XFER_PUBLIC
-from sovtoken.test.helper import decode_proof
+from sovtoken.test.helper import decode_proof, do_public_minting
 from plenum.test.conftest import get_data_for_role
 from sovtoken.test.conftest import build_wallets_from_data
 
@@ -112,3 +112,13 @@ def test_get_fees_with_proof(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
     assert client_trie.verify_spv_proof(
         state_roots_serializer.deserialize(res[STATE_PROOF][ROOT_HASH]),
         StaticFeesReqHandler.fees_state_key, fees, proof_nodes)
+
+
+def test_mint_after_set_fees(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
+                             trustee_wallets, SF_address, seller_address,
+                             sdk_pool_handle):
+    # Try another minting after setting fees
+    total_mint = 100
+    sf_master_gets = 60
+    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
+                      sf_master_gets, SF_address, seller_address)

@@ -20,7 +20,8 @@ from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC
+    XFER_PUBLIC, MINT_PUBLIC
+from sovtokenfees.transactions import FeesTransactions
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError
@@ -179,7 +180,10 @@ class StaticFeesReqHandler(FeeReqHandler):
                              state_root, txn_root):
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if get_seq_no(t) in self.deducted_fees
-                                       and get_type(t) != XFER_PUBLIC]
+                                       and get_type(t) != XFER_PUBLIC
+                                       and get_type(t) != MINT_PUBLIC
+                                       and get_type(t) != FeesTransactions.SET_FEES.value
+                                       ]
         if len(committed_seq_nos_with_fees) > 0:
             txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,

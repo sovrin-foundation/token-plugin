@@ -89,6 +89,7 @@ ifeq ($(DOCKER_TAG),)
 	$(eval DOCKER_TAG=$(call docker_env_value,'CI_ENV_VERSION',$(CI_DOCKERFILE_PATH))-$(OSNAME)-ci)
 endif
 	OSNAME=$(OSNAME) \
+	DOCKER_UID=$(DOCKER_UID) \
 	CI_DOCKER_NAME=$(DOCKER_NAME) \
 	CI_DOCKER_TAG=$(DOCKER_TAG) \
 		docker-compose -f docker/docker-compose.yml build ci
@@ -110,7 +111,7 @@ test: $(SRC_DIR) pipenv_version clean_pycache
 	cd $< \
 		&& pipenv --three \
 		&& pipenv run pip install -U -e ../sovtoken \
-		&& pipenv run pip install .[tests] \
+		&& pipenv run pip install .[test] \
 		&& pipenv run python -m pytest $(PYTEST_ARGS)
 
 pre_package: python_version | $(BUILD_DIR)
