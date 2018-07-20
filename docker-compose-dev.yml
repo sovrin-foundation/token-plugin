@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  token:
+    volumes:
+      - .:/home/indy/
+volumes:
+  .:
+    

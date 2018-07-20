@@ -24,6 +24,7 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
 from sovtokenfees.transactions import FeesTransactions
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -203,6 +204,8 @@ class StaticFeesReqHandler(FeeReqHandler):
                 request.operation[INPUTS],
                 request.operation[OUTPUTS],
                 is_committed=False)
+        except KeyError as ex:
+            raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
         except Exception as ex:
             error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
@@ -211,6 +214,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
                     'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+                raise InsufficientFundsError(request.identifier, request.reqId, error)
             else:
                 deducted_fees = sum_inputs - sum_outputs
                 return deducted_fees
@@ -223,12 +227,17 @@ class StaticFeesReqHandler(FeeReqHandler):
         if not self.has_fees(request):
             error = 'fees not preset or improperly formed'
         if not error:
-            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
-            change_amount = sum([a for _, a in self.get_change_for_fees(request)])
-            # TODO: Reconsider, this forces the sender to pay the exact amount of sovtokenfees, not more, not less
-            if sum_inputs != (change_amount + required_fees):
-                error = 'Insufficient fees, sum of inputs is {} and sum ' \
-                    'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
+            try:
+                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
+            except KeyError as ex:
+                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+            else:
+                change_amount = sum([a for _, a in self.get_change_for_fees(request)])
+                # TODO: Reconsider, this forces the sender to pay the exact amount of sovtokenfees, not more, not less
+                if sum_inputs != (change_amount + required_fees):
+                    error = 'Insufficient fees, sum of inputs is {} and sum ' \
+                        'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
+                    raise InsufficientFundsError(request.identifier, request.reqId, error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

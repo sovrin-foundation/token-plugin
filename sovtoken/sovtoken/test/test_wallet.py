@@ -3,6 +3,7 @@ from base58 import b58decode
 
 from sovtoken.messages.fields import PublicAddressField
 from sovtoken.wallet import TokenWallet, Address
+from sovtoken.test.txn_response import TxnResponse
 
 
 @pytest.fixture()
@@ -194,27 +195,31 @@ def test_token_wallet_on_reply_from_network_invalid(test_wallet, address0):
 def test_token_wallet_on_reply_from_network_success2(test_wallet, address0):
     observer_name = "ddcebc22-3364-47e6-8500-0e8a00cd6341"
     req_id = 1517251781147288
+    seq_no = 6
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : address0.address,
-              "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1, '']],
-              "type": "10001", "reqId" : 1517251781147288, "seqNo": 6}
+              "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1,]],
+              "type": "10001", "reqId" : 1517251781147288, "seqNo": seq_no}
     num_replies = 2
-    test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
-    assert address0.outputs[0][6] == 10000 and address0.outputs[1][1] == 50000
+    txn = TxnResponse("10001", result, seq_no=seq_no).form_response()
+    test_wallet.on_reply_from_network(observer_name, req_id, frm, txn, num_replies)
+    assert address0.outputs[0][seq_no] == 10000 and address0.outputs[1][1] == 50000
 
 
 def test_token_wallet_on_reply_from_network_invalid_address2(test_wallet, address0):
     invalid_address = Address()
     observer_name = "ddcebc22-3364-47e6-8500-0e8a00cd6341"
     req_id = 1517251781147288
+    seq_no = 6
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : invalid_address.address,
-              "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1, '']],
-              "type": "10001", "reqId" : 1517251781147288, "seqNo": 6}
+              "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+              "type": "10001", "reqId" : 1517251781147288, "seqNo": seq_no}
     num_replies = 2
-    test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
+    txn = TxnResponse("10001", result, seq_no=seq_no).form_response()
+    test_wallet.on_reply_from_network(observer_name, req_id, frm, txn, num_replies)
     with pytest.raises(KeyError):
-        assert address0.outputs[0][6] != 10000 and address0.outputs[1][1] != 50000
+        assert address0.outputs[0][seq_no] != 10000 and address0.outputs[1][1] != 50000
 
 
 def test_token_wallet_handle_get_utxo_response_success(test_wallet, address0):
@@ -234,22 +239,28 @@ def test_token_wallet_handle_get_utxo_response_invalid_address(test_wallet, addr
 
 
 def test_token_wallet_handle_xfer_success(test_wallet, address0):
+    seq_no = 6
     response = {"address": address0.address,
-                "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1, '']],
-                "seqNo": 6,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
-    test_wallet.handle_xfer(response)
-    assert address0.outputs[0][6] == 10000 and address0.outputs[1][1] == 50000
+                "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1]],
+                "seqNo": seq_no, "reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
+
+    txn = TxnResponse("10002", response, seq_no=seq_no).form_response()
+    test_wallet.handle_xfer(txn)
+    assert address0.outputs[0][seq_no] == 10000 and address0.outputs[1][1] == 50000
 
 
 def test_token_wallet_handle_xfer_invalid_address(test_wallet, address0):
     invalid_address = Address()
+    seq_no = 6
     response = {"address": invalid_address.address,
-                "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1, '']],
-                "seqNo": 6,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
-    test_wallet.handle_xfer(response)
+                "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+                "seqNo": seq_no,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
+
+    txn = TxnResponse("10002", response, seq_no=seq_no).form_response()
+    test_wallet.handle_xfer(txn)
     #Raises KeyError because (6, 10000) has been added to invalid_address obj not address0 obj
     with pytest.raises(KeyError):
-        assert address0.outputs[0][6] != 10000 and address0.outputs[1][1] != 50000
+        assert address0.outputs[0][seq_no] != 10000 and address0.outputs[1][1] != 50000
 
 
 def test_token_wallet_get_min_utxo_ge_success(test_wallet, address2):
