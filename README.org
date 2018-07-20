@@ -16,7 +16,8 @@
 
 *** Why cant I use my own local machine as my enviroment? 
 
-    Due to some compatibility issues we have decided that a docker enviroment would be the easiest way,
+    Due to some compatibility issues we have decided that a docker enviroment would be the easiest way
+    for any new developer to get setup and start testing their code.
    
 *** Requirements 
 
