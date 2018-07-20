@@ -25,7 +25,7 @@ from sovtoken.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
-
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
 # TODO: Rename to `PaymentReqHandler`
 from state.trie.pruning_trie import rlp_decode
@@ -153,7 +153,7 @@ class TokenReqHandler(LedgerRequestHandler):
                     self.domain_state, idr, TRUSTEE) for idr in senders):
                 error = 'only Trustees can send this transaction'
             if len(senders) < self.MinSendersForPublicMint:
-                error = 'Need at least {} but only {} found'.\
+                error = 'Need at least {} but only {} found'. \
                     format(self.MinSendersForPublicMint, len(senders))
 
         if operation[TXN_TYPE] == XFER_PUBLIC:
@@ -163,12 +163,17 @@ class TokenReqHandler(LedgerRequestHandler):
                     operation[INPUTS],
                     operation[OUTPUTS],
                     is_committed=False)
+            except KeyError as ex:
+                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
             except Exception as ex:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
             else:
                 if sum_inputs < sum_outputs:
                     error = 'Insufficient funds, sum of inputs is {} and sum' \
                             ' of outputs is {}'.format(sum_inputs, sum_outputs)
+                    raise InsufficientFundsError(request.identifier,
+                                                 request.reqId,
+                                                 error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier,
@@ -276,12 +281,9 @@ class TokenReqHandler(LedgerRequestHandler):
                    is_committed=False) -> int:
         output_val = 0
         for addr, seq_no in inputs:
-            try:
                 output_val += utxo_cache.get_output(
                     Output(addr, seq_no, None),
                     is_committed=is_committed).value
-            except KeyError:
-                continue
         return output_val
 
     @staticmethod
