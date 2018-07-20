@@ -111,6 +111,7 @@ test: $(SRC_DIR) pipenv_version clean_pycache
 	cd $< \
 		&& pipenv --three \
 		&& pipenv run pip install -U -e ../sovtoken \
+		&& pipenv run pip install -U -e ../sovtokenfees \
 		&& pipenv run pip install .[test] \
 		&& pipenv run python -m pytest $(PYTEST_ARGS)
 
