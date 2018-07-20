@@ -1,8 +1,0 @@
-{
-  "sovtokenfees/sovtokenfees/test/test_demo.py": true,
-  "sovtokenfees/sovtokenfees/test/test_fees_non_xfer_txn.py": true,
-  "sovtokenfees/sovtokenfees/test/test_fees_xfer_txn.py": true,
-  "sovtokenfees/sovtokenfees/test/test_no_fees_txns.py": true,
-  "sovtokenfees/sovtokenfees/test/test_set_get_fees.py": true,
-  "sovtokenfees/sovtokenfees/test/test_three_phase_commit.py": true
-}
