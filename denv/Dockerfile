@@ -8,6 +8,9 @@ USER root
 RUN apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
+
+RUN echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y \
     # common stuff
@@ -18,6 +21,8 @@ RUN apt-get update -y && apt-get install -y \
         python3-pip \
         python-setuptools \
         python3-venv \
+        vim \
+        sudo \
     # fpm
         ruby \
         ruby-dev \
@@ -30,16 +35,23 @@ RUN apt-get update -y && apt-get install -y \
         libzstd-dev \
         zlib1g-dev \
         liblz4-dev \
-        libsnappy-dev
+        libsnappy-dev \
+    # libindy 
+        python3-nacl \
+        libindy-crypto=0.4.1~46 \
+        libindy=1.4.0~586 
 
 
 RUN pip3 install -U \
     setuptools \
     'pip<10.0.0' \
     setuptools \
-    pytest
-    
+    pytest \
+    pytest-xdist \
+    python3-indy==1.4.0-dev-586 \
+    mock
 
+RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
 
 WORKDIR /home/indy
 
@@ -54,7 +66,6 @@ RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.lis
         indy-node=${INDY_NODE_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
-
 # config indy pool
 ENV POOL_IP ${POOL_IP:-127.0.0.1}
 USER indy

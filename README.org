@@ -1,4 +1,5 @@
 #+author: Cam Parra
+
 * Sovrin Ledger Payment plugins
   
   This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
@@ -11,5 +12,27 @@
     ./build_indy_pool
   #+END_SRC
   
+** EZ Development Enviorment 
 
+*** Why cant I use my own local machine as my enviroment? 
+
+    Due to some compatibility issues we have decided that a docker enviroment would be the easiest way,
+   
+*** Requirements 
+
+    [[https://www.docker.com/get-docker][docker]]
+    [[https://docs.docker.com/compose/][docker-compose]]
+    [[https://github.com/EugenMayer/docker-sync][docker-sync]]
+    ruby
+    gem 
+
+*** Installing docker-sync 
+
+    #+BEGIN_SRC bash
+      gem install docker-sync
+    #+END_SRC
+
+    
+
+    
    

@@ -1,6 +1,9 @@
 SHELL := /usr/bin/env bash
 
-
+it-so:
+	docker exec -u 0 -ti plugin_plugin_1 /bin/bash -c 'bash install_payment_plugins.sh' 
+it-so test: 
+	docker exec -u 0 -ti plugin_plugin_1 /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/' 
 setup: bundle-install pull-dependencies
 
 setup-build: rebuild pull-dependencies
