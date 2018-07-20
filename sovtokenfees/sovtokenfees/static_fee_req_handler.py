@@ -5,25 +5,23 @@ from common.serializers.base58_serializer import Base58Serializer
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
-from ledger.util import F
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
     STATE_PROOF, TXN_METADATA, TXN_SIGNATURE, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
-#, add_sigs_to_txn
 # TODO remove that once https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
 from plenum.common.types import f
-# from plenum.persistence.util import txnsWithSeqNo
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC, SIGS
+    XFER_PUBLIC, MINT_PUBLIC
+from sovtokenfees.transactions import FeesTransactions
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from state.trie.pruning_trie import rlp_decode
@@ -158,7 +156,9 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, FEES: fees, STATE_PROOF: proof}
+                  f.REQ_ID.nm: request.reqId, FEES: fees}
+        if proof:
+            result[STATE_PROOF] = proof
         result.update(request.operation)
         return result
 
@@ -179,7 +179,10 @@ class StaticFeesReqHandler(FeeReqHandler):
                              state_root, txn_root):
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if get_seq_no(t) in self.deducted_fees
-                                       and get_type(t) != XFER_PUBLIC]
+                                       and get_type(t) != XFER_PUBLIC
+                                       and get_type(t) != MINT_PUBLIC
+                                       and get_type(t) != FeesTransactions.SET_FEES.value
+                                       ]
         if len(committed_seq_nos_with_fees) > 0:
             txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,

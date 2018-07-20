@@ -6,7 +6,7 @@ from plenum.common.txn_util import get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.test.helper import send_xfer
+from sovtoken.test.helper import send_xfer, do_public_minting
 from sovtoken.test.conftest import seller_gets
 from sovtokenfees.test.test_set_get_fees import fees_set
 
@@ -28,8 +28,9 @@ def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,
         send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
-def test_xfer_with_sufficient_fees(public_minting, looper, fees_set,
-                   nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
+@pytest.fixture(scope="module")
+def xfer_with_fees_done(public_minting, looper, fees_set,
+                   sdk_pool_handle,
                    seller_token_wallet, seller_address, user1_address,
                    user1_token_wallet):
     global seller_gets
@@ -42,9 +43,29 @@ def test_xfer_with_sufficient_fees(public_minting, looper, fees_set,
     res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
     update_token_wallet_with_result(seller_token_wallet, res)
     update_token_wallet_with_result(user1_token_wallet, res)
+    return seller_remaining, user1_gets, res
+
+
+def test_xfer_with_sufficient_fees(xfer_with_fees_done, looper, fees_set,
+                   nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
+                   seller_token_wallet, seller_address, user1_address,
+                   user1_token_wallet):
+    global seller_gets
+    seller_remaining, user1_gets, res = xfer_with_fees_done
+    fee_amount = fees_set[FEES][XFER_PUBLIC]
     assert seller_remaining == seller_token_wallet.get_total_address_amount(seller_address)
     assert user1_gets == user1_token_wallet.get_total_address_amount(user1_address)
     seller_gets = seller_remaining
     for node in nodeSetWithIntegratedTokenPlugin:
         req_handler = node.get_req_handler(CONFIG_LEDGER_ID)
         assert req_handler.deducted_fees[get_seq_no(res)] == fee_amount
+
+
+def test_mint_after_paying_fees(xfer_with_fees_done, looper, nodeSetWithIntegratedTokenPlugin,
+                             trustee_wallets, SF_address, seller_address,
+                             sdk_pool_handle):
+    # Try another minting after doing some txns with fees
+    total_mint = 100
+    sf_master_gets = 60
+    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
+                      sf_master_gets, SF_address, seller_address)

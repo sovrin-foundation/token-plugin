@@ -27,9 +27,13 @@ var/
 .installed.cfg
 *.egg
 *.eggs
+<<<<<<< HEAD
 .sudo_as_admin_successful
 .viminfo
 .pytest_cache/
+=======
+*.deb
+>>>>>>> master
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
