@@ -20,11 +20,11 @@
    
 *** Requirements 
 
-    [[https://www.docker.com/get-docker][docker]]
-    [[https://docs.docker.com/compose/][docker-compose]]
-    [[https://github.com/EugenMayer/docker-sync][docker-sync]]
-    ruby
-    gem 
+   - [[https://www.docker.com/get-docker][docker]]
+   - [[https://docs.docker.com/compose/][docker-compose]]
+   - [[https://github.com/EugenMayer/docker-sync][docker-sync]]
+   - ruby
+   - gem 
 
 *** Installing docker-sync 
 
@@ -36,7 +36,7 @@
 *** Starting Dev Env 
 
 
-    *PlEASE OPEN TWO TERMINAL WINDOWS*
+    *PLEASE OPEN TWO TERMINAL WINDOWS*
 
 
     In the first window:
