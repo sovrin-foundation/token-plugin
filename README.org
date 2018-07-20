@@ -32,7 +32,40 @@
       gem install docker-sync
     #+END_SRC
 
-    
 
+*** Starting Dev Env 
+
+
+    *PlEASE OPEN TWO TERMINAL WINDOWS*
+
+
+    In the first window:
+
+    #+BEGIN_SRC bash
+       make start
+    #+END_SRC
+
+    This will run docker-sync-stack start. It will compose the docker container
+    and mount your local directory.
+
+    In the second window:
+
+    #+BEGIN_SRC bash
+       make setup
+    #+END_SRC
+
+    This will fix config files and install sovtoken and sovtoken fees
+
+
+    Now we run our test:
+
+    #+BEGIN_SRC bash
+       make test
+    #+END_SRC
+
+
+    when you're all done using sync just use:
     
-   
+    #+BEGIN_SRC bash
+       make clean 
+    #+END_SRC
