@@ -27,7 +27,13 @@ var/
 .installed.cfg
 *.egg
 *.eggs
+<<<<<<< HEAD
+.sudo_as_admin_successful
+.viminfo
+.pytest_cache/
+=======
 *.deb
+>>>>>>> master
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -50,7 +56,8 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
-
+sovtoken/.pytest_cache/
+sovtokenfees/.pytest_cache/
 # Translations
 *.mo
 *.pot
