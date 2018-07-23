@@ -4,25 +4,20 @@ import base58
 import pytest
 from plenum.common.signer_simple import SimpleSigner
 
-from plenum.common.constants import TXN_TYPE
+from plenum.common.constants import TXN_TYPE, STATE_PROOF
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn
-# TODO fix that for newer plenum version
-#from plenum.persistence.util import txnsWithSeqNo
+from plenum.common.txn_util import reqToTxn, append_txn_metadata
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.exceptions import InsufficientFundsError
 
-
-
-# from plenum.test.pool_transactions.conftest import clientAndWallet1, \
-#     client1, wallet1, client1Connected, looper
 
 # TEST CONSTANTS
 from sovtoken.types import Output
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, SIGS, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
+from sovtoken.test.txn_response import TxnResponse
 from sovtoken.util import verkey_to_address
 
 VALID_ADDR_1, VALID_ADDR_2 = (None, None)
@@ -37,12 +32,12 @@ CONS_TIME = 1518541344
 PROTOCOL_VERSION = 1
 SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
                   '27BVCWvThxMV9pzqz3JepMLVKww7MmreweYjh15LkwvAH4qwYAMbZWeYr6E6LcQexYAikTHo212U1NKtG8Gr2PPP',
-              'M9BJDuS24bqbJNvBRsoGg3':
-                  '5BzS7J7uSuUePRzLdF5BL5LPvnXxzQyB5BqMT19Hz8QjEyb41Mum71TeNvPW9pKbhnDK12Pciqw9WRHUvsfwdYT5',
+              'CA4bVFDU4GLbX8xZju811o':
+                  '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki',
               'E7QRhdcnhAwA6E46k9EtZo':
                   'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
-              'CA4bVFDU4GLbX8xZju811o':
-                  '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki'}
+              'M9BJDuS24bqbJNvBRsoGg3':
+                  '5BzS7J7uSuUePRzLdF5BL5LPvnXxzQyB5BqMT19Hz8QjEyb41Mum71TeNvPW9pKbhnDK12Pciqw9WRHUvsfwdYT5'}
 
 
 @pytest.fixture
@@ -188,7 +183,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_ha
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_2, 80]],
+                                                      OUTPUTS: [[VALID_ADDR_2, 40]],
                                                       INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
     # This test should raise an issue because the inputs are not on the ledger
     with pytest.raises(UnauthorizedClientRequest):
@@ -273,30 +268,53 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(token_handler_b):
 
 # We expect this test should pass, but in the future, we may want to exclude this case where MINT_PUBLIC txn has INPUTS
 def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]]},
-                      None, SIGNATURES, 1)
+    data = {
+        TXN_TYPE: MINT_PUBLIC,
+        OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
+        INPUTS: [[VALID_ADDR_1, 1]]
+    }
+    request = Request(VALID_IDENTIFIER, VALID_REQID, data, None, SIGNATURES, 1)
     seq_no, txn = token_handler_b.apply(request, CONS_TIME)
-    assert txn == {OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                   INPUTS: [[VALID_ADDR_1, 1]],
-                   TXN_TYPE: MINT_PUBLIC, 'reqId': VALID_REQID,
-                   'signature': None, 'txnTime': CONS_TIME,
-                   'identifier': VALID_IDENTIFIER, 'signatures': SIGNATURES}
+
+    metadata = {
+        "reqId": VALID_REQID,
+        "from": VALID_IDENTIFIER,
+        "digest": "4f8efb06f346f460f9f06fcb39e6b8b58cad663b139e9a3bdc7d223c269273d6"
+    }
+    expected = TxnResponse(
+        MINT_PUBLIC,
+        data,
+        signatures=SIGNATURES,
+        metadata=metadata
+    ).form_response()
+
+    assert txn["txn"]["data"] == expected["txn"]["data"]
+    assert txn["txn"]["metadata"] == metadata
+    for fv_expected in expected["reqSignature"]["values"]:
+        def finder(fv):
+            correct_from = fv["from"] == fv_expected["from"]
+            correct_value = fv["value"] == fv_expected["value"]
+            return correct_from and correct_value
+
+        assert any(map(finder, txn["reqSignature"]["values"]))
+
+
     token_handler_b.onBatchRejected()
 
 
 def test_token_req_handler_updateState_XFER_PUBLIC_success(public_minting, token_handler_b):
+    seq_no = 1
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]],
-                                                      SIGS: ['']}, None, SIGNATURES, 1)
-    txns = [reqToTxn(request)]
-    txns_with_seqNo = txnsWithSeqNo(1, 1, txns)
+                                                      INPUTS: [[VALID_ADDR_1, seq_no]],
+                                                      SIGS: ['']}, None, SIGNATURES, 2)
+    txn = reqToTxn(request)
+    append_txn_metadata(txn, seq_no=seq_no)
+    
     token_handler_b.validate(request)
-    token_handler_b.updateState(txns_with_seqNo)
-    state_key = TokenReqHandler.create_state_key(VALID_ADDR_1, 1)
-    key = token_handler_b.utxo_cache._create_type1_key(Output(VALID_ADDR_1, 1, 60))
+    token_handler_b.updateState([txn])
+    state_key = TokenReqHandler.create_state_key(VALID_ADDR_1, seq_no)
+    key = token_handler_b.utxo_cache._create_type1_key(Output(VALID_ADDR_1, seq_no, 60))
     assert token_handler_b.utxo_cache._store._has_key(key)
     try:
         token_handler_b.state.get(state_key, False)
@@ -353,8 +371,12 @@ def test_token_req_handler_commit_success(public_minting, token_handler_c, node)
 
 
 def test_token_req_handler_get_query_response_success(public_minting, token_handler_d):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO, ADDRESS: VALID_ADDR_1}, None, SIGNATURES, 1)
+    data = {TXN_TYPE: GET_UTXO, ADDRESS: VALID_ADDR_1}
+    request = Request(VALID_IDENTIFIER, VALID_REQID, data, None, SIGNATURES, 1)
     results = token_handler_d.get_query_response(request)
+    state_proof = results.pop(STATE_PROOF)
+
+    assert state_proof
     assert results == {ADDRESS: VALID_ADDR_1, TXN_TYPE: GET_UTXO,
                        OUTPUTS: [Output(address=VALID_ADDR_1, seq_no=1, value=40)],
                        'identifier': VALID_IDENTIFIER, 'reqId': VALID_REQID}
@@ -375,6 +397,9 @@ def test_token_req_handler_get_all_utxo_success(public_minting, token_handler_d)
                       None, SIGNATURES, 1)
 
     results = token_handler_d.get_query_response(request)
+    state_proof = results.pop(STATE_PROOF)
+
+    assert state_proof
     assert results == {ADDRESS: VALID_ADDR_1, TXN_TYPE: GET_UTXO,
                        OUTPUTS: [
                            Output(address=VALID_ADDR_1, seq_no=1, value=40)

@@ -5,12 +5,13 @@ class TxnResponse:
 
     version = 1
 
-    def __init__(self, type, data, seq_no=None):
+    def __init__(self, type, data, seq_no=None, signatures={}, metadata={}):
         self.type = type
         self.data = data
         self.seq_no = seq_no
+        self.signatures = signatures
+        self.metadata = metadata
         
-
     def form_response(self):
         txn_metadata = self._form_txn_metadata()
         metadata = self._form_metadata()
@@ -37,24 +38,26 @@ class TxnResponse:
 
     def _form_metadata(self):
         return {
-            "reqId": None,
-            "from": None,
+            "reqId": self.metadata.get("reqId"),
+            "from": self.metadata.get("from"),
+            "digest": self.metadata.get("digest")
         }
 
     def _form_txn_metadata(self):
         return {
-            'txnTime': None,
-            'seqNo': self.seq_no,
-            'txnId': None,
+            "txnTime": None,
+            "seqNo": self.seq_no,
+            "txnId": None,
         }
 
     def _form_req_signature(self):
+        values = [{"from": k, "value": v} for k, v in self.signatures.items()]
         return {
-            "type": None,
-            "values": None
+            "type": "ED25519",
+            "values": values
         }
 
     def _form_data(self):
-        if not "ver" in self.data:
-            self.data["ver"] = self.version
-        return self.data
+        data = self.data
+        data.pop("type")
+        return data
