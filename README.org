@@ -34,7 +34,7 @@
     #+END_SRC
 
 
-*** Starting Dev Env. 
+*** Starting Dev Env 
 
 
     *PLEASE OPEN TWO TERMINAL WINDOWS*
