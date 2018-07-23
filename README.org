@@ -81,7 +81,7 @@
 
     The remaining parameters are optional.
 
-    The second parameter is file name __without the .py__.
+    The second parameter is file name ** without the .py **.
 
     The third parameter is the name of the test.
 
