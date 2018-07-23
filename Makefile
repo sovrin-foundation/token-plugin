@@ -7,6 +7,7 @@ setup:
 
 test: 
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/'
+test_fees:	
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtokenfees/ && pytest sovtokenfees/test/'
 
 start:
