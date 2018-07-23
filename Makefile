@@ -6,7 +6,8 @@ setup:
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'bash install_payment_plugins.sh' 
 
 test: 
-	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/' 
+	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/'
+	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtokenfees/ && pytest sovtokenfees/test/'
 
 start:
 	docker-sync-stack start 
