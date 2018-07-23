@@ -9,7 +9,7 @@ from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientReq
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
 
 # TEST CONSTANTS
@@ -186,7 +186,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
                                                       OUTPUTS: [[VALID_ADDR_2, 40]],
                                                       INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
     # This test should raise an issue because the inputs are not on the ledger
-    with pytest.raises(UnauthorizedClientRequest):
+    with pytest.raises(UTXOAlreadySpentError):
         token_handler_a.validate(request)
 
 
@@ -310,7 +310,7 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(public_minting, token
                                                       SIGS: ['']}, None, SIGNATURES, 2)
     txn = reqToTxn(request)
     append_txn_metadata(txn, seq_no=seq_no)
-    
+
     token_handler_b.validate(request)
     token_handler_b.updateState([txn])
     state_key = TokenReqHandler.create_state_key(VALID_ADDR_1, seq_no)
