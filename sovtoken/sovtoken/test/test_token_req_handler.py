@@ -7,7 +7,8 @@ from plenum.common.signer_simple import SimpleSigner
 from plenum.common.constants import TXN_TYPE, STATE_PROOF
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn, append_txn_metadata
+from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
+    get_req_id, get_from
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
@@ -17,7 +18,7 @@ from sovtoken.types import Output
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, SIGS, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
-from sovtoken.test.txn_response import TxnResponse
+from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.util import verkey_to_address
 
 VALID_ADDR_1, VALID_ADDR_2 = (None, None)
@@ -180,11 +181,21 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_ha
     except Exception:
         pytest.fail("This test failed to validate")
 
-
 def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
+    operation = {
+        TXN_TYPE: XFER_PUBLIC,
+        OUTPUTS: [[VALID_ADDR_2, 40]],
+        INPUTS: [[VALID_ADDR_3, 1]]
+    }
+
+    request = Request(
+        VALID_IDENTIFIER,
+        VALID_REQID,
+        operation,
+        None,
+        SIGNATURES,
+        1
+    )
     # This test should raise an issue because the inputs are not on the ledger
     with pytest.raises(UTXOAlreadySpentError):
         token_handler_a.validate(request)
@@ -276,28 +287,18 @@ def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b
     request = Request(VALID_IDENTIFIER, VALID_REQID, data, None, SIGNATURES, 1)
     seq_no, txn = token_handler_b.apply(request, CONS_TIME)
 
-    metadata = {
-        "reqId": VALID_REQID,
-        "from": VALID_IDENTIFIER,
-        "digest": "4f8efb06f346f460f9f06fcb39e6b8b58cad663b139e9a3bdc7d223c269273d6"
-    }
     expected = TxnResponse(
         MINT_PUBLIC,
         data,
         signatures=SIGNATURES,
-        metadata=metadata
+        req_id=VALID_REQID,
+        frm=VALID_IDENTIFIER,
     ).form_response()
 
-    assert txn["txn"]["data"] == expected["txn"]["data"]
-    assert txn["txn"]["metadata"] == metadata
-    for fv_expected in expected["reqSignature"]["values"]:
-        def finder(fv):
-            correct_from = fv["from"] == fv_expected["from"]
-            correct_value = fv["value"] == fv_expected["value"]
-            return correct_from and correct_value
-
-        assert any(map(finder, txn["reqSignature"]["values"]))
-
+    assert get_payload_data(txn) == get_payload_data(expected)
+    assert get_req_id(txn) == get_req_id(expected)
+    assert get_from(txn) == get_from(expected)
+    assert get_sorted_signatures(txn) == get_sorted_signatures(txn)
 
     token_handler_b.onBatchRejected()
 

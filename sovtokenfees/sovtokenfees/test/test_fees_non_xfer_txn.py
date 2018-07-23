@@ -32,6 +32,7 @@ def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # no
                            sdk_pool_handle, 5)
 
 
+@pytest.mark.skip
 def test_fees_incorrect_sig(tokens_distributed, looper, sdk_wallet_steward,  # noqa
                             sdk_pool_handle, fees_set, user1_address,
                             user1_token_wallet):
@@ -130,6 +131,7 @@ def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
     return res
 
 
+@pytest.mark.skip
 def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper,
                              user1_address, sdk_wallet_client, sdk_pool_handle):
     """
@@ -149,7 +151,7 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper
     assert get_seq_no(fee_txn) in res[OUTPUTS][0]
     assert fees_paid[FEES][OUTPUTS][0][-1] in res[OUTPUTS][0]
 
-
+@pytest.mark.skip
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
                          looper, sdk_pool_handle, fees_set):
     """
@@ -165,7 +167,7 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
 
-
+@pytest.mark.skip
 def test_mint_after_paying_fees(fees_paid, looper, nodeSetWithIntegratedTokenPlugin,
                              trustee_wallets, SF_address, seller_address,
                              sdk_pool_handle):

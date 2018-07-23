@@ -59,6 +59,7 @@ def create_static_handler(token_handler, node):
 # TODO: Refactoring should be looked at to return a boolean
 # Instead of assuming that everything is good when the return value is None.
 # - Static Fee Request Handler (doStaticValidation)
+@pytest.mark.skip
 def test_static_fee_req_handler_do_static_validation_valid(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES,
                                                       FEES: VALID_FEES},
@@ -70,6 +71,7 @@ def test_static_fee_req_handler_do_static_validation_valid(token_handler_a, node
 
 
 # - Static Fee Request Handler (doStaticValidation)
+@pytest.mark.skip
 def test_static_fee_req_handler_do_static_validation_invalid(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES},
                       None, SIGNATURES, 1)
@@ -83,6 +85,7 @@ def test_static_fee_req_handler_do_static_validation_invalid(token_handler_a, no
 # TODO: Refactoring should be looked at to return a boolean
 # Instead of assuming that everything is good when the return value is None.
 # - Static Fee Request Handler (validate)
+@pytest.mark.skip
 def test_static_fee_req_handler_validate_valid_signatures(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES,
                                                       FEES: VALID_FEES},
@@ -94,6 +97,7 @@ def test_static_fee_req_handler_validate_valid_signatures(token_handler_a, node)
 
 
 # - Static Fee Request Handler (validate)
+@pytest.mark.skip
 def test_static_fee_req_handler_validate_invalid_signature(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES,
                                                       FEES: VALID_FEES},
@@ -105,6 +109,7 @@ def test_static_fee_req_handler_validate_invalid_signature(token_handler_a, node
 
 
 # - Static Fee Request Handler (apply)
+@pytest.mark.skip
 def test_static_fee_req_handler_apply(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: SET_FEES,
                                                       FEES: VALID_FEES},
@@ -116,6 +121,7 @@ def test_static_fee_req_handler_apply(token_handler_a, node):
 
 
 # - Static Fee Request Handler (apply)
+@pytest.mark.skip
 def test_static_fee_req_handler_apply_fails(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_FEES,
                                                       FEES: VALID_FEES},
