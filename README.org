@@ -71,7 +71,7 @@
        make clean 
     #+END_SRC
 
-**** Alternative for running tests
+*** Alternative for running tests
     We have a shell script to assist with running tests.  Here's an example:
     #+BEGIN_SRC bash
        ./run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output
@@ -81,4 +81,17 @@
 
     The remaining parameters are optional.
 
-    
+    The second parameter is file name __without the .py__.
+
+    The third parameter is the name of the test.
+
+**** To run all tests call it like this:
+    #+BEGIN_SRC bash
+       ./run-test.sh token
+    #+END_SRC
+
+**** To run all tests in a file, call it like this:
+    #+BEGIN_SRC bash
+       ./run-test.sh token test_token_req_handler
+    #+END_SRC
+
