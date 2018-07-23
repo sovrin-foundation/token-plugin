@@ -180,7 +180,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_ha
     except Exception:
         pytest.fail("This test failed to validate")
 
-
+@pytest.mark.skip
 def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
                                                       OUTPUTS: [[VALID_ADDR_2, 40]],

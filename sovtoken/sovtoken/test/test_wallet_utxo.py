@@ -100,18 +100,18 @@ def test_get_min_utxo_ge(wallet, address1, address2, address3):
     assert wallet.get_min_utxo_ge(11, address=address3.address) == \
            (address3.address, 3005, 15)
 
-
-# def test_update_multiple_address_outputs():
-#     wallet = TokenWallet()
-#     address1 = Address()
-#     address2 = Address()
-#     address3 = Address()
-#     wallet.add_new_address(address1)
-#     wallet.add_new_address(address2)
-#     fake_get_utxo_resp = {
-#         OUTPUTS: [(address1.address, 1, 10), (address1.address, 2, 10), (address2.address, 3, 10), (address3.address, 4, 30)]
-#     }
-#     wallet.handle_get_utxo_response(fake_get_utxo_resp)
-#     assert 20 == wallet.get_total_address_amount(address1.address)
-#     assert 10 == wallet.get_total_address_amount(address2.address)
-#     assert 0 == wallet.get_total_address_amount(address3.address)
+@pytest.mark.skip
+def test_update_multiple_address_outputs():
+    wallet = TokenWallet()
+    address1 = Address()
+    address2 = Address()
+    address3 = Address()
+    wallet.add_new_address(address1)
+    wallet.add_new_address(address2)
+    fake_get_utxo_resp = {
+        OUTPUTS: [(address1.address, 1, 10), (address1.address, 2, 10), (address2.address, 3, 10), (address3.address, 4, 30)]
+    }
+    wallet.handle_get_utxo_response(fake_get_utxo_resp)
+    assert 20 == wallet.get_total_address_amount(address1.address)
+    assert 10 == wallet.get_total_address_amount(address2.address)
+    assert 0 == wallet.get_total_address_amount(address3.address)

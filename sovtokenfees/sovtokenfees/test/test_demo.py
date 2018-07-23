@@ -1,3 +1,4 @@
+import pytest
 from plenum.common.constants import NYM
 from plenum.common.types import f
 from sovtokenfees.constants import FEES
@@ -152,6 +153,7 @@ def sovrin_foundation_collects_fees(methods):
     demo_logger.log_blue("Not implemented")
 
 
+@pytest.mark.skip
 def test_demo_fees_on_nym_transaction(methods):
     demo_logger.log_header("Started Fees Test")
 
