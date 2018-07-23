@@ -77,7 +77,7 @@
        ./run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output
     #+END_SRC
 
-    The first parameter is required.  It can be either /"token"/ or /"fees"/.
+    The first parameter is required.  It can be either /token/ or /fees/.  Anything else is an error.
 
     The remaining parameters are optional.
 
