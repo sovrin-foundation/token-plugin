@@ -19,6 +19,7 @@ DIR_NAME=${PWD##*/}
 DOCKER_IMAGE=${DIR_NAME}_token_1
 
 # defaults are nothing.
+PYTHON_WORKING_DIR=
 PYTHON_FILE_NAME=
 PYTHON_TEST_NAME=
 PYTHON_TEST_PATH=
@@ -33,9 +34,11 @@ if [ "$1" != "token" ] && [ "$1" != "fees" ]; then
 fi
 
 if [ "$1" == "token" ]; then
-    PYTHON_TEST_PATH=sov${1}/test/
+    PYTHON_WORKING_DIR=sovtoken
+    PYTHON_TEST_PATH=${PYTHON_WORKING_DIR}/test/
 elif [ "$1" == "fees" ]; then
-    PYTHON_TEST_PATH=sovtoken${1}/test/
+    PYTHON_WORKING_DIR=sovtokenfees
+    PYTHON_TEST_PATH=${PYTHON_WORKING_DIR}/test/
 fi
 
 # eval $2 (optional)   expectation is if this parameter is included it will be a python file name (sans .py).
@@ -53,10 +56,10 @@ if [ "$2" != "" ]; then
         PYTHON_TEST_COMMAND_PARAM=${PYTHON_TEST_PATH}${PYTHON_FILE_NAME}.py
     fi
 
-    PYTHON_COMMAND="docker exec -u 0 -ti ${DOCKER_IMAGE} /bin/bash -c 'cd sovtoken/ && pytest ${PYTHON_TEST_COMMAND_PARAM}'"
+    PYTHON_COMMAND="docker exec -u 0 -ti ${DOCKER_IMAGE} /bin/bash -c 'cd ${PYTHON_WORKING_DIR}/ && pytest ${PYTHON_TEST_COMMAND_PARAM}'"
 else
     echo configuring to run all tests
-    PYTHON_COMMAND="docker exec -u 0 -ti ${DOCKER_IMAGE} /bin/bash -c 'cd sovtoken/ && pytest'"
+    PYTHON_COMMAND="docker exec -u 0 -ti ${DOCKER_IMAGE} /bin/bash -c 'cd ${PYTHON_WORKING_DIR}/ && pytest'"
 fi
 
 echo
