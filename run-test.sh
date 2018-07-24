@@ -5,7 +5,11 @@ if [ "$1" == "--help" ]; then
     echo
     echo runs plenum plugin tests hosted in docker image
     echo run-test.sh plugin-name file-name test-name
-    echo -e '\t eg: run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output'
+    echo -e '\teg: run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output'
+    echo
+    echo -e '\tplugin-name      must be either token or fees'
+    echo -e '\tfile-name        file name with no extension (aka no .py) (optional)'
+    echo -e '\ttest-name        name of the test (optional)'
     echo
     exit
 fi
@@ -13,8 +17,6 @@ fi
 
 DIR_NAME=${PWD##*/}
 DOCKER_IMAGE=${DIR_NAME}_token_1
-
-echo docker image to be used $DOCKER_IMAGE
 
 # defaults are nothing.
 PYTHON_FILE_NAME=
@@ -36,11 +38,12 @@ elif [ "$1" == "fees" ]; then
     PYTHON_TEST_PATH=sovtoken${1}/test/
 fi
 
-# eval $2.   it may include file name
+# eval $2 (optional)   expectation is if this parameter is included it will be a python file name (sans .py).
 if [ "$2" != "" ]; then
-    PYTHON_FILE_NAME=$2
+    PYTHON_FILE_NAME=$(echo "$2" | cut -f 1 -d '.')
 
-    # only eval $3 if there was something for $2....
+    # eval $3 (also optional)....expectation is this will be a test name (aka function name starting with
+    # "test" since that's how pytest works)
     if [ "$3" != "" ]; then
         echo configuring for running individual test
         PYTHON_TEST_NAME=$3
@@ -57,6 +60,7 @@ else
 fi
 
 echo
+echo DOCKER_IMAGE = $DOCKER_IMAGE
 echo PYTHON_TEST_PATH = $PYTHON_TEST_PATH
 echo PYTHON_FILE_NAME = $PYTHON_FILE_NAME
 echo PYTHON_TEST_NAME = $PYTHON_TEST_NAME

@@ -100,7 +100,6 @@ def test_get_min_utxo_ge(wallet, address1, address2, address3):
     assert wallet.get_min_utxo_ge(11, address=address3.address) == \
            (address3.address, 3005, 15)
 
-@pytest.mark.skip
 def test_update_multiple_address_outputs():
     wallet = TokenWallet()
     address1 = Address()
