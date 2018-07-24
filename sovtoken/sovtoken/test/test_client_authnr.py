@@ -253,15 +253,17 @@ def test_getVerkey_invalid_identifier(node):
 
 
 # -------------------------Test get_xfer_ser_data method----------------------------------------------------------------
-@pytest.mark.skip
 # This test verifies that given a properly formatted request will return xfer ser data
-def test__get_xfer_ser_data_success(node, user2_token_wallet, user2_address,
+@pytest.mark.skip
+def test_get_xfer_ser_data_success(node, user2_token_wallet, user2_address,
                                     SF_token_wallet, SF_address, user1_address):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     inputs = [[user2_token_wallet, user2_address, 1], [SF_token_wallet, SF_address, 2]]
     outputs = [[user1_address, 10], [user1_address, 10]]
     request = xfer_request(inputs, outputs)
     msg = request.as_dict
+    # This test is marked as skip because the next line does not compile.  _get_xfer_ser_data was removed from
+    # TokenAuthNr or its base class without explanation or update to this test.  See TOK-317
     ser_data = token_authnr._get_xfer_ser_data(msg, VALID_IDENTIFIER)
     assert ser_data[OPERATION][INPUTS] == []
     assert ser_data[OPERATION][OUTPUTS] == msg[OPERATION][OUTPUTS]
