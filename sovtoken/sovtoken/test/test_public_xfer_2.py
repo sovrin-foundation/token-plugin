@@ -12,7 +12,7 @@ from sovtoken.test.helper import send_xfer, \
     check_output_val_on_all_nodes, xfer_request, send_get_utxo
 from sovtoken.test.conftest import seller_gets, total_mint
 from plenum.test.helper import sdk_send_signed_requests, \
-    sdk_get_and_check_replies
+    sdk_get_and_check_replies, sdk_get_replies, sdk_check_reply
 
 
 @pytest.fixture(scope="module")
@@ -150,60 +150,95 @@ def test_seller_xfer_valid(valid_xfer_txn_done):
     """
     pass
 
-@pytest.mark.skip
+
 def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
-                                          nodeSetWithIntegratedTokenPlugin,
-                                          seller_token_wallet, seller_address,
-                                          valid_xfer_txn_done, user1_address,
-                                          user2_address):
+    nodeSetWithIntegratedTokenPlugin, public_minting, sdk_wallet_client,
+    seller_address, user1_address, user2_address):
     """
     An address tries to send to send to transactions using the same UTXO,
     one of the txn gets rejected even though the amount held by the UTXO is
     greater than the sum of outputs in both txns, since one UTXO can be used
     only once
     """
-    seq_no = get_seq_no(valid_xfer_txn_done)
+
+    # =============
+    # Declaration of helper functions.
+    # =============
+
+    def succeeded(req_resp):
+        try:
+            sdk_check_reply(req_resp)
+            return True
+        except Exception:
+            return False
+
+    def check_output_val(address, amount):
+        return check_output_val_on_all_nodes(
+            nodeSetWithIntegratedTokenPlugin,
+            address,
+            amount
+        )
+
+    def check_no_output_val(address, amount):
+        with pytest.raises(AssertionError):
+            check_output_val(address, amount)
+
+    def get_seq_no_first_utxo(address):
+        get_utxo_resp = send_get_utxo(
+            looper,
+            address,
+            sdk_wallet_client,
+            sdk_pool_handle
+        )
+
+        return get_utxo_resp[OUTPUTS][0][1]
+
+    # =============
+    # Form the two xfer requests. Each request will try to spend the same UTXO.
+    # =============
+
     user1_gets = 3
     user2_gets = 5
+    seq_no = get_seq_no_first_utxo(seller_address)
     inputs = [[seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets - user1_gets
-    outputs1 = [[user1_address, user1_gets], [seller_address, seller_remaining]]
-    seller_remaining -= user2_gets
-    outputs2 = [[user2_address, user2_gets], [seller_address, seller_remaining]]
+    outputs1 = [
+        [user1_address, user1_gets],
+        [seller_address, seller_gets - user1_gets]
+    ]
+    outputs2 = [
+        [user2_address, user2_gets],
+        [seller_address, seller_gets - user2_gets]
+    ]
     r1 = xfer_request(inputs, outputs1)
-    r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(r1.as_dict), ])
     r2 = xfer_request(inputs, outputs2)
-    r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(r2.as_dict), ])
-    # So that both requests are sent simultaneously
-    looper.runFor(.2)
+    requests = [json.dumps(r.as_dict) for r in [r1, r2]]
 
-    # Both requests should not be successful, one and only one should be
-    success1, success2 = False, False
-    try:
-        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin,
-                                      user1_address, user1_gets)
-        success1 = True
-    except Exception:
-        pass
+    # =============
+    # Send the two requests and wait for replies. Only one request
+    # should succeed.
+    # =============
 
-    try:
-        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user2_address, user2_gets)
-        success2 = True
-    except Exception:
-        pass
+    req_resp = sdk_send_signed_requests(sdk_pool_handle, requests)
+    req_resp = sdk_get_replies(looper, req_resp)
+
+    success1 = succeeded(req_resp[0])
+    success2 = succeeded(req_resp[1])
 
     assert lxor(success1, success2)
 
-    request = r1 if success1 else r2
-    _, rep = sdk_get_and_check_replies(looper, request)[0]
-    update_token_wallet_with_result(seller_token_wallet, rep['result'])
+    # =============
+    # Check that the seller, user1, and user2, have the output or not.
+    # =============
 
     if success1:
-        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
-                                      seller_gets - user1_gets)
+        check_output_val(seller_address, seller_gets - user1_gets)
+        check_output_val(user1_address, user1_gets)
+        check_no_output_val(user2_address, 0)
     else:
-        check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
-                                      seller_gets - user2_gets)
+        check_output_val(seller_address, seller_gets - user2_gets)
+        check_output_val(user2_address, user2_gets)
+        check_no_output_val(user1_address, 0)
+
 
 
 def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wallet,  # noqa
@@ -229,15 +264,21 @@ def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wal
     res3 = send_get_utxo(looper, address.address, sdk_wallet_client, sdk_pool_handle)
     assert len(res3[OUTPUTS]) == 0
 
-@pytest.mark.skip
+
+# We can't handle multiple addresses at the moment because it requires a more 
+# complicated state proof. So this test has been changed to show that multiple
+# addresses are not accepted.
 def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_pool_handle, seller_address, SF_address):
     non_existent_address = Address().address
     addresses_to_check = [seller_address, SF_address, non_existent_address]
-    resp = send_get_utxo(looper, addresses_to_check, sdk_wallet_client, sdk_pool_handle)
-    address_in_outputs = lambda a: any(filter(lambda utxo: utxo[0] == a, resp[OUTPUTS]))
-    assert address_in_outputs(seller_address)
-    assert address_in_outputs(SF_address)
-    assert not address_in_outputs(non_existent_address)
+    with pytest.raises(RequestNackedException):
+        resp = send_get_utxo(looper, addresses_to_check, sdk_wallet_client, sdk_pool_handle)
+        # def address_in_outputs(address):
+        #     return any(filter(lambda utxo: utxo[0] == a, resp[OUTPUTS]))
+
+        # assert address_in_outputs(seller_address)
+        # assert address_in_outputs(SF_address)
+        # assert not address_in_outputs(non_existent_address)
 
 
 @pytest.mark.skip
