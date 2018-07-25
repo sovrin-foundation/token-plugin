@@ -143,7 +143,6 @@ def test_authenticate_invalid():
 
 # ------------------------------------------------------------------------------------
 # the signature and fees sections are populated with correct data
-@pytest.mark.skip
 def test_verify_signature_success():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
@@ -153,8 +152,8 @@ def test_verify_signature_success():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '3xekKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
-                           ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
+    setattr(msg, "fees", [ [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
+                          [ '3xekKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB'] ])
 
     fees_authenticator.verify_signature(msg)
 
@@ -175,14 +174,13 @@ def test_verify_signature_no_fees():
 # ------------------------------------------------------------------------------------
 # in the fees dictionary, array in element 0 has a signature that is not correct so the
 # exception InvalidSignatureFormat will get raised
-@pytest.mark.skip
 def test_verify_signature_invalid_signature_format(node):
     fees_authenticator = FeesAuthNr(node[0].getState(DOMAIN_LEDGER_ID), None)
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']],
-                           ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
+    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
+                          ['000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']])
 
     with pytest.raises(InvalidSignatureFormat):
         fees_authenticator.verify_signature(msg)
@@ -190,16 +188,16 @@ def test_verify_signature_invalid_signature_format(node):
 
 # ------------------------------------------------------------------------------------
 # in this test, the signature in fees is not valid for the data set.  it is a valid signature and passes b58decode
-@pytest.mark.skip
 def test_verify_signature_incorrect_signatures():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2, '5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']],
-                           ['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]])
+    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
+                          ['5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']])
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)
+
 
