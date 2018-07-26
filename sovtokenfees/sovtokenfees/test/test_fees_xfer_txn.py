@@ -61,7 +61,6 @@ def test_xfer_with_sufficient_fees(xfer_with_fees_done, looper, fees_set,
         assert req_handler.deducted_fees[get_seq_no(res)] == fee_amount
 
 
-@pytest.mark.skip
 def test_mint_after_paying_fees(xfer_with_fees_done, looper, nodeSetWithIntegratedTokenPlugin,
                              trustee_wallets, SF_address, seller_address,
                              sdk_pool_handle):
