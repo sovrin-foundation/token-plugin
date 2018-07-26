@@ -1,7 +1,6 @@
 from sovtokenfees.test.three_phase_commit_helper import *
 
 
-# @pytest.mark.skip
 class TestPrePrepare:
 
     def test_no_changes_on_token_ledger(self, three_phase_handler):
