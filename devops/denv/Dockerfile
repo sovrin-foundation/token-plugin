@@ -48,7 +48,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.4.0-dev-586 \
+    python3-indy>=1.4.0-dev-586 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
