@@ -18,18 +18,49 @@ from sovtokenfees.test.test_set_get_fees import fees_set
 @pytest.fixture(scope="module")
 def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
               sdk_pool_handle, fees_set, user1_address, user1_token_wallet):
+
+    # =============
+    # Declaration of helper functions.
+    # =============
+
+    def add_fees_request(request, wallet, address):
+        fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
+        request_with_fees = wallet.add_fees_to_request(
+            request, fee_amount=fee_amount, address=address
+        )
+        return request_with_fees
+
+    def get_address_utxos(wallet, address):
+        return wallet.addresses[address].all_utxos
+
+    def send_request_object_and_check(request):
+        sent_requests = sdk_send_and_check(
+            [json.dumps(req.__dict__)],
+            looper,
+            None,
+            sdk_pool_handle,
+            5
+        )
+        return sent_requests[0][1]
+
+    # =============
+    # Build nym request with fees.
+    # =============
+
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
-    req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
-                                                 address=user1_address)
-    utxos_before = next(iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
-    res = sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
-                             sdk_pool_handle, 5)[0][1]['result']
-    update_token_wallet_with_result(user1_token_wallet, res)
-    utxos_after = next(
-        iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
+    req = add_fees_request(req, user1_token_wallet, user1_address)
+    utxos_before = get_address_utxos(user1_token_wallet, user1_address)
+
+    # =============
+    # Send nym request with fees.
+    # =============
+
+    result = send_request_object_and_check(req)['result']
+    update_token_wallet_with_result(user1_token_wallet, result)
+    utxos_after = get_address_utxos(user1_token_wallet, user1_address)
+
     assert utxos_after != utxos_before
-    return res
+    return result
 
 
 def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # noqa
