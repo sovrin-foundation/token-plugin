@@ -39,8 +39,7 @@ def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
 
 
 def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
-                                            looper,
-                                            sdk_pool_handle,
+                                            helpers,
                                             seller_address,
                                             user1_token_wallet,
                                             user2_token_wallet,
@@ -60,21 +59,18 @@ def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
     request = xfer_request(inputs, outputs)
     request.operation[SIGS].pop()
     assert len(request.operation[SIGS]) == (len(inputs) - 1)
-    reqs = sdk_send_signed_requests(sdk_pool_handle,
-                                    [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
-        sdk_get_and_check_replies(looper, reqs)
+        helpers.sdk.send_and_check_request_objects([request])
 
     # Add signature from an address not present in input
     seq_no, _ = next(iter(
         seller_token_wallet.get_all_address_utxos(seller_address).values()))[0]
     seller_token_wallet.sign_using_output(seller_address, seq_no,
                                           request=request)
+
     assert len(request.operation[SIGS]) == len(inputs)
-    reqs = sdk_send_signed_requests(sdk_pool_handle,
-                                    [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
-        sdk_get_and_check_replies(looper, reqs)
+        helpers.sdk.send_and_check_request_objects([request])
 
 
 @pytest.fixture(scope='module')
