@@ -1,5 +1,4 @@
 import json
-
 import pytest
 
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID
@@ -14,6 +13,23 @@ from sovtoken.constants import INPUTS, OUTPUTS
 from sovtoken.util import update_token_wallet_with_result
 from plenum.test.helper import sdk_send_and_check
 from sovtokenfees.test.test_set_get_fees import fees_set
+
+
+@pytest.fixture(scope="module")
+def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
+              sdk_pool_handle, fees_set, user1_address, user1_token_wallet):
+    req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
+    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
+    req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
+                                                 address=user1_address)
+    utxos_before = next(iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
+    res = sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
+                             sdk_pool_handle, 5)[0][1]['result']
+    update_token_wallet_with_result(user1_token_wallet, res)
+    utxos_after = next(
+        iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
+    assert utxos_after != utxos_before
+    return res
 
 
 def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # noqa
@@ -32,7 +48,6 @@ def test_insufficient_fees(tokens_distributed, looper, sdk_wallet_steward,  # no
                            sdk_pool_handle, 5)
 
 
-@pytest.mark.skip
 def test_fees_incorrect_sig(tokens_distributed, looper, sdk_wallet_steward,  # noqa
                             sdk_pool_handle, fees_set, user1_address,
                             user1_token_wallet):
@@ -41,14 +56,18 @@ def test_fees_incorrect_sig(tokens_distributed, looper, sdk_wallet_steward,  # n
     """
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
-    req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
-                                                 address=user1_address)
+    req = user1_token_wallet.add_fees_to_request(
+        req, fee_amount=fee_amount, address=user1_address
+    )
+
     fees = getattr(req, f.FEES.nm)
     # reverse the signatures to make them incorrect
-    setattr(req, f.FEES.nm, [fees[0], fees[1], [sig[::-1] for sig in fees[2]]])
+    fees[2] = [sig[::-1] for sig in fees[2]]
+    setattr(req, f.FEES.nm, fees)
+    req_json = json.dumps(req.__dict__)
+
     with pytest.raises(RequestNackedException):
-        sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
-                           sdk_pool_handle, 5)
+        sdk_send_and_check([req_json], looper, None, sdk_pool_handle, 5)
 
 
 def test_invalid_fees_valid_payload(tokens_distributed, looper, sdk_wallet_steward,  # noqa
@@ -114,24 +133,6 @@ def test_valid_fees_invalid_payload(tokens_distributed, looper, sdk_wallet_clien
                            sdk_pool_handle, 5)
 
 
-@pytest.fixture(scope="module")
-def fees_paid(tokens_distributed, looper, sdk_wallet_steward,  # noqa
-              sdk_pool_handle, fees_set, user1_address, user1_token_wallet):
-    req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
-    req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount,
-                                                 address=user1_address)
-    utxos_before = next(iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
-    res = sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
-                             sdk_pool_handle, 5)[0][1]['result']
-    update_token_wallet_with_result(user1_token_wallet, res)
-    utxos_after = next(
-        iter(user1_token_wallet.get_all_address_utxos(user1_address).values()))
-    assert utxos_after != utxos_before
-    return res
-
-
-@pytest.mark.skip
 def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper,
                              user1_address, sdk_wallet_client, sdk_pool_handle):
     """
@@ -151,7 +152,7 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper
     assert get_seq_no(fee_txn) in res[OUTPUTS][0]
     assert fees_paid[FEES][OUTPUTS][0][-1] in res[OUTPUTS][0]
 
-@pytest.mark.skip
+
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
                          looper, sdk_pool_handle, fees_set):
     """
@@ -167,7 +168,7 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
                            sdk_pool_handle, 5)
 
-@pytest.mark.skip
+
 def test_mint_after_paying_fees(fees_paid, looper, nodeSetWithIntegratedTokenPlugin,
                              trustee_wallets, SF_address, seller_address,
                              sdk_pool_handle):

@@ -225,7 +225,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def _get_deducted_fees_non_xfer(self, request, required_fees):
         error = None
         if not self.has_fees(request):
-            error = 'fees not preset or improperly formed'
+            error = 'fees not present or improperly formed'
         if not error:
             try:
                 sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
