@@ -19,8 +19,7 @@ from sovtoken.test.test_public_xfer_2 import \
 
 
 def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
-                                                    looper,
-                                                    sdk_pool_handle,
+                                                    helpers,
                                                     seller_address,
                                                     user1_token_wallet,
                                                     user2_token_wallet,
@@ -35,10 +34,8 @@ def test_multiple_inputs_with_1_incorrect_input_sig(tokens_distributed, # noqa
     operation = getattr(request, OPERATION)
     # Change signature for 2nd input, set it same as the 1st input's signature
     operation[SIGS][1] = operation[SIGS][0]
-    reqs = sdk_send_signed_requests(sdk_pool_handle,
-                                    [json.dumps(request.as_dict), ])
     with pytest.raises(RequestNackedException):
-        sdk_get_and_check_replies(looper, reqs)
+        helpers.sdk.send_and_check_request_objects([request])
 
 
 def test_multiple_inputs_with_1_missing_sig(tokens_distributed, # noqa
