@@ -38,8 +38,8 @@ RUN apt-get update -y && apt-get install -y \
         libsnappy-dev \
     # libindy 
         python3-nacl \
-        libindy-crypto=0.4.1~46 \
-        libindy=1.4.0~586 
+        libindy-crypto>=0.4.1~46 \
+        libindy>=1.4.0~586 
 
 
 RUN pip3 install -U \
@@ -56,14 +56,14 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 100
 WORKDIR /home/indy
 
 # indy-node along with supervisor
-ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.4.496}
-ARG indy_plenum_ver=1.4.442
+ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.4.525}
+ARG indy_plenum_ver=1.4.478
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
-        indy-plenum=${indy_plenum_ver} \ 
-        indy-node=${INDY_NODE_VERSION} \
+        indy-plenum>=${indy_plenum_ver} \ 
+        indy-node>=${INDY_NODE_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
 # config indy pool
