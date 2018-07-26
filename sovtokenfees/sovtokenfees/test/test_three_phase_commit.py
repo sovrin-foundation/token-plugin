@@ -1,7 +1,7 @@
 from sovtokenfees.test.three_phase_commit_helper import *
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 class TestPrePrepare:
 
     def test_no_changes_on_token_ledger(self, three_phase_handler):
@@ -15,13 +15,11 @@ class TestPrePrepare:
         pp_appended = three_phase_handler.add_to_pre_prepare(pp)
         assert pp == pp_appended
 
-    @pytest.mark.skip
     def test_valid_prepare(self, monkeypatch, three_phase_handler):
         pp = PP.create_pre_prepare()
         pp_appended = PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
         assert pp_appended == PP.replace_fields(pp, {f.PLUGIN_FIELDS.nm: PP.plugin_data})
 
-@pytest.mark.skip
 class TestReceivedPrePrepare(BadHashes):
 
     def test_no_action_on_token_ledger(self, three_phase_handler, pp_valid):
@@ -74,7 +72,6 @@ class TestReceivedPrePrepare(BadHashes):
         assert not three_phase_handler.check_recvd_pre_prepare(pp_valid)
 
 
-@pytest.mark.skip
 class TestHasPluginFields:
 
     def test_no_plugin_fields(self, three_phase_handler, pp_valid):
@@ -85,7 +82,6 @@ class TestHasPluginFields:
         assert three_phase_handler._has_plugin_fields(pp_valid)
 
 
-@pytest.mark.skip
 class TestAddToPrepare:
 
     def _test_no_changes(self, three_phase_handler, pp_valid, fn_pp_adapter):
@@ -110,7 +106,6 @@ class TestAddToPrepare:
         assert getattr(pp_valid, f.PLUGIN_FIELDS.nm)[FEES] == getattr(pp_valid, f.PLUGIN_FIELDS.nm)[FEES]
 
 
-@pytest.mark.skip
 class TestAddToOrdered:
 
     def _test_no_changes(self, three_phase_handler, pp_valid, fn_pp_adapter):
@@ -135,7 +130,6 @@ class TestAddToOrdered:
         assert getattr(pp_valid, f.PLUGIN_FIELDS.nm)[FEES] == getattr(pp_valid, f.PLUGIN_FIELDS.nm)[FEES]
 
 
-@pytest.mark.skip
 class TestReceivedPrePrepareWithTxn(BadHashes):
 
     def test_no_action_on_token_ledger(self, three_phase_handler, pp_from_nym_req):
