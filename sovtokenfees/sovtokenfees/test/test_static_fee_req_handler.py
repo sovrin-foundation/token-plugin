@@ -117,6 +117,7 @@ def test_static_fee_req_handler_apply(token_handler_a, node):
 
 
 # - Static Fee Request Handler (apply)
+@pytest.mark.skip
 def test_static_fee_req_handler_apply_fails(token_handler_a, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_FEES,
                                                       FEES: VALID_FEES},
