@@ -4,9 +4,9 @@ from plenum.common.constants import TXN_TYPE
 from plenum.common.txn_util import get_payload_data
 from plenum.common.util import randomString
 from sovtokenfees.constants import SET_FEES, FEES, GET_FEES
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, \
-    sdk_gen_request, sdk_sign_and_submit_req_obj, sdk_sign_request_objects, \
-    sdk_json_to_request_object
+from plenum.test.helper import sdk_send_signed_requests, sdk_gen_request, \
+    sdk_get_and_check_replies, sdk_sign_and_submit_req_obj, \
+    sdk_json_to_request_object, sdk_sign_request_strings
 from plenum.test.pool_transactions.helper import prepare_nym_request
 
 
@@ -67,13 +67,13 @@ def check_fee_req_handler_in_memory_map_updated(nodes, fees):
 def gen_nym_req_for_fees(looper, creators_wallet, seed=None):
     name = randomString(6)
     seed = seed or randomString(32)
-    nym_request, new_did = looper.loop.run_until_complete(
-        prepare_nym_request(creators_wallet, seed,
-                            name, None))
-
-    signed_req = sdk_sign_request_objects(looper, creators_wallet,
-                                           [sdk_json_to_request_object(
-                                               json.loads(nym_request))])[0]
+    nym_req_future = prepare_nym_request(creators_wallet, seed, name, None)
+    nym_request, new_did = looper.loop.run_until_complete(nym_req_future)
+    signed_req = sdk_sign_request_strings(
+        looper,
+        creators_wallet,
+        [json.loads(nym_request)]
+    )[0]
 
     req_obj = sdk_json_to_request_object(json.loads(signed_req))
     if req_obj.signatures is None:
