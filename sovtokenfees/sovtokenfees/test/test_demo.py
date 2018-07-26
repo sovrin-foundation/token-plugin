@@ -1,5 +1,5 @@
 import pytest
-from plenum.common.constants import NYM
+from plenum.common.constants import NYM, TXN_METADATA
 from plenum.common.types import f
 from sovtokenfees.constants import FEES
 from sovtokenfees.wallet import FeeSupportedWallet
@@ -63,7 +63,7 @@ step2_info = """
 """
 def set_fee_for_nym_transactions(methods):
     set_reply = methods.set_fees(TXN_FEES)
-    assert set_reply['result'][FEES][NYM] == TXN_FEES[NYM]
+    assert set_reply['result']['txn']['data'][FEES][NYM] == TXN_FEES[NYM]
 
     demo_logger.log_header(step2_info)
     demo_logger.log_blue("Set sovtokenfees equal to:")
@@ -88,7 +88,7 @@ step4_info = """
 """
 def mint_tokens_to_client(methods, client_wallet, client_address):
     mint_tokens_reply = methods.mint_tokens(client_address.address, MINT_TOKEN_AMOUNT)
-    [reply_address, reply_tokens] = mint_tokens_reply['result']['outputs'][0]
+    [reply_address, reply_tokens] = mint_tokens_reply['result']['txn']['data']['outputs'][0]
     assert reply_address == client_address.address
     assert reply_tokens == MINT_TOKEN_AMOUNT
     utxo_at_client_wallet_address = methods.get_utxo_at_wallet_address(client_wallet, client_address)
@@ -107,7 +107,7 @@ step5_info = """
 def create_and_send_nym_request(methods, client_wallet, client_address):
     nym_request = methods.create_nym_request(client_wallet, client_address)
     nym_result = methods.send_nym_request(nym_request)['result']
-    [reply_address, reply_tokens] = nym_result[FEES][1][0]
+    [reply_address, reply_tokens] = nym_result[FEES]['outputs'][0]
     assert reply_address == client_address.address
     assert reply_tokens == MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
     update_token_wallet_with_result(client_wallet, nym_result)
@@ -134,10 +134,11 @@ step7_info = """
 """
 def check_fee_request_on_ledger(methods, client_address):
     transactions = methods.get_last_ledger_transaction_on_all_nodes(TOKEN_LEDGER_ID)
+    print(transactions)
     for fees in transactions:
         assert fees[OUTPUTS] == [[client_address.address, MINT_TOKEN_AMOUNT - TXN_FEES[NYM]]]
         assert fees[FEES] == TXN_FEES[NYM]
-        assert fees[f.SEQ_NO.nm] == 2
+        assert fees[TXN_METADATA][f.SEQ_NO.nm] == 2
 
     demo_logger.log_header(step7_info)
     demo_logger.log_blue("Transaction found on Token ledger:")
@@ -153,7 +154,6 @@ def sovrin_foundation_collects_fees(methods):
     demo_logger.log_blue("Not implemented")
 
 
-@pytest.mark.skip
 def test_demo_fees_on_nym_transaction(methods):
     demo_logger.log_header("Started Fees Test")
 

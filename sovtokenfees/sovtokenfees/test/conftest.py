@@ -5,6 +5,8 @@ from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
 from plenum.test.conftest import *
+from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
+from sovtokenfees import CLIENT_REQUEST_FIELDS
 
 
 from sovtoken.test.conftest import trustee_wallets, SF_address, \
@@ -18,6 +20,8 @@ from sovtoken.test.test_public_xfer_1 import user1_address, \
 @pytest.fixture(scope="module")
 def do_post_node_creation():
     # Integrate plugin into each node.
+    PLUGIN_CLIENT_REQUEST_FIELDS.update(CLIENT_REQUEST_FIELDS)
+
     def _post_node_creation(node):
         enable_token(node)
         enable_fees(node)
