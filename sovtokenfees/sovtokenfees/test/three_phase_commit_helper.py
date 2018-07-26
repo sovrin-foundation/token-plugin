@@ -124,8 +124,7 @@ class PP:
             # ppTime
             get_utc_epoch(),
             # reqIdr
-            [('B8fV7naUqLATYocqu7yZ8W,CA4bVFDU4GLbX8xZju811o,E7QRhdcnhAwA6E46k9EtZo,M9BJDuS24bqbJNvBRsoGg3',
-              1524070614801839)],
+            ['B8fV7naUqLATYocqu7yZ8WM9BJDuS24bqbJNvBRsoGg3'],
             # discarded
             1,
             # digest
@@ -176,7 +175,7 @@ class PP:
             replica.viewNo,
             replica.lastPrePrepareSeqNo + 1,
             get_utc_epoch(),
-            [(req.identifier, req.reqId)],
+            [req.digest],
             1,
             req.digest,
             CONFIG_LEDGER_ID,

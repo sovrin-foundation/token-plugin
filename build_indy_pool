@@ -6,12 +6,14 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 printf "\n${red}BEGIN BUILDING:\t${green}sovtoken.deb\n"
-sov_token=$(eval "SRC_DIR_NAME=sovtoken make -C devops/ package_in_docker" 2> /dev/null)
+sov_token=$(eval "SRC_DIR_NAME=sovtoken make -C devops/ package_in_docker" )
 printf "${reset}SUCCESS:\t${green}sovtoken.deb built\n\n"
 
 printf "${red}BEGIN BUILDING:\t${green}sovtokenfees.deb\n"
 sov_token_fees=$(eval "SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_docker" 2> /dev/null)
 printf "${reset}SUCCESS:\t${green}sovtokenfees.deb built\n\n"
+
+prep=$(./devops/build-scripts/xenial/Pool_Party/prep)
 
 
 printf "${red}MOVING: ${green}sovtoken.deb to devops/build-scripts/xenial/Pool_Party/\n"

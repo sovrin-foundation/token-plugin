@@ -9,8 +9,8 @@ from plenum.test.helper import sdk_send_and_check
 
 
 @pytest.fixture()
-def methods(txnPoolNodeSet, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
-    return DemoMethods(txnPoolNodeSet, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward)
+def methods(nodeSetWithIntegratedTokenPlugin, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward):
+    return DemoMethods(nodeSetWithIntegratedTokenPlugin, looper, trustee_wallets, fees, sdk_pool_handle, sdk_wallet_client, sdk_wallet_steward)
 
 
 class DemoMethods:
