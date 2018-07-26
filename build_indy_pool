@@ -13,6 +13,8 @@ printf "${red}BEGIN BUILDING:\t${green}sovtokenfees.deb\n"
 sov_token_fees=$(eval "SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_docker" 2> /dev/null)
 printf "${reset}SUCCESS:\t${green}sovtokenfees.deb built\n\n"
 
+prep=$(./devops/build-scripts/xenial/Pool_Party/prep)
+
 
 printf "${red}MOVING: ${green}sovtoken.deb to devops/build-scripts/xenial/Pool_Party/\n"
 mv devops/_build/sovtoken/*.deb devops/build-scripts/xenial/Pool_Party/.
