@@ -27,11 +27,11 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 ## After log in:
 1. shutdown the virtual environment.  from terminal run 'shutdown now'
 2. In virtualbox manager, select 'sandbox-development' machine and
-    2a change display memory to 16MB
-    2b turn off remote display
+    * change display memory to 16MB
+    * turn off remote display
 3. Start Virtual machine by either
-    3a double click in virtualbox manager -- or --
-    3b call 'vagrant reload' from the same directory as the vagrant file
+    * double click in virtualbox manager -- or --
+    * call 'vagrant reload' from the same directory as the vagrant file
 
 4. After log in, adjust display settings to something like 1400x1050
 5. use git to get code (eg from https://github.com/evernym/plugin or whatever)
