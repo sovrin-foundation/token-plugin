@@ -2,7 +2,7 @@ import pytest
 
 from plenum.common.constants import CONFIG_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException
-from plenum.common.txn_util import get_seq_no
+from plenum.common.txn_util import get_type, get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.util import update_token_wallet_with_result
@@ -58,7 +58,8 @@ def test_xfer_with_sufficient_fees(xfer_with_fees_done, looper, fees_set,
     seller_gets = seller_remaining
     for node in nodeSetWithIntegratedTokenPlugin:
         req_handler = node.get_req_handler(CONFIG_LEDGER_ID)
-        assert req_handler.deducted_fees[get_seq_no(res)] == fee_amount
+        print(req_handler.deducted_fees)
+        assert req_handler.deducted_fees["{}#{}".format(get_type(res), get_seq_no(res))] == fee_amount
 
 
 def test_mint_after_paying_fees(xfer_with_fees_done, looper, nodeSetWithIntegratedTokenPlugin,
