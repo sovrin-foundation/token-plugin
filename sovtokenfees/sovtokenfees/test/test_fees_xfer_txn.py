@@ -58,7 +58,6 @@ def test_xfer_with_sufficient_fees(xfer_with_fees_done, looper, fees_set,
     seller_gets = seller_remaining
     for node in nodeSetWithIntegratedTokenPlugin:
         req_handler = node.get_req_handler(CONFIG_LEDGER_ID)
-        print(req_handler.deducted_fees)
         assert req_handler.deducted_fees["{}#{}".format(get_type(res), get_seq_no(res))] == fee_amount
 
 
