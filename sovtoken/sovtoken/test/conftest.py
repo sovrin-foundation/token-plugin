@@ -114,9 +114,17 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
 
 
 @pytest.fixture(scope='module')
-def helpers(nodeSetWithIntegratedTokenPlugin, looper, sdk_pool_handle):
+def helpers(
+    nodeSetWithIntegratedTokenPlugin,
+    looper,
+    sdk_pool_handle,
+    trustee_wallets,
+    sdk_wallet_client
+):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
         looper,
-        sdk_pool_handle
+        sdk_pool_handle,
+        trustee_wallets,
+        sdk_wallet_client
     )
