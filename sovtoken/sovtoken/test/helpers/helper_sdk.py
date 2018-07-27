@@ -30,7 +30,7 @@ class HelperSdk():
         self._node_pool = node_pool
 
     def get_first_result(self, request_response_list):
-        """ Gets the result field from the first response """
+        """ Gets the result field from the first response. """
         return request_response_list[0][1][RESULT]
 
     # =============
@@ -39,12 +39,12 @@ class HelperSdk():
     # Methods for sending Request from plenum.common.request
 
     def prepare_request_objects(self, request_objects):
-        """ Prepares the request to be sent by transforming it into json """
+        """ Prepares the request to be sent by transforming it into json. """
         return [json.dumps(request.as_dict) for request in request_objects]
 
     def send_and_check_request_objects(self, request_objects):
         """
-        Sends the request objects and checks the replies are valid
+        Sends the request objects and checks the replies are valid.
 
         Returns a list of request_response tuples.
         """

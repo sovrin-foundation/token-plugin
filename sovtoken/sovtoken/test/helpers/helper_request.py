@@ -20,7 +20,7 @@ class HelperRequest():
         self._client_did = client_did
 
     def get_utxo(self, address):
-        """ Builds a get_utxo request """
+        """ Builds a get_utxo request. """
         payload = {
             TXN_TYPE: GET_UTXO,
             ADDRESS: address.address
@@ -31,7 +31,7 @@ class HelperRequest():
         return request
 
     def transfer(self, inputs, outputs, extra=None):
-        """ Builds a transfer request """
+        """ Builds a transfer request. """
         outputs_ready = self._prepare_outputs(outputs)
         inputs_ready = [[address.address, seq_no] for address, seq_no in inputs]
 
@@ -52,6 +52,7 @@ class HelperRequest():
         return request
 
     def mint(self, outputs):
+        """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
 
         payload = {

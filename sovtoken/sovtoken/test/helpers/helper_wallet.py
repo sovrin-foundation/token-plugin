@@ -3,7 +3,7 @@ from sovtoken.wallet import Address
 
 class HelperWallet():
     """
-    Helper for dealing with the wallet and addresses
+    Helper for dealing with the wallet and addresses.
 
     # Methods
     - add_new_addresses
@@ -15,7 +15,7 @@ class HelperWallet():
         self._trustees = trustees
 
     def add_new_addresses(self, wallet, n):
-        """ Create and add n new addresses to a wallet """
+        """ Create and add n new addresses to a wallet. """
         addresses = []
         for _ in range(n):
             address = Address()
@@ -25,7 +25,7 @@ class HelperWallet():
         return addresses
 
     def payment_signatures(self, inputs, outputs):
-        """ Generates a list of payment signatures from inptus and outputs"""
+        """ Generates a list of payment signatures from inptus and outputs. """
         outputs = self._prepare_outputs(outputs)
         signatures = []
         for [address, seq_no] in inputs:
@@ -35,8 +35,7 @@ class HelperWallet():
         return signatures
 
     def sign_request_trustees(self, request):
-        """ Sign a request with trustees """
-        print(self._trustees)
+        """ Sign a request with trustees. """
         for trustee in self._trustees:
             trustee.do_multi_sig_on_req(request, identifier=trustee.defaultId)
         return request

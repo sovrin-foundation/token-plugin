@@ -3,7 +3,7 @@ from sovtoken.constants import RESULT, OUTPUTS
 
 class HelperGeneral():
     """
-    Helper that uses all the other helpers
+    Helper that uses all the other helpers.
 
     # Methods
     - get_utxo_addresses
@@ -15,12 +15,9 @@ class HelperGeneral():
         self._request = helper_request
 
     def get_utxo_addresses(self, addresses):
-        """ Get and return the utxos for each address """
+        """ Get and return the utxos for each address. """
         def replace_utxos_address(utxos, address):
-            print("REPLACING UTXOS")
-            print(utxos)
             for utxo in utxos:
-                print(utxo)
                 utxo[0] = address
             return utxos
 
