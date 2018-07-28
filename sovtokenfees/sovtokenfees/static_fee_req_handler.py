@@ -93,10 +93,11 @@ class StaticFeesReqHandler(FeeReqHandler):
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
     def deduct_fees(self, request, cons_time, ledger_id, seq_no, txn):
-        operation = request.operation
-        if operation[TXN_TYPE] == XFER_PUBLIC:
+        txn_type = request.operation[TXN_TYPE]
+        fees_key = "{}#{}".format(txn_type, seq_no)
+        if txn_type == XFER_PUBLIC:
             if request.key in self.deducted_fees_xfer:
-                self.deducted_fees[seq_no] = self.deducted_fees_xfer.pop(request.key)
+                self.deducted_fees[fees_key] = self.deducted_fees_xfer.pop(request.key)
         else:
             if self.has_fees(request):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
@@ -118,7 +119,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
                 self.updateState(txns)
                 self.fee_txns_in_current_batch += 1
-                self.deducted_fees[seq_no] = fees
+                self.deducted_fees[fees_key] = fees
                 return txn
 
     def doStaticValidation(self, request: Request):
@@ -179,10 +180,8 @@ class StaticFeesReqHandler(FeeReqHandler):
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
-                                       if get_seq_no(t) in self.deducted_fees
+                                       if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
                                        and get_type(t) != XFER_PUBLIC
-                                       and get_type(t) != MINT_PUBLIC
-                                       and get_type(t) != FeesTransactions.SET_FEES.value
                                        ]
         if len(committed_seq_nos_with_fees) > 0:
             txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
@@ -225,7 +224,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def _get_deducted_fees_non_xfer(self, request, required_fees):
         error = None
         if not self.has_fees(request):
-            error = 'fees not preset or improperly formed'
+            error = 'fees not present or improperly formed'
         if not error:
             try:
                 sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
