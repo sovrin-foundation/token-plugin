@@ -6,7 +6,7 @@ import pytest
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS,
+from sovtoken.constants import SIGS
 from sovtoken.test.test_public_xfer_2 import user1_token_wallet
 
 
@@ -20,7 +20,8 @@ def addresses(helpers, user1_token_wallet):
 def initial_mint(helpers, addresses):
     outputs = [[address, 100] for address in addresses]
     mint_request = helpers.request.mint(outputs)
-    result = helpers.sdk.send_and_check_request_objects([mint_request])[0][1]['result']
+    responses = helpers.sdk.send_and_check_request_objects([mint_request])
+    result = helpers.sdk.get_first_result(responses)
     return result
 
 
