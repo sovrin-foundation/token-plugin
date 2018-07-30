@@ -1,13 +1,13 @@
 # Vagrant Ubuntu Desktop with Pycharm
-Intended for developers on Plenum Plugins https://github.com/evernym/plugin
+Intended for developers on Sovrin Plugins https://github.com/evernym/plugin (link subject to change)
 
 ## Requirements
 
-Install VirtualBox. https://www.virtualbox.org/wiki/Downloads
+1. Install VirtualBox. https://www.virtualbox.org/wiki/Downloads
 
-Install vagrant.  https://www.vagrantup.com/downloads.html
+2. Install vagrant.  https://www.vagrantup.com/downloads.html
 
-Download Pycharm for ubuntu as .tar.gz file.  Put the file in
+3. Download Pycharm for ubuntu as .tar.gz file.  Put the file in
 the common sub-directory and name the file pycharm-community.tar.gz.  *FAILURE
 to follow this command will lead to errors.*
 
@@ -39,3 +39,4 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 ## Notes
 Pycharm is in /home/vagrant/pycharm. To run Pycharm open a terminal and
 cd to /home/vagrant/pycharm/bin.   run ./pycharm.sh
+*. suggestion: create a symbolic link to the script on your desktop

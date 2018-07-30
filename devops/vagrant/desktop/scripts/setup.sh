@@ -1,7 +1,11 @@
 #!/bin/bash
+#
 
-echo setting up the enviroment
+# CYAN='\033[0;36m'
+CYAN=
+echo ${CYAN}setting up the enviroment
 
+echo certificates
 sudo apt-get update
 sudo apt-get update -y && apt-get install -y \
         apt-transport-https \
@@ -11,7 +15,7 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
 echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
 
-echo common stuff
+echo ${CYAN}common stuff
 sudo apt-get update -y && apt-get install -y \
         git \
         wget \
@@ -23,7 +27,7 @@ sudo apt-get update -y && apt-get install -y \
         vim \
         sudo
 
-echo fpm
+echo ${CYAN}fpm
 sudo apt-get update -y && apt-get install -y \
         ruby \
         ruby-dev \
@@ -31,7 +35,7 @@ sudo apt-get update -y && apt-get install -y \
         gcc \
         make
 
-echo rocksdb python wrapper
+echo ${CYAN}rocksdb python wrapper
 sudo apt-get update -y && apt-get install -y \
         libgflags-dev \
         libbz2-dev \
@@ -40,23 +44,33 @@ sudo apt-get update -y && apt-get install -y \
         liblz4-dev \
         libsnappy-dev
 
-echo libindy
+echo ${CYAN}libindy
 sudo apt-get update -y && apt-get install -y \
         python3-nacl \
-        libindy-crypto=0.4.1~46 \
-        libindy=1.4.0~586
+        libindy-crypto>=0.4.1~46 \
+        libindy>=1.4.0~586
 
-echo python
+echo ${CYAN}python
 sudo pip3 install -U \
     setuptools \
     'pip<10.0.0' \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.4.0-dev-586 \
+    python3-indy>=1.4.0-dev-586 \
     mock
 
-echo rocksdb
+echo ${CYAN}plenum
+echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
+sudo apt-get update && apt-get install -y \
+         supervisor \
+         python3-indy-crypto=0.4.1 \
+         indy-plenum>=1.4.442 \
+         indy-node>=1.4.496 \
+     && rm -rf /var/lib/apt/lists/*
+
+
+echo ${CYAN}rocksdb
 CWD=$(pwd)
 cd /home/vagrant/
 git clone https://github.com/facebook/rocksdb.git
@@ -64,17 +78,14 @@ cd rocksdb/
 make all
 cd $CWD
 
-echo pycharm
-tar xvzf /vagrant-common/pycharm-community.tar.gz -C /tmp
+echo ${CYAN}pycharm
+# if there is problems here, then add v to options for more details
+tar xzf /vagrant-common/pycharm-community.tar.gz -C /tmp
 mv /tmp/pycharm-community-2018.2 /home/vagrant/pycharm
-
-# echo UI
-# sudo apt-get install -y xfce4
 
 # these next commands do not work but it would be nice to have this working
 # sudo ln -s /home/vagrant/pycharm/bin/pycharm.sh /home/vagrant/Desktop/PyCharm
 # sudo chmod +x /home/vagrant/Desktop/PyCharm
 
-# sleep 30s
-echo done
-# sudo shutdown -r now
+echo ${CYAN}all done....
+echo ${CYAN}     see the readme for additional configuration steps
