@@ -1,4 +1,4 @@
-FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib
+FROM camparra/ubuntu16.04-rocksdb
 
 ARG INDY_NODE_VERSION
 ARG POOL_IP
@@ -8,6 +8,7 @@ USER root
 RUN apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
+
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
 RUN echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
@@ -62,6 +63,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
+        python3-indy-crypto=0.4.1 \
         indy-plenum>=${indy_plenum_ver} \ 
         indy-node>=${INDY_NODE_VERSION} \
     && rm -rf /var/lib/apt/lists/*
