@@ -9,7 +9,7 @@ Intended for developers on Sovrin Plugins https://github.com/evernym/plugin (lin
 
 3. Download Pycharm for ubuntu as .tar.gz file.  Put the file in
 the common sub-directory and name the file pycharm-community.tar.gz.  *FAILURE
-to follow this command will lead to errors.*
+to follow this command will lead to disappointment.*
 
 Additional vagrant documentation
 https://www.vagrantup.com/docs/cli/
@@ -25,9 +25,7 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 
 
 ## After log in:
-1. shutdown the virtual environment.  from terminal run 'shutdown now'
-2. In virtualbox manager, select 'sandbox-development' machine and
-    * turn off remote display
+1. shutdown (or reboot) the virtual environment.  from terminal run 'shutdown now'
 3. Start Virtual machine by either
     * double click in virtualbox manager -- or --
     * call 'vagrant reload' from the same directory as the vagrant file
@@ -36,6 +34,6 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 5. use git to get code (eg from https://github.com/evernym/plugin or whatever)
 
 ## Notes
-Pycharm is in /home/vagrant/pycharm. To run Pycharm open a terminal and
+If Pycharm found and unpacked, it will be found in /home/vagrant/pycharm. To run Pycharm open a terminal and
 cd to /home/vagrant/pycharm/bin.   run ./pycharm.sh
-*. suggestion: create a symbolic link to the script on your desktop
+__suggestion: create a symbolic link to the script on your desktop__

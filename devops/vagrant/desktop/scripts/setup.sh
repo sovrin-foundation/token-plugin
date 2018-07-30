@@ -79,13 +79,19 @@ make all
 cd $CWD
 
 echo ${CYAN}pycharm
-# if there is problems here, then add v to options for more details
-tar xzf /vagrant-common/pycharm-community.tar.gz -C /tmp
-mv /tmp/pycharm-community-2018.2 /home/vagrant/pycharm
+PYCHARM_FILE="/vagrant-common/pycharm-community.tar.gz"
+if [ -f ${PYCHARM_FILE} ]; then
+  # if there is problems here, then add v to options for more details
+  tar xzf ${PYCHARM_FILE} -C /tmp
+  mv /tmp/pycharm-community-2018.2 /home/vagrant/pycharm
+else
+  echo ${CYAN} PYCHARM download NOT FOUND!  You didnt follow directions, did you?
+  echo ${CYAN} ...see Requirements section of readme.md
+fi
 
 # these next commands do not work but it would be nice to have this working
 # sudo ln -s /home/vagrant/pycharm/bin/pycharm.sh /home/vagrant/Desktop/PyCharm
 # sudo chmod +x /home/vagrant/Desktop/PyCharm
 
 echo ${CYAN}all done....
-echo ${CYAN}     see the readme for additional configuration steps
+echo ${CYAN}....see the readme.md for additional configuration steps
