@@ -1,0 +1,37 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+development_box        = "bstoots/xubuntu-16.04-desktop-amd64"
+development_cpus       = "2"
+development_memory     = "4096"
+development_host_name  = "development.sandbox.evernym.lab"
+
+Vagrant.configure("2") do |config|
+
+  config.vm.define "development" do |development|
+    development.vm.box = development_box
+    development.vm.host_name = development_host_name
+    development.vm.network 'public_network'
+    development.ssh.private_key_path = '~/.vagrant.d/insecure_private_key'
+    development.ssh.insert_key = false
+    development.vm.provider "virtualbox" do |vb|
+      vb.name   = "sandbox-development"
+      vb.gui    = true
+      vb.memory = development_memory
+      vb.cpus   = development_cpus
+      vb.customize ["modifyvm", :id, "--cableconnected1", "on"]
+    end
+    # Uncomment the following line to set the default bridge.
+    # The bridge string MUST match your connection exactly as
+    # it appears when you are prompted to select a bridge during
+    # provisioning.
+    #default.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)"
+    development.vm.provision "", type: "shell", path: "scripts/setup.sh"
+
+    # Include all DevelopmentEnvironment common scripts/tools. These tools will
+    # be referenced with an absolute path in the guest VM.
+    development.vm.synced_folder Dir.pwd + "/common", "/vagrant-common"
+
+  end
+
+end
