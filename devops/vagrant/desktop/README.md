@@ -27,7 +27,6 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 ## After log in:
 1. shutdown the virtual environment.  from terminal run 'shutdown now'
 2. In virtualbox manager, select 'sandbox-development' machine and
-    * change display memory to 16MB
     * turn off remote display
 3. Start Virtual machine by either
     * double click in virtualbox manager -- or --
