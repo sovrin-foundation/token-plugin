@@ -39,9 +39,9 @@ RUN apt-get update -y && apt-get install -y \
         libsnappy-dev \
     # libindy 
         python3-nacl \
-        libindy-crypto>=0.4.1~46 \
-        libindy>=1.4.0~586 
-
+        libindy-crypto=0.4.1~46 \
+        libindy=1.4.0~586 
+        #//python3-indy-crypto
 
 RUN pip3 install -U \
     setuptools \
@@ -49,7 +49,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy>=1.4.0-dev-586 \
+    python3-indy==1.4.0-dev-586 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
@@ -57,15 +57,15 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 100
 WORKDIR /home/indy
 
 # indy-node along with supervisor
-ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.4.525}
-ARG indy_plenum_ver=1.4.478
+ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.4.496}
+ARG indy_plenum_ver=1.4.442
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.1 \
-        indy-plenum>=${indy_plenum_ver} \ 
-        indy-node>=${INDY_NODE_VERSION} \
+        indy-plenum=${indy_plenum_ver} \ 
+        indy-node=${INDY_NODE_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
 # config indy pool
