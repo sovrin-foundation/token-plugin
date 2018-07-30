@@ -13,42 +13,9 @@ from sovtoken.test.helper import send_xfer, send_public_mint, \
 from sovtoken.test.conftest import seller_gets, total_mint
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_replies, sdk_check_reply
-
-
-@pytest.fixture(scope="module")
-def user1_token_wallet():
-    return TokenWallet('user1')
-
-
-@pytest.fixture(scope="module")
-def user2_token_wallet():
-    return TokenWallet('user2')
-
-
-@pytest.fixture(scope="module")
-def user3_token_wallet():
-    return TokenWallet('user3')
-
-
-@pytest.fixture(scope="module")
-def user1_address(user1_token_wallet):
-    seed = 'user1000000000000000000000000000'.encode()
-    user1_token_wallet.add_new_address(seed=seed)
-    return next(iter(user1_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user2_address(user2_token_wallet):
-    seed = 'user2000000000000000000000000000'.encode()
-    user2_token_wallet.add_new_address(seed=seed)
-    return next(iter(user2_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user3_address(user3_token_wallet):
-    seed = 'user3000000000000000000000000000'.encode()
-    user3_token_wallet.add_new_address(seed=seed)
-    return next(iter(user3_token_wallet.addresses.keys()))
+from sovtoken.test.helper import \
+    user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
+    user3_address, user3_token_wallet
 
 
 @pytest.fixture(scope='module')     # noqa
@@ -67,7 +34,6 @@ def valid_xfer_txn_done(public_minting, looper,
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
     seller_gets = seller_remaining
     return res
-
 
 def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
                                      sdk_pool_handle, seller_token_wallet,
@@ -361,4 +327,3 @@ def test_xfer_with_multiple_inputs(looper,  # noqa
     xfer_tokens(seller_token_wallet, inputs, outputs)
 
     assert seller_token_wallet.get_total_address_amount(first_address) == amount
-

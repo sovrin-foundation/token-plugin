@@ -2,7 +2,7 @@ from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS
 from sovtoken.util import update_token_wallet_with_result
 from sovtoken.test.helper import send_xfer, send_get_utxo
-from sovtoken.test.test_public_xfer_2 import \
+from sovtoken.test.helper import \
     user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
     user3_address, user3_token_wallet
 
