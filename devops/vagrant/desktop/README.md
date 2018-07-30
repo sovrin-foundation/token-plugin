@@ -30,7 +30,10 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
     * double click in virtualbox manager -- or --
     * call 'vagrant reload' from the same directory as the vagrant file
 
-4. After log in, adjust display settings to something like 1400x1050
+4. After log in
+    * adjust display settings to something like 1400x1050
+    * set time zone.  
+    
 5. use git to get code (eg from https://github.com/evernym/plugin or whatever)
 
 ## Notes
