@@ -40,7 +40,7 @@ RUN apt-get update -y && apt-get install -y \
     # libindy 
         python3-nacl \
         libindy-crypto=0.4.1~46 \
-        libindy=1.4.0~586 
+        libindy=1.6.1~657
         #//python3-indy-crypto
 
 RUN pip3 install -U \
