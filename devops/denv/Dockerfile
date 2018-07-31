@@ -1,4 +1,4 @@
-FROM camparra/ubuntu16.04-rocksdb
+FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib 
 
 ARG INDY_NODE_VERSION
 ARG POOL_IP
@@ -49,7 +49,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.4.0-dev-586 \
+    python3-indy==1.6.1-dev-657 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
@@ -64,12 +64,10 @@ RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.lis
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.1 \
-        indy-plenum=${indy_plenum_ver}  \ 
-        indy-node=${indy_node_ver} \
-        emacs \
+        indy-plenum  \ 
+        indy-node \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
-RUN git clone https://github.com/syl20bnr/spacemacs /home/indy/.emacs.d
 # config indy pool
 ENV POOL_IP ${POOL_IP:-127.0.0.1}
 USER indy
