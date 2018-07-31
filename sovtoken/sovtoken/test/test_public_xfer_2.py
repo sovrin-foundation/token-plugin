@@ -231,7 +231,7 @@ def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wal
     assert len(res3[OUTPUTS]) == 0
 
 
-# We can't handle multiple addresses at the moment because it requires a more 
+# We can't handle multiple addresses at the moment because it requires a more
 # complicated state proof. So this test has been changed to show that multiple
 # addresses are not accepted.
 def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_pool_handle, seller_address, SF_address):
@@ -268,7 +268,7 @@ def test_xfer_with_multiple_inputs(looper,  # noqa
             addresses.append(address.address)
 
         return addresses
-    
+
     def update_wallet_utxos(wallet, address):
         res = send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle)
         update_token_wallet_with_result(seller_token_wallet, res)

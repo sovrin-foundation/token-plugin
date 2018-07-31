@@ -57,7 +57,7 @@ def seller_address(seller_token_wallet):
 
 
 @pytest.fixture(scope="module")
-def trustee_wallets(trustee_data, looper, sdk_pool_name):
+def trustee_wallets(trustee_data, looper, sdk_pool_data):
     return build_wallets_from_data(trustee_data)
 
 
