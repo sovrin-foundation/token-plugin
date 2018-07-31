@@ -1,4 +1,4 @@
-FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib
+FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib 
 
 ARG INDY_NODE_VERSION
 ARG POOL_IP
@@ -8,6 +8,7 @@ USER root
 RUN apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
+
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
 RUN echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
@@ -39,8 +40,8 @@ RUN apt-get update -y && apt-get install -y \
     # libindy 
         python3-nacl \
         libindy-crypto=0.4.1~46 \
-        libindy=1.4.0~586 
-
+        libindy=1.6.1~657
+        #//python3-indy-crypto
 
 RUN pip3 install -U \
     setuptools \
@@ -48,7 +49,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.4.0-dev-586 \
+    python3-indy==1.6.1-dev-657 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
@@ -62,8 +63,9 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
-        indy-plenum=${indy_plenum_ver} \ 
-        indy-node=${INDY_NODE_VERSION} \
+        python3-indy-crypto=0.4.1 \
+        indy-plenum  \ 
+        indy-node \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
 # config indy pool
