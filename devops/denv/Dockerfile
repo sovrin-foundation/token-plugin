@@ -64,8 +64,8 @@ RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.lis
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.1 \
-        indy-plenum \ 
-        indy-node \
+        indy-plenum=${indy_plenum_ver}  \ 
+        indy-node=${indy_node_ver} \
         emacs \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
