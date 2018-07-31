@@ -43,6 +43,7 @@ class FeesAuthNr(CoreAuthNr):
         correct_sigs_from = set()
         required_sigs_from = set()
         outputs = fees[1]
+        digest = msg.digest
         for (addr, seq_no), sig in zip(fees[0], fees[2]):
             required_sigs_from.add(addr)
             try:
@@ -50,7 +51,7 @@ class FeesAuthNr(CoreAuthNr):
             except Exception as ex:
                 raise InvalidSignatureFormat from ex
 
-            to_ser = [[addr, seq_no], outputs]
+            to_ser = [[addr, seq_no], outputs, digest]
             serz = serialize_msg_for_signing(to_ser)
             try:
                 verkey = address_to_verkey(addr)
