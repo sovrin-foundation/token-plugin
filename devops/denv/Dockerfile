@@ -64,10 +64,12 @@ RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.lis
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.1 \
-        indy-plenum=${indy_plenum_ver} \ 
-        indy-node=${INDY_NODE_VERSION} \
+        indy-plenum \ 
+        indy-node \
+        emacs \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
+RUN git clone https://github.com/syl20bnr/spacemacs /home/indy/.emacs.d
 # config indy pool
 ENV POOL_IP ${POOL_IP:-127.0.0.1}
 USER indy
