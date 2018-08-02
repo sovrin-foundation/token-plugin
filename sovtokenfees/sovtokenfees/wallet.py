@@ -34,14 +34,14 @@ class FeeSupportedWallet(TokenWallet):
         else:
             outputs = []
         fees = self.get_fees([[address, seq_no], ],
-                             outputs)
+                             outputs, req.digest)
         req.__setattr__(f.FEES.nm, fees)
         return req
 
-    def get_fees(self, inputs, outputs):
+    def get_fees(self, inputs, outputs, digest):
         fees = [[], outputs, []]
         for addr, seq_no in inputs:
-            to_sign = [[addr, seq_no], outputs]
+            to_sign = [[addr, seq_no], outputs, digest]
             sig = self.addresses[addr].signer.sign(to_sign)
             fees[0].append([addr, seq_no])
             fees[-1].append(sig)
