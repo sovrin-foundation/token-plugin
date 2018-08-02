@@ -120,7 +120,7 @@ def test_invalid_fees_valid_payload(tokens_distributed, looper, sdk_wallet_stewa
     assert utxo[1] < fee_amount
     existing_fees = getattr(req, f.FEES.nm)
     fees = seller_token_wallet.get_fees([[seller_address, utxo[0]]],
-                                        existing_fees[1])
+                                        existing_fees[1], req.digest)
     updated_fees = [existing_fees[0] + fees[0], existing_fees[1], existing_fees[2] + fees[2]]
     setattr(req, f.FEES.nm, updated_fees)
     with pytest.raises(RequestRejectedException):
@@ -193,7 +193,7 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
     paying_utxo = fees_req[FEES][INPUTS][0]
     fees = user1_token_wallet.get_fees([paying_utxo, ],
-                                       fees_req[FEES][OUTPUTS])
+                                       fees_req[FEES][OUTPUTS], req.digest)
     req.__setattr__(f.FEES.nm, fees)
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
