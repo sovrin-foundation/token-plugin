@@ -1,15 +1,15 @@
 # Vagrant Ubuntu Desktop with Pycharm
-Intended for developers on Plenum Plugins https://github.com/evernym/plugin
+Intended for developers on Sovrin Plugins https://github.com/evernym/plugin (link subject to change)
 
 ## Requirements
 
-Install VirtualBox. https://www.virtualbox.org/wiki/Downloads
+1. Install VirtualBox. https://www.virtualbox.org/wiki/Downloads
 
-Install vagrant.  https://www.vagrantup.com/downloads.html
+2. Install vagrant.  https://www.vagrantup.com/downloads.html
 
-Download Pycharm for ubuntu as .tar.gz file.  Put the file in
+3. Download Pycharm for ubuntu as .tar.gz file.  Put the file in
 the common sub-directory and name the file pycharm-community.tar.gz.  *FAILURE
-to follow this command will lead to errors.*
+to follow this command will lead to disappointment.*
 
 Additional vagrant documentation
 https://www.vagrantup.com/docs/cli/
@@ -25,17 +25,18 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
 
 
 ## After log in:
-1. shutdown the virtual environment.  from terminal run 'shutdown now'
-2. In virtualbox manager, select 'sandbox-development' machine and
-    * change display memory to 16MB
-    * turn off remote display
+1. shutdown (or reboot) the virtual environment.  from terminal run 'shutdown now'
 3. Start Virtual machine by either
     * double click in virtualbox manager -- or --
     * call 'vagrant reload' from the same directory as the vagrant file
 
-4. After log in, adjust display settings to something like 1400x1050
+4. After log in
+    * adjust display settings to something like 1400x1050
+    * set time zone.  
+    
 5. use git to get code (eg from https://github.com/evernym/plugin or whatever)
 
 ## Notes
-Pycharm is in /home/vagrant/pycharm. To run Pycharm open a terminal and
+If Pycharm found and unpacked, it will be found in /home/vagrant/pycharm. To run Pycharm open a terminal and
 cd to /home/vagrant/pycharm/bin.   run ./pycharm.sh
+__suggestion: create a symbolic link to the script on your desktop__
