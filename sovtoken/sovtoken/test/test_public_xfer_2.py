@@ -18,6 +18,17 @@ from sovtoken.test.helper import \
     user3_address, user3_token_wallet
 
 
+@pytest.fixture
+def addresses(helpers, user1_token_wallet):
+    return helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+
+
+@pytest.fixture
+def initial_mint(helpers, addresses):
+    outputs = [[address, 100] for address in addresses]
+    return helpers.general.do_mint(outputs)
+
+
 @pytest.fixture(scope='module')     # noqa
 def valid_xfer_txn_done(public_minting, looper,
                         nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
@@ -35,79 +46,105 @@ def valid_xfer_txn_done(public_minting, looper,
     seller_gets = seller_remaining
     return res
 
-def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
-                                     sdk_pool_handle, seller_token_wallet,
-                                     seller_address, user1_address):
+
+def test_seller_xfer_outputs_repeat_address(
+    helpers,
+    initial_mint,
+    addresses,
+):
     """
     Address repeats in the output of transaction, hence it will be rejected
     """
-    seq_no = get_seq_no(public_minting)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets - 10
-    outputs = [[user1_address, 10], [seller_address, seller_remaining / 2],
-               [seller_address, seller_remaining / 2]]
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [[seller_address, seq_no]]
+    outputs = [
+        [user1_address, 10],
+        [seller_address, 45],
+        [seller_address, 45]
+    ]
+
     with pytest.raises(RequestNackedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        helpers.general.do_transfer(inputs, outputs)
 
 
-def test_seller_xfer_float_amount(public_minting, looper, # noqa
-                                  sdk_pool_handle, seller_token_wallet,
-                                  seller_address, user1_address):
+def test_seller_xfer_float_amount(
+    helpers,
+    initial_mint,
+    addresses,
+):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is a floating point.
     """
-    seq_no = get_seq_no(public_minting)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets - 5.5
-    outputs = [[user1_address, 5.5], [seller_address, seller_remaining]]
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [[seller_address, seq_no]]
+    outputs = [[user1_address, 5.5], [seller_address, 94.5]]
+
     with pytest.raises(RequestNackedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        helpers.general.do_transfer(inputs, outputs)
 
 
-def test_seller_xfer_negative_amount(public_minting, looper, # noqa
-                                     sdk_pool_handle, seller_token_wallet,
-                                     seller_address, user1_address):
+def test_seller_xfer_negative_amount(
+    helpers,
+    initial_mint,
+    addresses
+):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is negative.
     """
-    seq_no = get_seq_no(public_minting)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets + 10
-    outputs = [[user1_address, -10], [seller_address, seller_remaining]]
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [[seller_address, seq_no]]
+    outputs = [[user1_address, -10], [seller_address, 110]]
+
     with pytest.raises(RequestNackedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        helpers.general.do_transfer(inputs, outputs)
 
 
-def test_seller_xfer_invalid_amount(public_minting, looper,     # noqa
-                                    sdk_pool_handle, seller_token_wallet,
-                                    seller_address, user1_address):
+def test_seller_xfer_invalid_amount(
+    helpers,
+    initial_mint,
+    addresses
+):
     """
     Amount used in outputs greater than the amount held by inputs,
     hence it will be rejected
     """
-    seq_no = get_seq_no(public_minting)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets + 10
-    outputs = [[user1_address, 10], [seller_address, seller_remaining]]
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [[seller_address, seq_no]]
+    outputs = [[user1_address, 10], [seller_address, 100]]
+
     with pytest.raises(RequestRejectedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        helpers.general.do_transfer(inputs, outputs)
 
 
-def test_seller_xfer_invalid_inputs(public_minting, looper, # noqa
-                                    sdk_pool_handle, seller_token_wallet,
-                                    seller_address, user1_address):
+def test_seller_xfer_invalid_inputs(
+    helpers,
+    initial_mint,
+    addresses
+):
     """
     Address+seq_no repeats in the inputs of transaction, hence it will be rejected
     """
-    seq_no = get_seq_no(public_minting)
-    inputs = [[seller_token_wallet, seller_address, seq_no],
-              [seller_token_wallet, seller_address, seq_no]]
-    seller_remaining = seller_gets - 10
-    outputs = [[user1_address, 10], [seller_address, seller_remaining]]
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [
+        [seller_address, seq_no],
+        [seller_address, seq_no]
+    ]
+    outputs = [[user1_address, 10], [seller_address, 90]]
+
     with pytest.raises(RequestNackedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        helpers.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_valid(valid_xfer_txn_done):
