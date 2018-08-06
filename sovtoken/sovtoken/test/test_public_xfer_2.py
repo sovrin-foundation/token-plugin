@@ -11,6 +11,8 @@ from sovtoken.test.helper import check_output_val_on_all_nodes, \
 from sovtoken.test.conftest import seller_gets
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_replies, sdk_check_reply
+from sovtoken.test.helper import user1_token_wallet, user2_token_wallet, \
+    user1_address, user2_address
 
 
 @pytest.fixture
