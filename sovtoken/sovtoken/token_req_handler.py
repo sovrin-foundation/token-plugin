@@ -20,7 +20,6 @@ from sovtoken.sovtoken_types import Output
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
-# TODO: Rename to `PaymentReqHandler`
 from state.trie.pruning_trie import rlp_decode
 
 
