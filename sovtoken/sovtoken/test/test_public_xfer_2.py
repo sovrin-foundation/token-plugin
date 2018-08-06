@@ -6,16 +6,11 @@ from plenum.common.exceptions import RequestNackedException, \
 from plenum.common.txn_util import get_seq_no
 from plenum.common.util import lxor
 from sovtoken.constants import OUTPUTS
-from sovtoken.util import update_token_wallet_with_result
-from sovtoken.wallet import TokenWallet, Address
-from sovtoken.test.helper import send_xfer, send_public_mint, \
-    check_output_val_on_all_nodes, xfer_request, send_get_utxo
-from sovtoken.test.conftest import seller_gets, total_mint
+from sovtoken.test.helper import check_output_val_on_all_nodes, \
+    xfer_request, send_get_utxo
+from sovtoken.test.conftest import seller_gets
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_replies, sdk_check_reply
-from sovtoken.test.helper import \
-    user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
-    user3_address, user3_token_wallet
 
 
 @pytest.fixture
