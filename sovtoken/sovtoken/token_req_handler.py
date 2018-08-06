@@ -3,27 +3,20 @@ from typing import List, Iterable
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
-from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
-#, add_sigs_to_txn
-# TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
-# (should be imported from plenum.common.txn_util)
-from sovtoken.txn_util import add_sigs_to_txn
+from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
+from sovtoken.messages.validation import static_req_validation
 
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, ED25519, MULTI_SIGNATURE
-from plenum.common.exceptions import InvalidClientRequest, \
-    UnauthorizedClientRequest
-from plenum.common.messages.fields import IterableField
+    PROOF_NODES, MULTI_SIGNATURE, ROLE
+from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
-from sovtoken.messages.fields import PublicOutputField, \
-    PublicInputsField, PublicOutputsField
-from sovtoken.types import Output
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+from sovtoken.sovtoken_types import Output
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
@@ -35,9 +28,6 @@ class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
 
-    _public_output_validator = IterableField(PublicOutputField())
-    _public_outputs_validator = PublicOutputsField()
-    _public_inputs_validator = PublicInputsField()
     MinSendersForPublicMint = 4
 
     def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
@@ -50,164 +40,122 @@ class TokenReqHandler(LedgerRequestHandler):
             GET_UTXO: self.get_all_utxo,
         }
 
-    @staticmethod
-    def _MINT_PUBLIC_validate(request: Request):
-        operation = request.operation
-        if operation[TXN_TYPE] == MINT_PUBLIC:
-            return TokenReqHandler._operation_outputs_validate(request)
-
-    @staticmethod
-    def _XFER_PUBLIC_validate(request: Request):
-        operation = request.operation
-        if operation[TXN_TYPE] == XFER_PUBLIC:
-            error = TokenReqHandler._operation_outputs_validate(request)
-            if error:
-                return error
-            else:
-                error = TokenReqHandler._operation_inputs_validate(request)
-            return error
-
-    @staticmethod
-    def _GET_UTXO_validate(request: Request):
-        operation = request.operation
-        if operation[TXN_TYPE] == GET_UTXO:
-            return TokenReqHandler._operation_address_validate(request)
-
-    @staticmethod
-    def _operation_outputs_validate(request: Request):
-        operation = request.operation
-        if OUTPUTS not in operation:
-            raise InvalidClientRequest(request.identifier, request.reqId,
-                                       "{} needs to be present".
-                                       format(OUTPUTS))
-        return TokenReqHandler._public_outputs_validator.validate(operation[OUTPUTS])
-
-    @staticmethod
-    def _operation_inputs_validate(request: Request):
-        operation = request.operation
-        if INPUTS not in operation:
-            raise InvalidClientRequest(request.identifier,
-                                       request.reqId,
-                                       "{} needs to be present".
-                                       format(INPUTS))
-        if SIGS not in operation:
-            raise InvalidClientRequest(request.identifier,
-                                       request.reqId,
-                                       "{} needs to be present".
-                                       format(SIGS))
-        # THIS IS TEMPORARY. The new format of requests will take an array of signatures
-        if len(operation[INPUTS]) != len(operation[SIGS]):
-            raise InvalidClientRequest(request.identifier,
-                                       request.reqId,
-                                       "all inputs should have signatures")
-        return TokenReqHandler._public_inputs_validator.validate(operation[INPUTS])
-
-    @staticmethod
-    def _operation_address_validate(request: Request):
-        operation = request.operation
-        if ADDRESS not in operation:
-            error = '{} needs to be provided'.format(ADDRESS)
-        else:
-            error = TokenReqHandler._public_output_validator.inner_field_type.public_address_field.validate(operation[ADDRESS])
-        if error:
-            raise InvalidClientRequest(request.identifier,
-                                       request.reqId, error)
-
-    def _reqToTxn(self, req: Request):
-        if req.operation[TXN_TYPE] == XFER_PUBLIC:
-            sigs = req.operation.pop(SIGS)
-        txn = reqToTxn(req)
-        if req.operation[TXN_TYPE] == XFER_PUBLIC:
-            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
-            add_sigs_to_txn(txn, sigs, sig_type=ED25519)
-        return txn
-
     def doStaticValidation(self, request: Request):
-        operation = request.operation
-        if operation[TXN_TYPE] in (MINT_PUBLIC, XFER_PUBLIC, GET_UTXO):
-            # This is the python way of doing a switch statement.
-            # It seems cleaner than a stack of if/elif/else
-            # TODO: This should be moved outside the function, should be created once.
-            txn_type_switch = {
-                MINT_PUBLIC: self._MINT_PUBLIC_validate,
-                XFER_PUBLIC: self._XFER_PUBLIC_validate,
-                GET_UTXO: self._GET_UTXO_validate
-            }
-            error = txn_type_switch[operation[TXN_TYPE]](request)
-            if error:
-                raise InvalidClientRequest(request.identifier,
-                                           request.reqId,
-                                           error)
+        static_req_validation(request)
+
+    # noinspection PyUnreachableCode
+    @staticmethod
+    def _validate_mint_public_txn(request: Request, senders: list, required_senders: int):
+        if not isinstance(senders, list):
+            raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
+                                                getattr(request, 'reqId', None),
+                                                'Senders was not computed to list')
+
+        if len(senders) >= required_senders:
+            if all(callable(getattr(nym_data, "get", None)) and  # Check that elements in senders have get method
+                   nym_data.get(ROLE) == TRUSTEE for nym_data in senders):
+                return
+            else:
+                error = 'only Trustees can send this transaction'
+                raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
+                                                getattr(request, 'reqId', None),
+                                                error)
         else:
-            raise InvalidClientRequest(request.identifier,
-                                       request.reqId,
-                                       "Invalid type in operation",
-                                       operation[TXN_TYPE])
+            error = 'Request needs at least {} signers but only {} found'. \
+                format(required_senders, len(senders))
+            raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
+                                            getattr(request, 'reqId', None),
+                                            error)
+
+        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
+                                            getattr(request, 'reqId', None),
+                                            'Request to not meet minimum requirements')
+
+    @staticmethod
+    def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int):
+        if not isinstance(sum_inputs, int) or not isinstance(sum_outputs, int):
+            raise InvalidClientMessageException(getattr(request, 'identifier', None),
+                                                getattr(request, 'reqId', None),
+                                                'Summation of input or outputs where not an integer, sum of inputs'
+                                                ' is {} and sum of outputs is {}'.format(sum_inputs, sum_outputs))
+
+        if sum_inputs == sum_outputs:
+            return
+        elif sum_inputs > sum_outputs:
+            error = 'Lost funds - inputs are greater than outputs, sum of inputs is {} and sum' \
+                    ' of outputs is {}'.format(sum_inputs, sum_outputs)
+            raise InsufficientFundsError(getattr(request, 'identifier', None),
+                                         getattr(request, 'reqId', None),
+                                         error)
+        elif sum_inputs < sum_outputs:
+            error = 'Insufficient funds, sum of inputs is {} and sum' \
+                    ' of outputs is {}'.format(sum_inputs, sum_outputs)
+            raise InsufficientFundsError(getattr(request, 'identifier', None),
+                                         getattr(request, 'reqId', None),
+                                         error)
+
+        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
+                                            getattr(request, 'reqId', None),
+                                            'Request to not meet minimum requirements')
 
     def validate(self, request: Request):
-        operation = request.operation
-        error = ''
-        if operation[TXN_TYPE] == MINT_PUBLIC:
-            senders = request.all_identifiers
-            if not all(DomainRequestHandler.get_role(
-                    self.domain_state, idr, TRUSTEE) for idr in senders):
-                error = 'only Trustees can send this transaction'
-            if len(senders) < self.MinSendersForPublicMint:
-                error = 'Need at least {} but only {} found'. \
-                    format(self.MinSendersForPublicMint, len(senders))
+        req_type = request.operation[TXN_TYPE]
+        if req_type == MINT_PUBLIC:
+            senders = [DomainRequestHandler.getNymDetails(self.domain_state, idr) for idr in request.all_identifiers]
+            return TokenReqHandler._validate_mint_public_txn(request, senders, self.MinSendersForPublicMint)
 
-        if operation[TXN_TYPE] == XFER_PUBLIC:
+        elif req_type == XFER_PUBLIC:
             try:
-                sum_inputs, sum_outputs = self.get_sum_inputs_outputs(
-                    self.utxo_cache,
-                    operation[INPUTS],
-                    operation[OUTPUTS],
-                    is_committed=False)
-            except KeyError as ex:
-                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
-            except Exception as ex:
-                error = 'Exception {} while processing inputs/outputs'.format(ex)
-            else:
-                if sum_inputs < sum_outputs:
-                    error = 'Insufficient funds, sum of inputs is {} and sum' \
-                            ' of outputs is {}'.format(sum_inputs, sum_outputs)
-                    raise InsufficientFundsError(request.identifier,
-                                                 request.reqId,
-                                                 error)
+                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
+                                                        request,
+                                                        is_committed=False)
 
-        if error:
-            raise UnauthorizedClientRequest(request.identifier,
-                                            request.reqId,
-                                            error)
+                sum_outputs = TokenReqHandler.sum_outputs(request)
+            except Exception as ex:
+                if isinstance(ex, InvalidClientMessageException):
+                    raise ex
+                error = 'Exception {} while processing inputs/outputs'.format(ex)
+                raise InvalidClientMessageException(request.identifier,
+                                                    getattr(request, 'reqId', None),
+                                                    error)
+            else:
+                return TokenReqHandler._validate_xfer_public_txn(request, sum_inputs, sum_outputs)
+
+        raise InvalidClientMessageException(request.identifier,
+                                            getattr(request, 'reqId', None),
+                                            'Unsupported request type - {}'.format(req_type))
 
     @staticmethod
     def transform_txn_for_ledger(txn):
         """
-        Some transactions need to be updated before they can be stored in the
-        ledger
+            No transformation is needed
         """
         return txn
 
+    def _update_state_mint_public_txn(self, txn, is_committed=False):
+        payload = get_payload_data(txn)
+        seq_no = get_seq_no(txn)
+        for addr, amount in payload[OUTPUTS]:
+            self._add_new_output(Output(addr, seq_no, amount),
+                                 is_committed=is_committed)
+
+    def _update_state_xfer_public(self, txn, is_committed=False):
+        payload = get_payload_data(txn)
+        for addr, seq_no in payload[INPUTS]:
+            self._spend_input(addr, seq_no, is_committed=is_committed)
+        for addr, amount in payload[OUTPUTS]:
+            seq_no = get_seq_no(txn)
+            self._add_new_output(Output(addr, seq_no, amount),
+                                 is_committed=is_committed)
+
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
-            self._update_state_with_single_txn(txn, is_committed=isCommitted)
+            typ = get_type(txn)
+            if typ == MINT_PUBLIC:
+                self._update_state_mint_public_txn(txn, is_committed=isCommitted)
 
-    def _update_state_with_single_txn(self, txn, is_committed=False):
-        typ = get_type(txn)
-        if typ == MINT_PUBLIC:
-            payload = get_payload_data(txn)
-            seq_no = get_seq_no(txn)
-            for addr, amount in payload[OUTPUTS]:
-                self._add_new_output(Output(addr, seq_no, amount),
-                                     is_committed=is_committed)
-        if typ == XFER_PUBLIC:
-            payload = get_payload_data(txn)
-            for addr, seq_no in payload[INPUTS]:
-                self._spend_input(addr, seq_no, is_committed=is_committed)
-            for addr, amount in payload[OUTPUTS]:
-                seq_no = get_seq_no(txn)
-                self._add_new_output(Output(addr, seq_no, amount),
-                                     is_committed=is_committed)
+            if typ == XFER_PUBLIC:
+                self._update_state_xfer_public(txn, is_committed=isCommitted)
 
     def _spend_input(self, address, seq_no, is_committed=False):
         self.spend_input(self.state, self.utxo_cache, address, seq_no,
@@ -264,8 +212,8 @@ class TokenReqHandler(LedgerRequestHandler):
         result.update(request.operation)
         return result
 
-    def _sum_inputs(self, inputs: Iterable, is_committed=False) -> int:
-        return self.sum_inputs(self.utxo_cache, inputs,
+    def _sum_inputs(self, req: Request, is_committed=False) -> int:
+        return self.sum_inputs(self.utxo_cache, req,
                                is_committed=is_committed)
 
     @staticmethod
@@ -277,14 +225,22 @@ class TokenReqHandler(LedgerRequestHandler):
         return key.split(':')
 
     @staticmethod
-    def sum_inputs(utxo_cache: UTXOCache, inputs: Iterable,
+    def sum_inputs(utxo_cache: UTXOCache, request: Request,
                    is_committed=False) -> int:
-        output_val = 0
-        for addr, seq_no in inputs:
-                output_val += utxo_cache.get_output(
-                    Output(addr, seq_no, None),
-                    is_committed=is_committed).value
-        return output_val
+        try:
+            inputs = request.operation[INPUTS]
+            output_val = 0
+            for addr, seq_no in inputs:
+                    output_val += utxo_cache.get_output(
+                        Output(addr, seq_no, None),
+                        is_committed=is_committed).value
+            return output_val
+        except KeyError as ex:
+            raise UTXOAlreadySpentError(request.identifier, request.reqId, '{}'.format(ex))
+
+    @staticmethod
+    def sum_outputs(request: Request) -> int:
+        return sum(o[1] for o in request.operation[OUTPUTS])
 
     @staticmethod
     def spend_input(state, utxo_cache, address, seq_no, is_committed=False):
@@ -299,13 +255,6 @@ class TokenReqHandler(LedgerRequestHandler):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
-
-    @staticmethod
-    def get_sum_inputs_outputs(utxo_cache, inputs, outputs, is_committed=False):
-        sum_inputs = TokenReqHandler.sum_inputs(utxo_cache, inputs,
-                                                is_committed=is_committed)
-        sum_outputs = sum(o[1] for o in outputs)
-        return sum_inputs, sum_outputs
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
