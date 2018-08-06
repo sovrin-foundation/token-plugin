@@ -1,14 +1,11 @@
 import json
-from random import randint
-
 import pytest
 
-from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no
+from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS
-from sovtoken.test.test_public_xfer_2 import user1_token_wallet
-
+from sovtoken.constants import SIGS, INPUTS, OUTPUTS
+from sovtoken.test.helper import user1_token_wallet
 
 
 @pytest.fixture

@@ -24,8 +24,11 @@ class FeeData:
         self.reqId = VALID_REQID
         self.identifier = VALID_IDENTIFIER
         self.signatures = SIGNATURES
-
     pass
+
+    @property
+    def digest(self):
+        return "c15db202e391a35fbf5eb7203bba015fa5142f49dda87041ecf25271384e70d7"
 
 
 # ------------------------------------------------------------------------------------
@@ -152,8 +155,8 @@ def test_verify_signature_success():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "fees", [ [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
-                          [ '3xekKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB'] ])
+    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 1]], [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 9]],
+                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
 
     fees_authenticator.verify_signature(msg)
 

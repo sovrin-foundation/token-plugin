@@ -13,42 +13,9 @@ from sovtoken.test.helper import send_xfer, send_public_mint, \
 from sovtoken.test.conftest import seller_gets, total_mint
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_replies, sdk_check_reply
-
-
-@pytest.fixture(scope="module")
-def user1_token_wallet():
-    return TokenWallet('user1')
-
-
-@pytest.fixture(scope="module")
-def user2_token_wallet():
-    return TokenWallet('user2')
-
-
-@pytest.fixture(scope="module")
-def user3_token_wallet():
-    return TokenWallet('user3')
-
-
-@pytest.fixture(scope="module")
-def user1_address(user1_token_wallet):
-    seed = 'user1000000000000000000000000000'.encode()
-    user1_token_wallet.add_new_address(seed=seed)
-    return next(iter(user1_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user2_address(user2_token_wallet):
-    seed = 'user2000000000000000000000000000'.encode()
-    user2_token_wallet.add_new_address(seed=seed)
-    return next(iter(user2_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user3_address(user3_token_wallet):
-    seed = 'user3000000000000000000000000000'.encode()
-    user3_token_wallet.add_new_address(seed=seed)
-    return next(iter(user3_token_wallet.addresses.keys()))
+from sovtoken.test.helper import \
+    user1_address, user1_token_wallet, user2_address, user2_token_wallet, \
+    user3_address, user3_token_wallet
 
 
 @pytest.fixture(scope='module')     # noqa
@@ -67,7 +34,6 @@ def valid_xfer_txn_done(public_minting, looper,
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
     seller_gets = seller_remaining
     return res
-
 
 def test_seller_xfer_invalid_outputs(public_minting, looper, # noqa
                                      sdk_pool_handle, seller_token_wallet,
@@ -265,7 +231,7 @@ def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wal
     assert len(res3[OUTPUTS]) == 0
 
 
-# We can't handle multiple addresses at the moment because it requires a more 
+# We can't handle multiple addresses at the moment because it requires a more
 # complicated state proof. So this test has been changed to show that multiple
 # addresses are not accepted.
 def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_pool_handle, seller_address, SF_address):
@@ -302,7 +268,7 @@ def test_xfer_with_multiple_inputs(looper,  # noqa
             addresses.append(address.address)
 
         return addresses
-    
+
     def update_wallet_utxos(wallet, address):
         res = send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle)
         update_token_wallet_with_result(seller_token_wallet, res)
@@ -361,4 +327,3 @@ def test_xfer_with_multiple_inputs(looper,  # noqa
     xfer_tokens(seller_token_wallet, inputs, outputs)
 
     assert seller_token_wallet.get_total_address_amount(first_address) == amount
-
