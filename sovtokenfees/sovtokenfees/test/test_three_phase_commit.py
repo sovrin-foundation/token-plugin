@@ -74,10 +74,16 @@ class TestReceivedPrePrepare(BadHashes):
 class TestHasPluginFields:
 
     def test_no_plugin_fields(self, three_phase_handler, pp_valid):
+        """
+        Removes the plugin fields from three_phase_handler, then checks to see that it is removed
+        """
         pp_no_plugin_fields = PP.remove_field(pp_valid, f.PLUGIN_FIELDS.nm)
         assert not three_phase_handler._has_plugin_fields(pp_no_plugin_fields)
 
     def test_has_plugin_fields(self, three_phase_handler, pp_valid):
+        """
+        Ensures that the three_phase_handler has the plugin fields properly added
+        """
         assert three_phase_handler._has_plugin_fields(pp_valid)
 
 
