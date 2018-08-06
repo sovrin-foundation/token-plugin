@@ -10,11 +10,12 @@ from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
-from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
+from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
+    get_req_id, append_txn_metadata
 # TODO remove that once https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
-from plenum.common.types import f
+from plenum.common.types import f, OPERATION
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
 from sovtokenfees.fee_req_handler import FeeReqHandler
@@ -104,18 +105,20 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no sovtokenfees
                 fees = self.get_txn_fees(request)
+                sigs = dict([(i[0], s) for i, s in zip(inputs, signatures)])
                 txn = {
-                    INPUTS: inputs,
-                    OUTPUTS: outputs,
-                    REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
-                    FEES: fees,
-                    TXN_SIGNATURE: {},
-                    TXN_METADATA: {}
+                    OPERATION: {
+                        INPUTS: inputs,
+                        OUTPUTS: outputs,
+                        REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
+                        FEES: fees,
+                    },
+                    f.SIGS.nm: sigs,
+                    f.REQ_ID.nm: get_req_id(txn),
+                    f.PROTOCOL_VERSION.nm: 2,
                 }
-
+                txn = reqToTxn(txn)
                 self.ledger.append_txns_metadata([txn], txn_time=cons_time)
-                sigs = [(i[0], s) for i, s in zip(inputs, signatures)]
-                add_sigs_to_txn(txn, sigs)
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
                 self.updateState(txns)
                 self.fee_txns_in_current_batch += 1

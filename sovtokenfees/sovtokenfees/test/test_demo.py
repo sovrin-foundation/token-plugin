@@ -107,7 +107,7 @@ step5_info = """
 def create_and_send_nym_request(methods, client_wallet, client_address):
     nym_request = methods.create_nym_request(client_wallet, client_address)
     nym_result = methods.send_nym_request(nym_request)['result']
-    [reply_address, reply_tokens] = nym_result[FEES]['outputs'][0]
+    [reply_address, reply_tokens] = nym_result[FEES]['txn']['data']['outputs'][0]
     assert reply_address == client_address.address
     assert reply_tokens == MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
     update_token_wallet_with_result(client_wallet, nym_result)

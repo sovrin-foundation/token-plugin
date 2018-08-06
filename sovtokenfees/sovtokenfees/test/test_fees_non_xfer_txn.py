@@ -173,15 +173,15 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)
         assert len(token_ledger.uncommittedTxns) == 0
         fee_txn = token_ledger.getBySeqNo(token_ledger.size)
-        assert fee_txn[INPUTS] == fees_paid[FEES][INPUTS]
-        assert fee_txn[OUTPUTS] == fees_paid[FEES][OUTPUTS]
-        assert fee_txn[REF] == '{}:{}'.format(DOMAIN_LEDGER_ID,
+        assert fee_txn['txn']['data'][INPUTS] == fees_paid[FEES]['txn']['data'][INPUTS]
+        assert fee_txn['txn']['data'][OUTPUTS] == fees_paid[FEES]['txn']['data'][OUTPUTS]
+        assert fee_txn['txn']['data'][REF] == '{}:{}'.format(DOMAIN_LEDGER_ID,
                                               get_seq_no(fees_paid))
     res = send_get_utxo(looper, user1_address, sdk_wallet_client,
                         sdk_pool_handle)
     assert user1_address in res[OUTPUTS][0]
     assert get_seq_no(fee_txn) in res[OUTPUTS][0]
-    assert fees_paid[FEES][OUTPUTS][0][-1] in res[OUTPUTS][0]
+    assert fee_txn['txn']['data'][OUTPUTS][0] in res[OUTPUTS][0]
 
 
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
@@ -191,9 +191,10 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     """
     fees_req = fees_paid
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    paying_utxo = fees_req[FEES][INPUTS][0]
+    paying_utxo = fees_req[FEES]['txn']['data'][INPUTS][0]
+    print(fees_req)
     fees = user1_token_wallet.get_fees([paying_utxo, ],
-                                       fees_req[FEES][OUTPUTS], req.digest)
+                                       fees_req[FEES]['txn']['data'][OUTPUTS], req.digest)
     req.__setattr__(f.FEES.nm, fees)
     with pytest.raises(RequestRejectedException):
         sdk_send_and_check([json.dumps(req.__dict__)], looper, None,
