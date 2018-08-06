@@ -247,83 +247,61 @@ def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_p
         # assert not address_in_outputs(non_existent_address)
 
 
-def test_xfer_with_multiple_inputs(looper,  # noqa
-                                   sdk_pool_handle,
-                                   sdk_wallet_client,
-                                   seller_token_wallet,
-                                   trustee_wallets):
+def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     """
     3 inputs are used to transfer tokens to a single output
     """
 
     # =============
-    # Declaration of helper functions.
-    # =============
-
-    def create_addresses_wallet(wallet, num):
-        addresses = []
-        for _ in range(num):
-            address = Address()
-            wallet.add_new_address(address=address)
-            addresses.append(address.address)
-
-        return addresses
-
-    def update_wallet_utxos(wallet, address):
-        res = send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle)
-        update_token_wallet_with_result(seller_token_wallet, res)
-
-    def xfer_tokens(wallet, inputs, outputs):
-        inputs = [
-            [wallet, address, seq_no]
-            for [address, seq_no] in inputs
-        ]
-        res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
-        update_token_wallet_with_result(wallet, res)
-
-    def addresses_utxos(wallet, address):
-        return wallet.addresses[address].all_utxos
-
-    def mint_tokens(outputs):
-        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
-
-    # =============
     # Mint tokens to sender's address
     # =============
 
-    first_address = create_addresses_wallet(seller_token_wallet, 1)[0]
-    outputs = [[first_address, 50]]
-    mint_tokens(outputs)
-    update_wallet_utxos(seller_token_wallet, first_address)
-    (seq_no, amount) = addresses_utxos(seller_token_wallet, first_address)[0]
+    amount = 50
+    first_address = helpers.wallet.add_new_addresses(seller_token_wallet, 1)[0]
+    outputs = [[first_address, amount]]
+    mint_result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(mint_result)
 
     # =============
     # Transfer tokens to 3 different addresses
     # =============
 
     # Add 3 new addresses
-    new_addresses = create_addresses_wallet(seller_token_wallet, 3)
+    new_addresses = helpers.wallet.add_new_addresses(seller_token_wallet, 3)
 
     # Distribute an existing UTXO among 3 address
     inputs = [[first_address, seq_no]]
     outputs = [[address, amount // 3] for address in new_addresses]
     outputs[-1][1] += amount % 3
-    xfer_tokens(seller_token_wallet, inputs, outputs)
+    xfer_result = helpers.general.do_transfer(inputs, outputs)
 
     # =============
     # Assert tokens are in new addresses
     # =============
 
-    assert 16 == addresses_utxos(seller_token_wallet, new_addresses[0])[0][1]
-    assert 16 == addresses_utxos(seller_token_wallet, new_addresses[1])[0][1]
-    assert 18 == addresses_utxos(seller_token_wallet, new_addresses[2])[0][1]
+    xfer_seq_no = get_seq_no(xfer_result)
+    new_address_utxos = helpers.general.get_utxo_addresses(new_addresses)
+
+    assert new_address_utxos[0] == [[new_addresses[0], xfer_seq_no, 16]]
+    assert new_address_utxos[1] == [[new_addresses[1], xfer_seq_no, 16]]
+    assert new_address_utxos[2] == [[new_addresses[2], xfer_seq_no, 18]]
 
     # =============
     # Transfer tokens from 3 addresses back to a single address
     # =============
 
-    inputs = [[address, seq_no + 1] for address in new_addresses]
+    inputs = [[address, xfer_seq_no] for address in new_addresses]
     outputs = [[first_address, amount]]
-    xfer_tokens(seller_token_wallet, inputs, outputs)
+    xfer_result = helpers.general.do_transfer(inputs, outputs)
 
-    assert seller_token_wallet.get_total_address_amount(first_address) == amount
+    [
+        first_address_utxos,
+        new_address1_utxos,
+        new_address2_utxos,
+        new_address3_utxos,
+    ] = helpers.general.get_utxo_addresses([first_address] + new_addresses)
+
+    assert first_address_utxos == [[first_address, xfer_seq_no + 1, amount]]
+    assert new_address1_utxos == []
+    assert new_address2_utxos == []
+    assert new_address3_utxos == []
