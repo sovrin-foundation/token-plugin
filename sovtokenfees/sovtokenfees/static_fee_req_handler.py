@@ -23,7 +23,7 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, MINT_PUBLIC
 from sovtokenfees.transactions import FeesTransactions
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.types import Output
+from sovtoken.sovtoken_types import Output
 from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 from state.trie.pruning_trie import rlp_decode
 

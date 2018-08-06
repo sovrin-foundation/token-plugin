@@ -6,7 +6,7 @@ from collections import defaultdict
 import pytest
 
 from plenum.common.util import randomString
-from sovtoken.types import Output
+from sovtoken.sovtoken_types import Output
 from sovtoken.utxo_cache import UTXOCache
 from storage.test.conftest import parametrised_storage
 
