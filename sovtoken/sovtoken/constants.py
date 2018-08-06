@@ -5,6 +5,7 @@ OUTPUTS = 'outputs'
 EXTRA = 'extra'
 ADDRESS = 'address'
 SIGS = 'signatures'
+RESULT = 'result'
 
 TOKEN_LEDGER_ID = 1001
 

@@ -93,25 +93,6 @@ def send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle):
     return reply['result']
 
 
-def inputs_outputs(*input_token_wallets, output_addr, change_addr=None,
-                   change_amount=None):
-    inputs = []
-    out_amount = 0
-    for tw in input_token_wallets:
-        addr, vals = next(iter(tw.get_all_wallet_utxos().items()))
-        inputs.append([tw, addr.address, vals[0][0]])
-        out_amount += vals[0][1]
-
-    if change_amount is not None:
-        assert change_amount <= out_amount
-        out_amount -= change_amount
-
-    outputs = [[output_addr, out_amount], ]
-    if change_addr:
-        outputs.append([change_addr, change_amount])
-    return inputs, outputs
-
-
 def decode_proof(proof):
     proof = proof_nodes_serializer.deserialize(proof)
     return Trie.deserialize_proof(proof)
