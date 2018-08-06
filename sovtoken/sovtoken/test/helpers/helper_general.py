@@ -46,6 +46,10 @@ class HelperGeneral():
         request = self._request.transfer(inputs, outputs)
         return self._send_get_first_result(request)
 
+    def do_get_utxo(self, address):
+        request = self._request.get_utxo(address)
+        return self._send_get_first_result(request)
+
     # =============
     # Private Methods
     # =============

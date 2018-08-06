@@ -206,47 +206,6 @@ def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
         check_no_output_val(user1_address, 0)
 
 
-
-def test_query_utxo(looper, sdk_pool_handle, sdk_wallet_client, seller_token_wallet,  # noqa
-                    seller_address, valid_xfer_txn_done, user1_address):
-    """
-    The ledger is queried for all UTXOs of a given address.
-    """
-    res1 = send_get_utxo(looper, seller_address, sdk_wallet_client,
-                         sdk_pool_handle)
-    assert res1[OUTPUTS]
-
-    res2 = send_get_utxo(looper, user1_address, sdk_wallet_client,
-                         sdk_pool_handle)
-
-    assert res2[OUTPUTS]
-
-    # An query for UTXOs for empty address fails
-    with pytest.raises(RequestNackedException):
-        send_get_utxo(looper, '', sdk_wallet_client, sdk_pool_handle)
-
-    # An query for UTXOs for a new address returns 0 outputs
-    address = Address()
-    res3 = send_get_utxo(looper, address.address, sdk_wallet_client, sdk_pool_handle)
-    assert len(res3[OUTPUTS]) == 0
-
-
-# We can't handle multiple addresses at the moment because it requires a more
-# complicated state proof. So this test has been changed to show that multiple
-# addresses are not accepted.
-def test_get_multiple_addresses(public_minting, looper, sdk_wallet_client, sdk_pool_handle, seller_address, SF_address):
-    non_existent_address = Address().address
-    addresses_to_check = [seller_address, SF_address, non_existent_address]
-    with pytest.raises(RequestNackedException):
-        resp = send_get_utxo(looper, addresses_to_check, sdk_wallet_client, sdk_pool_handle)
-        # def address_in_outputs(address):
-        #     return any(filter(lambda utxo: utxo[0] == a, resp[OUTPUTS]))
-
-        # assert address_in_outputs(seller_address)
-        # assert address_in_outputs(SF_address)
-        # assert not address_in_outputs(non_existent_address)
-
-
 def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     """
     3 inputs are used to transfer tokens to a single output
