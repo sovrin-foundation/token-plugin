@@ -29,24 +29,6 @@ def initial_mint(helpers, addresses):
     return helpers.general.do_mint(outputs)
 
 
-@pytest.fixture(scope='module')     # noqa
-def valid_xfer_txn_done(public_minting, looper,
-                        nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
-                        seller_token_wallet, seller_address, user1_address):
-    global seller_gets
-    seq_no = get_seq_no(public_minting)
-    user1_gets = 10
-    seller_remaining = seller_gets - user1_gets
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
-    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
-    update_token_wallet_with_result(seller_token_wallet, res)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address, seller_remaining)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, user1_address, user1_gets)
-    seller_gets = seller_remaining
-    return res
-
-
 def test_seller_xfer_outputs_repeat_address(
     helpers,
     initial_mint,
@@ -145,13 +127,6 @@ def test_seller_xfer_invalid_inputs(
 
     with pytest.raises(RequestNackedException):
         helpers.general.do_transfer(inputs, outputs)
-
-
-def test_seller_xfer_valid(valid_xfer_txn_done):
-    """
-    A valid transfer txn, done successfully
-    """
-    pass
 
 
 def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
