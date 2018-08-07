@@ -149,23 +149,21 @@ class TokenWallet(Wallet):
 
     def get_min_utxo_ge(self, amount, address=None) -> Optional[Tuple]:
         # Get minimum utxo greater than or equal to `amount`
-        if address is not None:
-            all_utxos = self.get_all_address_utxos(address=address)
+        def get_address_utxos(address):
+            for (seq_no, amount) in address.all_utxos:
+                yield (address.address, seq_no, amount)
+
+        if address:
+            all_utxos = get_address_utxos(self.addresses[address])
         else:
-            all_utxos = self.get_all_wallet_utxos()
-        minimum = None
+            all_utxos = [
+                utxo
+                for address in self.addresses.values()
+                for utxo in get_address_utxos(address)
+            ]
 
-        def _greater_than(tpl):
-            return tpl[1] if tpl[1] >= amount else math.inf
-
-        if all_utxos:
-            for addr, lst in all_utxos.items():
-                if not lst:
-                    continue
-                min_val = min(lst, key=_greater_than)
-                minimum = (addr.address, *min_val) if (
-                    minimum is None or min_val[-1] < minimum[-1]) else minimum
-        return minimum
+        filtered = filter(lambda utxo: utxo[2] >= amount, all_utxos)
+        return min(filtered, key=lambda utxo: utxo[2], default=None)
 
     def get_val(self, address, seq_no):
         # Get value of unspent output (address and seq_no), can raise KeyError
