@@ -263,11 +263,6 @@ def test_token_wallet_handle_xfer_invalid_address(test_wallet, address0):
         assert address0.outputs[0][seq_no] != 10000 and address0.outputs[1][1] != 50000
 
 
-def test_token_wallet_get_min_utxo_ge_success(test_wallet, address2):
-    utxos = test_wallet.get_min_utxo_ge(10000)
-    assert utxos == (address2.address, 3, 3001)
-
-
 # TODO: This throws a key error when receiving an object of an Address.
 # TODO: Needs to be refactored to accept address in string or object format
 def test_token_wallet_get_val_success(test_wallet, address0):
