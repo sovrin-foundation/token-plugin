@@ -207,7 +207,7 @@ def test_verify_signature_incorrect_signatures():
 # ------------------------------------------------------------------------------------
 # fees sections are populated with correct data
 # however the signature is not signed for all of the values
-def test_verify_signature_incorrect_signatures_2():
+def test_verify_signature_mismatch_of_signatures():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
 
