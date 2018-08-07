@@ -118,7 +118,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                     f.PROTOCOL_VERSION.nm: 2,
                 }
                 txn = reqToTxn(txn)
-                self.ledger.append_txns_metadata([txn], txn_time=cons_time)
+                self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
                 self.updateState(txns)
                 self.fee_txns_in_current_batch += 1
