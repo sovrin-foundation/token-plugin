@@ -227,7 +227,8 @@ def test_verify_signature_mismatch_of_signatures():
 
 
 # ------------------------------------------------------------------------------------
-# the signature and fees sections are populated with correct data
+# the signature and fees sections are populated with correct data but the sequence
+# number is wrong.  
 def test_verify_signature_sequence_order_wrong():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
