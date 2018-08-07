@@ -4,6 +4,8 @@
 import pytest
 from base58 import b58decode
 
+
+from plenum.common.txn_util import get_seq_no
 from plenum.common.constants import STEWARD
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
@@ -12,6 +14,12 @@ from plenum.test.conftest import get_data_for_role
 from sovtoken.test.helper import send_public_mint, \
     do_public_minting, check_output_val_on_all_nodes
 from sovtoken.test.conftest import build_wallets_from_data
+from sovtoken.test.helper import user1_token_wallet
+
+
+@pytest.fixture
+def addresses(helpers, user1_token_wallet):
+    return helpers.wallet.add_new_addresses(user1_token_wallet, 5)
 
 
 def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, # noqa
@@ -73,7 +81,6 @@ def test_less_than_min_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
     with pytest.raises(RequestRejectedException):
         send_public_mint(looper, trustee_wallets[:3], outputs, sdk_pool_handle)
 
-
 def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
                                trustee_wallets, SF_address, seller_address,
                                sdk_pool_handle):
@@ -81,8 +88,8 @@ def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
     Trustees should mint new tokens increasing the balance of `SF_MASTER`
     and seller_address
     """
-    total_mint = 100
-    sf_master_gets = 60
+    total_mint = 1000000000000000000
+    sf_master_gets = 600000000000000000
     do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
                       sf_master_gets, SF_address, seller_address)
 
@@ -93,3 +100,71 @@ def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
                                   sf_master_gets)
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
                                   total_mint - sf_master_gets)
+
+
+
+
+def test_two_mints_have_different_sequence_numbers(addresses, helpers):
+
+    first_mint_outputs = [[address, 100] for address in addresses]
+    first_mint_request = helpers.request.mint(first_mint_outputs)
+    first_mint_responses = helpers.sdk.send_and_check_request_objects([first_mint_request])
+    first_mint_result = helpers.sdk.get_first_result(first_mint_responses)
+    first_mint_seq_no = get_seq_no(first_mint_result)
+
+    second_mint_outputs = [[address, 100] for address in addresses]
+    second_mint_request = helpers.request.mint(second_mint_outputs)
+    second_mint_responses = helpers.sdk.send_and_check_request_objects([second_mint_request])
+    second_mint_result = helpers.sdk.get_first_result(second_mint_responses)
+    second_mint_seq_no = get_seq_no(second_mint_result)
+
+    assert second_mint_seq_no != first_mint_seq_no
+
+
+def test_two_mints_to_same_address(addresses, helpers):
+
+
+    [address1, address2, address3, address4, address5] = addresses
+
+    first_mint_outputs = [[address, 100] for address in addresses]
+    first_mint_request = helpers.request.mint(first_mint_outputs)
+    first_mint_responses = helpers.sdk.send_and_check_request_objects([first_mint_request])
+    first_mint_result = helpers.sdk.get_first_result(first_mint_responses)
+    first_mint_seq_no = get_seq_no(first_mint_result)
+
+    second_mint_outputs = [[address, 200] for address in addresses]
+    second_mint_request = helpers.request.mint(second_mint_outputs)
+    second_mint_responses = helpers.sdk.send_and_check_request_objects([second_mint_request])
+    second_mint_result = helpers.sdk.get_first_result(second_mint_responses)
+    second_mint_seq_no = get_seq_no(second_mint_result)
+
+    [
+        address1_utxos,
+        address2_utxos,
+        address3_utxos,
+        address4_utxos,
+        address5_utxos
+    ] = helpers.general.get_utxo_addresses(addresses)
+
+    assert address1_utxos == [
+        [address1, first_mint_seq_no, 100],
+        [address1, second_mint_seq_no, 200],
+    ]
+    assert address2_utxos == [
+        [address2, first_mint_seq_no, 100],
+        [address2, second_mint_seq_no, 200],
+    ]
+    assert address3_utxos == [
+        [address3, first_mint_seq_no, 100],
+        [address3, second_mint_seq_no, 200],
+    ]
+    assert address4_utxos == [
+        [address4, first_mint_seq_no, 100],
+        [address4, second_mint_seq_no, 200],
+    ]
+    assert address5_utxos == [
+        [address5, first_mint_seq_no, 100],
+        [address5, second_mint_seq_no, 200],
+    ]
+
+
