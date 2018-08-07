@@ -181,7 +181,7 @@ def test_valid_txn_with_fees(fees_paid, nodeSetWithIntegratedTokenPlugin, looper
                         sdk_pool_handle)
     assert user1_address in res[OUTPUTS][0]
     assert get_seq_no(fee_txn) in res[OUTPUTS][0]
-    assert fee_txn['txn']['data'][OUTPUTS][0] in res[OUTPUTS][0]
+    assert fees_paid[FEES]['txn']['data'][OUTPUTS][0][-1] in res[OUTPUTS][0]
 
 
 def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
@@ -192,7 +192,6 @@ def test_fees_utxo_reuse(fees_paid, user1_token_wallet, sdk_wallet_steward,
     fees_req = fees_paid
     req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
     paying_utxo = fees_req[FEES]['txn']['data'][INPUTS][0]
-    print(fees_req)
     fees = user1_token_wallet.get_fees([paying_utxo, ],
                                        fees_req[FEES]['txn']['data'][OUTPUTS], req.digest)
     req.__setattr__(f.FEES.nm, fees)

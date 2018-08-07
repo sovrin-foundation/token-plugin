@@ -134,10 +134,9 @@ step7_info = """
 """
 def check_fee_request_on_ledger(methods, client_address):
     transactions = methods.get_last_ledger_transaction_on_all_nodes(TOKEN_LEDGER_ID)
-    print(transactions)
     for fees in transactions:
-        assert fees[OUTPUTS] == [[client_address.address, MINT_TOKEN_AMOUNT - TXN_FEES[NYM]]]
-        assert fees[FEES] == TXN_FEES[NYM]
+        assert fees['txn']['data'][OUTPUTS] == [[client_address.address, MINT_TOKEN_AMOUNT - TXN_FEES[NYM]]]
+        assert fees['txn']['data'][FEES] == TXN_FEES[NYM]
         assert fees[TXN_METADATA][f.SEQ_NO.nm] == 2
 
     demo_logger.log_header(step7_info)

@@ -278,23 +278,22 @@ class StaticFeesReqHandler(FeeReqHandler):
         return fees
 
     def _update_state_with_single_txn(self, txn, is_committed=False):
-        try:
-            typ = get_type(txn)
-            if typ == SET_FEES:
-                payload = get_payload_data(txn)
-                existing_fees = self._get_fees(is_committed=is_committed)
-                existing_fees.update(payload[FEES])
-                val = self.state_serializer.serialize(existing_fees)
-                self.state.set(self.fees_state_key, val)
-                self.fees = existing_fees
-        except KeyError:
-            for addr, seq_no in txn[INPUTS]:
+        typ = get_type(txn)
+        if typ == SET_FEES:
+            payload = get_payload_data(txn)
+            existing_fees = self._get_fees(is_committed=is_committed)
+            existing_fees.update(payload[FEES])
+            val = self.state_serializer.serialize(existing_fees)
+            self.state.set(self.fees_state_key, val)
+            self.fees = existing_fees
+        elif not typ: # typ is None or null
+            for addr, seq_no in txn['txn']['data'][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
                                             address=addr, seq_no=seq_no,
                                             is_committed=is_committed)
             seq_no = get_seq_no(txn)
-            for addr, amount in txn[OUTPUTS]:
+            for addr, amount in txn['txn']['data'][OUTPUTS]:
                 TokenReqHandler.add_new_output(state=self.token_state,
                                                utxo_cache=self.utxo_cache,
                                                output=Output(
@@ -302,3 +301,4 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                    seq_no,
                                                    amount),
                                                is_committed=is_committed)
+
