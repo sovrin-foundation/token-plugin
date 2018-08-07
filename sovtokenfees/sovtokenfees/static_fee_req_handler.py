@@ -105,7 +105,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no sovtokenfees
                 fees = self.get_txn_fees(request)
-                sigs = dict([(i[0], s) for i, s in zip(inputs, signatures)])
+                sigs = {i[0]:s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         INPUTS: inputs,
