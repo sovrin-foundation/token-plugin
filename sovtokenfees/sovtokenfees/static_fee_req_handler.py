@@ -1,6 +1,5 @@
 from common.serializers.serialization import proof_nodes_serializer, \
-    state_roots_serializer  # , txn_root_serializer
-# TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
+    state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
 txn_root_serializer = Base58Serializer()
 
@@ -11,8 +10,6 @@ from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
-# TODO remove that once https://github.com/hyperledger/indy-plenum/pull/767 is merged
-# (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
