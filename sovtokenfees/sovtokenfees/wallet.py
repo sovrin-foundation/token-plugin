@@ -50,7 +50,7 @@ class FeeSupportedWallet(TokenWallet):
     def on_reply_from_network(self, observer_name, req_id, frm, result,
                               num_replies):
         if FEES in result:
-            self._update_inputs(result[FEES][INPUTS])
-            self._update_outputs(result[FEES][OUTPUTS], get_seq_no(result[FEES]))
+            self._update_inputs(result[FEES]['txn']['data'][INPUTS])
+            self._update_outputs(result[FEES]['txn']['data'][OUTPUTS], get_seq_no(result[FEES]))
         super().on_reply_from_network(observer_name, req_id, frm, result,
                                       num_replies)
