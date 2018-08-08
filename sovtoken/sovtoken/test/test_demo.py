@@ -59,6 +59,7 @@ def test_addresses_on_nodes(nodeSetWithIntegratedTokenPlugin):
 
 
 def test_sender_wallet():
+    print(str(wallets))
     assert_wallet_amount(wallets["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES, SELLER_RECEIVES)
 
 

@@ -1,7 +1,9 @@
 from typing import List
 
 from plenum.common.util import updateNamedTuple
-from sovtoken.types import Output
+
+from sovtoken.exceptions import UTXOAlreadySpentError, UTXONotFound
+from sovtoken.sovtoken_types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
 
@@ -47,9 +49,14 @@ class UTXOCache(OptimisticKVStore):
     # incomplete output object (with seq_no set to None)
     def get_output(self, output: Output, is_committed=False) -> Output:
         type1_key = self._create_type1_key(output)
-        val = self.get(type1_key, is_committed)
+
+        try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
+            val = self.get(type1_key, is_committed)
+        except KeyError:
+            raise UTXONotFound("UTXO key was not found")
+
         if not val:
-            raise KeyError(type1_key)
+            raise UTXOAlreadySpentError("UTXO value is None")
         return Output(output.address, output.seq_no, int(val))
 
     # Spends the provided output by fetching it from the key value store
@@ -63,6 +70,8 @@ class UTXOCache(OptimisticKVStore):
         seq_nos = self._parse_type2_val(seq_nos)
         seq_no_str = str(output.seq_no)
         if seq_no_str not in seq_nos:
+            #  TODO We need a better error
+            #  Devin: I think this error is that seq
             raise KeyError('{} not in {}'.format(seq_no_str, seq_nos))
         seq_nos.remove(seq_no_str)
         batch = [(self._store.WRITE_OP, type1_key, '')]
@@ -93,6 +102,12 @@ class UTXOCache(OptimisticKVStore):
             return [int(seq_no) for seq_no in self._parse_type2_val(seq_nos)]
         except KeyError:
             return []
+
+    def sum_inputs(self, inputs: list, is_committed=False):
+        output_val = 0
+        for addr, seq_no in inputs:
+            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+        return output_val
 
     # Creates a type1 key with this format: '0:address:sequence_number'
     # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
