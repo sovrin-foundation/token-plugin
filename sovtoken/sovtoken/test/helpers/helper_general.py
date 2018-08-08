@@ -7,6 +7,9 @@ class HelperGeneral():
 
     # Methods
     - get_utxo_addresses
+    - do_mint
+    - do_transfer
+    - do_get_utxo
     """
 
     def __init__(self, helper_sdk, helper_wallet, helper_request):
@@ -39,14 +42,17 @@ class HelperGeneral():
         return utxos_with_address_object
 
     def do_mint(self, outputs):
+        """ Builds and sends a mint request """
         request = self._request.mint(outputs)
         return self._send_get_first_result(request)
 
     def do_transfer(self, inputs, outputs):
+        """ Builds and sends a transfer request """
         request = self._request.transfer(inputs, outputs)
         return self._send_get_first_result(request)
 
     def do_get_utxo(self, address):
+        """ Builds and sends a get_utxo request """
         request = self._request.get_utxo(address)
         return self._send_get_first_result(request)
 

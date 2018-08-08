@@ -8,7 +8,6 @@ from common.serializers.serialization import state_roots_serializer
 from plenum.common.messages.node_messages import PrePrepare, Prepare, Ordered
 from plenum.common.util import get_utc_epoch
 from sovtokenfees.three_phase_commit_handling import ThreePhaseCommitHandler
-from sovtokenfees.test.test_set_get_fees import fees_set
 
 import pytest
 

@@ -12,8 +12,6 @@ TXN_FEES = {
     XFER_PUBLIC: 8
 }
 
-from sovtokenfees.test.test_set_get_fees import fees_set
-
 
 def test_txn_with_no_fees_specified(tokens_distributed, looper, sdk_wallet_steward,  # noqa
                                     sdk_pool_handle, fees_set,
