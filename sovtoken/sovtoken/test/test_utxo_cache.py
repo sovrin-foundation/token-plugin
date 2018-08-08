@@ -53,12 +53,11 @@ def test_spend_unspent_output(utxo_cache):
 def test_spend_unadded_invalid_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
-    for i in range(num_outputs):
-        new_out = Output(outputs[i].address, outputs[i].seq_no, None)
+    for output in outputs:
         with pytest.raises(KeyError):
-            utxo_cache.get_output(new_out, True)
+            utxo_cache.get_output(output, True)
         with pytest.raises(KeyError):
-            utxo_cache.spend_output(new_out, True)
+            utxo_cache.spend_output(output, True)
 
 
 def test_get_all_unspent_outputs(utxo_cache):
