@@ -1,4 +1,4 @@
-from sovtoken.wallet import TokenWallet, Address
+from sovtoken.test.wallet import TokenWallet, Address
 from .demo_logger import DemoLogger
 
 demo_logger = DemoLogger()

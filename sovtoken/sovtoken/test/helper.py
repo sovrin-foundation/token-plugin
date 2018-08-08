@@ -10,7 +10,7 @@ from sovtoken.util import address_to_verkey
 from plenum.test.helper import sdk_send_signed_requests, \
     sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
 from state.trie.pruning_trie import Trie
-from sovtoken.wallet import TokenWallet
+from sovtoken.test.wallet import TokenWallet
 
 
 
