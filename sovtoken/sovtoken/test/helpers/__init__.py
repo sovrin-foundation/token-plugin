@@ -9,17 +9,25 @@ from .helper_wallet import HelperWallet
 
 def form_helpers(
     txn_pool_node_set,
-    looper, pool_handle,
+    looper,
+    pool_handle,
     trustees,
-    sdk_wallet_client
+    sdk_wallet_client,
+    sdk_wallet_steward
 ):
-    (_client_wallet_handle, client_did) = sdk_wallet_client
-
-    helper_sdk = HelperSdk(looper, pool_handle, txn_pool_node_set)
+    helper_sdk = HelperSdk(
+        looper,
+        pool_handle,
+        txn_pool_node_set,
+        sdk_wallet_steward
+    )
     helper_wallet = HelperWallet(trustees)
     helper_requests = HelperRequest(
         helper_wallet,
-        client_did
+        helper_sdk,
+        looper,
+        sdk_wallet_client,
+        sdk_wallet_steward
     )
     helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests)
 

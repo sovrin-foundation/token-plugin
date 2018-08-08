@@ -22,12 +22,14 @@ class HelperSdk():
     - sdk_get_and_check_replies
     - sdk_send_and_check
     - sdk_send_signed_requests
+    - sdk_json_to_request_object
     """
 
-    def __init__(self, looper, pool_handle, node_pool):
+    def __init__(self, looper, pool_handle, node_pool, wallet_steward):
         self._looper = looper
         self._pool_handle = pool_handle
         self._node_pool = node_pool
+        self._wallet_steward = wallet_steward
 
     def get_first_result(self, request_response_list):
         """ Gets the result field from the first response. """
@@ -80,4 +82,14 @@ class HelperSdk():
             self._node_pool,
             self._pool_handle,
             timeout
+        )
+
+    def sdk_json_to_request_object(self, obj):
+        return plenum_helper.sdk_json_to_request_object(obj)
+
+    def sdk_sign_request_objects(self, requests):
+        return plenum_helper.sdk_sign_request_objects(
+            self._looper,
+            self._wallet_steward,
+            requests
         )
