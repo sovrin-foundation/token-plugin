@@ -14,6 +14,7 @@ from sovtoken.test.conftest import trustee_wallets, SF_address, \
 from sovtoken.test.helper import user1_address, \
     user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
     user3_token_wallet
+from sovtokenfees.test.helper import set_fees
 from sovtokenfees.test.helpers import form_helpers
 
 
@@ -42,6 +43,12 @@ def fees(request):
     }
     fees = getValueFromModule(request, "TXN_FEES", default_fees)
     return fees
+
+
+@pytest.fixture(scope="module")
+def fees_set(looper, nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
+             trustee_wallets, fees):
+    return set_fees(looper, trustee_wallets, fees, sdk_pool_handle)
 
 
 # Wallet should have support to track sovtokenfees

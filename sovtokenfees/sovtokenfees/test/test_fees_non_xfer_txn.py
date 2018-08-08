@@ -9,7 +9,6 @@ from sovtoken.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS
-from sovtokenfees.test.test_set_get_fees import fees_set
 
 
 def add_fees_request_with_address(helpers, fees_set, request, address):
