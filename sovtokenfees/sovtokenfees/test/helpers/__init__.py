@@ -7,7 +7,8 @@ from sovtoken.test.helpers.helper_wallet import HelperWallet
 from .helper_request import HelperRequest
 from .helper_general import HelperGeneral
 
-
+# TODO: Have a way to setup helpers between sovtoken and sovtokenfees with less
+# repetition.
 def form_helpers(
     txn_pool_node_set,
     looper,

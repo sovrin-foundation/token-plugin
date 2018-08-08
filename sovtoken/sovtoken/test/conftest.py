@@ -119,12 +119,14 @@ def helpers(
     looper,
     sdk_pool_handle,
     trustee_wallets,
-    sdk_wallet_client
+    sdk_wallet_client,
+    sdk_wallet_steward,
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
         looper,
         sdk_pool_handle,
         trustee_wallets,
-        sdk_wallet_client
+        sdk_wallet_client,
+        sdk_wallet_steward
     )
