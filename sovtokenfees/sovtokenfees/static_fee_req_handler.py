@@ -8,7 +8,7 @@ from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
     STATE_PROOF, TXN_METADATA, TXN_SIGNATURE, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest
+    InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id, append_txn_metadata
@@ -24,8 +24,8 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, MINT_PUBLIC
 from sovtokenfees.transactions import FeesTransactions
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
+from sovtoken.sovtoken_types import Output
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -201,14 +201,20 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def _get_deducted_fees_xfer(self, request, required_fees):
         try:
-            sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
-                self.utxo_cache,
-                request.operation[INPUTS],
-                request.operation[OUTPUTS],
-                is_committed=False)
-        except KeyError as ex:
-            raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+            # sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
+            #     self.utxo_cache,
+            #     request.operation[INPUTS],
+            #     request.operation[OUTPUTS],
+            #     is_committed=False)
+
+            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
+                                                    request,
+                                                    is_committed=False)
+
+            sum_outputs = TokenReqHandler.sum_outputs(request)
         except Exception as ex:
+            if isinstance(ex, InvalidClientMessageException):
+                raise ex
             error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             required_sum_outputs = sum_outputs + required_fees
@@ -230,9 +236,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             error = 'fees not present or improperly formed'
         if not error:
             try:
-                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
-            except KeyError as ex:
-                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)#TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
+            except UTXOError as ex:
+                raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
                 # TODO: Reconsider, this forces the sender to pay the exact amount of sovtokenfees, not more, not less

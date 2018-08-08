@@ -9,36 +9,19 @@ from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientReq
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
-from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
 
+from sovtoken.test.constants import VALID_IDENTIFIER, VALID_REQID, SIGNATURES, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, \
+    VALID_ADDR_3, CONS_TIME, VALID_ADDR_7
+from sovtoken.token_req_handler import TokenReqHandler
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, InvalidFundsError, UTXOError
 
 # TEST CONSTANTS
-from sovtoken.types import Output
+from sovtoken.sovtoken_types import Output
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, SIGS, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
 
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.util import verkey_to_address
-
-VALID_ADDR_1, VALID_ADDR_2 = (None, None)
-
-(VALID_ADDR_3, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, VALID_ADDR_7) = \
-    (verkey_to_address(SimpleSigner().verkey) for _ in range(5))
-
-
-VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
-VALID_REQID = 1517423828260117
-CONS_TIME = 1518541344
-PROTOCOL_VERSION = 1
-SIGNATURES = {'B8fV7naUqLATYocqu7yZ8W':
-                  '27BVCWvThxMV9pzqz3JepMLVKww7MmreweYjh15LkwvAH4qwYAMbZWeYr6E6LcQexYAikTHo212U1NKtG8Gr2PPP',
-              'CA4bVFDU4GLbX8xZju811o':
-                  '3A1Pmkox4SzYRavTj9toJtGBr1Jy9JvTTnHz5gkS5dGnY3PhDcsKpQCBfLhYbKqFvpZKaLPGT48LZKzUVY4u78Ki',
-              'E7QRhdcnhAwA6E46k9EtZo':
-                  'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg',
-              'M9BJDuS24bqbJNvBRsoGg3':
-                  '5BzS7J7uSuUePRzLdF5BL5LPvnXxzQyB5BqMT19Hz8QjEyb41Mum71TeNvPW9pKbhnDK12Pciqw9WRHUvsfwdYT5'}
 
 
 @pytest.fixture
@@ -74,58 +57,6 @@ def token_handler_d(node):
     return node[3].ledger_to_req_handler[TOKEN_LEDGER_ID]
 
 
-def test_token_req_handler_MINT_PUBLIC_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]]},
-                      None, SIGNATURES, 1)
-    ret_val = token_handler_a._MINT_PUBLIC_validate(request)
-    assert ret_val is None
-
-
-def test_token_req_handler_MINT_PUBLIC_validate_missing_output(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._MINT_PUBLIC_validate(request)
-
-
-def test_token_req_handler_XFER_PUBLIC_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
-                                                      SIGS: ['']}, None, SIGNATURES, 1)
-    ret_val = token_handler_a._XFER_PUBLIC_validate(request)
-    assert ret_val is None
-
-def test_token_req_handler_XFER_PUBLIC_validate_missing_output(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [[VALID_ADDR_2, 1]]},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._XFER_PUBLIC_validate(request)
-
-
-def test_token_req_handler_XFER_PUBLIC_validate_missing_input(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]]},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._XFER_PUBLIC_validate(request)
-
-
-def test_token_req_handler_GET_UTXO_validate_missing_address(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._GET_UTXO_validate(request)
-
-
-def test_token_req_handler_GET_UTXO_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO,
-                                                      ADDRESS: VALID_ADDR_1},
-                      None, SIGNATURES, 1)
-    ret_val = token_handler_a._GET_UTXO_validate(request)
-    assert ret_val is None
-
 
 def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
@@ -137,7 +68,6 @@ def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_
         pytest.fail("This test failed because error is not None")
     except Exception:
         pytest.fail("This test failed outside the doStaticValidation method")
-
 
 def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
@@ -197,7 +127,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
         1
     )
     # This test should raise an issue because the inputs are not on the ledger
-    with pytest.raises(UTXOAlreadySpentError):
+    with pytest.raises(InvalidFundsError):
         token_handler_a.validate(request)
 
 
@@ -258,8 +188,8 @@ def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
                                                       INPUTS: [[VALID_ADDR_2, 3]],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
-    # This raises a KeyError because the input transaction isn't already in the UTXO_Cache
-    with pytest.raises(KeyError):
+    # This raises a UTXOError because the input transaction isn't already in the UTXO_Cache
+    with pytest.raises(UTXOError):
         token_handler_b.apply(request, CONS_TIME)
     token_handler_b.onBatchRejected()
 
@@ -430,8 +360,17 @@ def test_token_req_handler_sum_inputs_success(public_minting, token_handler_d):
     assert post_second_add_outputs == [Output(VALID_ADDR_4, 5, 150), Output(VALID_ADDR_4, 6, 100)]
 
     # Verify sum_inputs is working properly
-    inputs = [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
-    sum_inputs = token_handler_d._sum_inputs(inputs)
+    request = Request(VALID_IDENTIFIER,
+                      VALID_REQID,
+                      {
+                          TXN_TYPE: XFER_PUBLIC,
+                          OUTPUTS: None,
+                          INPUTS: [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
+                      },
+                      None,
+                      SIGNATURES,
+                      1)
+    sum_inputs = token_handler_d._sum_inputs(request)
     assert sum_inputs == 250
 
 
