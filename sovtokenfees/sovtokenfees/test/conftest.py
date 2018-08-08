@@ -8,13 +8,14 @@ from plenum.test.conftest import *
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
-
 from sovtoken.test.conftest import trustee_wallets, SF_address, \
     seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
     tokens_distributed
 from sovtoken.test.helper import user1_address, \
     user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
     user3_token_wallet
+from sovtokenfees.test.helper import set_fees
+from sovtokenfees.test.helpers import form_helpers
 
 
 @pytest.fixture(scope="module")
@@ -44,6 +45,12 @@ def fees(request):
     return fees
 
 
+@pytest.fixture(scope="module")
+def fees_set(looper, nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
+             trustee_wallets, fees):
+    return set_fees(looper, trustee_wallets, fees, sdk_pool_handle)
+
+
 # Wallet should have support to track sovtokenfees
 
 @pytest.fixture(scope="module")
@@ -64,3 +71,22 @@ def user2_token_wallet():
 @pytest.fixture(scope="module") # noqa
 def user3_token_wallet():
     return FeeSupportedWallet('user3')
+
+
+@pytest.fixture(scope="module")
+def helpers(
+    nodeSetWithIntegratedTokenPlugin,
+    looper,
+    sdk_pool_handle,
+    trustee_wallets,
+    sdk_wallet_client,
+    sdk_wallet_steward
+):
+    return form_helpers(
+        nodeSetWithIntegratedTokenPlugin,
+        looper,
+        sdk_pool_handle,
+        trustee_wallets,
+        sdk_wallet_client,
+        sdk_wallet_steward
+    )
