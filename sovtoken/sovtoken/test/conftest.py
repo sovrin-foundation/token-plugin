@@ -6,7 +6,7 @@ from plenum.common.txn_util import get_seq_no
 from sovtoken.main import integrate_plugin_in_node
 from sovtoken.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
-from sovtoken.wallet import TokenWallet
+from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import *
 from sovtoken.test.helper import send_get_utxo, send_xfer, \
     do_public_minting

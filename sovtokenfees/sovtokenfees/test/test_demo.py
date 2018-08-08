@@ -2,10 +2,10 @@ import pytest
 from plenum.common.constants import NYM, TXN_METADATA
 from plenum.common.types import f
 from sovtokenfees.constants import FEES
-from sovtokenfees.wallet import FeeSupportedWallet
+from sovtokenfees.test.wallet import FeeSupportedWallet
 from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.wallet import Address
+from sovtoken.test.wallet import Address
 from sovtokenfees.test.demo_helper import methods
 from sovtoken.test.demo.demo_helpers import demo_logger
 

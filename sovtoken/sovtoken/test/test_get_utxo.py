@@ -3,7 +3,7 @@ import pytest
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, ADDRESS
-from sovtoken.wallet import Address
+from sovtoken.test.wallet import Address
 
 
 def test_empty_address(helpers):

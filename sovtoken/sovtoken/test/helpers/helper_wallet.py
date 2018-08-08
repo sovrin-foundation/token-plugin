@@ -1,4 +1,4 @@
-from sovtoken.wallet import Address
+from sovtoken.test.wallet import Address
 
 
 class HelperWallet():

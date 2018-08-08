@@ -5,7 +5,7 @@ from plenum.common.txn_util import get_seq_no
 from plenum.common.types import f
 from sovtokenfees.constants import FEES
 from sovtoken.constants import INPUTS, OUTPUTS
-from sovtoken.wallet import TokenWallet
+from sovtoken.test.wallet import TokenWallet
 
 
 class FeeSupportedWallet(TokenWallet):

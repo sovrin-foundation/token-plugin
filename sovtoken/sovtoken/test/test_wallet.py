@@ -2,7 +2,7 @@ import pytest
 from base58 import b58decode
 
 from sovtoken.messages.fields import PublicAddressField
-from sovtoken.wallet import TokenWallet, Address
+from sovtoken.test.wallet import TokenWallet, Address
 from sovtoken.test.txn_response import TxnResponse
 
 

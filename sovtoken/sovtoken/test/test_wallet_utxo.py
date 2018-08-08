@@ -1,5 +1,5 @@
 import pytest
-from sovtoken.wallet import TokenWallet, Address
+from sovtoken.test.wallet import TokenWallet, Address
 from sovtoken.constants import OUTPUTS
 
 
