@@ -19,10 +19,14 @@ class UTXOCache(OptimisticKVStore):
     Stores 2 kinds of keys.
         Type1 key is an output prepended with "0"
         Type2 key is an address prepended with "1"
+
+    An unspent output is combination of an address and a reference (seq no)
+    to a txn in which this address was transferred some tokens
     """
     def __init__(self, kv_store: KeyValueStorage):
         super().__init__(kv_store)
 
+    # Adds an output to the batch of uncommitted outputs
     def add_output(self, output: Output, is_committed=False):
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
@@ -41,6 +45,8 @@ class UTXOCache(OptimisticKVStore):
         batch = [(type1_key, type1_val), (type2_key, type2_val)]
         self.setBatch(batch, is_committed=is_committed)
 
+    # Returns the full output object in the key value store, when given an
+    # incomplete output object (with seq_no set to None)
     def get_output(self, output: Output, is_committed=False) -> Output:
         type1_key = self._create_type1_key(output)
 
@@ -53,6 +59,8 @@ class UTXOCache(OptimisticKVStore):
             raise UTXOAlreadySpentError("UTXO value is None")
         return Output(output.address, output.seq_no, int(val))
 
+    # Spends the provided output by fetching it from the key value store
+    # (it must have been previously added) and then doing batch ops
     def spend_output(self, output: Output, is_committed=False):
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
@@ -67,13 +75,13 @@ class UTXOCache(OptimisticKVStore):
             raise KeyError('{} not in {}'.format(seq_no_str, seq_nos))
         seq_nos.remove(seq_no_str)
         batch = [(self._store.WRITE_OP, type1_key, '')]
-        # if seq_nos:
         type2_val = self._create_type2_val(seq_nos)
         batch.append((self._store.WRITE_OP, type2_key, type2_val))
-        # else:
-        #     batch.append((self._store.REMOVE_OP, type2_key, None))
         self.do_ops_in_batch(batch, is_committed=is_committed)
 
+
+    # Retrieves a list of the unspent outputs from the key value storage that
+    # are associated with the provided address
     def get_unspent_outputs(self, address: str,
                             is_committed=False) -> List[Output]:
         seq_nos = self.get_unspent_seq_nos(address, is_committed)
@@ -82,6 +90,8 @@ class UTXOCache(OptimisticKVStore):
             for seq_no in seq_nos
         ]
 
+    # Retrieves a list of the sequence numbers from the key value storage that
+    # are associated with the provided address
     def get_unspent_seq_nos(self, address: str, is_committed) -> List[int]:
         try:
             type2_key = self._create_type2_key(address)
@@ -99,18 +109,24 @@ class UTXOCache(OptimisticKVStore):
             output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
         return output_val
 
+    # Creates a type1 key with this format: '0:address:sequence_number'
+    # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
     @staticmethod
     def _create_type1_key(output: Output) -> str:
         return '0:{}:{}'.format(output.address, output.seq_no)
 
+    # Creates a type2 key with this format: '1:address'
+    # example: '1:2d4daf5d9247997d59ba430567e0c3a4'
     @staticmethod
     def _create_type2_key(address: str) -> str:
         return '1:{}'.format(address)
 
+    # Creates a type2 value from a list of sequence numbers
     @staticmethod
     def _create_type2_val(seq_nos: List) -> str:
         return ':'.join(seq_nos)
 
+    # Retrieves the type2 value from the sequence numbers
     @staticmethod
     def _parse_type2_val(seq_nos: str) -> List:
         return [] if not seq_nos else seq_nos.split(':')

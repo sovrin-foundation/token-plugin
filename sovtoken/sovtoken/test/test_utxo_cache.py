@@ -27,7 +27,6 @@ def gen_outputs(num):
     return [Output(randomString(32), random.randint(1000, 10000),
                    random.randint(100, 500)) for i in range(num)]
 
-
 def test_add_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
@@ -38,7 +37,7 @@ def test_add_unspent_output(utxo_cache):
         out = utxo_cache.get_output(outputs[i], True)
         assert out.value == outputs[i].value
 
-
+# Tests spending unspent outputs
 def test_spend_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
@@ -51,6 +50,16 @@ def test_spend_unspent_output(utxo_cache):
             utxo_cache.get_output(new_out, True)
         with pytest.raises(KeyError):
             utxo_cache.spend_output(new_out, True)
+
+# Tests that when outputs are spent before they are added, it fails
+def test_spend_unadded_invalid_unspent_output(utxo_cache):
+    num_outputs = 5
+    outputs = gen_outputs(num_outputs)
+    for output in outputs:
+        with pytest.raises(KeyError):
+            utxo_cache.get_output(output, True)
+        with pytest.raises(KeyError):
+            utxo_cache.spend_output(output, True)
 
 
 def test_get_all_unspent_outputs(utxo_cache):

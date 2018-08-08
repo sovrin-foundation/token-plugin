@@ -23,6 +23,9 @@ class FeesAuthNr(CoreAuthNr):
         super().__init__(state)
         self.token_authnr = token_authnr
 
+    # ------------------------------------------------------------------------------------
+    # verifies the request operation is transaction type of fees
+    #       if transaction type is not fees, an exception is raised.
     def authenticate(self, req_data, identifier: str = None,
                      signature: str = None, verifier=None):
         txn_type = req_data[OPERATION][TXN_TYPE]
@@ -35,17 +38,29 @@ class FeesAuthNr(CoreAuthNr):
             raise InvalidClientRequest(req_data[f.REQ_ID.nm], identifier,
                                        "txn type is {} not {}".format(txn_type, SET_FEES))
 
+    # ------------------------------------------------------------------------------------
+    # verify the signatures in the fees section
+    #
+    #     if the signatures found do not match the signatures expected,
+    #            an exception is thrown.
+    #
+    #     If everything is ok, nothing is returned
+    #     If there is no fees, nothing is returned
     def verify_signature(self, msg):
         try:
             fees = getattr(msg, f.FEES.nm)
         except (AttributeError, KeyError):
             return
+
         correct_sigs_from = set()
         required_sigs_from = set()
         outputs = fees[1]
         digest = msg.digest
+
         for (addr, seq_no), sig in zip(fees[0], fees[2]):
+
             required_sigs_from.add(addr)
+
             try:
                 sig = base58.b58decode(sig.encode())
             except Exception as ex:
@@ -57,9 +72,11 @@ class FeesAuthNr(CoreAuthNr):
                 verkey = address_to_verkey(addr)
             except ValueError:
                 continue
+
             verifier = AddressSigVerifier(verkey=verkey)
             if verifier.verify(sig, serz):
                 correct_sigs_from.add(addr)
+
         if correct_sigs_from != required_sigs_from:
             raise InsufficientCorrectSignatures(len(correct_sigs_from),
                                                 len(fees[0]))
