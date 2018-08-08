@@ -5,7 +5,7 @@ from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, NYM
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.types import f
-from sovtoken.wallet import Address
+from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS
