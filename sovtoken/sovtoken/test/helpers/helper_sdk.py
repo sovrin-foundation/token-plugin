@@ -87,9 +87,11 @@ class HelperSdk():
     def sdk_json_to_request_object(self, obj):
         return plenum_helper.sdk_json_to_request_object(obj)
 
-    def sdk_sign_request_objects(self, requests):
+    def sdk_sign_request_objects(self, requests, sdk_wallet=None):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+
         return plenum_helper.sdk_sign_request_objects(
             self._looper,
-            self._wallet_steward,
+            sdk_wallet,
             requests
         )

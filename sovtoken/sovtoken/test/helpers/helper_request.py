@@ -80,7 +80,13 @@ class HelperRequest():
         request = self._wallet.sign_request_trustees(request)
         return request
 
-    def nym(self, seed=None, alias=None, role=None):
+    def nym(
+        self,
+        seed=None,
+        alias=None,
+        role=None,
+        sdk_wallet=None
+    ):
         """ Builds a nym request. """
         if not seed:
             seed = randomString(32)
@@ -88,8 +94,10 @@ class HelperRequest():
         if not alias:
             alias = randomString(6)
 
+        sdk_wallet = sdk_wallet or self._steward_wallet
+
         nym_request_future = prepare_nym_request(
-            self._steward_wallet,
+            sdk_wallet,
             seed,
             alias,
             role
@@ -97,7 +105,7 @@ class HelperRequest():
 
         nym_request, _did = self._looper.loop.run_until_complete(nym_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
-        request = self._sign_sdk(request)
+        request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
         return request
 
@@ -113,11 +121,19 @@ class HelperRequest():
         )
 
     # Copied this over from another helper. Don't really know what it does.
-    def _sign_sdk(self, request):
-        request = self._sdk.sdk_sign_request_objects([request])[0]
+    def _sign_sdk(self, request, sdk_wallet=None):
+        request = self._sdk.sdk_sign_request_objects(
+            [request],
+            sdk_wallet=sdk_wallet
+        )[0]
+
         request = self._sdk.sdk_json_to_request_object(json.loads(request))
+
         if request.signatures is None:
             request.signatures = {}
+
         request.signatures[request._identifier] = request.signature
+        request.signature = None
+        request._identifier = None
 
         return request
