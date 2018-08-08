@@ -204,3 +204,42 @@ def test_verify_signature_incorrect_signatures():
         fees_authenticator.verify_signature(msg)
 
 
+# ------------------------------------------------------------------------------------
+# fees sections are populated with correct data
+# however the signature is not signed for all of the values
+def test_verify_signature_mismatch_of_signatures():
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+
+    msg = FeeData()
+    msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
+
+    #                                 1         2         3         4   4
+    #                        12345678901234567890123456789012345678901234567890
+    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 1],
+                           ['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 2]],
+                          [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 4],
+                           ['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 5]],
+                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
+
+    with pytest.raises(InsufficientCorrectSignatures):
+        fees_authenticator.verify_signature(msg)
+
+
+# ------------------------------------------------------------------------------------
+# the signature and fees sections are populated with correct data but the sequence
+# number is wrong.
+def test_verify_signature_sequence_order_wrong():
+    state = pruning_state()
+    fees_authenticator = FeesAuthNr(state, None)
+
+    msg = FeeData()
+    msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
+
+    #                                 1         2         3         4   4
+    #                        12345678901234567890123456789012345678901234567890
+    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 2]], [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 9]],
+                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
+
+    with pytest.raises(InsufficientCorrectSignatures):
+        fees_authenticator.verify_signature(msg)
