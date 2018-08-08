@@ -13,8 +13,7 @@ from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_da
 from sovtoken.test.constants import VALID_IDENTIFIER, VALID_REQID, SIGNATURES, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, \
     VALID_ADDR_3, CONS_TIME, VALID_ADDR_7
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
-
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, InvalidFundsError
 
 # TEST CONSTANTS
 from sovtoken.sovtoken_types import Output
@@ -128,7 +127,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
         1
     )
     # This test should raise an issue because the inputs are not on the ledger
-    with pytest.raises(UTXOAlreadySpentError):
+    with pytest.raises(InvalidFundsError):
         token_handler_a.validate(request)
 
 

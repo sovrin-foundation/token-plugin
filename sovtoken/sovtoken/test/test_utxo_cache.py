@@ -6,6 +6,8 @@ from collections import defaultdict
 import pytest
 
 from plenum.common.util import randomString
+
+from sovtoken.exceptions import UTXOAlreadySpentError, UTXOError
 from sovtoken.sovtoken_types import Output
 from sovtoken.utxo_cache import UTXOCache
 from storage.test.conftest import parametrised_storage
@@ -30,7 +32,7 @@ def test_add_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
     for i in range(num_outputs):
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(outputs[i], True)
         utxo_cache.add_output(outputs[i], True)
         out = utxo_cache.get_output(outputs[i], True)
@@ -45,7 +47,7 @@ def test_spend_unspent_output(utxo_cache):
         new_out = Output(outputs[i].address, outputs[i].seq_no, None)
         utxo_cache.get_output(new_out, True)
         utxo_cache.spend_output(new_out, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOAlreadySpentError):
             utxo_cache.get_output(new_out, True)
         with pytest.raises(KeyError):
             utxo_cache.spend_output(new_out, True)
@@ -112,7 +114,7 @@ def test_get_output_success(utxo_cache):
 
 def test_get_output_missing_output(utxo_cache):
     output = Output(VALID_ADDR_1, 10, 10)
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         utxo_cache.get_output(output)
 
     # teardown test
