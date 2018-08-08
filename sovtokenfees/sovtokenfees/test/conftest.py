@@ -1,6 +1,6 @@
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.main import integrate_plugin_in_node as enable_token
-from sovtokenfees.wallet import FeeSupportedWallet
+from sovtokenfees.test.wallet import FeeSupportedWallet
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
