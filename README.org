@@ -72,6 +72,9 @@
     #+END_SRC
 
 *** Alternative for running tests
+
+    To use this script, you will need to use make as instructed above.  Once you have the docker image running and synchronized, you can use run-test.sh to run individual tests.
+    
     We have a shell script to assist with running tests.  Here's an example:
     #+BEGIN_SRC bash
        ./run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output

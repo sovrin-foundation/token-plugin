@@ -60,12 +60,6 @@ def test_non_trustee_set_fees(looper, nodeSetWithIntegratedTokenPlugin,
     assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == {}
 
 
-@pytest.fixture(scope="module")
-def fees_set(looper, nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
-             trustee_wallets, fees):
-    return set_fees(looper, trustee_wallets, fees, sdk_pool_handle)
-
-
 def test_trustee_set_valid_fees(fees_set, nodeSetWithIntegratedTokenPlugin,
                                 fees):
     """
