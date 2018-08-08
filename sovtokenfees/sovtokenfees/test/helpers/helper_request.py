@@ -13,10 +13,11 @@ class HelperRequest(token_helper_request.HelperRequest):
     - get_fees
     - add_fees
     - find_utxos_can_pay
+    - fees_signatures
     """
 
     def set_fees(self, fees):
-        """ Builds a request to set the fees """
+        """ Build a request to set the fees. """
         payload = {
             TXN_TYPE: SET_FEES,
             FEES: fees,
@@ -27,7 +28,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         return request
 
     def get_fees(self):
-        """ Builds a request to get the fees """
+        """ Build a request to get the fees. """
         payload = {
             TXN_TYPE: GET_FEES
         }
@@ -43,7 +44,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         change_address=None
     ):
         """
-        Adds fees to a non transfer request
+        Add fees to a non transfer request.
         
         Will find utxos to cover the fee_amount. If it requires more than a
         single utxo to pay for the fees, it will use the smallest utxo and look
@@ -58,7 +59,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         else:
             outputs = []
    
-        fees_signatures = self._fees_signatures(inputs, outputs, request.digest)
+        fees_signatures = self.fees_signatures(inputs, outputs, request.digest)
 
         # Remove the amount from the inputs and use address string
         inputs = [
@@ -103,7 +104,8 @@ class HelperRequest(token_helper_request.HelperRequest):
 
         return _find_utxos(utxos, amount)
 
-    def _fees_signatures(self, inputs, outputs, digest):
+    def fees_signatures(self, inputs, outputs, digest):
+        """ Sign the fees for a non transfer request. """
         outputs = self._prepare_outputs(outputs)
         signatures = []
 
