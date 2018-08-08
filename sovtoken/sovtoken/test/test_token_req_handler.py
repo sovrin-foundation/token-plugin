@@ -13,7 +13,7 @@ from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_da
 from sovtoken.test.constants import VALID_IDENTIFIER, VALID_REQID, SIGNATURES, VALID_ADDR_4, VALID_ADDR_5, VALID_ADDR_6, \
     VALID_ADDR_3, CONS_TIME, VALID_ADDR_7
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, InvalidFundsError
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, InvalidFundsError, UTXOError
 
 # TEST CONSTANTS
 from sovtoken.sovtoken_types import Output
@@ -188,8 +188,8 @@ def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
                                                       INPUTS: [[VALID_ADDR_2, 3]],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
-    # This raises a KeyError because the input transaction isn't already in the UTXO_Cache
-    with pytest.raises(KeyError):
+    # This raises a UTXOError because the input transaction isn't already in the UTXO_Cache
+    with pytest.raises(UTXOError):
         token_handler_b.apply(request, CONS_TIME)
     token_handler_b.onBatchRejected()
 

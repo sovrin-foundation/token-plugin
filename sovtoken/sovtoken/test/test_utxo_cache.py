@@ -48,7 +48,7 @@ def test_spend_unspent_output(utxo_cache):
         utxo_cache.spend_output(new_out, True)
         with pytest.raises(UTXOAlreadySpentError):
             utxo_cache.get_output(new_out, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.spend_output(new_out, True)
 
 # Tests that when outputs are spent before they are added, it fails
@@ -56,9 +56,9 @@ def test_spend_unadded_invalid_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
     for output in outputs:
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(output, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.spend_output(output, True)
 
 
@@ -163,7 +163,7 @@ def test_spend_output_invalid_output(utxo_cache):
 
 def test_spend_output_fail_output_not_in_cache(utxo_cache):
     output = Output(VALID_ADDR_1, 10, 10)
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         utxo_cache.spend_output(output)
 
     # teardown test
@@ -176,7 +176,7 @@ def test_spend_output_double_spend_fail(utxo_cache):
     # First spend
     utxo_cache.spend_output(output)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         # Second spend fails as expected
         utxo_cache.spend_output(output)
 
