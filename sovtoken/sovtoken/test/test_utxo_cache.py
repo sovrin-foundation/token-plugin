@@ -56,7 +56,7 @@ def test_spend_unadded_invalid_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
     for output in outputs:
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(output, True)
         with pytest.raises(KeyError):
             utxo_cache.spend_output(output, True)

@@ -1,7 +1,7 @@
 from plenum.common.signer_simple import SimpleSigner
 
 from sovtoken.util import verkey_to_address
-from sovtoken.wallet import Address
+from sovtoken.test.wallet import Address
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
