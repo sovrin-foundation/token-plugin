@@ -18,7 +18,7 @@ from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from sovtoken.sovtoken_types import Output
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, InvalidFundsError, UTXOError
 
 from state.trie.pruning_trie import rlp_decode
 
@@ -78,14 +78,8 @@ class TokenReqHandler(LedgerRequestHandler):
                                                 'Summation of input or outputs where not an integer, sum of inputs'
                                                 ' is {} and sum of outputs is {}'.format(sum_inputs, sum_outputs))
 
-        if sum_inputs == sum_outputs:
+        if sum_inputs >= sum_outputs:
             return
-        elif sum_inputs > sum_outputs:
-            error = 'Lost funds - inputs are greater than outputs, sum of inputs is {} and sum' \
-                    ' of outputs is {}'.format(sum_inputs, sum_outputs)
-            raise InsufficientFundsError(getattr(request, 'identifier', None),
-                                         getattr(request, 'reqId', None),
-                                         error)
         elif sum_inputs < sum_outputs:
             error = 'Insufficient funds, sum of inputs is {} and sum' \
                     ' of outputs is {}'.format(sum_inputs, sum_outputs)
@@ -228,14 +222,9 @@ class TokenReqHandler(LedgerRequestHandler):
                    is_committed=False) -> int:
         try:
             inputs = request.operation[INPUTS]
-            output_val = 0
-            for addr, seq_no in inputs:
-                    output_val += utxo_cache.get_output(
-                        Output(addr, seq_no, None),
-                        is_committed=is_committed).value
-            return output_val
-        except KeyError as ex:
-            raise UTXOAlreadySpentError(request.identifier, request.reqId, '{}'.format(ex))
+            return utxo_cache.sum_inputs(inputs, is_committed=is_committed)
+        except UTXOError as ex:
+            raise InvalidFundsError(request.identifier, request.reqId, '{}'.format(ex))
 
     @staticmethod
     def sum_outputs(request: Request) -> int:
