@@ -98,7 +98,6 @@ def decode_proof(proof):
     return Trie.deserialize_proof(proof)
 
 
-
 @pytest.fixture(scope="module")
 def user1_token_wallet():
     return TokenWallet('user1')
@@ -112,6 +111,7 @@ def user2_token_wallet():
 @pytest.fixture(scope="module")
 def user3_token_wallet():
     return TokenWallet('user3')
+
 
 @pytest.fixture(scope="module")
 def user1_address(user1_token_wallet):
@@ -132,4 +132,3 @@ def user3_address(user3_token_wallet):
     seed = 'user3000000000000000000000000000'.encode()
     user3_token_wallet.add_new_address(seed=seed)
     return next(iter(user3_token_wallet.addresses.keys()))
-
