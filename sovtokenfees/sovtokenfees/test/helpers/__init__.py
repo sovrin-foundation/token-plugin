@@ -1,19 +1,21 @@
 import pytest
 
 from types import SimpleNamespace
-from .helper_general import HelperGeneral
+from sovtoken.test.helpers.helper_sdk import HelperSdk
+from sovtoken.test.helpers.helper_wallet import HelperWallet
+
 from .helper_request import HelperRequest
-from .helper_sdk import HelperSdk
-from .helper_wallet import HelperWallet
+from .helper_general import HelperGeneral
 
-
+# TODO: Have a way to setup helpers between sovtoken and sovtokenfees with less
+# repetition.
 def form_helpers(
     txn_pool_node_set,
     looper,
     pool_handle,
     trustees,
     sdk_wallet_client,
-    sdk_wallet_steward
+    sdk_wallet_steward,
 ):
     helper_sdk = HelperSdk(
         looper,

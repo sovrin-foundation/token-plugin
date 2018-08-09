@@ -25,7 +25,7 @@ class HelperWallet():
         return addresses
 
     def payment_signatures(self, inputs, outputs):
-        """ Generates a list of payment signatures from inptus and outputs. """
+        """ Generate a list of payment signatures from inptus and outputs. """
         outputs = self._prepare_outputs(outputs)
         signatures = []
         for [address, seq_no] in inputs:
