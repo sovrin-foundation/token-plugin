@@ -5,7 +5,7 @@ import pytest
 from plenum.common.signer_simple import SimpleSigner
 
 from plenum.common.constants import TXN_TYPE, STATE_PROOF
-from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest
+from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
@@ -72,60 +72,6 @@ def token_handler_c(node):
 @pytest.fixture
 def token_handler_d(node):
     return node[3].ledger_to_req_handler[TOKEN_LEDGER_ID]
-
-
-def test_token_req_handler_MINT_PUBLIC_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]]},
-                      None, SIGNATURES, 1)
-    ret_val = token_handler_a._MINT_PUBLIC_validate(request)
-    assert ret_val is None
-
-
-def test_token_req_handler_MINT_PUBLIC_validate_missing_output(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._MINT_PUBLIC_validate(request)
-
-
-def test_token_req_handler_XFER_PUBLIC_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
-                                                      SIGS: ['']}, None, SIGNATURES, 1)
-    ret_val = token_handler_a._XFER_PUBLIC_validate(request)
-    assert ret_val is None
-
-
-def test_token_req_handler_XFER_PUBLIC_validate_missing_output(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [[VALID_ADDR_2, 1]]},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._XFER_PUBLIC_validate(request)
-
-
-def test_token_req_handler_XFER_PUBLIC_validate_missing_input(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]]},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._XFER_PUBLIC_validate(request)
-
-
-def test_token_req_handler_GET_UTXO_validate_missing_address(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO},
-                      None, SIGNATURES, 1)
-    with pytest.raises(InvalidClientRequest):
-        token_handler_a._GET_UTXO_validate(request)
-
-
-def test_token_req_handler_GET_UTXO_validate_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: GET_UTXO,
-                                                      ADDRESS: VALID_ADDR_1},
-                      None, SIGNATURES, 1)
-    ret_val = token_handler_a._GET_UTXO_validate(request)
-    assert ret_val is None
 
 
 def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_a):
@@ -199,7 +145,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
         1
     )
     # This test should raise an issue because the inputs are not on the ledger
-    with pytest.raises(UTXOAlreadySpentError):
+    with pytest.raises(InvalidClientMessageException):
         token_handler_a.validate(request)
 
 
@@ -441,8 +387,17 @@ def test_token_req_handler_sum_inputs_success(public_minting, token_handler_d):
     assert post_second_add_outputs == [Output(VALID_ADDR_4, 5, 150), Output(VALID_ADDR_4, 6, 100)]
 
     # Verify sum_inputs is working properly
-    inputs = [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
-    sum_inputs = token_handler_d._sum_inputs(inputs)
+    request = Request(VALID_IDENTIFIER,
+                      VALID_REQID,
+                      {
+                          TXN_TYPE: XFER_PUBLIC,
+                          OUTPUTS: None,
+                          INPUTS: [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
+                      },
+                      None,
+                      SIGNATURES,
+                      1)
+    sum_inputs = token_handler_d._sum_inputs(request)
     assert sum_inputs == 250
 
 
