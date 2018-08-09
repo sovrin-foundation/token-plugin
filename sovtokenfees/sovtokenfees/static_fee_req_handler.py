@@ -6,26 +6,22 @@ txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, TXN_METADATA, TXN_SIGNATURE, MULTI_SIGNATURE
+    STATE_PROOF, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
-    get_req_id, append_txn_metadata
-# TODO remove that once https://github.com/hyperledger/indy-plenum/pull/767 is merged
-# (should be imported from plenum.common.txn_util)
-from sovtoken.txn_util import add_sigs_to_txn
+    get_req_id
 from plenum.common.types import f, OPERATION
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC, MINT_PUBLIC
-from sovtokenfees.transactions import FeesTransactions
+    XFER_PUBLIC
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, ExtraFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -103,9 +99,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             if self.has_fees(request):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
-                # transactions have no sovtokenfees
+                # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[0]:s for i, s in zip(inputs, signatures)}
+                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         INPUTS: inputs,
@@ -212,14 +208,20 @@ class StaticFeesReqHandler(FeeReqHandler):
             error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             required_sum_outputs = sum_outputs + required_fees
+            # Check for the happy and probably most common case first and cause early return
+            if sum_inputs == required_sum_outputs:
+                deducted_fees = sum_inputs - sum_outputs
+                return deducted_fees
             if sum_inputs < required_sum_outputs:
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
                     'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
                 raise InsufficientFundsError(request.identifier, request.reqId, error)
-            else:
-                deducted_fees = sum_inputs - sum_outputs
-                return deducted_fees
+            if sum_inputs > required_sum_outputs:
+                error = 'Extra funds, sum of inputs is {} ' \
+                    'but required is {} (sum of outputs: {}, ' \
+                    'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+                raise ExtraFundsError(request.identifier, request.reqId, error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

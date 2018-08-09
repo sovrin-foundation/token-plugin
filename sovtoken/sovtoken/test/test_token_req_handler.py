@@ -10,7 +10,7 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, UTXOAlreadySpentError
 
 
 # TEST CONSTANTS
@@ -97,6 +97,7 @@ def test_token_req_handler_XFER_PUBLIC_validate_success(token_handler_a):
     ret_val = token_handler_a._XFER_PUBLIC_validate(request)
     assert ret_val is None
 
+
 def test_token_req_handler_XFER_PUBLIC_validate_missing_output(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [[VALID_ADDR_2, 1]]},
                       None, SIGNATURES, 1)
@@ -181,6 +182,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_ha
     except Exception:
         pytest.fail("This test failed to validate")
 
+
 def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
     operation = {
         TXN_TYPE: XFER_PUBLIC,
@@ -207,6 +209,15 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(public_minting
                                                       INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
     # This test is expected to fail because
     with pytest.raises(InsufficientFundsError):
+        token_handler_a.validate(request)
+
+
+def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(public_minting, token_handler_a):
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
+                                                      OUTPUTS: [[VALID_ADDR_1, 1], [VALID_ADDR_2, 1]],
+                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+    # This test is expected to fail because
+    with pytest.raises(ExtraFundsError):
         token_handler_a.validate(request)
 
 

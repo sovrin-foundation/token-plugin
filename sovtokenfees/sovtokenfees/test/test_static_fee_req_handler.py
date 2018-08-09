@@ -1,4 +1,3 @@
-
 import pytest
 
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
