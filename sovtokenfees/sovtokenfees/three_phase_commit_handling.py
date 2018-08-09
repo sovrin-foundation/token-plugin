@@ -12,6 +12,8 @@ class ThreePhaseCommitHandler:
         self.token_state = token_state
         self.fees_req_handler = fees_req_handler
 
+    # adds a pre_prepare message to be sent that includes the fee transaction info in
+    # the "plugins_fields" member
     def add_to_pre_prepare(self, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
                 self.fees_req_handler.fee_txns_in_current_batch > 0:
@@ -30,6 +32,8 @@ class ThreePhaseCommitHandler:
             pre_prepare = updateNamedTuple(pre_prepare, **extra)
         return pre_prepare
 
+    # adds a prepare message to be sent that includes the fee transaction info in
+    # the "plugins_fields" member
     def add_to_prepare(self, prepare, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
                 self._has_plugin_fields(pre_prepare):
@@ -54,11 +58,13 @@ class ThreePhaseCommitHandler:
         # Nothing needed in commit
         return commit
 
+    # ?
     def add_to_ordered(self, ordered, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
                 self._has_plugin_fields(pre_prepare):
             pre_prepare_fees_data = pre_prepare.plugin_fields.get(FEES, {})
             if pre_prepare_fees_data:
+                # the plugins_fields member created here is an exact copy of the one found in the pre_prepare msg
                 extra = {
                     f.PLUGIN_FIELDS.nm: {
                         FEES: {
@@ -73,6 +79,7 @@ class ThreePhaseCommitHandler:
                 ordered = updateNamedTuple(ordered, **extra)
         return ordered
 
+    # Checks to make sure the pre_prepare message was properly appended and formatted with fee info
     def check_recvd_pre_prepare(self, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID:
             fee_txn_count = self.fees_req_handler.fee_txns_in_current_batch
@@ -108,21 +115,27 @@ class ThreePhaseCommitHandler:
                                                                 self.fees_req_handler.token_ledger.uncommittedRootHash,
                                                                 recvd_txn_root))
 
+    # Checks to make sure the prepare message was properly appended and formatted with fee info
     def check_recvd_prepare(self, prepare, pre_prepare):
         # TODO:
         return
 
+    # Checks to make sure the commit message was properly appended and formatted with fee info
     def check_recvd_commit(self, commit):
         # No check needed in commit
         return
 
+    # ?
     def batch_created(self, ledger_id, state_root):
         # Need old state root hash to preserve
         pass
 
+    # ?
     def batch_rejected(self, ledger_id):
         pass
 
+    # Makes sure that the "plugins_fields" member is contained in a message. This field is what distinguishes normal
+    # messages from messages that support the sovrin plugin
     @staticmethod
     def _has_plugin_fields(msg):
         try:
