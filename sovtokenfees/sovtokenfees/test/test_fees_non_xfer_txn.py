@@ -33,7 +33,7 @@ def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([[address_main, 1000]])
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def fees_paid(
     helpers,
     fees_set,
@@ -41,6 +41,7 @@ def fees_paid(
     mint_tokens
 ):
     request = helpers.request.nym()
+
     request = add_fees_request_with_address(
         helpers,
         fees_set,
