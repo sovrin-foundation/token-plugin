@@ -86,7 +86,7 @@ def test_seller_xfer_negative_amount(
         helpers.general.do_transfer(inputs, outputs)
 
 
-def test_seller_xfer_invalid_amount(
+def test_seller_xfer_sum_of_outputs_greater_than_inputs(
     helpers,
     initial_mint,
     addresses
@@ -100,6 +100,25 @@ def test_seller_xfer_invalid_amount(
 
     inputs = [[seller_address, seq_no]]
     outputs = [[user1_address, 10], [seller_address, 100]]
+
+    with pytest.raises(RequestRejectedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+
+def test_seller_xfer_sum_of_outputs_less_than_inputs(
+    helpers,
+    initial_mint,
+    addresses
+):
+    """
+    Amount used in outputs greater than the amount held by inputs,
+    hence it will be rejected
+    """
+    seq_no = get_seq_no(initial_mint)
+    [seller_address, user1_address] = addresses
+
+    inputs = [[seller_address, seq_no]]
+    outputs = [[user1_address, 1], [seller_address, 2]]
 
     with pytest.raises(RequestRejectedException):
         helpers.general.do_transfer(inputs, outputs)

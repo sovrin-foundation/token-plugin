@@ -18,6 +18,11 @@ def integrate_plugin_in_node(node):
     if not token_req_handler:
         raise ModuleNotFoundError('sovtoken plugin should be loaded, request ' # noqa
                                   'handler not found')
+
+    # Since `token_req_handler` does not know about fees, it will expect inputs and outputs to match exactly.
+    # Disabling that.
+    token_req_handler.ALLOW_INPUTS_TO_EXCEED_OUTPUTS = True
+
     token_ledger = token_req_handler.ledger
     token_state = token_req_handler.state
     utxo_cache = token_req_handler.utxo_cache
