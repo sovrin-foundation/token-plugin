@@ -11,7 +11,8 @@ def form_helpers(
     txn_pool_node_set,
     looper,
     pool_handle,
-    trustees,
+    trustee_wallets,
+    steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward
 ):
@@ -21,7 +22,7 @@ def form_helpers(
         txn_pool_node_set,
         sdk_wallet_steward
     )
-    helper_wallet = HelperWallet(trustees)
+    helper_wallet = HelperWallet(trustee_wallets, steward_wallets)
     helper_requests = HelperRequest(
         helper_wallet,
         helper_sdk,

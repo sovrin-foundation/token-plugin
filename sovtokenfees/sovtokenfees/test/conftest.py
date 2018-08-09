@@ -10,7 +10,7 @@ from sovtokenfees import CLIENT_REQUEST_FIELDS
 
 from sovtoken.test.conftest import trustee_wallets, SF_address, \
     seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
-    tokens_distributed
+    tokens_distributed, steward_wallets
 from sovtoken.test.helper import user1_address, \
     user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
     user3_token_wallet
@@ -79,6 +79,7 @@ def helpers(
     looper,
     sdk_pool_handle,
     trustee_wallets,
+    steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward
 ):
@@ -87,6 +88,7 @@ def helpers(
         looper,
         sdk_pool_handle,
         trustee_wallets,
+        steward_wallets,
         sdk_wallet_client,
         sdk_wallet_steward
     )

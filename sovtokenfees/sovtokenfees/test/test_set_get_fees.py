@@ -13,25 +13,25 @@ from plenum.common.constants import NYM, STEWARD, STATE_PROOF, PROOF_NODES, \
     ROOT_HASH
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
+from plenum.common.txn_util import get_seq_no
 from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import get_fees_from_ledger, \
     check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
     send_get_fees
-from sovtoken.constants import XFER_PUBLIC
+from sovtoken.constants import XFER_PUBLIC, OUTPUTS
 from sovtoken.test.helper import decode_proof, do_public_minting
+from sovtoken.test.wallet import Address
 from plenum.test.conftest import get_data_for_role
 from sovtoken.test.conftest import build_wallets_from_data
 
 
-def test_get_fees_when_no_fees_set(helpers, looper, nodeSetWithIntegratedTokenPlugin,
-                                   sdk_wallet_client, sdk_pool_handle):
-    assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == {}
-    check_fee_req_handler_in_memory_map_updated(nodeSetWithIntegratedTokenPlugin, {})
+def test_get_fees_when_no_fees_set(helpers):
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
+    helpers.node.check_fees_in_memory_map({})
 
 
-def test_trustee_set_invalid_fees(looper, nodeSetWithIntegratedTokenPlugin,
-                                  sdk_wallet_client, sdk_pool_handle,
-                                  trustee_wallets):
+def test_trustee_set_invalid_fees(helpers):
     """
     Fees cannot be negative
     """
@@ -40,12 +40,12 @@ def test_trustee_set_invalid_fees(looper, nodeSetWithIntegratedTokenPlugin,
         XFER_PUBLIC: 2
     }
     with pytest.raises(RequestNackedException):
-        send_set_fees(looper, trustee_wallets, fees, sdk_pool_handle)
-    assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == {}
+        helpers.general.do_set_fees(fees)
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
 
 
-def test_non_trustee_set_fees(looper, nodeSetWithIntegratedTokenPlugin,
-                              sdk_wallet_client, sdk_pool_handle, poolTxnData):
+def test_non_trustee_set_fees(helpers):
     """
     Only trustees can change the sovtokenfees
     """
@@ -53,66 +53,61 @@ def test_non_trustee_set_fees(looper, nodeSetWithIntegratedTokenPlugin,
         NYM: 1,
         XFER_PUBLIC: 2
     }
-    steward_data = get_data_for_role(poolTxnData, STEWARD)
-    steward_wallets = build_wallets_from_data(steward_data)
+    fees_request = helpers.request.set_fees(fees)
+    fees_request.signatures = None
+    fees_request = helpers.wallet.sign_request_stewards(fees_request)
     with pytest.raises(RequestRejectedException):
-        send_set_fees(looper, steward_wallets, fees, sdk_pool_handle)
-    assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == {}
+        helpers.sdk.send_and_check_request_objects([fees_request])
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
 
 
-def test_trustee_set_valid_fees(fees_set, nodeSetWithIntegratedTokenPlugin,
-                                fees):
+def test_trustee_set_valid_fees(helpers, fees_set, fees):
     """
     Set a valid sovtokenfees
     """
-    check_fee_req_handler_in_memory_map_updated(
-        nodeSetWithIntegratedTokenPlugin, fees)
+    helpers.node.check_fees_in_memory_map(fees)
 
 
-def test_get_fees(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
-                  sdk_wallet_client, sdk_pool_handle, fees):
+def test_get_fees(helpers, fees_set, fees):
     """
     Get the sovtokenfees from the ledger
     """
-    assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == fees
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == fees
 
 
-def test_change_fees(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
-                     sdk_wallet_client, sdk_pool_handle, trustee_wallets, fees):
+def test_change_fees(helpers, fees_set, fees):
     """
     Change the sovtokenfees on the ledger and check that sovtokenfees has changed
     """
     updated_fees = {**fees, NYM: 10}
-    set_fees(looper, trustee_wallets, updated_fees, sdk_pool_handle)
-    new_fees = get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle)
-    assert new_fees == updated_fees
-    assert new_fees != fees
-    check_fee_req_handler_in_memory_map_updated(nodeSetWithIntegratedTokenPlugin,
-                                                updated_fees)
+    helpers.general.do_set_fees(updated_fees)
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == updated_fees
+    assert ledger_fees != fees
+    helpers.node.check_fees_in_memory_map(updated_fees)
 
 
-def test_get_fees_with_proof(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
-                             sdk_wallet_client, sdk_pool_handle, fees):
+def test_get_fees_with_proof(helpers, fees_set, fees):
     """
     Get the sovtokenfees from the ledger
     """
-    res = send_get_fees(looper, sdk_wallet_client, sdk_pool_handle)
-    fees = res[FEES]
-    state_proof = res[STATE_PROOF]
+    result = helpers.general.do_get_fees()
+    fees = result[FEES]
+    state_proof = result[STATE_PROOF]
     assert state_proof
-    proof_nodes = decode_proof(res[STATE_PROOF][PROOF_NODES])
+    proof_nodes = decode_proof(result[STATE_PROOF][PROOF_NODES])
     client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))
     fees = rlp_encode([StaticFeesReqHandler.state_serializer.serialize(fees)])
     assert client_trie.verify_spv_proof(
-        state_roots_serializer.deserialize(res[STATE_PROOF][ROOT_HASH]),
+        state_roots_serializer.deserialize(result[STATE_PROOF][ROOT_HASH]),
         StaticFeesReqHandler.fees_state_key, fees, proof_nodes)
 
 
-def test_mint_after_set_fees(fees_set, looper, nodeSetWithIntegratedTokenPlugin,
-                             trustee_wallets, SF_address, seller_address,
-                             sdk_pool_handle):
+def test_mint_after_set_fees(helpers, fees_set):
     # Try another minting after setting fees
-    total_mint = 100
-    sf_master_gets = 60
-    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
-                      sf_master_gets, SF_address, seller_address)
+    address = Address()
+    mint_req = helpers.general.do_mint([[address, 60]])
+    utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
+    assert utxos == [[address.address, get_seq_no(mint_req), 60]]
