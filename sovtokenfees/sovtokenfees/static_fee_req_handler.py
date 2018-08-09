@@ -208,19 +208,20 @@ class StaticFeesReqHandler(FeeReqHandler):
             error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             required_sum_outputs = sum_outputs + required_fees
+            # Check for the happy and probably most common case first and cause early return
+            if sum_inputs == required_sum_outputs:
+                deducted_fees = sum_inputs - sum_outputs
+                return deducted_fees
             if sum_inputs < required_sum_outputs:
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
                     'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
                 raise InsufficientFundsError(request.identifier, request.reqId, error)
-            elif sum_inputs > required_sum_outputs:
+            if sum_inputs > required_sum_outputs:
                 error = 'Extra funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
                     'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
                 raise ExtraFundsError(request.identifier, request.reqId, error)
-            else:
-                deducted_fees = sum_inputs - sum_outputs
-                return deducted_fees
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

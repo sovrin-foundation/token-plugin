@@ -20,7 +20,10 @@ def integrate_plugin_in_node(node):
                                   'handler not found')
 
     # Since `token_req_handler` does not know about fees, it will expect inputs and outputs to match exactly.
-    # Disabling that.
+    # Disabling that check since in case of XFER_PUBLIC with fees `token_req_handler` will find the sum of
+    # inputs greater than outputs since its agnostic of fees. Thus in case of XFER_PUBLIC with fees, `StaticFeeReqHandler`
+    # guarantees the equality of inputs and outputs
+    # `StaticFeeReqHandler` checks for the equality of inputs and outputs in `_get_deducted_fees_xfer`.
     token_req_handler.ALLOW_INPUTS_TO_EXCEED_OUTPUTS = True
 
     token_ledger = token_req_handler.ledger
