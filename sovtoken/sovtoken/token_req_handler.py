@@ -131,6 +131,7 @@ class TokenReqHandler(LedgerRequestHandler):
             # This is the python way of doing a switch statement.
             # It seems cleaner than a stack of if/elif/else
             # TODO: This should be moved outside the function, should be created once.
+            # FIX REQUEST from Daniel: actually do the above refactor
             txn_type_switch = {
                 MINT_PUBLIC: self._MINT_PUBLIC_validate,
                 XFER_PUBLIC: self._XFER_PUBLIC_validate,
@@ -155,6 +156,10 @@ class TokenReqHandler(LedgerRequestHandler):
             if not all(DomainRequestHandler.get_role(
                     self.domain_state, idr, TRUSTEE) for idr in senders):
                 error = 'only Trustees can send this transaction'
+            # FIX REQUEST from Daniel: second "if" here shouldn't cause us to lose first error.
+            # Also, is request.all_identifiers guaranteed to contain unique values? If not, then
+            # I could submit the same identifier 7 times instead of 7 unique identifiers... Are
+            # we testing for this?
             if len(senders) < self.MinSendersForPublicMint:
                 error = 'Need at least {} but only {} found'. \
                     format(self.MinSendersForPublicMint, len(senders))
