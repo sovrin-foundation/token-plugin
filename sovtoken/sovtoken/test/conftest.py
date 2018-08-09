@@ -2,6 +2,7 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
+from plenum.common.constants import STEWARD
 from plenum.common.txn_util import get_seq_no
 from sovtoken.main import integrate_plugin_in_node
 from sovtoken.util import \
@@ -63,6 +64,12 @@ def trustee_wallets(trustee_data, looper, sdk_pool_data):
 
 
 @pytest.fixture(scope="module")
+def steward_wallets(poolTxnData):
+    steward_data = get_data_for_role(poolTxnData, STEWARD)
+    return build_wallets_from_data(steward_data)
+
+
+@pytest.fixture(scope="module")
 def do_post_node_creation():
     # Integrate plugin into each node.
     def _post_node_creation(node):
@@ -119,6 +126,7 @@ def helpers(
     looper,
     sdk_pool_handle,
     trustee_wallets,
+    steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward,
 ):
@@ -127,6 +135,7 @@ def helpers(
         looper,
         sdk_pool_handle,
         trustee_wallets,
+        steward_wallets,
         sdk_wallet_client,
         sdk_wallet_steward
     )
