@@ -31,6 +31,9 @@ class TokenAuthNr(CoreAuthNr):
     write_types = AcceptableWriteTypes
     query_types = AcceptableQueryTypes
 
+    # ------------------------------------------------------------------------------------
+    # Entrance point for transaction signature verification. Here come all transactions of all types,
+    # but only XFER_PUBLIC and MINT_PUBLIC are verified
     def authenticate(self, req_data, identifier: str = None,
                      signature: str = None, verifier=None):
         if req_data[OPERATION][TXN_TYPE] == MINT_PUBLIC:
@@ -41,6 +44,12 @@ class TokenAuthNr(CoreAuthNr):
             verifier = verifier or AddressSigVerifier
             return self.authenticate_xfer(req_data, verifier=verifier)
 
+    # ------------------------------------------------------------------------------------
+    # Signature authentication for XFER
+    # It checks the signatures for array of one input and all outputs with a key from input
+    # If the check fails, it will raise InsufficientCorrectSignatures
+    # The verkey will be unobtainable from input, it will raise CouldNotAuthenticate
+    # Raises UnknownIdentifier if input is not a valid base58 value
     def authenticate_xfer(self, req_data, verifier):
         # new_data = {
         #     f.PROTOCOL_VERSION.nm: req_data[f.PROTOCOL_VERSION.nm],
@@ -76,6 +85,9 @@ class TokenAuthNr(CoreAuthNr):
                                                 len(req_data[OPERATION][INPUTS]))
         return correct_sigs_from
 
+    # ------------------------------------------------------------------------------------
+    # Gets verkey from payment address
+    # Raises UnknownIdentifier if it is not a valid base58 value
     def getVerkey(self, identifier):
         if len(identifier) not in (21, 22):
             vk = address_to_verkey(identifier)
