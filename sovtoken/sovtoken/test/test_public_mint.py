@@ -33,6 +33,7 @@ def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, # noq
     with pytest.raises(RequestNackedException):
         send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
 
+# FIX REQUEST from Daniel: test invalid output of zero; of a string version of an int
 
 def test_trustee_float_minting(nodeSetWithIntegratedTokenPlugin, looper,
                                trustee_wallets, SF_address, seller_address,
@@ -45,6 +46,9 @@ def test_trustee_float_minting(nodeSetWithIntegratedTokenPlugin, looper,
     with pytest.raises(RequestNackedException):
         send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
 
+
+# FIX REQUEST from Daniel: test trustee and non-trustee DIDs that are fully qualified vs. relative;
+# test every role that is not trustee; test a DID that's not on the ledger at all
 
 # What about trust anchors, TGB, do those fail as well?
 def test_non_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
@@ -62,6 +66,9 @@ def test_non_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
     with pytest.raises(RequestRejectedException):
         send_public_mint(looper, steward_wallets, outputs, sdk_pool_handle)
 
+
+# FIX REQUEST from Daniel: test submitting the same trustee identifier N times,
+# instead of N unique trustee identifiers.
 
 # where are the trustee signatures coming from? How is the trustee wallet
 # created here?
