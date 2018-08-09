@@ -4,7 +4,6 @@ import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no
-#, add_sigs_to_txn
 # TODO remove that onece https://github.com/hyperledger/indy-plenum/pull/767 is merged
 # (should be imported from plenum.common.txn_util)
 from sovtoken.txn_util import add_sigs_to_txn
@@ -25,7 +24,7 @@ from sovtoken.messages.fields import PublicOutputField, \
     PublicInputsField, PublicOutputsField
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError
+from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, ExtraFundsError
 
 # TODO: Rename to `PaymentReqHandler`
 from state.trie.pruning_trie import rlp_decode
@@ -39,6 +38,10 @@ class TokenReqHandler(LedgerRequestHandler):
     _public_outputs_validator = PublicOutputsField()
     _public_inputs_validator = PublicInputsField()
     MinSendersForPublicMint = 4
+
+    # When set to True, sum of inputs can be greater than outputs but not vice versa.
+    # Defaults to False requiring sum of inputs to exactly match outputs, else the txn will be rejected.
+    ALLOW_INPUTS_TO_EXCEED_OUTPUTS = False
 
     def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
@@ -168,10 +171,21 @@ class TokenReqHandler(LedgerRequestHandler):
             except Exception as ex:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
             else:
+                # Check for the happy and probably most common case first and cause early return
+                if sum_inputs == sum_outputs:
+                    return
+
                 if sum_inputs < sum_outputs:
                     error = 'Insufficient funds, sum of inputs is {} and sum' \
                             ' of outputs is {}'.format(sum_inputs, sum_outputs)
                     raise InsufficientFundsError(request.identifier,
+                                                 request.reqId,
+                                                 error)
+
+                if not self.ALLOW_INPUTS_TO_EXCEED_OUTPUTS and sum_inputs > sum_outputs:
+                    error = 'Extra funds, sum of inputs is {} and sum' \
+                            ' of outputs is {}'.format(sum_inputs, sum_outputs)
+                    raise ExtraFundsError(request.identifier,
                                                  request.reqId,
                                                  error)
 

@@ -27,6 +27,23 @@ def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,
         send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
 
+def test_xfer_with_extra_fees(public_minting, looper, fees_set,
+                                     nodeSetWithIntegratedTokenPlugin,
+                                     sdk_pool_handle,
+                                     seller_token_wallet, seller_address, user1_address,
+                                     user1_token_wallet):
+    # Payed fees is less than required fees
+    global seller_gets
+    seq_no = get_seq_no(public_minting)
+    fee_amount = fees_set[FEES][XFER_PUBLIC]
+    user1_gets = 10
+    seller_remaining = seller_gets - (user1_gets + fee_amount + 1)
+    inputs = [[seller_token_wallet, seller_address, seq_no]]
+    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
+    with pytest.raises(RequestRejectedException):
+        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+
+
 @pytest.fixture(scope="module")
 def xfer_with_fees_done(public_minting, looper, fees_set,
                    sdk_pool_handle,
