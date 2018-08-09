@@ -23,7 +23,7 @@ from plenum.test.conftest import get_data_for_role
 from sovtoken.test.conftest import build_wallets_from_data
 
 
-def test_get_fees_when_no_fees_set(looper, nodeSetWithIntegratedTokenPlugin,
+def test_get_fees_when_no_fees_set(helpers, looper, nodeSetWithIntegratedTokenPlugin,
                                    sdk_wallet_client, sdk_pool_handle):
     assert get_fees_from_ledger(looper, sdk_wallet_client, sdk_pool_handle) == {}
     check_fee_req_handler_in_memory_map_updated(nodeSetWithIntegratedTokenPlugin, {})

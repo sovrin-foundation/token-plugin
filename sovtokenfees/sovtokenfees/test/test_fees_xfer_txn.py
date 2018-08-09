@@ -2,7 +2,7 @@ import pytest
 
 from plenum.common.constants import CONFIG_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException
-from plenum.common.txn_util import get_type, get_seq_no
+from plenum.common.txn_util import get_type, get_seq_no, get_payload_data
 from sovtokenfees.constants import FEES
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.util import update_token_wallet_with_result
@@ -28,10 +28,17 @@ def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,
 
 
 @pytest.fixture(scope="module")
-def xfer_with_fees_done(public_minting, looper, fees_set,
+def xfer_with_fees_done(helpers, public_minting, looper, fees,
                    sdk_pool_handle,
                    seller_token_wallet, seller_address, user1_address,
                    user1_token_wallet):
+    # TODO: Refactor this file to remove test dependence.
+    # Can't use the fees_set fixture because this is a module scope.
+    # Just setting fees in here directly until some refacotring is done in this
+    # file.
+    result = helpers.general.do_set_fees(fees)
+    fees_set = get_payload_data(result)
+
     global seller_gets
     seq_no = get_seq_no(public_minting)
     fee_amount = fees_set[FEES][XFER_PUBLIC]

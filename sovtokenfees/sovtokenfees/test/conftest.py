@@ -45,10 +45,10 @@ def fees(request):
     return fees
 
 
-@pytest.fixture(scope="module")
-def fees_set(looper, nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
-             trustee_wallets, fees):
-    return set_fees(looper, trustee_wallets, fees, sdk_pool_handle)
+@pytest.fixture()
+def fees_set(helpers, fees):
+    result = helpers.general.do_set_fees(fees)
+    return get_payload_data(result)
 
 
 # Wallet should have support to track sovtokenfees
@@ -90,3 +90,8 @@ def helpers(
         sdk_wallet_client,
         sdk_wallet_steward
     )
+
+
+@pytest.fixture(autouse=True)
+def reset_fees(helpers):
+    helpers.node.reset_fees()
