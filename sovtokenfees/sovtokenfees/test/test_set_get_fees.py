@@ -1,28 +1,18 @@
 import pytest
-from sovtokenfees.static_fee_req_handler import \
-    StaticFeesReqHandler
 
 from common.serializers.serialization import state_roots_serializer
-
+from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
+from plenum.common.exceptions import (RequestNackedException,
+                                      RequestRejectedException)
+from plenum.common.txn_util import get_seq_no
+from sovtoken.constants import OUTPUTS, XFER_PUBLIC
+from sovtoken.test.helper import decode_proof
+from sovtoken.test.wallet import Address
+from sovtokenfees.constants import FEES
+from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from state.db.persistent_db import PersistentDB
-
 from state.trie.pruning_trie import Trie, rlp_encode
 from storage.kv_in_memory import KeyValueStorageInMemory
-
-from plenum.common.constants import NYM, STEWARD, STATE_PROOF, PROOF_NODES, \
-    ROOT_HASH
-from plenum.common.exceptions import RequestNackedException, \
-    RequestRejectedException
-from plenum.common.txn_util import get_seq_no
-from sovtokenfees.constants import FEES
-from sovtokenfees.test.helper import get_fees_from_ledger, \
-    check_fee_req_handler_in_memory_map_updated, send_set_fees, set_fees, \
-    send_get_fees
-from sovtoken.constants import XFER_PUBLIC, OUTPUTS
-from sovtoken.test.helper import decode_proof, do_public_minting
-from sovtoken.test.wallet import Address
-from plenum.test.conftest import get_data_for_role
-from sovtoken.test.conftest import build_wallets_from_data
 
 
 def test_get_fees_when_no_fees_set(helpers):
@@ -79,7 +69,8 @@ def test_get_fees(helpers, fees_set, fees):
 
 def test_change_fees(helpers, fees_set, fees):
     """
-    Change the sovtokenfees on the ledger and check that sovtokenfees has changed
+    Change the sovtokenfees on the ledger and check that sovtokenfees has
+    changed.
     """
     updated_fees = {**fees, NYM: 10}
     helpers.general.do_set_fees(updated_fees)
