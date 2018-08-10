@@ -9,10 +9,12 @@ class HelperWallet():
     - add_new_addresses
     - payment_signatures
     - sign_request_trustees
+    - sign_request_stewards
     """
 
-    def __init__(self, trustees):
-        self._trustees = trustees
+    def __init__(self, trustee_wallets, steward_wallets):
+        self._trustee_wallets = trustee_wallets
+        self._steward_wallets = steward_wallets
 
     def add_new_addresses(self, wallet, n):
         """ Create and add n new addresses to a wallet. """
@@ -36,8 +38,15 @@ class HelperWallet():
 
     def sign_request_trustees(self, request):
         """ Sign a request with trustees. """
-        for trustee in self._trustees:
-            trustee.do_multi_sig_on_req(request, identifier=trustee.defaultId)
+        return self._sign_request(request, self._trustee_wallets)
+
+    def sign_request_stewards(self, request):
+        """ Sign a request with stewards. """
+        return self._sign_request(request, self._steward_wallets)
+
+    def _sign_request(self, request, wallets):
+        for wallet in wallets:
+            wallet.do_multi_sig_on_req(request, identifier=wallet.defaultId)
         return request
 
     def _prepare_outputs(self, outputs):

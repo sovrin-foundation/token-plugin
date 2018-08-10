@@ -33,7 +33,7 @@ class HelperRequest(token_helper_request.HelperRequest):
             TXN_TYPE: GET_FEES
         }
 
-        request = self._create_request(payload)
+        request = self._create_request(payload, identifier=self._client_did)
         return request
 
     def add_fees(
