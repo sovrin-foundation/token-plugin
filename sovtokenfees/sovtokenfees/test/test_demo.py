@@ -61,11 +61,12 @@ def mint_tokens_to_client(helpers, client_address):
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
     assert client_utxos == [[client_address, 1, MINT_TOKEN_AMOUNT]]
 
+    formatted_utxos = [(utxo[0].address, utxo[1], utxo[2]) for utxo in client_utxos]
     demo_logger.log_header(step4_info)
     demo_logger.log_blue("Minted {} tokens to Client".format(MINT_TOKEN_AMOUNT))
-    demo_logger.log_blue("Client wallet contained utxo at address {}:".format(client_address.address))
-    demo_logger.log_yellow(client_utxos)
-    demo_logger.log_blue("utxo format is (sequence_number, tokens)")
+    demo_logger.log_blue("Client address {} contained utxo:".format(client_address.address))
+    demo_logger.log_yellow(formatted_utxos[0])
+    demo_logger.log_blue("utxo format is (address, sequence_number, tokens)")
 
     return client_utxos
 
@@ -93,9 +94,10 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
     responses = helpers.sdk.send_and_check_request_objects([nym_request])
     result = helpers.sdk.get_first_result(responses)
 
+    formatted_request = demo_logger.format_json(nym_request.as_dict)
     demo_logger.log_header(step5_info)
     demo_logger.log_blue("Sent NYM request:")
-    demo_logger.log_yellow(nym_request)
+    demo_logger.log_yellow(formatted_request)
 
     return result
 
@@ -108,9 +110,11 @@ def check_tokens_at_address(helpers, client_address):
     expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
     assert client_utxos == [[client_address, 2, expected_amount]]
 
+    formatted_utxos = [(utxo[0].address, utxo[1], utxo[2]) for utxo in client_utxos]
     demo_logger.log_header(step6_info)
-    demo_logger.log_blue("Client wallet contained utxo at address {}:".format(client_address.address))
-    demo_logger.log_yellow(client_utxos)
+    demo_logger.log_blue("Client address {} contained utxo:".format(client_address.address))
+    demo_logger.log_yellow(formatted_utxos[0])
+    demo_logger.log_blue("utxo format is (address, sequence_number, tokens)")
 
 
 step7_info = """
@@ -127,9 +131,10 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
     nym_seq_no = get_seq_no(nym_result)
     helpers.node.assert_deducted_fees(NYM, nym_seq_no, TXN_FEES[NYM])
 
+    formatted_txn = demo_logger.format_json(transactions[0])
     demo_logger.log_header(step7_info)
     demo_logger.log_blue("Fee transaction found on Payment ledger:")
-    demo_logger.log_yellow(transactions[0])
+    demo_logger.log_yellow(formatted_txn)
 
 
 # TODO Fees are distributed

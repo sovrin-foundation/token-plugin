@@ -20,9 +20,7 @@ class HelperNode():
         key = "{}#{}".format(txn_type, seq_no)
         for node in self._nodes:
             req_handler = self._get_fees_req_handler(node)
-            print(req_handler.deducted_fees)
             deducted = req_handler.deducted_fees.get(key, 0)
-            print("{} : {}".format(key, deducted))
             assert deducted == amount
 
     def assert_set_fees_in_memory(self, fees):
