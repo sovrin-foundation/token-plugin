@@ -63,7 +63,7 @@ class HelperRequest(token_helper_request.HelperRequest):
 
         # Remove the amount from the inputs and use address string
         inputs = [
-            (address.address, seq_no)
+            [address.address, seq_no]
             for address, seq_no, _amount in inputs
         ]
         outputs = self._prepare_outputs(outputs)
