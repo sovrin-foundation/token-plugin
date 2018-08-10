@@ -1,7 +1,8 @@
 import json
 
-from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION
+from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
+from plenum.common.types import f
 from plenum.common.util import randomString
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
     MINT_PUBLIC, GET_UTXO, ADDRESS
@@ -42,6 +43,17 @@ class HelperRequest():
             ADDRESS: address.address
         }
 
+        request = self._create_request(payload, self._client_did)
+
+        return request
+
+    def get_txn(self, ledger_id, seq_no):
+        """ Builds a get_utxo request. """
+        payload = {
+            TXN_TYPE: GET_TXN,
+            f.LEDGER_ID.nm: ledger_id,
+            DATA: seq_no
+        }
         request = self._create_request(payload, self._client_did)
 
         return request
