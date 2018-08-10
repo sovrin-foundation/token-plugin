@@ -1,9 +1,11 @@
 from typing import List
 
-from plenum.common.util import updateNamedTuple
 from sovtoken.types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
+from stp_core.common.log import getlogger
+
+logger = getlogger()
 
 
 class UTXOCache(OptimisticKVStore):
@@ -36,6 +38,7 @@ class UTXOCache(OptimisticKVStore):
             seq_nos = self._parse_type2_val(seq_nos)
         except KeyError:
             seq_nos = []
+        logger.debug('adding new output: type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
         seq_no_str = str(output.seq_no)
         if seq_no_str not in seq_nos:
             seq_nos.append(seq_no_str)
@@ -48,6 +51,7 @@ class UTXOCache(OptimisticKVStore):
     def get_output(self, output: Output, is_committed=False) -> Output:
         type1_key = self._create_type1_key(output)
         val = self.get(type1_key, is_committed)
+        logger.debug('Getting type1 key {}, val is {}'.format(type1_key, val))
         if not val:
             raise KeyError(type1_key)
         return Output(output.address, output.seq_no, int(val))
@@ -60,6 +64,7 @@ class UTXOCache(OptimisticKVStore):
         seq_nos = self.get(type2_key, is_committed)
         if isinstance(seq_nos, (bytes, bytearray)):
             seq_nos = seq_nos.decode()
+        logger.debug('spending output type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
         seq_nos = self._parse_type2_val(seq_nos)
         seq_no_str = str(output.seq_no)
         if seq_no_str not in seq_nos:
@@ -69,7 +74,6 @@ class UTXOCache(OptimisticKVStore):
         type2_val = self._create_type2_val(seq_nos)
         batch.append((self._store.WRITE_OP, type2_key, type2_val))
         self.do_ops_in_batch(batch, is_committed=is_committed)
-
 
     # Retrieves a list of the unspent outputs from the key value storage that
     # are associated with the provided address

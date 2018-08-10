@@ -14,7 +14,7 @@ from sovtoken.constants import INPUTS, OUTPUTS
 def add_fees_request_with_address(helpers, fees_set, request, address):
     utxos = helpers.general.get_utxo_addresses([address])[0]
     fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
-    request_with_fees = helpers.request.add_fees(
+    helpers.request.add_fees(
         request,
         utxos,
         fee_amount,
