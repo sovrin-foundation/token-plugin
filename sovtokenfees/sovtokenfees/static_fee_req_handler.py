@@ -197,11 +197,11 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def _get_deducted_fees_xfer(self, request, required_fees):
         try:
-            sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
-                self.utxo_cache,
-                request.operation[INPUTS],
-                request.operation[OUTPUTS],
-                is_committed=False)
+            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
+                                                      request,
+                                                      is_committed=False)
+
+            sum_outputs = TokenReqHandler.sum_outputs(request)
         except KeyError as ex:
             raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
         except Exception as ex:
@@ -232,7 +232,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             error = 'fees not present or improperly formed'
         if not error:
             try:
-                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
+                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
             except KeyError as ex:
                 raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
             else:
