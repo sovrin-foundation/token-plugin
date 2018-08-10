@@ -94,6 +94,12 @@ class UTXOCache(OptimisticKVStore):
         except KeyError:
             return []
 
+    def sum_inputs(self, inputs: list, is_committed=False):
+        output_val = 0
+        for addr, seq_no in inputs:
+            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+        return output_val
+
     # Creates a type1 key with this format: '0:address:sequence_number'
     # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
     @staticmethod
