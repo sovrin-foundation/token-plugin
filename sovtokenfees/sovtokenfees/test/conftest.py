@@ -1,6 +1,5 @@
 from sovtoken.constants import XFER_PUBLIC
 from sovtoken.main import integrate_plugin_in_node as enable_token
-from sovtokenfees.test.wallet import FeeSupportedWallet
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
@@ -11,10 +10,7 @@ from sovtokenfees import CLIENT_REQUEST_FIELDS
 from sovtoken.test.conftest import trustee_wallets, SF_address, \
     seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
     tokens_distributed, steward_wallets
-from sovtoken.test.helper import user1_address, \
-    user1_token_wallet, user2_address, user2_token_wallet, user3_address, \
-    user3_token_wallet
-from sovtokenfees.test.helper import set_fees
+from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.test.helpers import form_helpers
 
 
@@ -49,28 +45,6 @@ def fees(request):
 def fees_set(helpers, fees):
     result = helpers.general.do_set_fees(fees)
     return get_payload_data(result)
-
-
-# Wallet should have support to track sovtokenfees
-
-@pytest.fixture(scope="module")
-def seller_token_wallet():
-    return FeeSupportedWallet('SELLER')
-
-
-@pytest.fixture(scope="module") # noqa
-def user1_token_wallet():
-    return FeeSupportedWallet('user1')
-
-
-@pytest.fixture(scope="module") # noqa
-def user2_token_wallet():
-    return FeeSupportedWallet('user2')
-
-
-@pytest.fixture(scope="module") # noqa
-def user3_token_wallet():
-    return FeeSupportedWallet('user3')
 
 
 @pytest.fixture(scope="module")
