@@ -6,14 +6,23 @@ class HelperNode():
     Helper for dealing with the nodes.
 
     # Methods
-    - check_fees_in_memory_map
+    - assert_deducted_fees
+    - assert_set_fees_in_memory
     - reset_fees
     """
 
     def __init__(self, nodes):
         self._nodes = nodes
 
-    def check_fees_in_memory_map(self, fees):
+    def assert_deducted_fees(self, txn_type, seq_no, amount):
+        """ Assert nodes have paid fees stored in memory """
+        key = "{}#{}".format(txn_type, seq_no)
+        for node in self._nodes:
+            req_handler = self._get_fees_req_handler(node)
+            deducted = req_handler.deducted_fees.get(key, 0)
+            assert deducted == amount
+
+    def assert_set_fees_in_memory(self, fees):
         """ Assert nodes hold a certain fees in memory. """
         for node in self._nodes:
             req_handler = self._get_fees_req_handler(node)
