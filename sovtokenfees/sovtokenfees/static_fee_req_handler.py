@@ -207,20 +207,20 @@ class StaticFeesReqHandler(FeeReqHandler):
         except Exception as ex:
             error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
-            required_sum_outputs = sum_outputs + required_fees
+            expected_amount = sum_outputs + required_fees
             # Check for the happy and probably most common case first and cause early return
-            if sum_inputs == required_sum_outputs:
+            if sum_inputs == expected_amount:
                 deducted_fees = sum_inputs - sum_outputs
                 return deducted_fees
-            if sum_inputs < required_sum_outputs:
+            if sum_inputs < expected_amount:
                 error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
                 raise InsufficientFundsError(request.identifier, request.reqId, error)
-            if sum_inputs > required_sum_outputs:
+            if sum_inputs > expected_amount:
                 error = 'Extra funds, sum of inputs is {} ' \
                     'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, required_sum_outputs, sum_outputs, required_fees)
+                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
                 raise ExtraFundsError(request.identifier, request.reqId, error)
 
         if error:
@@ -237,11 +237,18 @@ class StaticFeesReqHandler(FeeReqHandler):
                 raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
-                # TODO: Reconsider, this forces the sender to pay the exact amount of sovtokenfees, not more, not less
-                if sum_inputs != (change_amount + required_fees):
+                expected_amount = change_amount + required_fees
+                if sum_inputs == expected_amount:
+                    return
+                if sum_inputs < expected_amount:
                     error = 'Insufficient fees, sum of inputs is {} and sum ' \
                         'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
                     raise InsufficientFundsError(request.identifier, request.reqId, error)
+                if sum_inputs > expected_amount:
+                    error = 'Extra funds, sum of inputs is {} ' \
+                            'but required is {} (change amount: {}, ' \
+                            'fees: {})'.format(sum_inputs, expected_amount, change_amount, required_fees)
+                    raise ExtraFundsError(request.identifier, request.reqId, error)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

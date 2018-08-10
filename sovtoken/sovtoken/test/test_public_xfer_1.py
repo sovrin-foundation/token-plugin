@@ -1,10 +1,9 @@
-import json
 import pytest
 
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS, INPUTS, OUTPUTS
+from sovtoken.constants import SIGS
 from sovtoken.test.helper import user1_token_wallet
 
 
