@@ -1,11 +1,10 @@
 import json
 
 from plenum.common.constants import NYM
-from plenum.common.util import randomString
-from sovtokenfees.test.helper import gen_nym_req_for_fees
+from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import XFER_PUBLIC
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_replies
-from plenum.test.pool_transactions.helper import sdk_add_new_nym
+from sovtokenfees.constants import FEES
+
 
 TXN_FEES = {
     NYM: 0,
@@ -13,18 +12,29 @@ TXN_FEES = {
 }
 
 
-def test_txn_with_no_fees_specified(tokens_distributed, looper, sdk_wallet_steward,  # noqa
-                                    sdk_pool_handle, fees_set,
-                                    user1_address, user1_token_wallet):
-    name = randomString(6)
-    sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward, alias=name)
+def test_txn_with_no_fees_specified(helpers):
+    helpers.general.do_set_fees(TXN_FEES)
+    request = helpers.request.nym()
+    helpers.sdk.send_and_check_request_objects([request])
 
 
-def test_txn_with_0_fees_specified(tokens_distributed, looper, sdk_wallet_steward,  # noqa
-                                   sdk_pool_handle, fees_set,
-                                   user1_address, user1_token_wallet):
-    req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
-    req = user1_token_wallet.add_fees_to_request(req, fee_amount=0,
-                                                 address=user1_address)
-    res = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(req.__dict__)])
-    assert sdk_get_replies(looper, res, timeout=20)
+def test_txn_with_0_fees_specified(helpers):
+    helpers.general.do_set_fees(TXN_FEES)
+    address = helpers.wallet.create_address()
+    helpers.general.do_mint([[address, 1000]])
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+
+    request = helpers.request.nym()
+    helpers.request.add_fees(
+        request,
+        utxos,
+        fee_amount=0,
+        change_address=address
+    )
+    responses = helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.get_first_result(responses)
+    fee_seq_no = get_seq_no(result[FEES])
+
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+
+    assert utxos == [[address, fee_seq_no, 1000]]
