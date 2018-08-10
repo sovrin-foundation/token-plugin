@@ -18,7 +18,7 @@ from storage.kv_in_memory import KeyValueStorageInMemory
 def test_get_fees_when_no_fees_set(helpers):
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
-    helpers.node.check_fees_in_memory_map({})
+    helpers.node.assert_set_fees_in_memory({})
 
 
 def test_trustee_set_invalid_fees(helpers):
@@ -56,7 +56,7 @@ def test_trustee_set_valid_fees(helpers, fees_set, fees):
     """
     Set a valid sovtokenfees
     """
-    helpers.node.check_fees_in_memory_map(fees)
+    helpers.node.assert_set_fees_in_memory(fees)
 
 
 def test_get_fees(helpers, fees_set, fees):
@@ -77,7 +77,7 @@ def test_change_fees(helpers, fees_set, fees):
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == updated_fees
     assert ledger_fees != fees
-    helpers.node.check_fees_in_memory_map(updated_fees)
+    helpers.node.assert_set_fees_in_memory(updated_fees)
 
 
 def test_get_fees_with_proof(helpers, fees_set, fees):

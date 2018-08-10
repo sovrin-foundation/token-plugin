@@ -7,7 +7,7 @@ class HelperNode():
 
     # Methods
     - assert_deducted_fees
-    - check_fees_in_memory_map
+    - assert_set_fees_in_memory
     - reset_fees
     """
 
@@ -22,7 +22,7 @@ class HelperNode():
             deducted = req_handler.deducted_fees.get(key, 0)
             assert deducted == amount
 
-    def check_fees_in_memory_map(self, fees):
+    def assert_set_fees_in_memory(self, fees):
         """ Assert nodes hold a certain fees in memory. """
         for node in self._nodes:
             req_handler = self._get_fees_req_handler(node)
