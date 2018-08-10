@@ -1,94 +1,114 @@
 import pytest
 
-from plenum.common.constants import CONFIG_LEDGER_ID
 from plenum.common.exceptions import RequestRejectedException
-from plenum.common.txn_util import get_type, get_seq_no, get_payload_data
-from sovtokenfees.constants import FEES
-from sovtoken.constants import XFER_PUBLIC
-from sovtoken.util import update_token_wallet_with_result
-from sovtoken.test.helper import send_xfer, do_public_minting
-from sovtoken.test.conftest import seller_gets
+from plenum.common.txn_util import get_seq_no
+from sovtoken.constants import XFER_PUBLIC, OUTPUTS
 
 
-def test_xfer_with_insufficient_fees(public_minting, looper, fees_set,
-                                     nodeSetWithIntegratedTokenPlugin,
-                                     sdk_pool_handle,
-                                     seller_token_wallet, seller_address, user1_address,
-                                     user1_token_wallet):
-    # Payed fees is less than required fees
-    global seller_gets
-    seq_no = get_seq_no(public_minting)
-    fee_amount = fees_set[FEES][XFER_PUBLIC]
-    user1_gets = 10
-    seller_remaining = seller_gets - (user1_gets + fee_amount - 1)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
+@pytest.fixture()
+def addresses(helpers, user1_token_wallet):
+    return helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+
+
+@pytest.fixture()
+def mint_tokens(helpers, addresses):
+    outputs = [[addresses[0], 1000]]
+    return helpers.general.do_mint(outputs)
+
+
+def send_transfer_request(helpers, mint_result, fees, addresses, adjust_fees=0):
+    helpers.general.do_set_fees(fees)
+
+    [address_giver, address_receiver] = addresses
+    mint_seq_no = get_seq_no(mint_result)
+    fee_amount = fees[XFER_PUBLIC] + adjust_fees
+
+    inputs = [[address_giver, mint_seq_no]]
+    outputs = [[address_receiver, 100], [address_giver, 900 - fee_amount]]
+    result = helpers.general.do_transfer(inputs, outputs)
+
+    return result
+
+
+# Attempt a transfer transaction with insufficient fees.
+def test_xfer_with_insufficient_fees(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees,
+):
     with pytest.raises(RequestRejectedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        send_transfer_request(
+            helpers,
+            mint_tokens,
+            fees,
+            addresses,
+            adjust_fees=-1
+        )
 
 
-def test_xfer_with_extra_fees(public_minting, looper, fees_set,
-                                     nodeSetWithIntegratedTokenPlugin,
-                                     sdk_pool_handle,
-                                     seller_token_wallet, seller_address, user1_address,
-                                     user1_token_wallet):
-    # Payed fees is less than required fees
-    global seller_gets
-    seq_no = get_seq_no(public_minting)
-    fee_amount = fees_set[FEES][XFER_PUBLIC]
-    user1_gets = 10
-    seller_remaining = seller_gets - (user1_gets + fee_amount + 1)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
+# Attempt a transfer transaction with extra fees.
+def test_xfer_with_extra_fees(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees,
+):
     with pytest.raises(RequestRejectedException):
-        send_xfer(looper, inputs, outputs, sdk_pool_handle)
+        send_transfer_request(
+            helpers,
+            mint_tokens,
+            fees,
+            addresses,
+            adjust_fees=1
+        )
 
 
-@pytest.fixture(scope="module")
-def xfer_with_fees_done(helpers, public_minting, looper, fees,
-                   sdk_pool_handle,
-                   seller_token_wallet, seller_address, user1_address,
-                   user1_token_wallet):
-    # TODO: Refactor this file to remove test dependence.
-    # Can't use the fees_set fixture because this is a module scope.
-    # Just setting fees in here directly until some refacotring is done in this
-    # file.
-    result = helpers.general.do_set_fees(fees)
-    fees_set = get_payload_data(result)
+def test_xfer_with_sufficient_fees(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees,
+):
+    [address_giver, address_receiver] = addresses
+    result = send_transfer_request(helpers, mint_tokens, fees, addresses)
+    transfer_seq_no = get_seq_no(result)
+    fee_amount = fees[XFER_PUBLIC]
 
-    global seller_gets
-    seq_no = get_seq_no(public_minting)
-    fee_amount = fees_set[FEES][XFER_PUBLIC]
-    user1_gets = 10
-    seller_remaining = seller_gets - (user1_gets + fee_amount)
-    inputs = [[seller_token_wallet, seller_address, seq_no]]
-    outputs = [[user1_address, user1_gets], [seller_address, seller_remaining]]
-    res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
-    update_token_wallet_with_result(seller_token_wallet, res)
-    update_token_wallet_with_result(user1_token_wallet, res)
-    return seller_remaining, user1_gets, res
+    [
+        address_giver_utxos,
+        address_receiver_utxos,
+    ] = helpers.general.get_utxo_addresses(addresses)
 
+    assert address_giver_utxos == [
+        [address_giver, transfer_seq_no, 900 - fee_amount]
+    ]
+    assert address_receiver_utxos == [
+        [address_receiver, transfer_seq_no, 100]
+    ]
 
-def test_xfer_with_sufficient_fees(xfer_with_fees_done, looper, fees_set,
-                   nodeSetWithIntegratedTokenPlugin, sdk_pool_handle,
-                   seller_token_wallet, seller_address, user1_address,
-                   user1_token_wallet):
-    global seller_gets
-    seller_remaining, user1_gets, res = xfer_with_fees_done
-    fee_amount = fees_set[FEES][XFER_PUBLIC]
-    assert seller_remaining == seller_token_wallet.get_total_address_amount(seller_address)
-    assert user1_gets == user1_token_wallet.get_total_address_amount(user1_address)
-    seller_gets = seller_remaining
-    for node in nodeSetWithIntegratedTokenPlugin:
-        req_handler = node.get_req_handler(CONFIG_LEDGER_ID)
-        assert req_handler.deducted_fees["{}#{}".format(get_type(res), get_seq_no(res))] == fee_amount
+    helpers.node.assert_deducted_fees(XFER_PUBLIC, transfer_seq_no, fee_amount)
 
 
-def test_mint_after_paying_fees(xfer_with_fees_done, looper, nodeSetWithIntegratedTokenPlugin,
-                             trustee_wallets, SF_address, seller_address,
-                             sdk_pool_handle):
-    # Try another minting after doing some txns with fees
-    total_mint = 100
-    sf_master_gets = 60
-    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
-                      sf_master_gets, SF_address, seller_address)
+# Mint after a transfer transaction with fees
+def test_mint_after_paying_fees(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees
+):
+    xfer_result = send_transfer_request(helpers, mint_tokens, fees, addresses)
+
+    address_giver = addresses[0]
+    outputs = [[address_giver, 1000]]
+    mint_result = helpers.general.do_mint(outputs)
+    xfer_seq_no = get_seq_no(xfer_result)
+    mint_seq_no = get_seq_no(mint_result)
+
+    utxos = helpers.general.do_get_utxo(address_giver)[OUTPUTS]
+    print(utxos)
+
+    assert utxos == [
+        [address_giver.address, xfer_seq_no, 900 - fees[XFER_PUBLIC]],
+        [address_giver.address, mint_seq_no, 1000],
+    ]
