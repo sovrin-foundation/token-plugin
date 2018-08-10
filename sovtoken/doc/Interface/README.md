@@ -5,11 +5,11 @@ The format of sovtoken transactions requests and responses
 ## GET_UTXO transaction request
 ```
 {
-    "identifier": <str>,        // the payment address
+    "identifier": <str>,        // submitter of txn; normally a DID, but for payments, a payment addr
     "operation":
     {
-        "address": <str>,       // the payment address
-        "type": 10002
+        "address": <str>,       // the payment address for which we're seeking UTXOs
+        "type": 10002           // the numeric txn id of "GET_UTXO"
     },
     "reqId": <int>,             // a random identifier
     "protocolVersion": <int>    // (optional)  the version of the client/node communication protocol
@@ -105,7 +105,8 @@ Example:
 ```
 
 ## XFER_PUBLIC transaction request
-    note: any difference between the sum of the inputs and the sum of outputs is the fees amount
+    note: any difference between the sum of the inputs and the sum of outputs
+    used to be the fees amount, but now renders the txn invalid
 ```
 {
     "identifier": <str>,        // first <source payment address w/o checksum>
