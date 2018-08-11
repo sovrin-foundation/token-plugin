@@ -16,6 +16,9 @@ class HelperWallet():
         self._trustee_wallets = trustee_wallets
         self._steward_wallets = steward_wallets
 
+    def create_address(self):
+        return Address()
+
     def add_new_addresses(self, wallet, n):
         """ Create and add n new addresses to a wallet. """
         addresses = []
