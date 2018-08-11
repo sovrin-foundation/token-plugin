@@ -1,6 +1,9 @@
-import os
+import json
 import logging
+import os
+
 import py._io.terminalwriter as terminalwriter
+
 
 class DemoLogger():
 
@@ -12,7 +15,7 @@ class DemoLogger():
             self._tw = terminalwriter.TerminalWriter()
             self._tw.hasmarkup = True
 
-    def log(self, msg, log_level = logging.DEBUG, color=None):
+    def log(self, msg, log_level=logging.DEBUG, color=None):
         msg = str(msg).strip()
         if color and hasattr(self, '_tw'):
             msg = ' ' * self._indent + msg
@@ -36,3 +39,6 @@ class DemoLogger():
 
     def set_indent(self, number_of_spaces):
         self._indent = number_of_spaces
+
+    def format_json(self, dictionary):
+        return json.dumps(dictionary, indent=3, sort_keys=True)
