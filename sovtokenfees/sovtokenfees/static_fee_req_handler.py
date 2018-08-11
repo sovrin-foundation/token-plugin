@@ -2,6 +2,7 @@ from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
 from common.serializers.base58_serializer import Base58Serializer
+from sovtokenfees import FeesTransactions
 from stp_core.common.log import getlogger
 
 txn_root_serializer = Base58Serializer()
@@ -109,7 +110,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 sigs = {i[0]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
-                        TXN_TYPE: FEES,
+                        TXN_TYPE: FeesTransactions.FEES.value,
                         INPUTS: inputs,
                         OUTPUTS: outputs,
                         REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
@@ -301,7 +302,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             val = self.state_serializer.serialize(existing_fees)
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
-        elif typ == FEES: # typ is None or null
+        elif typ == FeesTransactions.FEES.value: # typ is None or null
             for addr, seq_no in txn['txn']['data'][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
@@ -317,6 +318,5 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                    amount),
                                                is_committed=is_committed)
         else:
-            logger.warning('Unknown type {} found while updating state with txn {}'.format(typ, txn))
-
-
+            logger.warning('Unknown type {} found while updating '
+                           'state with txn {}'.format(typ, txn))

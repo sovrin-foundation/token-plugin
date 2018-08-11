@@ -48,7 +48,7 @@ class HelperRequest():
         return request
 
     def get_txn(self, ledger_id, seq_no):
-        """ Builds a get_utxo request. """
+        """ Builds a get_txn request. """
         payload = {
             TXN_TYPE: GET_TXN,
             f.LEDGER_ID.nm: ledger_id,

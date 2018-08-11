@@ -34,13 +34,7 @@ def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([[address_main, 1000]])
 
 
-@pytest.fixture()
-def fees_paid(
-    helpers,
-    fees_set,
-    address_main,
-    mint_tokens
-):
+def pay_fees(helpers, fees_set, address_main, mint_tokens):
     request = helpers.request.nym()
 
     request = add_fees_request_with_address(
@@ -53,6 +47,16 @@ def fees_paid(
     responses = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(responses)
     return result
+
+
+@pytest.fixture()
+def fees_paid(
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens
+):
+    return pay_fees(helpers, fees_set, address_main, mint_tokens)
 
 
 def test_insufficient_fees(
@@ -207,7 +211,7 @@ def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
     seq_no = get_seq_no(fees_paid[FEES])
     request = helpers.request.get_txn(TOKEN_LEDGER_ID, seq_no)
     responses = helpers.sdk.send_and_check_request_objects([request, ])
-    result = responses[0][1]['result']
+    result = helpers.sdk.get_first_result(responses)
     data = result[DATA]
     for node in nodeSetWithIntegratedTokenPlugin:
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)
@@ -215,7 +219,6 @@ def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
         assert get_payload_data(fee_txn) == get_payload_data(data)
         assert get_seq_no(fee_txn) == get_seq_no(data)
         assert get_txn_time(fee_txn) == get_txn_time(data)
-    print(data)
 
 
 def test_fees_utxo_reuse(
