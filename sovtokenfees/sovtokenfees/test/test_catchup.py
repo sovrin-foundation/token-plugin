@@ -1,6 +1,7 @@
 from plenum.common.config_helper import PNodeConfigHelper
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_seq_no
+from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test.test_node import TestNode
 from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID
 from sovtoken.test.helper import user1_token_wallet
@@ -8,7 +9,7 @@ from sovtoken.test.test_public_xfer_1 import addresses
 from sovtoken.main import integrate_plugin_in_node as integrate_token_plugin_in_node
 from sovtokenfees.main import integrate_plugin_in_node as integrate_fees_plugin_in_node
 from sovtokenfees.test.test_fees_non_xfer_txn import pay_fees, mint_tokens, address_main
-
+from stp_core.loop.eventually import eventually
 
 TestRunningTimeLimitSec = 250
 
@@ -45,7 +46,7 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
         seq_no = get_seq_no(result)
         remaining -= 2
 
-    for _ in range(10):
+    for _ in range(5):
         pay_fees(helpers, fees_set, address_main, mint_tokens)
 
     config_helper = PNodeConfigHelper(last_node.name, tconf, chroot=tdir)
@@ -65,5 +66,15 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
     looper.add(restarted_node)
     nodeSetWithIntegratedTokenPlugin.append(restarted_node)
 
+    def chk():
+        sizes = set()
+        for node in nodeSetWithIntegratedTokenPlugin:
+            token_ledger = node.getLedger(TOKEN_LEDGER_ID)
+            sizes.add(token_ledger.size)
 
+        assert len(sizes) == 1
+
+    looper.run(eventually(chk, timeout=60))
+
+    # TODO: Add more checks
 

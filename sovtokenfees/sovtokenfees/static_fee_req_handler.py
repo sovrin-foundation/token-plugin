@@ -17,7 +17,7 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
     get_req_id
 from plenum.common.types import f, OPERATION
 from plenum.server.domain_req_handler import DomainRequestHandler
-from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
+from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
@@ -32,8 +32,8 @@ logger = getlogger()
 
 
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {SET_FEES, GET_FEES}
-    write_types = {SET_FEES, }
+    valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
+    write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
     MinSendersForFees = 4
@@ -110,7 +110,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 sigs = {i[0]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
-                        TXN_TYPE: FeesTransactions.FEES.value,
+                        TXN_TYPE: FEE_TXN,
                         INPUTS: inputs,
                         OUTPUTS: outputs,
                         REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
@@ -302,7 +302,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             val = self.state_serializer.serialize(existing_fees)
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
-        elif typ == FeesTransactions.FEES.value: # typ is None or null
+        elif typ == FEE_TXN:
             for addr, seq_no in txn['txn']['data'][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
@@ -320,3 +320,11 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             logger.warning('Unknown type {} found while updating '
                            'state with txn {}'.format(typ, txn))
+
+    @staticmethod
+    def transform_txn_for_ledger(txn):
+        """
+        Some transactions need to be updated before they can be stored in the
+        ledger
+        """
+        return txn
