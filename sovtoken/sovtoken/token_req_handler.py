@@ -212,6 +212,9 @@ class TokenReqHandler(LedgerRequestHandler):
         else:
             proof = {}
 
+        # The outputs need to be returned in sorted order since each node's reply should be same.
+        # Since no of outputs can be large, a concious choice to not use `operator.attrgetter` on an
+        # already constructed list was made
         outputs = SortedIems()
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())

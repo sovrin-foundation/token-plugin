@@ -34,6 +34,7 @@ def decode_address_to_vk_bytes(address):
 
 
 class SortedIems:
+    # Used to keep the inserted items in sorted order.
     def __init__(self):
         self._heap = []
 
