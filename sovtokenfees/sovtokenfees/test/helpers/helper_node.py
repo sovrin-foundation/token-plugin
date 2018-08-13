@@ -8,6 +8,7 @@ class HelperNode():
     # Methods
     - assert_deducted_fees
     - assert_set_fees_in_memory
+    - get_last_ledger_transaction_on_nodes
     - reset_fees
     """
 
@@ -27,6 +28,16 @@ class HelperNode():
         for node in self._nodes:
             req_handler = self._get_fees_req_handler(node)
             assert req_handler.fees == fees
+
+    def get_last_ledger_transaction_on_nodes(self, ledger_id):
+        """ Return last transaction stored on ledger from each node. """
+        transactions = []
+        for node in self._nodes:
+            ledger = node.getLedger(ledger_id)
+            last_sequence_number = ledger.size
+            transactions.append(ledger.getBySeqNo(last_sequence_number))
+
+        return transactions
 
     def reset_fees(self):
         """ Reset the fees on each node. """

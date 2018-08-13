@@ -1,24 +1,27 @@
+import operator
 from typing import List, Iterable
 
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
-from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
+from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
 from sovtoken.messages.validation import static_req_validation
 
 
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, MULTI_SIGNATURE, ROLE
+    PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException
 
 from plenum.common.request import Request
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
+from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
+from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError
 
@@ -146,6 +149,22 @@ class TokenReqHandler(LedgerRequestHandler):
         """
         return txn
 
+    def _reqToTxn(self, req: Request):
+        """
+        Converts the request to a transaction. This is called by LedgerRequestHandler. Not a
+        public method. TODO we should consider a more standard approach to inheritance.
+
+        :param req:
+        :return: the converted transaction from the Request
+        """
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = req.operation.pop(SIGS)
+        txn = reqToTxn(req)
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
+            add_sigs_to_txn(txn, sigs, sig_type=ED25519)
+        return txn
+
     def _update_state_mint_public_txn(self, txn, is_committed=False):
         payload = get_payload_data(txn)
         seq_no = get_seq_no(txn)
@@ -210,16 +229,19 @@ class TokenReqHandler(LedgerRequestHandler):
         else:
             proof = {}
 
-        outputs = []
+        # The outputs need to be returned in sorted order since each node's reply should be same.
+        # Since no of outputs can be large, a concious choice to not use `operator.attrgetter` on an
+        # already constructed list was made
+        outputs = SortedItems()
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
             if not amount:
                 continue
-            outputs.append(Output(addr, int(seq_no), int(amount)))
+            outputs.add(Output(addr, int(seq_no), int(amount)))
 
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs}
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs.sorted_list}
         if proof:
             result[STATE_PROOF] = proof
 
@@ -264,13 +286,6 @@ class TokenReqHandler(LedgerRequestHandler):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
-
-    # @staticmethod
-    # def get_sum_inputs_outputs(utxo_cache, inputs, outputs, is_committed=False):
-    #     sum_inputs = TokenReqHandler.sum_inputs(utxo_cache, inputs,
-    #                                             is_committed=is_committed)
-    #     sum_outputs = sum(o[1] for o in outputs)
-    #     return sum_inputs, sum_outputs
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
