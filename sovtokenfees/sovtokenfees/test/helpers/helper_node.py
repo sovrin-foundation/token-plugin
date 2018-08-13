@@ -8,6 +8,7 @@ class HelperNode():
     # Methods
     - assert_deducted_fees
     - assert_set_fees_in_memory
+    - fee_handler_can_pay_fees
     - get_last_ledger_transaction_on_nodes
     - reset_fees
     """
@@ -43,6 +44,11 @@ class HelperNode():
         """ Reset the fees on each node. """
         for node in self._nodes:
             self._reset_fees(node)
+
+    def fee_handler_can_pay_fees(self, request):
+        """ Checks the request can pay fees using a StaticFeeRequestHandler """
+        request_handler = self._get_fees_req_handler(self._nodes[0])
+        return request_handler.can_pay_fees(request)
 
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)

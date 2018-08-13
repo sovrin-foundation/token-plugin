@@ -11,7 +11,3 @@ class InvalidFundsError(InvalidClientMessageException):
 
 class ExtraFundsError(InvalidClientMessageException):
     pass
-
-
-class UTXOAlreadySpentError(InvalidClientMessageException):
-    pass

@@ -10,7 +10,7 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, UTXOAlreadySpentError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError
 
 
 # TEST CONSTANTS
