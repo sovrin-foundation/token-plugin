@@ -9,7 +9,6 @@ from sovtoken.test.test_public_xfer_1 import addresses
 from sovtoken.main import integrate_plugin_in_node as integrate_token_plugin_in_node
 from sovtokenfees.main import integrate_plugin_in_node as integrate_fees_plugin_in_node
 from sovtokenfees.test.test_fees_non_xfer_txn import pay_fees, mint_tokens, address_main
-from stp_core.loop.eventually import eventually
 
 TestRunningTimeLimitSec = 250
 
@@ -66,15 +65,4 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
     looper.add(restarted_node)
     nodeSetWithIntegratedTokenPlugin.append(restarted_node)
 
-    def chk():
-        sizes = set()
-        for node in nodeSetWithIntegratedTokenPlugin:
-            token_ledger = node.getLedger(TOKEN_LEDGER_ID)
-            sizes.add(token_ledger.size)
-
-        assert len(sizes) == 1
-
-    looper.run(eventually(chk, timeout=60))
-
-    # TODO: Add more checks
-
+    ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
