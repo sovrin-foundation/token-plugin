@@ -12,7 +12,7 @@ from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
     PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519
-from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException
+from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException, OperationError
 
 from plenum.common.request import Request
 from plenum.common.types import f
