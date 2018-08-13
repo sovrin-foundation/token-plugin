@@ -16,10 +16,10 @@ from sovtoken.test.helper import user1_token_wallet, user1_address
 from state.trie.pruning_trie import Trie, rlp_encode
 
 
-def test_xfer_with_multiple_inputs(public_minting, looper,  # noqa
-                                   sdk_pool_handle, sdk_wallet_client,
-                                   seller_token_wallet, seller_address,
-                                   user1_token_wallet, user1_address):
+def test_state_proof(public_minting, looper,  # noqa
+                     sdk_pool_handle, sdk_wallet_client,
+                     seller_token_wallet, seller_address,
+                     user1_token_wallet, user1_address):
     res = send_get_utxo(looper, seller_address, sdk_wallet_client, sdk_pool_handle)
     update_token_wallet_with_result(seller_token_wallet, res)
 
