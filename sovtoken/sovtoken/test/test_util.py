@@ -3,7 +3,7 @@ from base58 import b58decode
 from plenum.common.signer_simple import SimpleSigner
 from sovtoken.types import Output
 from sovtoken.util import verkey_to_address, \
-    address_to_verkey, SortedIems
+    address_to_verkey, SortedItems
 
 
 def test_address_to_verkey_and_vice_versa():
@@ -27,7 +27,7 @@ def test_outputs_in_order():
     o6 = Output('b', 6, 6)
     o7 = Output('b', 4, 7)
 
-    sr = SortedIems()
+    sr = SortedItems()
     sr.add(o6)
     sr.add(o5)
     sr.add(o2)

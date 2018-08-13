@@ -33,7 +33,7 @@ def decode_address_to_vk_bytes(address):
         raise UnknownIdentifier('{} is not a valid base58check value'.format(address))
 
 
-class SortedIems:
+class SortedItems:
     # Used to keep the inserted items in sorted order.
     def __init__(self):
         self._heap = []

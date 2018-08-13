@@ -20,7 +20,7 @@ from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from sovtoken.types import Output
-from sovtoken.util import SortedIems
+from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError
 
@@ -215,7 +215,7 @@ class TokenReqHandler(LedgerRequestHandler):
         # The outputs need to be returned in sorted order since each node's reply should be same.
         # Since no of outputs can be large, a concious choice to not use `operator.attrgetter` on an
         # already constructed list was made
-        outputs = SortedIems()
+        outputs = SortedItems()
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
