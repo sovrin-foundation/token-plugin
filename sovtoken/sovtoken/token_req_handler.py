@@ -236,10 +236,6 @@ class TokenReqHandler(LedgerRequestHandler):
                                is_committed=is_committed)
 
     @staticmethod
-    def get_ordered_by_seq_no_outputs(outputs: List[Output]) -> List[Output]:
-        return sorted(outputs, key=operator.attrgetter('seq_no'))
-
-    @staticmethod
     def create_state_key(address: str, seq_no: int) -> bytes:
         return ':'.join([address, str(seq_no)]).encode()
 
