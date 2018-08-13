@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 
 from setuptools import setup, find_packages
 
@@ -15,8 +16,9 @@ if sys.version_info < (3, 5):
 
 here = os.path.abspath(os.path.dirname(__file__))
 metadata={}
-with open(os.path.join(here, 'sovtokenfees', '__metadata__.py'), 'r') as f:
-    exec(f.read(), metadata)
+
+with open(os.path.join(here, 'sovtokenfees', 'metadata.json'), 'r') as f:
+    metadata = json.load(f)
 
 tests_require = ['pytest', 'pytest-xdist', 'python3-indy==1.6.1-dev-657']
 
@@ -44,4 +46,3 @@ setup(
     tests_require=tests_require,
     scripts=[]
 )
-
