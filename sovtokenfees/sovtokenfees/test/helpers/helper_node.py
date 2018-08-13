@@ -46,7 +46,7 @@ class HelperNode():
             self._reset_fees(node)
 
     def fee_handler_can_pay_fees(self, request):
-        """ Checks the request can pay fees using a StaticFeeRequestHandler """
+        """ Check the request can pay fees using a StaticFeeRequestHandler. """
         request_handler = self._get_fees_req_handler(self._nodes[0])
         return request_handler.can_pay_fees(request)
 

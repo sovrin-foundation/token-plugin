@@ -57,7 +57,10 @@ def create_static_handler(token_handler, node):
 
 
 def test_non_existent_input_xfer(helpers, user1_token_wallet):
-    """ Expect an InvalidFundsError on xfer with invalid inputs """
+    """
+    Expect an InvalidFundsError on a xfer request with inputs which don't
+    contain a valid utxo.
+    """
 
     fees = {
         XFER_PUBLIC: 10
@@ -80,7 +83,10 @@ def test_non_existent_input_xfer(helpers, user1_token_wallet):
 
 
 def test_non_existent_input_non_xfer(helpers):
-    """ Expect an InvalidFundsError on nym with invalid inputs """
+    """
+    Expect an InvalidFundsError on a nym request with inputs which don't
+    contain a valid utxo.
+    """
 
     fees = {
         NYM: 10
