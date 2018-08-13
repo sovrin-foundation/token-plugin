@@ -13,5 +13,16 @@ class ExtraFundsError(InvalidClientMessageException):
     pass
 
 
-class UTXOAlreadySpentError(InvalidClientMessageException):
+# class UTXOAlreadySpentError(InvalidClientMessageException):
+#     pass
+
+class UTXOError(Exception):
+    pass
+
+
+class UTXONotFound(UTXOError):
+    pass
+
+
+class UTXOAlreadySpentError(UTXOError):
     pass

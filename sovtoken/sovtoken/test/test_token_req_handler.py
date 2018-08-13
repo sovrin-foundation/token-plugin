@@ -5,13 +5,13 @@ import pytest
 from plenum.common.signer_simple import SimpleSigner
 
 from plenum.common.constants import TXN_TYPE, STATE_PROOF
-from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest, InvalidClientMessageException
+from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest, InvalidClientMessageException, \
+    OperationError
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
 from sovtoken.token_req_handler import TokenReqHandler
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, UTXOAlreadySpentError
-
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, UTXOAlreadySpentError, UTXOError
 
 # TEST CONSTANTS
 from sovtoken.types import Output
@@ -215,8 +215,8 @@ def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
                                                       INPUTS: [[VALID_ADDR_2, 3]],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
-    # This raises a KeyError because the input transaction isn't already in the UTXO_Cache
-    with pytest.raises(KeyError):
+    # This raises a UTXOError because the input transaction isn't already in the UTXO_Cache
+    with pytest.raises(OperationError):
         token_handler_b.apply(request, CONS_TIME)
     token_handler_b.onBatchRejected()
 

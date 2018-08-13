@@ -11,7 +11,7 @@ from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
     PROOF_NODES, MULTI_SIGNATURE, ROLE
-from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException
+from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException, OperationError
 
 from plenum.common.request import Request
 from plenum.common.types import f
@@ -20,7 +20,7 @@ from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError
 
 from state.trie.pruning_trie import rlp_decode
 
@@ -121,10 +121,10 @@ class TokenReqHandler(LedgerRequestHandler):
                                                         is_committed=False)
 
                 sum_outputs = TokenReqHandler.sum_outputs(request)
+            except InvalidClientMessageException as ex:
+                raise ex
             except Exception as ex:
-                if isinstance(ex, InvalidClientMessageException):
-                    raise ex
-                error = 'TException {} while processing inputs/outputs'.format(ex)
+                error = 'Exception {} while processing inputs/outputs'.format(ex)
                 raise InvalidClientMessageException(request.identifier,
                                                     getattr(request, 'reqId', None),
                                                     error)
@@ -141,8 +141,7 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def transform_txn_for_ledger(txn):
         """
-        Some transactions need to be updated before they can be stored in the
-        ledger
+        Token TXNs does not need to be transformed
         """
         return txn
 
@@ -163,13 +162,17 @@ class TokenReqHandler(LedgerRequestHandler):
                                  is_committed=is_committed)
 
     def updateState(self, txns, isCommitted=False):
-        for txn in txns:
-            typ = get_type(txn)
-            if typ == MINT_PUBLIC:
-                self._update_state_mint_public_txn(txn, is_committed=isCommitted)
+        try:
+            for txn in txns:
+                typ = get_type(txn)
+                if typ == MINT_PUBLIC:
+                    self._update_state_mint_public_txn(txn, is_committed=isCommitted)
 
-            if typ == XFER_PUBLIC:
-                self._update_state_xfer_public(txn, is_committed=isCommitted)
+                if typ == XFER_PUBLIC:
+                    self._update_state_xfer_public(txn, is_committed=isCommitted)
+        except UTXOError as ex:
+            error = 'Exception {} while updating state'.format(ex)
+            raise OperationError(error)
 
     def _spend_input(self, address, seq_no, is_committed=False):
         self.spend_input(self.state, self.utxo_cache, address, seq_no,
@@ -244,7 +247,7 @@ class TokenReqHandler(LedgerRequestHandler):
         try:
             inputs = request.operation[INPUTS]
             return utxo_cache.sum_inputs(inputs, is_committed=is_committed)
-        except KeyError as ex:
+        except UTXOError as ex:
             raise InvalidFundsError(request.identifier, request.reqId, '{}'.format(ex))
 
     @staticmethod
