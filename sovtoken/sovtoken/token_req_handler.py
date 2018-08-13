@@ -4,21 +4,22 @@ from typing import List, Iterable
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
-from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
+from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
 from sovtoken.messages.validation import static_req_validation
 
 
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, MULTI_SIGNATURE, ROLE
+    PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException
 
 from plenum.common.request import Request
 from plenum.common.types import f
 from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
+from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
 from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
@@ -146,6 +147,22 @@ class TokenReqHandler(LedgerRequestHandler):
         Some transactions need to be updated before they can be stored in the
         ledger
         """
+        return txn
+
+    def _reqToTxn(self, req: Request):
+        """
+        Converts the request to a transaction. This is called by LedgerRequestHandler. Not a
+        public method. TODO we should consider a more standard approach to inheritance.
+
+        :param req:
+        :return: the converted transaction from the Request
+        """
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = req.operation.pop(SIGS)
+        txn = reqToTxn(req)
+        if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
+            add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn
 
     def _update_state_mint_public_txn(self, txn, is_committed=False):
