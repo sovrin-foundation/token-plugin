@@ -159,8 +159,9 @@ def test_static_fee_req_handler_apply(token_handler_a, node):
                       None, SIGNATURES, 1)
 
     shandler = create_static_handler(token_handler_a, node)
+    prev_size = shandler.ledger.uncommitted_size
     ret_value = shandler.apply(request, 10)
-    assert ret_value[0] == 1
+    assert ret_value[0] == prev_size + 1
 
 
 # - Static Fee Request Handler (apply)
