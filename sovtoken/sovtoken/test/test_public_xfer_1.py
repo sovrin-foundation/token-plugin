@@ -112,6 +112,7 @@ def test_multiple_inputs_outputs_without_change(
 
     request = helpers.request.transfer(inputs, outputs)
     response = helpers.sdk.send_and_check_request_objects([request])
+    assert response[0][1]["result"]["reqSignature"] != {}
     result = helpers.sdk.get_first_result(response)
     xfer_seq_no = get_seq_no(result)
 
@@ -159,6 +160,7 @@ def test_multiple_inputs_outputs_with_change(
 
     request = helpers.request.transfer(inputs, outputs)
     response = helpers.sdk.send_and_check_request_objects([request])
+    assert response[0][1]["result"]["reqSignature"] != {}
     result = helpers.sdk.get_first_result(response)
     xfer_seq_no = get_seq_no(result)
 
