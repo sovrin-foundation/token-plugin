@@ -1,7 +1,6 @@
 from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE
 from plenum.common.types import f
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
-from sovtokenfees.test.helper import gen_nym_req_for_fees
 from sovtoken import TOKEN_LEDGER_ID
 from state.trie.pruning_trie import BLANK_ROOT
 from common.serializers.serialization import state_roots_serializer
@@ -13,9 +12,8 @@ import pytest
 
 
 @pytest.fixture()
-def node(nodeSetWithIntegratedTokenPlugin):
-    a, _, _, _ = nodeSetWithIntegratedTokenPlugin
-    return a
+def node(helpers, user_address):
+    return helpers.node._nodes[0]
 
 
 @pytest.fixture()
@@ -35,15 +33,40 @@ def pp_valid(monkeypatch, three_phase_handler):
     return PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
 
 
+@pytest.fixture(scope="module")
+def user_address(helpers):
+    address = helpers.wallet.create_address()
+    helpers.general.do_mint([[address, 1000]])
+    return address
+
+
+@pytest.fixture(scope="module")
+def user_utxos(helpers, user_address):
+    return helpers.general.get_utxo_addresses([user_address])[0]
+
+
 @pytest.fixture
-def pp_from_nym_req(looper, tokens_distributed, sdk_wallet_steward, user1_token_wallet, fees_set, user1_address, node,
-         three_phase_handler):
-    req = gen_nym_req_for_fees(looper, sdk_wallet_steward)
+def pp_from_nym_req(
+    helpers,
+    user_address,
+    user_utxos,
+    fees_set,
+    three_phase_handler,
+    node,
+):
+    req = helpers.request.nym()
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
-    req = user1_token_wallet.add_fees_to_request(req, fee_amount=fee_amount, address=user1_address)
+    req = helpers.request.add_fees(
+        req,
+        user_utxos,
+        fee_amount=fee_amount,
+        change_address=user_address
+    )
+
     node.applyReq(req, 10000)
     pp = PP.from_request(req, three_phase_handler)
     yield three_phase_handler.add_to_pre_prepare(pp)
+
     node.onBatchRejected(CONFIG_LEDGER_ID)
     three_phase_handler.token_ledger.reset_uncommitted()
 
