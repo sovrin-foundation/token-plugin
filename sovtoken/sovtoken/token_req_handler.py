@@ -1,3 +1,4 @@
+import operator
 from typing import List, Iterable
 
 import base58
@@ -19,6 +20,7 @@ from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS
 from sovtoken.types import Output
+from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError
 
@@ -210,16 +212,19 @@ class TokenReqHandler(LedgerRequestHandler):
         else:
             proof = {}
 
-        outputs = []
+        # The outputs need to be returned in sorted order since each node's reply should be same.
+        # Since no of outputs can be large, a concious choice to not use `operator.attrgetter` on an
+        # already constructed list was made
+        outputs = SortedItems()
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
             if not amount:
                 continue
-            outputs.append(Output(addr, int(seq_no), int(amount)))
+            outputs.add(Output(addr, int(seq_no), int(amount)))
 
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs}
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs.sorted_list}
         if proof:
             result[STATE_PROOF] = proof
 
@@ -264,13 +269,6 @@ class TokenReqHandler(LedgerRequestHandler):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
-
-    # @staticmethod
-    # def get_sum_inputs_outputs(utxo_cache, inputs, outputs, is_committed=False):
-    #     sum_inputs = TokenReqHandler.sum_inputs(utxo_cache, inputs,
-    #                                             is_committed=is_committed)
-    #     sum_outputs = sum(o[1] for o in outputs)
-    #     return sum_inputs, sum_outputs
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
