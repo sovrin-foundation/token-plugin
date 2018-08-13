@@ -1,3 +1,6 @@
+from heapq import heappush
+from typing import List
+
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
 
 def register_token_wallet_with_client(client, token_wallet):
@@ -28,3 +31,15 @@ def decode_address_to_vk_bytes(address):
         return b58decode_check(address)
     except ValueError:
         raise UnknownIdentifier('{} is not a valid base58check value'.format(address))
+
+
+class SortedIems:
+    def __init__(self):
+        self._heap = []
+
+    def add(self, item):
+        heappush(self._heap, item)
+
+    @property
+    def sorted_list(self) -> List:
+        return list(self._heap)
