@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0
+
+* Significant refactoring and updated tests
+* Stability improvements
+* Buqfixes
+
 ## 0.8.0
 
 * A docker image that provides an easy-install build environment
