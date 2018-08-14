@@ -209,10 +209,9 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                       is_committed=False)
 
             sum_outputs = TokenReqHandler.sum_outputs(request)
+        except InvalidFundsError as ex:
+            raise ex
         except Exception as ex:
-            if isinstance(ex, InvalidFundsError):
-                raise ex
-            else:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             expected_amount = sum_outputs + required_fees
