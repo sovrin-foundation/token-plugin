@@ -37,6 +37,30 @@ def test_outputs_in_order():
     sr.add(o3)
 
     assert sr.sorted_list == [Output(address='a', seq_no=1, value=8), Output(address='a', seq_no=2, value=9),
-                              Output(address='b', seq_no=3, value=3), Output(address='b', seq_no=6, value=6),
-                              Output(address='b', seq_no=4, value=7), Output(address='a', seq_no=22, value=11),
-                              Output(address='a', seq_no=9, value=10)]
+                              Output(address='b', seq_no=3, value=3), Output(address='b', seq_no=4, value=7),
+                              Output(address='b', seq_no=6, value=6), Output(address='a', seq_no=9, value=10),
+                              Output(address='a', seq_no=22, value=11)]
+
+    outputs = [Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=312, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=313, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=314, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=315, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=316, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=319, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=317, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=321, value=1),
+               Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=318, value=1)]
+
+    si = SortedItems()
+    for o in outputs:
+        si.add(o)
+
+    assert si.sorted_list == [Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=312, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=313, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=314, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=315, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=316, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=317, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=318, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=319, value=1),
+                              Output(address='2w3WMmR92ijMH3ZV9qNoAUh1i7HjCyqVbBt7e771DdwEWL1K2W', seq_no=321, value=1)]
