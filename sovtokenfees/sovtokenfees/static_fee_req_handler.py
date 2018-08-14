@@ -11,7 +11,7 @@ from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
     STATE_PROOF, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest
+    InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
@@ -24,7 +24,8 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, InvalidFundsError, ExtraFundsError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
+    UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -208,7 +209,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                       is_committed=False)
 
             sum_outputs = TokenReqHandler.sum_outputs(request)
-        except InvalidFundsError as ex:
+        except InvalidClientMessageException as ex:
             raise ex
         except Exception as ex:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
@@ -239,7 +240,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         if not error:
             try:
                 sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
-            except KeyError as ex:
+            except UTXOError as ex:
                 raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
