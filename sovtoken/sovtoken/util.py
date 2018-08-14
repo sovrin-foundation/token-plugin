@@ -1,4 +1,4 @@
-from heapq import heappush
+from heapq import heappush, heappop
 from typing import List
 
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
@@ -43,4 +43,7 @@ class SortedItems:
 
     @property
     def sorted_list(self) -> List:
-        return list(self._heap)
+        ordered = []
+        while self._heap:
+            ordered.append(heappop(self._heap))
+        return ordered
