@@ -5,8 +5,7 @@ from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
 from plenum.common.request import Request
 from plenum.common.constants import TXN_TYPE, NYM
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES
-from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
+from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID
 from sovtoken.exceptions import InvalidFundsError
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientRequest
 
@@ -100,7 +99,11 @@ def test_non_existent_input_non_xfer(helpers):
     request = helpers.request.add_fees(request, utxos, 10)
 
     with pytest.raises(InvalidFundsError) as e:
-        helpers.node.fee_handler_can_pay_fees(request)
+        try:
+            helpers.node.fee_handler_can_pay_fees(request)
+        except Exception as ex:
+            print("*****************"+str(ex))
+            raise ex
 
 
 # Method returns None if it was successful -
