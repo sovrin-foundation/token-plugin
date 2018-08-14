@@ -12,11 +12,11 @@ def integrate_plugin_in_node(node):
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
-        raise ModuleNotFoundError('sovtoken plugin should be loaded, ' # noqa
+        raise ImportError('sovtoken plugin should be loaded, ' # noqa
                                   'authenticator not found')
     token_req_handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
     if not token_req_handler:
-        raise ModuleNotFoundError('sovtoken plugin should be loaded, request ' # noqa
+        raise ImportError('sovtoken plugin should be loaded, request ' # noqa
                                   'handler not found')
 
     # Since `token_req_handler` does not know about fees, it will expect inputs and outputs to match exactly.
