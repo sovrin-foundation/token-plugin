@@ -25,7 +25,7 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
-    UTXOError
+    UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -212,7 +212,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         except InvalidClientMessageException as ex:
             raise ex
         except Exception as ex:
-            error = 'Exception {} while processing inputs/outputs'.format(ex)
+                error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             expected_amount = sum_outputs + required_fees
             # Check for the happy and probably most common case first and cause early return
@@ -241,7 +241,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             try:
                 sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
             except UTXOError as ex:
-                raise InvalidClientMessageException(request.identifier, request.reqId, "{}".format(ex))
+                raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees

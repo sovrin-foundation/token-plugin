@@ -3,10 +3,10 @@ import pytest
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
 from plenum.common.request import Request
-from plenum.common.constants import TXN_TYPE
+from plenum.common.constants import TXN_TYPE, NYM
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES
-from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
+from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID
+from sovtoken.exceptions import InvalidFundsError
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientRequest
 
 
@@ -53,6 +53,57 @@ def create_static_handler(token_handler, node):
     static_fee_request_handler = StaticFeesReqHandler(config_ledger, config_state, token_ledger, token_state,
                                                       utxo_cache, domain_state, bls_store)
     return static_fee_request_handler
+
+
+def test_non_existent_input_xfer(helpers, user1_token_wallet):
+    """
+    Expect an InvalidFundsError on a xfer request with inputs which don't
+    contain a valid utxo.
+    """
+
+    fees = {
+        XFER_PUBLIC: 10
+    }
+
+    helpers.general.do_set_fees(fees)
+
+    [
+        address1,
+        address2
+    ] = helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+
+    inputs = [[address1, 1]]
+    outputs = [[address2, 290]]
+
+    request = helpers.request.transfer(inputs, outputs)
+
+    with pytest.raises(InvalidFundsError) as e:
+        helpers.node.fee_handler_can_pay_fees(request)
+
+
+def test_non_existent_input_non_xfer(helpers):
+    """
+    Expect an InvalidFundsError on a nym request with inputs which don't
+    contain a valid utxo.
+    """
+
+    fees = {
+        NYM: 10
+    }
+
+    helpers.general.do_set_fees(fees)
+
+    utxos = [[helpers.wallet.create_address(), 1, 10]]
+
+    request = helpers.request.nym()
+    request = helpers.request.add_fees(request, utxos, 10)
+
+    with pytest.raises(InvalidFundsError) as e:
+        try:
+            helpers.node.fee_handler_can_pay_fees(request)
+        except Exception as ex:
+            print("*****************"+str(ex))
+            raise ex
 
 
 # Method returns None if it was successful -
@@ -111,8 +162,9 @@ def test_static_fee_req_handler_apply(token_handler_a, node):
                       None, SIGNATURES, 1)
 
     shandler = create_static_handler(token_handler_a, node)
+    prev_size = shandler.ledger.uncommitted_size
     ret_value = shandler.apply(request, 10)
-    assert ret_value[0] == 1
+    assert ret_value[0] == prev_size + 1
 
 
 # - Static Fee Request Handler (apply)

@@ -215,7 +215,7 @@ def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
                                                       INPUTS: [[VALID_ADDR_2, 3]],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
-    # This raises a UTXOError because the input transaction isn't already in the UTXO_Cache
+    # This raises a OperationError because the input transaction isn't already in the UTXO_Cache
     with pytest.raises(OperationError):
         token_handler_b.apply(request, CONS_TIME)
     token_handler_b.onBatchRejected()
