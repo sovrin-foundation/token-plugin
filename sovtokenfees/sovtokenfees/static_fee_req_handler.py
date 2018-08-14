@@ -87,11 +87,10 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
-        if required_fees:
-            if request.operation[TXN_TYPE] == XFER_PUBLIC:
-                # Fees in XFER_PUBLIC is part of operation[INPUTS]
-                self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
-            else:
+        if request.operation[TXN_TYPE] == XFER_PUBLIC:
+            # Fees in XFER_PUBLIC is part of operation[INPUTS]
+            self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
+        elif required_fees:
                 self._get_deducted_fees_non_xfer(request, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract

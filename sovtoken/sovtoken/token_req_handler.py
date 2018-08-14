@@ -1,5 +1,4 @@
-import operator
-from typing import List, Iterable
+from typing import List
 
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
