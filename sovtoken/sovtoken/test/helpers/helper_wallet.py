@@ -8,6 +8,7 @@ class HelperWallet():
     # Methods
     - add_new_addresses
     - payment_signatures
+    - sign_request
     - sign_request_trustees
     - sign_request_stewards
     """
@@ -19,13 +20,15 @@ class HelperWallet():
     def create_address(self):
         return Address()
 
+    def create_new_addresses(self, n):
+        """ Create n new addresses """
+        return [self.create_address() for _ in range(n)]
+
     def add_new_addresses(self, wallet, n):
         """ Create and add n new addresses to a wallet. """
-        addresses = []
-        for _ in range(n):
-            address = Address()
+        addresses = self.create_new_addresses(n)
+        for address in addresses:
             wallet.add_new_address(address=address)
-            addresses.append(address)
 
         return addresses
 
@@ -41,13 +44,14 @@ class HelperWallet():
 
     def sign_request_trustees(self, request):
         """ Sign a request with trustees. """
-        return self._sign_request(request, self._trustee_wallets)
+        return self.sign_request(request, self._trustee_wallets)
 
     def sign_request_stewards(self, request):
         """ Sign a request with stewards. """
-        return self._sign_request(request, self._steward_wallets)
+        return self.sign_request(request, self._steward_wallets)
 
-    def _sign_request(self, request, wallets):
+    def sign_request(self, request, wallets):
+        """ Sign a request with wallets from plenum/client/wallet """
         for wallet in wallets:
             wallet.do_multi_sig_on_req(request, identifier=wallet.defaultId)
         return request
