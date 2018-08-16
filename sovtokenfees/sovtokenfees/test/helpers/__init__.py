@@ -20,7 +20,12 @@ def form_helpers(
     sdk_wallet_client,
     sdk_wallet_steward,
 ):
-    helper_wallet = HelperWallet(trustee_wallets, steward_wallets)
+    helper_wallet = HelperWallet(
+        looper,
+        sdk_wallet_client,
+        trustee_wallets,
+        steward_wallets
+    )
     helper_node = HelperNode(txn_pool_node_set)
     helper_sdk = HelperSdk(
         looper,
