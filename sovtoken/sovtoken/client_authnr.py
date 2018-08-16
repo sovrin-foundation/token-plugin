@@ -51,39 +51,10 @@ class TokenAuthNr(CoreAuthNr):
     # The verkey will be unobtainable from input, it will raise CouldNotAuthenticate
     # Raises UnknownIdentifier if input is not a valid base58 value
     def authenticate_xfer(self, req_data, verifier):
-        # new_data = {
-        #     f.PROTOCOL_VERSION.nm: req_data[f.PROTOCOL_VERSION.nm],
-        #     f.REQ_ID.nm: req_data[f.REQ_ID.nm],
-        #     OPERATION: {k: deepcopy(req_data[OPERATION][k]) for k in req_data[OPERATION] if k != SIGS}
-        # }
-        correct_sigs_from = []
-        for inp, sig in zip(req_data[OPERATION][INPUTS],
-                            req_data[OPERATION][SIGS]):
-            try:
-                sig = base58.b58decode(sig)
-            except Exception as ex:
-                raise InvalidSignatureFormat from ex
-
-            # TODO: Account for `extra` field
-            new_data = [inp, req_data[OPERATION][OUTPUTS]]
-            idr = inp[0]
-            ser = serialize_msg_for_signing(new_data, topLevelKeysToIgnore=self.excluded_from_signing)
-
-            verkey = self.getVerkey(idr)
-
-            if verkey is None:
-                raise CouldNotAuthenticate(
-                    'Can not find verkey for {}'.format(idr))
-
-            vr = verifier(verkey)
-            if vr.verify(sig, ser):
-                correct_sigs_from.append(idr)
-
-        if len(correct_sigs_from) != len(req_data[OPERATION][INPUTS]):
-            # All inputs should have signatures present
-            raise InsufficientCorrectSignatures(len(correct_sigs_from),
-                                                len(req_data[OPERATION][INPUTS]))
-        return correct_sigs_from
+        return self.verify_signtures_on_payments(req_data[OPERATION][INPUTS],
+                                                 req_data[OPERATION][OUTPUTS],
+                                                 req_data[OPERATION][SIGS],
+                                                 verifier)
 
     # ------------------------------------------------------------------------------------
     # Gets verkey from payment address
@@ -95,3 +66,34 @@ class TokenAuthNr(CoreAuthNr):
             # Address is the 32 byte verkey
                 return vk
         return super().getVerkey(identifier)
+
+    @staticmethod
+    def verify_signtures_on_payments(inputs, outputs, signatures, verifier,
+                                     *extra_fields_for_signing):
+        correct_sigs_from = []
+        for inp, sig in zip(inputs,
+                            signatures):
+            try:
+                sig = base58.b58decode(sig)
+            except Exception as ex:
+                raise InvalidSignatureFormat from ex
+
+            # TODO: Account for `extra` field
+            new_data = [inp, outputs]
+            new_data.extend(extra_fields_for_signing)
+            idr = inp[0]
+            ser = serialize_msg_for_signing(new_data)
+            try:
+                verkey = address_to_verkey(idr)
+            except ValueError:
+                continue
+
+            vr = verifier(verkey)
+            if vr.verify(sig, ser):
+                correct_sigs_from.append(idr)
+
+        if len(correct_sigs_from) != len(inputs):
+            # All inputs should have signatures present
+            raise InsufficientCorrectSignatures(len(correct_sigs_from),
+                                                len(inputs))
+        return correct_sigs_from

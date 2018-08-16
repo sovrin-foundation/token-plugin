@@ -166,20 +166,8 @@ def test_authenticate_xfer_invalid_signature_format(node, user2_token_wallet, us
     outputs = [[user1_address, 10], [user2_address, 10]]
     request = xfer_request(inputs, outputs)
     req_data = request.as_dict
-    req_data[OPERATION]["signatures"][0] =  'INVALID_SIGNATURE'
+    req_data[OPERATION]["signatures"][0] = 'INVALID_SIGNATURE'
     with pytest.raises(InvalidSignatureFormat):
-        token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
-
-
-# This test verifies that authenticate_xfer raises an error when an invalid formatted signature is submitted
-@mock.patch.object(TokenAuthNr, 'getVerkey', return_value=None)
-def test_authenticate_xfer_could_not_authenticate(node, user2_token_wallet, user2_address, user1_address):
-    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
-    request = xfer_request(inputs, outputs)
-    req_data = request.as_dict
-    with pytest.raises(CouldNotAuthenticate):
         token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
 
 
