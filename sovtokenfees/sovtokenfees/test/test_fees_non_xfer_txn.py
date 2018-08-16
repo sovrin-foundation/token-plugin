@@ -129,6 +129,30 @@ def test_fees_incorrect_sig(
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
 
+def test_fees_insufficient_sig(
+        helpers,
+        fees_set,
+        address_main,
+        mint_tokens
+):
+    """
+    The fee amount is correct but signature over the fee is incorrect.
+    """
+    request = helpers.request.nym()
+    request = add_fees_request_with_address(
+        helpers,
+        fees_set,
+        request,
+        address_main
+    )
+    fees = getattr(request, FEES)
+    # set only one signature instead of two
+    fees[2] = []
+    setattr(request, FEES, fees)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
 
 def test_valid_fees_invalid_payload_sig(
     helpers,
