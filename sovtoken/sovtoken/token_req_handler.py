@@ -10,7 +10,7 @@ from sovtoken.messages.validation import static_req_validation
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519
+    PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519, TXN_PAYLOAD_METADATA_REQ_ID
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException, OperationError
 
 from plenum.common.request import Request
@@ -26,6 +26,7 @@ from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, Invalid
 
 from state.trie.pruning_trie import rlp_decode
 
+ALL_IDENTIFIERS = "all_identifiers"
 
 class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
@@ -50,31 +51,45 @@ class TokenReqHandler(LedgerRequestHandler):
 
     # noinspection PyUnreachableCode
     @staticmethod
-    def _validate_mint_public_txn(request: Request, senders: list, required_senders: int):
-        if not isinstance(senders, list):
-            raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
-                                                getattr(request, 'reqId', None),
-                                                'Senders was not computed to list')
+    def _validate_mint_public_txn(
+        request: Request,
+        senders: list,
+        required_senders: int
+    ):
+        # =============
+        # Declaration of helper functions.
+        # =============
 
-        if len(senders) >= required_senders:
-            if all(callable(getattr(nym_data, "get", None)) and  # Check that elements in senders have get method
-                   nym_data.get(ROLE) == TRUSTEE for nym_data in senders):
-                return
-            else:
-                error = 'only Trustees can send this transaction'
-                raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
-                                                getattr(request, 'reqId', None),
-                                                error)
-        else:
+        all_identifiers = getattr(request, ALL_IDENTIFIERS, None)
+        req_id = getattr(request, TXN_PAYLOAD_METADATA_REQ_ID, None)
+
+        def _client_exception(error):
+            return InvalidClientMessageException(all_identifiers, req_id, error)
+
+        def _unauthorized_exception(error):
+            return UnauthorizedClientRequest(all_identifiers, req_id, error)
+
+        def _contains_method(instance, method):
+            return callable(getattr(instance, method, None))
+
+        def _is_trustee(sender):
+            return _contains_method(sender, "get") and sender.get(ROLE) == TRUSTEE
+
+        # =============
+        # Actual validation.
+        # =============
+
+        if not isinstance(senders, list):
+            raise _client_exception('Senders was not computed to list')
+
+        if len(senders) < required_senders:
             error = 'Request needs at least {} signers but only {} found'. \
                 format(required_senders, len(senders))
-            raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
-                                            getattr(request, 'reqId', None),
-                                            error)
+            raise _unauthorized_exception(error)
 
-        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
-                                            getattr(request, 'reqId', None),
-                                            'Request to not meet minimum requirements')
+        if not all(map(_is_trustee, senders)):
+            error = 'only Trustees can send this transaction'
+            raise _unauthorized_exception(error)
 
     @staticmethod
     def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int, allow_inputs_exceed_outputs: bool):
