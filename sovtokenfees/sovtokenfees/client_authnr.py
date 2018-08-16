@@ -77,7 +77,7 @@ class FeesAuthNr(CoreAuthNr):
             if verifier.verify(sig, serz):
                 correct_sigs_from.add(addr)
 
-        if correct_sigs_from != required_sigs_from:
+        if correct_sigs_from != required_sigs_from or len(correct_sigs_from) != len(fees[0]):
             raise InsufficientCorrectSignatures(len(correct_sigs_from),
                                                 len(fees[0]))
 
