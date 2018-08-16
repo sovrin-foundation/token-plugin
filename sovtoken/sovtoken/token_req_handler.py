@@ -48,7 +48,6 @@ class TokenReqHandler(LedgerRequestHandler):
             GET_UTXO: self.get_all_utxo,
         }
 
-
     # noinspection PyUnreachableCode
     @staticmethod
     def _validate_mint_public_txn(
@@ -91,11 +90,33 @@ class TokenReqHandler(LedgerRequestHandler):
             error = 'only Trustees can send this transaction'
             raise _unauthorized_exception(error)
 
+    def handle_xfer_public_txn(self, request):
+        # Currently only sum of inputs is matched with sum of outputs. If anything more is
+        # needed then a new function should be created.
+        try:
+            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
+                                                    request,
+                                                    is_committed=False)
+
+            sum_outputs = TokenReqHandler.sum_outputs(request)
+        except Exception as ex:
+            if isinstance(ex, InvalidClientMessageException):
+                raise ex
+            error = 'Exception {} while processing inputs/outputs'.format(ex)
+            raise InvalidClientMessageException(request.identifier,
+                                                getattr(request, 'reqId', None),
+                                                error)
+        else:
+            return TokenReqHandler._validate_xfer_public_txn(request,
+                                                             sum_inputs,
+                                                             sum_outputs,
+                                                             self.ALLOW_INPUTS_TO_EXCEED_OUTPUTS)
+
     @staticmethod
     def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int, allow_inputs_exceed_outputs: bool):
         if not isinstance(sum_inputs, int) or not isinstance(sum_outputs, int):
-            raise InvalidClientMessageException(getattr(request, 'identifier', None),
-                                                getattr(request, 'reqId', None),
+            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                getattr(request, f.REQ_ID.nm, None),
                                                 'Summation of input or outputs where not an integer, sum of inputs'
                                                 ' is {} and sum of outputs is {}'.format(sum_inputs, sum_outputs))
 
@@ -105,21 +126,21 @@ class TokenReqHandler(LedgerRequestHandler):
             if allow_inputs_exceed_outputs:
                 return   # Greater inputs is only valid when allowed
             else:
-                error = 'Extra funds, sum of inputs is {} and sum' \
-                        ' of outputs is {}'.format(sum_inputs, sum_outputs)
-                raise ExtraFundsError(getattr(request, 'identifier', None),
-                                      getattr(request, 'reqId', None),
+                error = 'Extra funds, sum of inputs is {} and ' \
+                        'expected output amount is {}'.format(sum_inputs, sum_outputs)
+                raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
+                                      getattr(request, f.REQ_ID.nm, None),
                                       error)
 
         elif sum_inputs < sum_outputs:
-            error = 'Insufficient funds, sum of inputs is {} and sum' \
-                    ' of outputs is {}'.format(sum_inputs, sum_outputs)
-            raise InsufficientFundsError(getattr(request, 'identifier', None),
-                                         getattr(request, 'reqId', None),
+            error = 'Insufficient funds, sum of inputs is {} and ' \
+                    'expected output amount is {}'.format(sum_inputs, sum_outputs)
+            raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
+                                         getattr(request, f.REQ_ID.nm, None),
                                          error)
 
         raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
-                                            getattr(request, 'reqId', None),
+                                            getattr(request, f.REQ_ID.nm, None),
                                             'Request to not meet minimum requirements')
 
     def doStaticValidation(self, request: Request):
@@ -132,24 +153,7 @@ class TokenReqHandler(LedgerRequestHandler):
             return TokenReqHandler._validate_mint_public_txn(request, senders, self.MinSendersForPublicMint)
 
         elif req_type == XFER_PUBLIC:
-            try:
-                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                        request,
-                                                        is_committed=False)
-
-                sum_outputs = TokenReqHandler.sum_outputs(request)
-            except Exception as ex:
-                if isinstance(ex, InvalidClientMessageException):
-                    raise ex
-                error = 'TException {} while processing inputs/outputs'.format(ex)
-                raise InvalidClientMessageException(request.identifier,
-                                                    getattr(request, 'reqId', None),
-                                                    error)
-            else:
-                return TokenReqHandler._validate_xfer_public_txn(request,
-                                                                 sum_inputs,
-                                                                 sum_outputs,
-                                                                 self.ALLOW_INPUTS_TO_EXCEED_OUTPUTS)
+            return self.handle_xfer_public_txn(request)
 
         raise InvalidClientMessageException(request.identifier,
                                             getattr(request, 'reqId', None),
