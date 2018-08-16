@@ -2,7 +2,6 @@ from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
 from common.serializers.base58_serializer import Base58Serializer
-from sovtokenfees import FeesTransactions
 from stp_core.common.log import getlogger
 
 txn_root_serializer = Base58Serializer()
@@ -91,7 +90,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
             self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
         elif required_fees:
-                self._get_deducted_fees_non_xfer(request, required_fees)
+            self._get_deducted_fees_non_xfer(request, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -219,16 +218,8 @@ class StaticFeesReqHandler(FeeReqHandler):
             if sum_inputs == expected_amount:
                 deducted_fees = sum_inputs - sum_outputs
                 return deducted_fees
-            if sum_inputs < expected_amount:
-                error = 'Insufficient funds, sum of inputs is {} ' \
-                    'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
-                raise InsufficientFundsError(request.identifier, request.reqId, error)
-            if sum_inputs > expected_amount:
-                error = 'Extra funds, sum of inputs is {} ' \
-                    'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
-                raise ExtraFundsError(request.identifier, request.reqId, error)
+            self._handle_incorrect_funds(sum_inputs, sum_outputs,
+                                         expected_amount, required_fees, request)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
@@ -247,15 +238,8 @@ class StaticFeesReqHandler(FeeReqHandler):
                 expected_amount = change_amount + required_fees
                 if sum_inputs == expected_amount:
                     return
-                if sum_inputs < expected_amount:
-                    error = 'Insufficient fees, sum of inputs is {} and sum ' \
-                        'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
-                    raise InsufficientFundsError(request.identifier, request.reqId, error)
-                if sum_inputs > expected_amount:
-                    error = 'Extra funds, sum of inputs is {} ' \
-                            'but required is {} (change amount: {}, ' \
-                            'fees: {})'.format(sum_inputs, expected_amount, change_amount, required_fees)
-                    raise ExtraFundsError(request.identifier, request.reqId, error)
+                self._handle_incorrect_funds(sum_inputs, change_amount,
+                                             expected_amount, required_fees, request)
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
@@ -320,6 +304,19 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             logger.warning('Unknown type {} found while updating '
                            'state with txn {}'.format(typ, txn))
+
+    @staticmethod
+    def _handle_incorrect_funds(sum_inputs, sum_outputs, expected_amount, required_fees, request):
+        if sum_inputs < expected_amount:
+            error = 'Insufficient funds, sum of inputs is {} ' \
+                    'but required is {} (sum of outputs: {}, ' \
+                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
+            raise InsufficientFundsError(request.identifier, request.reqId, error)
+        if sum_inputs > expected_amount:
+            error = 'Extra funds, sum of inputs is {} ' \
+                    'but required is {} (sum of outputs: {}, ' \
+                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
+            raise ExtraFundsError(request.identifier, request.reqId, error)
 
     @staticmethod
     def transform_txn_for_ledger(txn):
