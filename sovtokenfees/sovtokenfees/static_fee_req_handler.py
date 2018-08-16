@@ -2,32 +2,39 @@ from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
 from common.serializers.base58_serializer import Base58Serializer
+from sovtokenfees import FeesTransactions
+from stp_core.common.log import getlogger
+
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
     STATE_PROOF, MULTI_SIGNATURE
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest
+    InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
 from plenum.server.domain_req_handler import DomainRequestHandler
-from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF
+from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, ExtraFundsError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
+    UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
+logger = getlogger()
+
+
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {SET_FEES, GET_FEES}
-    write_types = {SET_FEES, }
+    valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
+    write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
     MinSendersForFees = 4
@@ -80,11 +87,10 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
-        if required_fees:
-            if request.operation[TXN_TYPE] == XFER_PUBLIC:
-                # Fees in XFER_PUBLIC is part of operation[INPUTS]
-                self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
-            else:
+        if request.operation[TXN_TYPE] == XFER_PUBLIC:
+            # Fees in XFER_PUBLIC is part of operation[INPUTS]
+            self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
+        elif required_fees:
                 self._get_deducted_fees_non_xfer(request, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
@@ -104,6 +110,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 sigs = {i[0]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
+                        TXN_TYPE: FEE_TXN,
                         INPUTS: inputs,
                         OUTPUTS: outputs,
                         REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
@@ -197,15 +204,15 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def _get_deducted_fees_xfer(self, request, required_fees):
         try:
-            sum_inputs, sum_outputs = TokenReqHandler.get_sum_inputs_outputs(
-                self.utxo_cache,
-                request.operation[INPUTS],
-                request.operation[OUTPUTS],
-                is_committed=False)
-        except KeyError as ex:
-            raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
+                                                      request,
+                                                      is_committed=False)
+
+            sum_outputs = TokenReqHandler.sum_outputs(request)
+        except InvalidClientMessageException as ex:
+            raise ex
         except Exception as ex:
-            error = 'Exception {} while processing inputs/outputs'.format(ex)
+                error = 'Exception {} while processing inputs/outputs'.format(ex)
         else:
             expected_amount = sum_outputs + required_fees
             # Check for the happy and probably most common case first and cause early return
@@ -232,9 +239,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             error = 'fees not present or improperly formed'
         if not error:
             try:
-                sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache, request.fees[0], is_committed=False)
-            except KeyError as ex:
-                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
+            except UTXOError as ex:
+                raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees
@@ -295,7 +302,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             val = self.state_serializer.serialize(existing_fees)
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
-        elif not typ: # typ is None or null
+        elif typ == FEE_TXN:
             for addr, seq_no in txn['txn']['data'][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
@@ -310,4 +317,14 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                    seq_no,
                                                    amount),
                                                is_committed=is_committed)
+        else:
+            logger.warning('Unknown type {} found while updating '
+                           'state with txn {}'.format(typ, txn))
 
+    @staticmethod
+    def transform_txn_for_ledger(txn):
+        """
+        Some transactions need to be updated before they can be stored in the
+        ledger
+        """
+        return txn

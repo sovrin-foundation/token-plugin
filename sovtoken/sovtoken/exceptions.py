@@ -5,9 +5,20 @@ class InsufficientFundsError(InvalidClientMessageException):
     pass
 
 
-class ExtraFundsError(InvalidClientMessageException):
+class InvalidFundsError(InvalidClientMessageException):
     pass
 
 
-class UTXOAlreadySpentError(InvalidClientMessageException):
+class ExtraFundsError(InvalidClientMessageException):
+    pass
+
+class UTXOError(Exception):
+    pass
+
+
+class UTXONotFound(UTXOError):
+    pass
+
+
+class UTXOAlreadySpentError(UTXOError):
     pass

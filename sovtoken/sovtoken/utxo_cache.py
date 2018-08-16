@@ -1,5 +1,6 @@
 from typing import List
 
+from sovtoken.exceptions import UTXONotFound, UTXOAlreadySpentError, UTXOError
 from sovtoken.types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
@@ -26,8 +27,15 @@ class UTXOCache(OptimisticKVStore):
     def __init__(self, kv_store: KeyValueStorage):
         super().__init__(kv_store)
 
+    @staticmethod
+    def _is_valid_output(output: Output):
+        if not isinstance(output, Output):
+            raise UTXOError("Output is invalid object type")
+
     # Adds an output to the batch of uncommitted outputs
     def add_output(self, output: Output, is_committed=False):
+        UTXOCache._is_valid_output(output)
+
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
         type1_val = str(output.value)
@@ -49,26 +57,44 @@ class UTXOCache(OptimisticKVStore):
     # Returns the full output object in the key value store, when given an
     # incomplete output object (with seq_no set to None)
     def get_output(self, output: Output, is_committed=False) -> Output:
+        UTXOCache._is_valid_output(output)
+
         type1_key = self._create_type1_key(output)
-        val = self.get(type1_key, is_committed)
-        logger.debug('Getting type1 key {}, val is {}'.format(type1_key, val))
+
+        try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
+            val = self.get(type1_key, is_committed)
+            logger.debug('Getting type1 key {}, val is {}'.format(type1_key, val))
+        except KeyError:
+            raise UTXONotFound("UTXO key was not found")
+
         if not val:
-            raise KeyError(type1_key)
+            raise UTXOAlreadySpentError("UTXO value is None")
+
         return Output(output.address, output.seq_no, int(val))
 
     # Spends the provided output by fetching it from the key value store
     # (it must have been previously added) and then doing batch ops
     def spend_output(self, output: Output, is_committed=False):
+        UTXOCache._is_valid_output(output)
+
+
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
-        seq_nos = self.get(type2_key, is_committed)
+
+        try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
+            seq_nos = self.get(type2_key, is_committed)
+        except KeyError:
+            raise UTXONotFound("seq_no for address were not found")
+
         if isinstance(seq_nos, (bytes, bytearray)):
             seq_nos = seq_nos.decode()
         logger.debug('spending output type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
         seq_nos = self._parse_type2_val(seq_nos)
         seq_no_str = str(output.seq_no)
         if seq_no_str not in seq_nos:
-            raise KeyError('{} not in {}'.format(seq_no_str, seq_nos))
+            err_msg = "seq_no {} is not found is list of seq_nos for address -- current list: {}".format(seq_no_str,
+                                                                                                         seq_nos)
+            raise UTXONotFound(err_msg)
         seq_nos.remove(seq_no_str)
         batch = [(self._store.WRITE_OP, type1_key, '')]
         type2_val = self._create_type2_val(seq_nos)
@@ -98,6 +124,12 @@ class UTXOCache(OptimisticKVStore):
         except KeyError:
             return []
 
+    def sum_inputs(self, inputs: list, is_committed=False):
+        output_val = 0
+        for addr, seq_no in inputs:
+            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+        return output_val
+
     # Creates a type1 key with this format: '0:address:sequence_number'
     # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
     @staticmethod
@@ -118,4 +150,7 @@ class UTXOCache(OptimisticKVStore):
     # Retrieves the type2 value from the sequence numbers
     @staticmethod
     def _parse_type2_val(seq_nos: str) -> List:
+        if not isinstance(seq_nos, str):
+            raise UTXOError("Sequence numbers are not valid string -- '{}'".format(str(seq_nos)))
+
         return [] if not seq_nos else seq_nos.split(':')

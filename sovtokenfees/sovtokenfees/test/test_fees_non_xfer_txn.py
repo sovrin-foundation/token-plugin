@@ -1,10 +1,11 @@
 import json
 import pytest
 
-from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, NYM
+from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, NYM, DATA
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
-from plenum.common.txn_util import get_seq_no, get_payload_data
+from plenum.common.txn_util import get_seq_no, get_payload_data, get_txn_time
 from plenum.common.types import f
+from plenum.test.pool_transactions.helper import sdk_build_get_txn_request
 from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
@@ -33,13 +34,7 @@ def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([[address_main, 1000]])
 
 
-@pytest.fixture()
-def fees_paid(
-    helpers,
-    fees_set,
-    address_main,
-    mint_tokens
-):
+def pay_fees(helpers, fees_set, address_main, mint_tokens):
     request = helpers.request.nym()
 
     request = add_fees_request_with_address(
@@ -52,6 +47,16 @@ def fees_paid(
     responses = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(responses)
     return result
+
+
+@pytest.fixture()
+def fees_paid(
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens
+):
+    return pay_fees(helpers, fees_set, address_main, mint_tokens)
 
 
 def test_insufficient_fees(
@@ -182,24 +187,38 @@ def test_valid_txn_with_fees(
     """
     Provide sufficient sovtokenfees for transaction with correct signatures and payload
     """
-    nym_data = get_payload_data(fees_paid[FEES])
+    fee_payload_from_resp = get_payload_data(fees_paid[FEES])
 
     for node in nodeSetWithIntegratedTokenPlugin:
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)
         assert len(token_ledger.uncommittedTxns) == 0
 
         fee_txn = token_ledger.getBySeqNo(token_ledger.size)
-        fee_data = get_payload_data(fee_txn)
+        fee_payload_from_ledger = get_payload_data(fee_txn)
         expected_ref = '{}:{}'.format(DOMAIN_LEDGER_ID, get_seq_no(fees_paid))
 
-        assert fee_data[INPUTS] == nym_data[INPUTS]
-        assert fee_data[OUTPUTS] == nym_data[OUTPUTS]
-        assert fee_data[REF] == expected_ref
+        assert fee_payload_from_ledger[INPUTS] == fee_payload_from_resp[INPUTS]
+        assert fee_payload_from_ledger[OUTPUTS] == fee_payload_from_resp[OUTPUTS]
+        assert fee_payload_from_ledger[REF] == expected_ref
 
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     last_utxo = utxos[-1]
-    expected_amount = nym_data[OUTPUTS][0][-1]
+    expected_amount = fee_payload_from_resp[OUTPUTS][0][-1]
     assert last_utxo == [address_main, get_seq_no(fee_txn), expected_amount]
+
+
+def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
+    seq_no = get_seq_no(fees_paid[FEES])
+    request = helpers.request.get_txn(TOKEN_LEDGER_ID, seq_no)
+    responses = helpers.sdk.send_and_check_request_objects([request, ])
+    result = helpers.sdk.get_first_result(responses)
+    data = result[DATA]
+    for node in nodeSetWithIntegratedTokenPlugin:
+        token_ledger = node.getLedger(TOKEN_LEDGER_ID)
+        fee_txn = token_ledger.getBySeqNo(seq_no)
+        assert get_payload_data(fee_txn) == get_payload_data(data)
+        assert get_seq_no(fee_txn) == get_seq_no(data)
+        assert get_txn_time(fee_txn) == get_txn_time(data)
 
 
 def test_fees_utxo_reuse(

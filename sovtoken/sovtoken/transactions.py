@@ -4,7 +4,6 @@ from enum import Enum, unique
 PREFIX = '1000'
 
 
-# TODO: Rename to `PaymentTransactions`
 @unique
 class TokenTransactions(Enum):
     #  These numeric constants CANNOT be changed once they have been used,

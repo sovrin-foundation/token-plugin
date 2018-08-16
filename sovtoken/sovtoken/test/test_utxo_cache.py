@@ -6,6 +6,8 @@ from collections import defaultdict
 import pytest
 
 from plenum.common.util import randomString
+
+from sovtoken.exceptions import UTXOError
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
 from storage.test.conftest import parametrised_storage
@@ -29,7 +31,7 @@ def test_add_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
     for i in range(num_outputs):
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(outputs[i], True)
         utxo_cache.add_output(outputs[i], True)
         out = utxo_cache.get_output(outputs[i], True)
@@ -44,9 +46,9 @@ def test_spend_unspent_output(utxo_cache):
         new_out = Output(outputs[i].address, outputs[i].seq_no, None)
         utxo_cache.get_output(new_out, True)
         utxo_cache.spend_output(new_out, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(new_out, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.spend_output(new_out, True)
 
 # Tests that when outputs are spent before they are added, it fails
@@ -54,9 +56,9 @@ def test_spend_unadded_invalid_unspent_output(utxo_cache):
     num_outputs = 5
     outputs = gen_outputs(num_outputs)
     for output in outputs:
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.get_output(output, True)
-        with pytest.raises(KeyError):
+        with pytest.raises(UTXOError):
             utxo_cache.spend_output(output, True)
 
 
@@ -100,7 +102,7 @@ def test_add_outputs(utxo_cache):
 def test_add_outputs_invalid_output(utxo_cache):
     # setup
     invalid_output = (VALID_ADDR_1, 10, 10)
-    with pytest.raises(AttributeError):
+    with pytest.raises(UTXOError):
         utxo_cache.add_output(invalid_output)
 
     # teardown test
@@ -121,7 +123,7 @@ def test_get_output_success(utxo_cache):
 
 def test_get_output_missing_output(utxo_cache):
     output = Output(VALID_ADDR_1, 10, 10)
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         utxo_cache.get_output(output)
 
     # teardown test
@@ -131,7 +133,7 @@ def test_get_output_missing_output(utxo_cache):
 def test_get_output_invalid_output(utxo_cache):
     # setup
     invalid_output = (VALID_ADDR_2, 10, 10)
-    with pytest.raises(AttributeError):
+    with pytest.raises(UTXOError):
         utxo_cache.get_output(invalid_output)
 
     # teardown test
@@ -152,7 +154,7 @@ def test_spend_output_success(utxo_cache):
 
 def test_spend_output_invalid_output(utxo_cache):
     invalid_output = (VALID_ADDR_1, 10, 10)
-    with pytest.raises(AttributeError):
+    with pytest.raises(UTXOError):
         utxo_cache.spend_output(invalid_output)
 
     # teardown test
@@ -161,7 +163,7 @@ def test_spend_output_invalid_output(utxo_cache):
 
 def test_spend_output_fail_output_not_in_cache(utxo_cache):
     output = Output(VALID_ADDR_1, 10, 10)
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         utxo_cache.spend_output(output)
 
     # teardown test
@@ -174,7 +176,7 @@ def test_spend_output_double_spend_fail(utxo_cache):
     # First spend
     utxo_cache.spend_output(output)
 
-    with pytest.raises(KeyError):
+    with pytest.raises(UTXOError):
         # Second spend fails as expected
         utxo_cache.spend_output(output)
 
@@ -265,7 +267,7 @@ def test_parse_type2_val(utxo_cache):
 
 def test_parse_type2_val_invalid_list(utxo_cache):
     type2_val = [10, 11, 12, 5, 13, 6]
-    with pytest.raises(AttributeError):
+    with pytest.raises(UTXOError):
         type2_val_list = utxo_cache._parse_type2_val(type2_val)
 
     # teardown test

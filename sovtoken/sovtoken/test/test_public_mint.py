@@ -1,6 +1,8 @@
 # It is assumed the initial minting will give some tokens to the Sovrin
 # Foundation and sovtoken seller platform. From then on, exchange will be
 # responsible for giving tokens to "users".
+import random
+
 import pytest
 from base58 import b58decode
 
@@ -30,6 +32,14 @@ def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, # noq
     txn fails
     """
     outputs = [[SF_address, -20], [seller_address, 100]]
+    with pytest.raises(RequestNackedException):
+        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+
+    outputs = [[SF_address, "100"], [seller_address, 100]]
+    with pytest.raises(RequestNackedException):
+        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+
+    outputs = [[SF_address, 0], [seller_address, 100]]
     with pytest.raises(RequestNackedException):
         send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
 
@@ -80,6 +90,76 @@ def test_less_than_min_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
     outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
     with pytest.raises(RequestRejectedException):
         send_public_mint(looper, trustee_wallets[:3], outputs, sdk_pool_handle)
+
+
+def test_invalid_trustee_scenarios(nodeSetWithIntegratedTokenPlugin, looper,
+                                       trustee_wallets, steward_wallets, SF_address,
+                                       seller_address, sdk_pool_handle):
+    """
+        Making sure we fail to mint in different invalid scenarios
+    """
+    total_mint = 100
+    sf_master_gets = 60
+    seller_gets = total_mint - sf_master_gets
+    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
+
+    # Using STEWARDS, NOT TRUSTEES
+    with pytest.raises(RequestRejectedException):
+        send_public_mint(looper, steward_wallets, outputs, sdk_pool_handle)
+
+    # Adding STEWARDS to TRUSTEE list
+    wallets = list(trustee_wallets)
+    wallets.extend(steward_wallets)
+    with pytest.raises(RequestRejectedException):
+        send_public_mint(looper, wallets, outputs, sdk_pool_handle)
+
+    # Using DID not on the ledger
+    not_on_ledger_wallets = build_wallets_from_data([
+        ('DID01', 'vdbK9YQGxNHviCOZ7RbOtUgIx9d29XwU'),
+        ('DID02', 'sWPSHOH12GEnwLOuQAJgCWBzFER8glUU'),
+        ('DID03', 'poIRynSnHJ2JSyBiah7AfXViGPfGcZ7Z'),
+        ('DID04', 'X2YlFw7ibYIfyB3A7pIBasy4gWpFNTC6'),
+    ])
+    with pytest.raises(RequestNackedException):
+        send_public_mint(looper, not_on_ledger_wallets, outputs, sdk_pool_handle)
+
+    # Add non-ledger DID to TRUSTEE list
+    wallets = list(trustee_wallets)
+    wallets.append(not_on_ledger_wallets[0])
+    with pytest.raises(RequestNackedException):
+        send_public_mint(looper, wallets, outputs, sdk_pool_handle)
+
+    # Random sets of 4 wallets. Since we only include 3 TRUSTEES, all random
+    # samples should fail to mint
+    complete_wallet_set = list()
+    complete_wallet_set.extend(steward_wallets)
+    complete_wallet_set.extend(not_on_ledger_wallets)
+    complete_wallet_set.extend(trustee_wallets[:3])
+
+    for _ in range(5):
+        wallets = random.sample(complete_wallet_set, 4)
+        wallet_data = "["
+        for wallet in wallets:
+            wallet_data += " {}-{}".format(wallet.name, str(wallet.idsToSigners[wallet.defaultId].seed))
+
+        wallet_data = "FUZZING TEST -- Please examine !! -- " + wallet_data
+        with pytest.raises((RequestRejectedException, RequestNackedException), message=wallet_data):
+            send_public_mint(looper, wallets, outputs, sdk_pool_handle)
+
+
+def test_repeat_trustee(nodeSetWithIntegratedTokenPlugin, looper,
+                                       trustee_wallets, SF_address,
+                                       seller_address, sdk_pool_handle):
+    """
+        Should not be possible to use the same trustee more than once
+    """
+    total_mint = 100
+    sf_master_gets = 60
+    seller_gets = total_mint - sf_master_gets
+    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
+    repeating_trustee_wallets = [trustee_wallets[0], trustee_wallets[0], trustee_wallets[0], trustee_wallets[0]]
+    with pytest.raises(RequestRejectedException):
+        send_public_mint(looper, repeating_trustee_wallets, outputs, sdk_pool_handle)
 
 def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
                                trustee_wallets, SF_address, seller_address,
