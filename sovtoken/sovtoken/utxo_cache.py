@@ -77,7 +77,6 @@ class UTXOCache(OptimisticKVStore):
     def spend_output(self, output: Output, is_committed=False):
         UTXOCache._is_valid_output(output)
 
-
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
 

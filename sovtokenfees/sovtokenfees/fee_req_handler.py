@@ -1,8 +1,5 @@
 from abc import abstractmethod
-
-
 from plenum.server.config_req_handler import ConfigReqHandler
-from sovtoken.client_authnr import AddressSigVerifier
 
 
 class FeeReqHandler(ConfigReqHandler):
