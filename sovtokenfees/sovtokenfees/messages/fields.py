@@ -4,6 +4,7 @@ from plenum.config import SIGNATURE_FIELD_LIMIT
 
 from sovtoken.messages.fields import PublicInputsField, \
     PublicOutputsField
+from sovtoken.constants import INPUTS, SIGS, OUTPUTS
 
 
 class FeesStructureField(MapField):
@@ -26,19 +27,19 @@ class TxnFeesField(AnyMapField):
         if error:
             return error
 
-        error = self.inputs_validator.validate(val["inputs"])
+        error = self.inputs_validator.validate(val[INPUTS])
         if error:
             return error
 
-        error = self.outputs_validator.validate(val["outputs"])
+        error = self.outputs_validator.validate(val[OUTPUTS])
         if error:
             return error
 
-        error = self.signatures_validator.validate(val["signatures"])
+        error = self.signatures_validator.validate(val[SIGS])
         if error:
             return error
 
-        if len(val["inputs"]) != len(val["signatures"]):
+        if len(val[INPUTS]) != len(val[SIGS]):
             return 'Number of signatures and number of inputs should match but are {} and {} ' \
-                   'respectively.'.format(len(val["signatures"]), len(val["inputs"]))
+                   'respectively.'.format(len(val[SIGS]), len(val[INPUTS]))
 
