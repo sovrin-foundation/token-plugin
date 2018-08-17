@@ -48,6 +48,6 @@ class FeesAuthNr(CoreAuthNr):
             return
 
         digest = msg.digest
-        return TokenAuthNr.verify_signtures_on_payments(fees[0], fees[1], fees[2],
+        return TokenAuthNr.verify_signtures_on_payments(fees["inputs"], fees["outputs"], fees["signatures"],
                                                         AddressSigVerifier, digest)
 

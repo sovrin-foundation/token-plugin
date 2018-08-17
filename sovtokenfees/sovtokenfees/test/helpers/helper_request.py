@@ -68,7 +68,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         ]
         outputs = self._prepare_outputs(outputs)
 
-        fees = [inputs, outputs, fees_signatures]
+        fees = {"inputs": inputs, "outputs": outputs, "signatures": fees_signatures}
         setattr(request, FEES, fees)
 
         return request
