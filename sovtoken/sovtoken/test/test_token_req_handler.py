@@ -1,22 +1,25 @@
 from collections import OrderedDict
 
 import base58
+import math
 import pytest
 from plenum.common.signer_simple import SimpleSigner
 
-from plenum.common.constants import TXN_TYPE, STATE_PROOF
+from plenum.common.constants import TXN_TYPE, STATE_PROOF, TRUSTEE_STRING, \
+    TARGET_NYM, VERKEY
 from plenum.common.exceptions import InvalidClientRequest, UnauthorizedClientRequest, InvalidClientMessageException, \
     OperationError
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, append_txn_metadata, get_payload_data, \
     get_req_id, get_from
+from plenum.common.util import randomString
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, UTXOAlreadySpentError, UTXOError
 
 # TEST CONSTANTS
 from sovtoken.types import Output
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, SIGS, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, TOKEN_LEDGER_ID, RESULT
 
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.util import verkey_to_address
@@ -417,3 +420,128 @@ def test_token_req_handler_add_new_output_success(token_handler_d):
     token_handler_d._add_new_output(Output(VALID_ADDR_6, 8, 350))
     unspent_outputs = token_handler_d.utxo_cache.get_unspent_outputs(VALID_ADDR_6)
     assert unspent_outputs == [Output(VALID_ADDR_6, 8, 350)]
+
+
+class TestValidateMintPublic():
+    @pytest.fixture(autouse=True)
+    def init(self, helpers):
+        self.addresses = helpers.wallet.create_new_addresses(2)
+        self.handler = helpers.node.get_token_req_handler()
+
+    @pytest.fixture()
+    def mint_request(self, helpers):
+        outputs = [[address, 1000] for address in self.addresses]
+        request = helpers.request.mint(outputs)
+        return request
+
+    @pytest.fixture()
+    def increased_trustees(self, helpers, trustee_wallets, sdk_wallet_trustee):
+        seeds = [randomString(32) for _ in range(3)]
+
+        requests = [
+            helpers.request.nym(seed=seed, role=TRUSTEE_STRING)
+            for seed in seeds
+        ]
+
+        responses = helpers.sdk.send_and_check_request_objects(requests)
+
+        wallets = [helpers.wallet.create_client_wallet(seed) for seed in seeds]
+
+        yield trustee_wallets + wallets
+
+        # TODO: Not certain if this is actually changing the role.
+        def _update_nym_standard_user(response):
+            data = get_payload_data(response[RESULT])
+            request = helpers.request.nym(
+                dest=data[TARGET_NYM],
+                verkey=data[VERKEY],
+                role=None
+            )
+            return request
+
+        requests = [
+            _update_nym_standard_user(response)
+            for _, response in responses
+        ]
+
+        helpers.sdk.send_and_check_request_objects(requests)
+
+    def sign_with_quorum(self, helpers, request, wallets):
+        quorum = wallets[:math.ceil(len(wallets) / 2)]
+        request.signatures = {}
+        request = helpers.wallet.sign_request(request, quorum)
+        return request
+
+    def test_less_than_min_trustees(self, helpers, mint_request):
+        mint_request.signatures.popitem()
+        with pytest.raises(InvalidClientMessageException):
+            self.handler.validate(mint_request)
+
+    def test_steward_with_trustees(
+        self,
+        helpers,
+        mint_request,
+        steward_wallets
+    ):
+        mint_request = helpers.wallet.sign_request(
+            mint_request,
+            steward_wallets[0:1]
+        )
+        with pytest.raises(InvalidClientMessageException):
+            self.handler.validate(mint_request)
+
+    def test_valid_request(self, helpers, mint_request):
+        valid = self.handler.validate(mint_request)
+        assert valid is None
+
+    @pytest.mark.skip
+    def test_quorum_trustees(self, helpers, mint_request, trustee_wallets):
+        mint_request = self.sign_with_quorum(
+            helpers,
+            mint_request,
+            trustee_wallets
+        )
+        valid = self.handler.validate(mint_request)
+        assert valid is None
+
+    @pytest.mark.skip
+    def test_no_quorum_trustees(self, helpers, mint_request, trustee_wallets):
+        mint_request = self.sign_with_quorum(
+            helpers,
+            mint_request,
+            trustee_wallets
+        )
+        mint_request.signatures.popitem()
+        with pytest.raises(InvalidClientMessageException):
+            self.handler.validate(mint_request)
+
+    @pytest.mark.skip
+    def test_quorum_increased_trustees(
+        self,
+        helpers,
+        mint_request,
+        increased_trustees
+    ):
+        mint_request = self.sign_with_quorum(
+            helpers,
+            mint_request,
+            increased_trustees
+        )
+        valid = self.handler.validate(mint_request)
+        assert valid is None
+
+    @pytest.mark.skip
+    def test_no_quorum_increased_trustees(
+        self,
+        helpers,
+        mint_request,
+        increased_trustees
+    ):
+        mint_request = self.sign_with_quorum(
+            helpers,
+            mint_request,
+            increased_trustees
+        )
+        mint_request.signatures.popitem()
+        with pytest.raises(InvalidClientMessageException):
+            self.handler.validate(mint_request)

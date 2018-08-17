@@ -1,13 +1,12 @@
 import json
 
+from indy.ledger import build_nym_request
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from plenum.common.util import randomString
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
     MINT_PUBLIC, GET_UTXO, ADDRESS
 from sovtoken.util import address_to_verkey
-from plenum.test.pool_transactions.helper import prepare_nym_request
 
 
 class HelperRequest():
@@ -97,25 +96,31 @@ class HelperRequest():
         seed=None,
         alias=None,
         role=None,
-        sdk_wallet=None
+        dest=None,
+        verkey=None,
+        sdk_wallet=None,
     ):
         """ Builds a nym request. """
-        if not seed:
-            seed = randomString(32)
-  
-        if not alias:
-            alias = randomString(6)
-
         sdk_wallet = sdk_wallet or self._steward_wallet
+        _, sdk_wallet_did = sdk_wallet
 
-        nym_request_future = prepare_nym_request(
-            sdk_wallet,
-            seed,
+        if not dest:
+            (dest, new_verkey) = self._wallet.create_did(
+                seed=seed,
+                sdk_wallet=sdk_wallet
+            )
+
+        verkey = verkey or new_verkey
+
+        nym_request_future = build_nym_request(
+            sdk_wallet_did,
+            dest,
+            verkey,
             alias,
-            role
+            role,
         )
 
-        nym_request, _did = self._looper.loop.run_until_complete(nym_request_future)
+        nym_request = self._looper.loop.run_until_complete(nym_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
