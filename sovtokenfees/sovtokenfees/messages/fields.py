@@ -37,3 +37,8 @@ class TxnFeesField(FixedLengthField):
         error = self.signatures_validator.validate(val[2])
         if error:
             return error
+
+        if len(val[0]) != len(val[2]):
+            return 'Number of signatures and number of inputs should match but are {} and {} ' \
+                   'respectively.'.format(len(val[2]), len(val[0]))
+
