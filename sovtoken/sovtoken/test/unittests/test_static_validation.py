@@ -14,7 +14,13 @@ from sovtoken.test.constants import VALID_IDENTIFIER, VALID_REQID, SIGNATURES, V
 
 def test_MINT_PUBLIC_validate_success():
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]]},
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40
+                                                      }]},
                       None, SIGNATURES, 1)
     ret_val = txn_mint_public_validate(request)
     assert ret_val is None
@@ -29,14 +35,23 @@ def test_MINT_PUBLIC_validate_missing_output():
 
 def test_XFER_PUBLIC_validate_success():
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 20
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1
+                                                      }],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     ret_val = txn_xfer_public_validate(request)
     assert ret_val is None
 
 def test_XFER_PUBLIC_validate_missing_output():
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [[VALID_ADDR_2, 1]]},
+    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [{"address": VALID_ADDR_2, "seqNo": 1}]},
                       None, SIGNATURES, 1)
     with pytest.raises(InvalidClientRequest):
         txn_xfer_public_validate(request)
@@ -44,7 +59,13 @@ def test_XFER_PUBLIC_validate_missing_output():
 
 def test_XFER_PUBLIC_validate_missing_input():
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]]},
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 20
+                                                      }]},
                       None, SIGNATURES, 1)
     with pytest.raises(InvalidClientRequest):
         txn_xfer_public_validate(request)

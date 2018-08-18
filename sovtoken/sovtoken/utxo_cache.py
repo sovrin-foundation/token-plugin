@@ -125,8 +125,8 @@ class UTXOCache(OptimisticKVStore):
 
     def sum_inputs(self, inputs: list, is_committed=False):
         output_val = 0
-        for addr, seq_no in inputs:
-            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+        for inp in inputs:
+            output_val += self.get_output(Output(inp["address"], inp["seqNo"], None), is_committed=is_committed).value
         return output_val
 
     # Creates a type1 key with this format: '0:address:sequence_number'

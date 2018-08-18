@@ -113,7 +113,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
+                sigs = {i["address"]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         TXN_TYPE: FEE_TXN,
@@ -241,7 +241,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             except UTXOError as ex:
                 raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
-                change_amount = sum([a for _, a in self.get_change_for_fees(request)])
+                change_amount = sum([a["amount"] for a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees
                 if sum_inputs == expected_amount:
                     return
