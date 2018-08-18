@@ -83,9 +83,9 @@ class TokenWallet(Wallet):
         # signature = self.addresses[id].signer.sign(payload)
         # request.operation[INPUTS] = existing_inputs + [[id, seq_no], ]
         # TODO: Account for `extra` field
-        payload = [[[id, seq_no], ], request.operation[OUTPUTS]]
+        payload = [[{"address": id, "seqNo": seq_no}, ], request.operation[OUTPUTS]]
         signature = self.addresses[id].signer.sign(payload)
-        request.operation[INPUTS] = request.operation.get(INPUTS, []) + [[id, seq_no], ]
+        request.operation[INPUTS] = request.operation.get(INPUTS, []) + [{"address": id, "seqNo": seq_no}, ]
         request.operation[SIGS].append(signature)
         return request
 

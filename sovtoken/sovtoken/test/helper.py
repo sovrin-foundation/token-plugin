@@ -38,7 +38,7 @@ def send_public_mint(looper, trustees, outputs, sdk_pool_handle):
 def do_public_minting(looper, trustees, sdk_pool_handle, total_mint,
                       sf_master_share, sf_address, seller_address):
     seller_share = total_mint - sf_master_share
-    outputs = [[sf_address, sf_master_share], [seller_address, seller_share]]
+    outputs = [{"address": sf_address, "amount": sf_master_share}, {"address": seller_address, "amount": seller_share}]
     _, reply = send_public_mint(looper, trustees, outputs, sdk_pool_handle)[0]
     return reply['result']
 
