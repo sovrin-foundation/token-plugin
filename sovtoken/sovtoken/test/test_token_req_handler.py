@@ -487,7 +487,7 @@ class TestValidateMintPublic():
             mint_request,
             steward_wallets[0:1]
         )
-        with pytest.raises(InvalidClientMessageException):
+        with pytest.raises(UnauthorizedClientRequest):
             self.handler.validate(mint_request)
 
     def test_valid_request(self, helpers, mint_request):

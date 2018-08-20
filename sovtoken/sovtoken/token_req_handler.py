@@ -97,8 +97,6 @@ class TokenReqHandler(LedgerRequestHandler):
     def validate(self, request: Request):
         req_type = request.operation[TXN_TYPE]
         if req_type == MINT_PUBLIC:
-            # senders = [DomainRequestHandler.getNymDetails(self.domain_state, idr) for idr in request.all_identifiers]
-            # return TokenReqHandler._validate_mint_public_txn(request, senders, self.MinSendersForPublicMint)
             return validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForPublicMint)
 
         elif req_type == XFER_PUBLIC:

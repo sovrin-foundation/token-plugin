@@ -58,7 +58,7 @@ def validate_multi_sig_txn(request, required_role, domain_state, threshold: int)
     # senders roles with provided role. Can raise an exception
     senders = request.all_identifiers
     if len(senders) >= threshold:
-        authorized_sender_count = False
+        authorized_sender_count = 0
         for idr in senders:
             if DomainRequestHandler.get_role(domain_state, idr, required_role):
                 authorized_sender_count += 1
