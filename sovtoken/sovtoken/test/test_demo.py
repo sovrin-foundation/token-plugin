@@ -53,7 +53,7 @@ def xfer_partial_amount(looper, sdk_pool_handle, seqNo):
 
 
 def test_addresses_on_nodes(nodeSetWithIntegratedTokenPlugin):
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin,addresses["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES)
+    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, addresses["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES)
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, addresses["Recipient"], RECIPIENT_RECEIVES)
     check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, addresses["SF"], SF_RECEIVES)
 

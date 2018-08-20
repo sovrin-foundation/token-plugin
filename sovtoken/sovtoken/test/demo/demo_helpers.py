@@ -7,15 +7,15 @@ demo_logger = DemoLogger()
 def assert_wallet_amount(wallet, expected_unspent, expected_spent):
     unspent, spent = wallet_total_amount_and_spent(wallet)
     demo_logger.log_blue("{} wallet has spent {} tokens and currently has {} tokens".format(wallet._name, spent, unspent))
-    assert unspent == expected_unspent
-    assert spent == expected_spent
+    assert unspent == expected_unspent, 'unspent={}, expected_unspent={}'.format(unspent, expected_unspent)
+    assert spent == expected_spent, 'spent={}, expected_spent={}'.format(spent, expected_spent)
 
 
 def wallet_total_amount_and_spent(wallet):
     addresses = wallet.addresses.values()
     unspent = sum((value for address in addresses for value in address.outputs[0].values()), 0)
     spent = sum((value for address in addresses for value in address.outputs[1].values()), 0)
-    return unspent,spent
+    return unspent, spent
 
 
 def create_wallet_with_default_identifier(name):

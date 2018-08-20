@@ -2,6 +2,7 @@ from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
 from common.serializers.base58_serializer import Base58Serializer
+from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
 
 txn_root_serializer = Base58Serializer()
@@ -142,14 +143,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def validate(self, req: Request):
         operation = req.operation
         if operation[TXN_TYPE] == SET_FEES:
-            error = ''
-            senders = req.all_identifiers
-            if not all(DomainRequestHandler.get_role(
-                    self.domain_state, idr, TRUSTEE) for idr in senders):
-                error = 'only Trustees can send this transaction'
-            if error:
-                raise UnauthorizedClientRequest(req.identifier, req.reqId,
-                                                error)
+            validate_multi_sig_txn(req, TRUSTEE, self.domain_state, self.MinSendersForFees)
         else:
             super().validate(req)
 
@@ -204,8 +198,8 @@ class StaticFeesReqHandler(FeeReqHandler):
     def _get_deducted_fees_xfer(self, request, required_fees):
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                      request,
-                                                      is_committed=False)
+                                                    request,
+                                                    is_committed=False)
 
             sum_outputs = TokenReqHandler.sum_outputs(request)
         except InvalidClientMessageException as ex:
