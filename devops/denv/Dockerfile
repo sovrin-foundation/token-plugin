@@ -63,8 +63,8 @@ ARG indy_plenum_ver=1.6.510
 RUN apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.3 \
-        indy-plenum  \ 
-        indy-node \
+        indy-plenum=1.6.510  \ 
+        indy-node=1.6.568 \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
 # config indy pool
