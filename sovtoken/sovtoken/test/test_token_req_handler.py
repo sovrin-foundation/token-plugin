@@ -483,6 +483,7 @@ class TestValidateMintPublic():
         mint_request,
         steward_wallets
     ):
+        mint_request.signatures.popitem()
         mint_request = helpers.wallet.sign_request(
             mint_request,
             steward_wallets[0:1]
