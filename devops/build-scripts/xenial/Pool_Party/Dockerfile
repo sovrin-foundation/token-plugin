@@ -51,10 +51,10 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $ui
 ARG indy_stream=master
 
 ARG indy_anoncreds_ver=1.0.32
-ARG indy_node_ver=1.4.496
-ARG python3_indy_crypto_ver=0.4.1
-ARG indy_crypto_ver=0.4.0
-ARG indy_plenum_ver=1.4.442
+ARG indy_node_ver=1.6.568
+ARG python3_indy_crypto_ver=0.4.3
+ARG indy_crypto_ver=0.4.3
+ARG indy_plenum_ver=1.6.510
 
 ARG sovtoken_pkg_name=sovtoken_0.9.0_amd64.deb
 ARG sovtokenfees_pkg_name=sovtokenfees_0.9.0_amd64.deb
