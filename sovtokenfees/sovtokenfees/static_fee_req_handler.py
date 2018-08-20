@@ -205,17 +205,12 @@ class StaticFeesReqHandler(FeeReqHandler):
             raise ex
         except Exception as ex:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
+                raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
             expected_amount = sum_outputs + required_fees
-            # Check for the happy and probably most common case first and cause early return
-            if sum_inputs == expected_amount:
-                deducted_fees = sum_inputs - sum_outputs
-                return deducted_fees
-            self._handle_incorrect_funds(sum_inputs, sum_outputs,
-                                         expected_amount, required_fees, request)
-
-        if error:
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs,
+                                                          expected_amount, request,
+                                                          'fees: {}'.format(required_fees))
 
     def _get_deducted_fees_non_xfer(self, request, required_fees):
         error = None
@@ -229,10 +224,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees
-                if sum_inputs == expected_amount:
-                    return
-                self._handle_incorrect_funds(sum_inputs, change_amount,
-                                             expected_amount, required_fees, request)
+                TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
+                                                              expected_amount, request,
+                                                              'fees: {}'.format(required_fees))
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)

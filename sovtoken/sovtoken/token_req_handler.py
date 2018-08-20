@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
@@ -65,23 +65,32 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int):
-        if sum_inputs == sum_outputs:
+        TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs, sum_outputs, request)
+
+    @staticmethod
+    def validate_given_inputs_outputs(inputs, outputs, expected_output, request,
+                                      error_msg_suffix: Optional[str]=None):
+        if inputs == expected_output:
             return  # Equal is valid
-        elif sum_inputs > sum_outputs:
-            error = 'Extra funds, sum of inputs is {} and ' \
-                    'expected output amount is {}'.format(sum_inputs, sum_outputs)
+        elif inputs > expected_output:
+            error = 'Extra funds, sum of inputs is {}' \
+                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+            if error_msg_suffix and isinstance(error_msg_suffix, str):
+                error += ' ' + error_msg_suffix
             raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
                                   getattr(request, f.REQ_ID.nm, None),
                                   error)
 
-        elif sum_inputs < sum_outputs:
-            error = 'Insufficient funds, sum of inputs is {} and ' \
-                    'expected output amount is {}'.format(sum_inputs, sum_outputs)
+        elif inputs < expected_output:
+            error = 'Insufficient funds, sum of inputs is {}' \
+                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+            if error_msg_suffix and isinstance(error_msg_suffix, str):
+                error += ' ' + error_msg_suffix
             raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
                                          getattr(request, f.REQ_ID.nm, None),
                                          error)
 
-        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
+        raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                             getattr(request, f.REQ_ID.nm, None),
                                             'Request to not meet minimum requirements')
 
