@@ -65,12 +65,6 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int):
-        if not isinstance(sum_inputs, int) or not isinstance(sum_outputs, int):
-            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                getattr(request, f.REQ_ID.nm, None),
-                                                'Summation of input or outputs where not an integer, sum of inputs'
-                                                ' is {} and sum of outputs is {}'.format(sum_inputs, sum_outputs))
-
         if sum_inputs == sum_outputs:
             return  # Equal is valid
         elif sum_inputs > sum_outputs:

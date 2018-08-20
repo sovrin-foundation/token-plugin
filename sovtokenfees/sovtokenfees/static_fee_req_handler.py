@@ -9,14 +9,13 @@ txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, MULTI_SIGNATURE
+    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
@@ -281,19 +280,16 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
         elif typ == FEE_TXN:
-            for addr, seq_no in txn['txn']['data'][INPUTS]:
+            for addr, seq_no in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
                                             address=addr, seq_no=seq_no,
                                             is_committed=is_committed)
             seq_no = get_seq_no(txn)
-            for addr, amount in txn['txn']['data'][OUTPUTS]:
+            for addr, amount in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
                 TokenReqHandler.add_new_output(state=self.token_state,
                                                utxo_cache=self.utxo_cache,
-                                               output=Output(
-                                                   addr,
-                                                   seq_no,
-                                                   amount),
+                                               output=Output(addr, seq_no, amount),
                                                is_committed=is_committed)
         else:
             logger.warning('Unknown type {} found while updating '
