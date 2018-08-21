@@ -128,21 +128,25 @@ class TokenWallet(Wallet):
         self._update_outputs(data[OUTPUTS], seq_no)
 
     def _update_inputs(self, inputs):
-        for addr, seq_no in inputs:
+        for inp in inputs:
+            addr = inp["address"]
+            seq_no = inp["seqNo"]
             if addr in self.addresses:
                 self.addresses[addr].spent(seq_no)
 
     def _update_outputs(self, outputs, txn_seq_no=None):
         for output in outputs:
-            if len(output) == 2:
-                error = self.txn_seq_no_valdator.validate(txn_seq_no)
-                if error:
-                    raise ValueError(error)
-                addr, val = output
-                seq_no = txn_seq_no
-            elif len(output) == 3:
-                addr, seq_no, val = output
-            else:
+            try:
+                addr = output["address"]
+                val = output["amount"]
+                try:
+                    seq_no = output["seqNo"]
+                except KeyError as ex:
+                    if txn_seq_no:
+                        seq_no = txn_seq_no
+                    else:
+                        raise ex
+            except Exception:
                 raise ValueError('Cannot handle output {}'.format(output))
             if addr in self.addresses:
                 self.addresses[addr].add_utxo(seq_no, val)
@@ -151,7 +155,7 @@ class TokenWallet(Wallet):
         # Get minimum utxo greater than or equal to `amount`
         def get_address_utxos(address):
             for (seq_no, amount) in address.all_utxos:
-                yield (address.address, seq_no, amount)
+                yield {"address": address.address, "seqNo": seq_no, "amount": amount}
 
         if address:
             all_utxos = get_address_utxos(self.addresses[address])
@@ -162,8 +166,8 @@ class TokenWallet(Wallet):
                 for utxo in get_address_utxos(address)
             ]
 
-        filtered = filter(lambda utxo: utxo[2] >= amount, all_utxos)
-        return min(filtered, key=lambda utxo: utxo[2], default=None)
+        filtered = filter(lambda utxo: utxo["amount"] >= amount, all_utxos)
+        return min(filtered, key=lambda utxo: utxo["amount"], default=None)
 
     def get_val(self, address, seq_no):
         # Get value of unspent output (address and seq_no), can raise KeyError

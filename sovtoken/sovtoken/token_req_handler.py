@@ -254,7 +254,9 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def add_new_output(state, utxo_cache, output: Output, is_committed=False):
-        address, seq_no, amount = output
+        address = output.address
+        seq_no = output.seqNo
+        amount = output.amount
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
