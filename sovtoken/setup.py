@@ -43,7 +43,7 @@ setup(
     # '>=' here seems makes sense since usually indy-plenum is
     # installed as indy-node's dependency and might be with greater
     # version (just to not update each time new indy-node is released)
-    install_requires=['indy-plenum-dev>=1.6.500'],
+    install_requires=['indy-plenum-dev==1.6.510'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
