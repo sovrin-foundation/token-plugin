@@ -13,6 +13,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
 RUN echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
 
+RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list
+
 RUN apt-get update -y && apt-get install -y \
     # common stuff
         git \
@@ -39,7 +41,7 @@ RUN apt-get update -y && apt-get install -y \
         libsnappy-dev \
     # libindy 
         python3-nacl \
-        libindy-crypto=0.4.1~46 \
+        libindy-crypto=0.4.3 \
         libindy=1.6.1~657
         #//python3-indy-crypto
 
@@ -57,15 +59,15 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 100
 WORKDIR /home/indy
 
 # indy-node along with supervisor
-ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.4.496}
-ARG indy_plenum_ver=1.4.442
+ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.568}
+ARG indy_plenum_ver=1.6.510
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
-        python3-indy-crypto=0.4.1 \
-        indy-plenum  \ 
-        indy-node \
+        python3-indy-crypto=0.4.3 \
+        indy-plenum=1.6.510  \
+        indy-node=1.6.568 \
     && rm -rf /var/lib/apt/lists/*
 COPY supervisord.conf /etc/supervisord.conf
 # config indy pool
