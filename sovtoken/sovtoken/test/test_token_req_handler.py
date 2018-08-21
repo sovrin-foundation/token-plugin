@@ -385,7 +385,7 @@ def test_token_req_handler_onBatchCreated_success(token_handler_b, node):
     type2_key = token_handler_b.utxo_cache._create_type2_key(output.address)
     print(token_handler_b.utxo_cache.un_committed)
     assert token_handler_b.utxo_cache.un_committed == [(state_root, OrderedDict([(type1_key, str(output.value)),
-                                                                                 (type2_key, str(output.seq_no))]))]
+                                                                                 (type2_key, str(output.seqNo))]))]
 
 
 def test_token_req_handler_onBatchRejected_success(token_handler_b):

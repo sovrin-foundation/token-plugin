@@ -43,7 +43,7 @@ def test_spend_unspent_output(utxo_cache):
     outputs = gen_outputs(num_outputs)
     for i in range(num_outputs):
         utxo_cache.add_output(outputs[i], True)
-        new_out = Output(outputs[i].address, outputs[i].seq_no, None)
+        new_out = Output(outputs[i].address, outputs[i].seqNo, None)
         utxo_cache.get_output(new_out, True)
         utxo_cache.spend_output(new_out, True)
         with pytest.raises(UTXOError):
@@ -66,7 +66,7 @@ def test_get_all_unspent_outputs(utxo_cache):
     num_addresses = 5
     num_outputs_per_address = 4
     address_outputs = gen_outputs(num_addresses)
-    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seq_no * (i + 1),
+    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seqNo * (i + 1),
                                                  ao.value * (i + 1)) for i in
                                           range(num_outputs_per_address)]
                                          for ao in address_outputs]))
