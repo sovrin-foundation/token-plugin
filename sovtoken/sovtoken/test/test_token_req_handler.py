@@ -275,7 +275,7 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(public_minting, token
     token_handler_b.validate(request)
     token_handler_b.updateState([txn])
     state_key = TokenReqHandler.create_state_key(VALID_ADDR_1, seq_no)
-    key = token_handler_b.utxo_cache._create_type1_key(Output(VALID_ADDR_1, seq_no, 60))
+    key = token_handler_b.utxo_cache._create_key(Output(VALID_ADDR_1, seq_no, 60))
     assert token_handler_b.utxo_cache._store._has_key(key)
     try:
         token_handler_b.state.get(state_key, False)
@@ -294,11 +294,10 @@ def test_token_req_handler_onBatchCreated_success(token_handler_b, node):
     # run onBatchCreated
     token_handler_b.onBatchCreated(state_root)
     # Verify onBatchCreated worked properly
-    type1_key = token_handler_b.utxo_cache._create_type1_key(output)
-    type2_key = token_handler_b.utxo_cache._create_type2_key(output.address)
+    key = token_handler_b.utxo_cache._create_key(output)
     print(token_handler_b.utxo_cache.un_committed)
-    assert token_handler_b.utxo_cache.un_committed == [(state_root, OrderedDict([(type1_key, str(output.value)),
-                                                                                 (type2_key, str(output.seq_no))]))]
+    assert token_handler_b.utxo_cache.un_committed == [(state_root,
+                                                        OrderedDict([(key, '{}:{}'.format(str(output.seq_no), str(output.value)))]))]
 
 
 def test_token_req_handler_onBatchRejected_success(token_handler_b):

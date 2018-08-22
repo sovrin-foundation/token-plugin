@@ -45,7 +45,7 @@ def test_incorrect_funds(helpers, addresses, initial_mint):
         [address4, mint_seq_no],
     ]
 
-    for i in range(200):
+    for i in range(3):
         if i < 100:
             amount = randint(1, 99)
         else:

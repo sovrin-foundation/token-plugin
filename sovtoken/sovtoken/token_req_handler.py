@@ -21,7 +21,7 @@ from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, AddressNotFound
 
 from state.trie.pruning_trie import rlp_decode
 
@@ -44,7 +44,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
-        # needed then a new function should be created.
+            # needed then a new function should be created.
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
                                                     request,
@@ -237,7 +237,7 @@ class TokenReqHandler(LedgerRequestHandler):
         try:
             inputs = request.operation[INPUTS]
             return utxo_cache.sum_inputs(inputs, is_committed=is_committed)
-        except UTXOError as ex:
+        except (AddressNotFound, UTXOError) as ex:
             raise InvalidFundsError(request.identifier, request.reqId, '{}'.format(ex))
 
     @staticmethod

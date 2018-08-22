@@ -12,6 +12,11 @@ class InvalidFundsError(InvalidClientMessageException):
 class ExtraFundsError(InvalidClientMessageException):
     pass
 
+
+class AddressNotFound(Exception):
+    pass
+
+
 class UTXOError(Exception):
     pass
 

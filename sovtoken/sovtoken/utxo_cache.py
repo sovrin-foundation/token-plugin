@@ -1,6 +1,7 @@
-from typing import List
+from collections import defaultdict
+from typing import List, Dict, Set
 
-from sovtoken.exceptions import UTXONotFound, UTXOAlreadySpentError, UTXOError
+from sovtoken.exceptions import UTXONotFound, UTXOAlreadySpentError, UTXOError, AddressNotFound
 from sovtoken.types import Output
 from storage.kv_store import KeyValueStorage
 from storage.optimistic_kv_store import OptimisticKVStore
@@ -10,16 +11,18 @@ logger = getlogger()
 
 
 class UTXOCache(OptimisticKVStore):
-    # TODO: Extract storing in-memory`level`s like functionality from IdrCache
     """
     Used to answer 2 questions:
         1. Given​ ​an​ ​output,​ ​check​ ​if​ ​it's​ ​spent​ ​or​ ​not​ ​and​ ​return​ ​the​ ​amount​ ​
         held​ ​by​ ​it​ ​if​ ​not spent
         2. Given​ ​an​ ​address,​ ​return​ ​all​ ​valid​ ​UTXOs
 
-    Stores 2 kinds of keys.
-        Type1 key is an output prepended with "0"
-        Type2 key is an address prepended with "1"
+    The key value looks like this `<key is address> -> <value is a list of unspent seq nos and amounts>`
+    If address `a1` has 3 UTXOs with seq no 4, 6, 19 and amount 1, 31, 100 respectively,
+    the key value would be `a1 -> 4:1:6:31:19:100`; for `n` seq_nos, there will be `2*n` items.
+    The seq no lives at index `i` and value lives at `i+1`
+    Intentionally not using tuples or any delimiter for seq_no, value pairs to avoid serialization and
+    deserialization cost
 
     An unspent output is combination of an address and a reference (seq no)
     to a txn in which this address was transferred some tokens
@@ -35,121 +38,125 @@ class UTXOCache(OptimisticKVStore):
     # Adds an output to the batch of uncommitted outputs
     def add_output(self, output: Output, is_committed=False):
         UTXOCache._is_valid_output(output)
-
-        type1_key = self._create_type1_key(output)
-        type2_key = self._create_type2_key(output.address)
-        type1_val = str(output.value)
+        key = self._create_key(output)
         try:
-            seq_nos = self.get(type2_key, is_committed)
-            if isinstance(seq_nos, (bytes, bytearray)):
-                seq_nos = seq_nos.decode()
-            seq_nos = self._parse_type2_val(seq_nos)
+            seq_nos_amounts = self.get(key, is_committed)
+            seq_nos_amounts = self._parse_val(seq_nos_amounts)
         except KeyError:
-            seq_nos = []
-        logger.debug('adding new output: type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
-        seq_no_str = str(output.seq_no)
-        if seq_no_str not in seq_nos:
-            seq_nos.append(seq_no_str)
-        type2_val = self._create_type2_val(seq_nos)
-        batch = [(type1_key, type1_val), (type2_key, type2_val)]
-        self.setBatch(batch, is_committed=is_committed)
-
-    # Returns the full output object in the key value store, when given an
-    # incomplete output object (with seq_no set to None)
-    def get_output(self, output: Output, is_committed=False) -> Output:
-        UTXOCache._is_valid_output(output)
-
-        type1_key = self._create_type1_key(output)
-
-        try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
-            val = self.get(type1_key, is_committed)
-            logger.debug('Getting type1 key {}, val is {}'.format(type1_key, val))
-        except KeyError:
-            raise UTXONotFound("UTXO key was not found")
-
-        if not val:
-            raise UTXOAlreadySpentError("UTXO value is None")
-
-        return Output(output.address, output.seq_no, int(val))
+            seq_nos_amounts = []
+        logger.debug('adding new output: key {} seq_nos_amounts {} '
+                     'output {}'.format(key, seq_nos_amounts, output))
+        seq_nos_amounts.append(str(output.seq_no))
+        seq_nos_amounts.append(str(output.value))
+        val = self._create_val(seq_nos_amounts)
+        self.set(key, val, is_committed=is_committed)
 
     # Spends the provided output by fetching it from the key value store
     # (it must have been previously added) and then doing batch ops
     def spend_output(self, output: Output, is_committed=False):
         UTXOCache._is_valid_output(output)
 
-        type1_key = self._create_type1_key(output)
-        type2_key = self._create_type2_key(output.address)
+        key = self._create_key(output)
 
         try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
-            seq_nos = self.get(type2_key, is_committed)
+            seq_nos_amounts = self.get(key, is_committed)
         except KeyError:
             raise UTXONotFound("seq_no for address were not found")
 
-        if isinstance(seq_nos, (bytes, bytearray)):
-            seq_nos = seq_nos.decode()
-        logger.debug('spending output type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
-        seq_nos = self._parse_type2_val(seq_nos)
+        logger.debug('spending output type2 key {} seq_nos_amounts {} output {}'.format(key, seq_nos_amounts, output))
+        seq_nos_amounts = self._parse_val(seq_nos_amounts)
         seq_no_str = str(output.seq_no)
-        if seq_no_str not in seq_nos:
-            err_msg = "seq_no {} is not found is list of seq_nos for address -- current list: {}".format(seq_no_str,
-                                                                                                         seq_nos)
-            raise UTXONotFound(err_msg)
-        seq_nos.remove(seq_no_str)
-        batch = [(self._store.WRITE_OP, type1_key, '')]
-        type2_val = self._create_type2_val(seq_nos)
-        batch.append((self._store.WRITE_OP, type2_key, type2_val))
-        self.do_ops_in_batch(batch, is_committed=is_committed)
+
+        self.remove_seq_no(seq_no_str, seq_nos_amounts)
+
+        val = self._create_val(seq_nos_amounts)
+        self.set(key, val, is_committed=is_committed)
 
     # Retrieves a list of the unspent outputs from the key value storage that
     # are associated with the provided address
     def get_unspent_outputs(self, address: str,
                             is_committed=False) -> List[Output]:
-        seq_nos = self.get_unspent_seq_nos(address, is_committed)
-        return [
-            self.get_output(Output(address, seq_no, None), is_committed)
-            for seq_no in seq_nos
-        ]
-
-    # Retrieves a list of the sequence numbers from the key value storage that
-    # are associated with the provided address
-    def get_unspent_seq_nos(self, address: str, is_committed) -> List[int]:
-        try:
-            type2_key = self._create_type2_key(address)
-            seq_nos = self.get(type2_key, is_committed)
-            if isinstance(seq_nos, (bytes, bytearray)):
-                seq_nos = seq_nos.decode()
-
-            return [int(seq_no) for seq_no in self._parse_type2_val(seq_nos)]
+        try:  # Looking at OptimisticKVStore, there is not way to test if key is in store
+            seq_nos_amounts = self.get(address, is_committed)
         except KeyError:
             return []
+        return self._build_outputs_from_val(address, seq_nos_amounts)
 
     def sum_inputs(self, inputs: list, is_committed=False):
-        output_val = 0
+        addresses = defaultdict(set)
         for addr, seq_no in inputs:
-            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+            addresses[addr].add(seq_no)
+
+        output_val = 0
+        for addr, seq_nos in addresses.items():
+            try:
+                seq_nos_amounts = self.get(addr, is_committed)
+            except KeyError:
+                raise AddressNotFound('Address {} was not found'.format(addr))
+
+            seq_nos_amounts = self._parse_val(seq_nos_amounts)
+            total = self._sum_amounts_from_seq_nos_amounts(seq_nos, seq_nos_amounts)
+
+            output_val += total
+
         return output_val
 
-    # Creates a type1 key with this format: '0:address:sequence_number'
-    # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
     @staticmethod
-    def _create_type1_key(output: Output) -> str:
-        return '0:{}:{}'.format(output.address, output.seq_no)
+    def _create_key(output: Output) -> str:
+        return '{}'.format(output.address)
 
-    # Creates a type2 key with this format: '1:address'
-    # example: '1:2d4daf5d9247997d59ba430567e0c3a4'
     @staticmethod
-    def _create_type2_key(address: str) -> str:
-        return '1:{}'.format(address)
+    def _create_val(items: List) -> str:
+        return ':'.join(items)
 
-    # Creates a type2 value from a list of sequence numbers
     @staticmethod
-    def _create_type2_val(seq_nos: List) -> str:
-        return ':'.join(seq_nos)
+    def _parse_val(val: str) -> List:
+        if isinstance(val, (bytes, bytearray)):
+            val = val.decode()
+        if not isinstance(val, str):
+            raise UTXOError("Items are not valid string -- '{}'".format(str(val)))
 
-    # Retrieves the type2 value from the sequence numbers
+        return [] if not val else val.split(':')
+
     @staticmethod
-    def _parse_type2_val(seq_nos: str) -> List:
-        if not isinstance(seq_nos, str):
-            raise UTXOError("Sequence numbers are not valid string -- '{}'".format(str(seq_nos)))
+    def _build_outputs_from_val(address: str, val: str) -> List[Output]:
+        items = UTXOCache._parse_val(val)
+        if len(items) % 2 != 0:
+            raise ValueError('Length of items should be even: items={}'.format(len(items)))
 
-        return [] if not seq_nos else seq_nos.split(':')
+        return [Output(address, int(items[i]), int(items[i + 1]))
+                for i in range(0, len(items), 2)]
+
+    @staticmethod
+    def remove_seq_no(seq_no_str: str, seq_nos_amounts: List[str]):
+        # Shortens the passed list `seq_nos_amounts` by 2 items
+        for i in range(0, len(seq_nos_amounts), 2):
+            if seq_nos_amounts[i] == seq_no_str:
+                break
+        else:
+            err_msg = "seq_no {} is not found is list of seq_nos_amounts for address -- current list: {}".format(
+                seq_no_str,
+                seq_nos_amounts)
+            raise UTXONotFound(err_msg)
+
+        seq_nos_amounts.pop(i)
+        # List has changed length, value at index `i+1` has moved to index `i`
+        seq_nos_amounts.pop(i)
+
+    @staticmethod
+    def _sum_amounts_from_seq_nos_amounts(required_seq_nos: Set[int], seq_nos_amounts: List[str]) -> int:
+        total = 0
+        for i in range(0, len(seq_nos_amounts), 2):
+            if int(seq_nos_amounts[i]) in required_seq_nos:
+                total += int(seq_nos_amounts[i + 1])
+                required_seq_nos.remove(int(seq_nos_amounts[i]))
+                if not required_seq_nos:
+                    break
+
+        if required_seq_nos:
+            err_msg = "seq_nos {} are not found is list of seq_nos_amounts for address -- current list: {}".format(
+                required_seq_nos,
+                seq_nos_amounts)
+            raise UTXONotFound(err_msg)
+
+        return total
