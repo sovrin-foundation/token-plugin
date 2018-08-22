@@ -52,7 +52,8 @@
     In the second window:
 
     #+BEGIN_SRC bash
-       make setup
+        make deps
+        make setup
     #+END_SRC
 
     This will fix config files and install sovtoken and sovtoken fees
