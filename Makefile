@@ -3,7 +3,7 @@ pwd = $(shell pwd)
 dirname = $(shell basename ${pwd})
 
 setup: 
-	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'bash install_payment_plugins.sh' 
+	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'bash -x install_payment_plugins.sh'
 
 test: 
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/'
