@@ -19,7 +19,7 @@ metadata = {}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.6.1-dev-657']
+tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.6.1']
 
 setup(
     name=metadata['__title__'],
@@ -43,7 +43,7 @@ setup(
     # '>=' here seems makes sense since usually indy-plenum is
     # installed as indy-node's dependency and might be with greater
     # version (just to not update each time new indy-node is released)
-    install_requires=['indy-plenum-dev>=1.6.500'],
+    install_requires=['indy-plenum==1.6.50'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
