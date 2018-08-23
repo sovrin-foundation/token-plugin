@@ -60,7 +60,7 @@ WORKDIR /home/indy
 ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.71}
 ARG indy_plenum_ver=1.6.50
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
-RUN echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
+RUN echo "deb https://repo.sovrin.org/deb xenial stable" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.1 \
