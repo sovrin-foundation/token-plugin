@@ -2,9 +2,7 @@ import pytest
 
 from plenum.common.txn_util import get_seq_no
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.test.demo.helper import demo_logger, assert_address_contains
-
-demo_logger = DemoLogger()
+from sovtoken.test.demo.demo_helpers import demo_logger, assert_address_contains
 
 
 SOVATOM = int(1e8)
