@@ -48,13 +48,13 @@ RUN pip3 install -U \
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $uid indy; usermod -aG sudo indy
 
-ARG indy_stream=master
+ARG indy_stream=rc
 
-ARG indy_anoncreds_ver=1.0.32
-ARG indy_node_ver=1.4.496
+ARG indy_anoncreds_ver=1.0.11
+ARG indy_node_ver=1.6.71
 ARG python3_indy_crypto_ver=0.4.1
 ARG indy_crypto_ver=0.4.0
-ARG indy_plenum_ver=1.4.442
+ARG indy_plenum_ver=1.6.50
 
 ARG sovtoken_pkg_name=sovtoken_0.9.0_amd64.deb
 ARG sovtokenfees_pkg_name=sovtokenfees_0.9.0_amd64.deb
