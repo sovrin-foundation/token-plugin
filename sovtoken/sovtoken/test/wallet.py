@@ -142,7 +142,7 @@ class TokenWallet(Wallet):
                 try:
                     seq_no = output["seqNo"]
                 except KeyError as ex:
-                    if txn_seq_no:
+                    if txn_seq_no and isinstance(txn_seq_no, int):
                         seq_no = txn_seq_no
                     else:
                         raise ex

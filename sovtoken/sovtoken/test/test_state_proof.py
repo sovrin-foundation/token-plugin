@@ -48,8 +48,8 @@ def test_state_proof(public_minting, looper,  # noqa
     encoded = {}
     outputs = res[OUTPUTS]
     for out in outputs:
-        state_key = TokenReqHandler.create_state_key(out[0], out[1])
-        encoded[state_key] = rlp_encode([str(out[2])])
+        state_key = TokenReqHandler.create_state_key(out["address"], out["seqNo"])
+        encoded[state_key] = rlp_encode([str(out["amount"])])
     proof_nodes = decode_proof(res[STATE_PROOF][PROOF_NODES])
     client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))
     assert client_trie.verify_spv_proof_multi(
