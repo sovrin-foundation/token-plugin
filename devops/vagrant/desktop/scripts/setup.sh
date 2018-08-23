@@ -61,7 +61,7 @@ sudo pip3 install -U \
     mock
 
 echo ${CYAN}plenum
-echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
+echo "deb https://repo.sovrin.org/deb xenial stable" >> /etc/apt/sources.list \
 sudo apt-get update && apt-get install -y \
          supervisor \
          python3-indy-crypto=0.4.1 \
