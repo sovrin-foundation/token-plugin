@@ -129,6 +129,7 @@ def test_fees_incorrect_sig(
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
 
+
 def test_fees_insufficient_sig(
         helpers,
         fees_set,

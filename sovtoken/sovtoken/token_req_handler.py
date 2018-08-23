@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
@@ -10,17 +10,16 @@ from sovtoken.messages.validation import static_req_validation
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
-    PROOF_NODES, MULTI_SIGNATURE, ROLE, ED25519
-from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientMessageException, OperationError
+    PROOF_NODES, MULTI_SIGNATURE, ED25519
+from plenum.common.exceptions import InvalidClientMessageException, OperationError
 
 from plenum.common.request import Request
 from plenum.common.types import f
-from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
 from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
-from sovtoken.util import SortedItems
+from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError
 
@@ -33,10 +32,6 @@ class TokenReqHandler(LedgerRequestHandler):
 
     MinSendersForPublicMint = 4
 
-    # When set to True, sum of inputs can be greater than outputs but not vice versa.
-    # Defaults to False requiring sum of inputs to exactly match outputs, else the txn will be rejected.
-    ALLOW_INPUTS_TO_EXCEED_OUTPUTS = False
-
     def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
@@ -46,34 +41,6 @@ class TokenReqHandler(LedgerRequestHandler):
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
-
-    # noinspection PyUnreachableCode
-    @staticmethod
-    def _validate_mint_public_txn(request: Request, senders: list, required_senders: int):
-        if not isinstance(senders, list):
-            raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
-                                                getattr(request, 'reqId', None),
-                                                'Senders was not computed to list')
-
-        if len(senders) >= required_senders:
-            if all(callable(getattr(nym_data, "get", None)) and  # Check that elements in senders have get method
-                   nym_data.get(ROLE) == TRUSTEE for nym_data in senders):
-                return
-            else:
-                error = 'only Trustees can send this transaction'
-                raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
-                                                getattr(request, 'reqId', None),
-                                                error)
-        else:
-            error = 'Request needs at least {} signers but only {} found'. \
-                format(required_senders, len(senders))
-            raise UnauthorizedClientRequest(getattr(request, 'all_identifiers', None),
-                                            getattr(request, 'reqId', None),
-                                            error)
-
-        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
-                                            getattr(request, 'reqId', None),
-                                            'Request to not meet minimum requirements')
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
@@ -94,37 +61,36 @@ class TokenReqHandler(LedgerRequestHandler):
         else:
             return TokenReqHandler._validate_xfer_public_txn(request,
                                                              sum_inputs,
-                                                             sum_outputs,
-                                                             self.ALLOW_INPUTS_TO_EXCEED_OUTPUTS)
+                                                             sum_outputs)
 
     @staticmethod
-    def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int, allow_inputs_exceed_outputs: bool):
-        if not isinstance(sum_inputs, int) or not isinstance(sum_outputs, int):
-            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                getattr(request, f.REQ_ID.nm, None),
-                                                'Summation of input or outputs where not an integer, sum of inputs'
-                                                ' is {} and sum of outputs is {}'.format(sum_inputs, sum_outputs))
+    def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int):
+        TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs, sum_outputs, request)
 
-        if sum_inputs == sum_outputs:
+    @staticmethod
+    def validate_given_inputs_outputs(inputs, outputs, expected_output, request,
+                                      error_msg_suffix: Optional[str]=None):
+        if inputs == expected_output:
             return  # Equal is valid
-        elif sum_inputs > sum_outputs:
-            if allow_inputs_exceed_outputs:
-                return   # Greater inputs is only valid when allowed
-            else:
-                error = 'Extra funds, sum of inputs is {} and ' \
-                        'expected output amount is {}'.format(sum_inputs, sum_outputs)
-                raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
-                                      getattr(request, f.REQ_ID.nm, None),
-                                      error)
+        elif inputs > expected_output:
+            error = 'Extra funds, sum of inputs is {}' \
+                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+            if error_msg_suffix and isinstance(error_msg_suffix, str):
+                error += ' ' + error_msg_suffix
+            raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
+                                  getattr(request, f.REQ_ID.nm, None),
+                                  error)
 
-        elif sum_inputs < sum_outputs:
-            error = 'Insufficient funds, sum of inputs is {} and ' \
-                    'expected output amount is {}'.format(sum_inputs, sum_outputs)
+        elif inputs < expected_output:
+            error = 'Insufficient funds, sum of inputs is {}' \
+                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+            if error_msg_suffix and isinstance(error_msg_suffix, str):
+                error += ' ' + error_msg_suffix
             raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
                                          getattr(request, f.REQ_ID.nm, None),
                                          error)
 
-        raise InvalidClientMessageException(getattr(request, 'all_identifiers', None),
+        raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                             getattr(request, f.REQ_ID.nm, None),
                                             'Request to not meet minimum requirements')
 
@@ -134,8 +100,7 @@ class TokenReqHandler(LedgerRequestHandler):
     def validate(self, request: Request):
         req_type = request.operation[TXN_TYPE]
         if req_type == MINT_PUBLIC:
-            senders = [DomainRequestHandler.getNymDetails(self.domain_state, idr) for idr in request.all_identifiers]
-            return TokenReqHandler._validate_mint_public_txn(request, senders, self.MinSendersForPublicMint)
+            return validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForPublicMint)
 
         elif req_type == XFER_PUBLIC:
             return self.handle_xfer_public_txn(request)
@@ -163,6 +128,7 @@ class TokenReqHandler(LedgerRequestHandler):
             sigs = req.operation.pop(SIGS)
         txn = reqToTxn(req)
         if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            req.operation[SIGS] = sigs
             sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
             add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn

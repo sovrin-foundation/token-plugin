@@ -111,7 +111,7 @@ def test_seller_xfer_sum_of_outputs_less_than_inputs(
     addresses
 ):
     """
-    Amount used in outputs greater than the amount held by inputs,
+    Amount used in outputs lesser than the amount held by inputs,
     hence it will be rejected
     """
     seq_no = get_seq_no(initial_mint)

@@ -2,20 +2,20 @@ from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
 from common.serializers.base58_serializer import Base58Serializer
+from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
 
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, MULTI_SIGNATURE
+    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
@@ -88,7 +88,8 @@ class StaticFeesReqHandler(FeeReqHandler):
         required_fees = self.get_txn_fees(request)
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
-            self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
+            self._get_deducted_fees_xfer(request, required_fees)
+            self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
             self._get_deducted_fees_non_xfer(request, required_fees)
 
@@ -142,14 +143,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def validate(self, req: Request):
         operation = req.operation
         if operation[TXN_TYPE] == SET_FEES:
-            error = ''
-            senders = req.all_identifiers
-            if not all(DomainRequestHandler.get_role(
-                    self.domain_state, idr, TRUSTEE) for idr in senders):
-                error = 'only Trustees can send this transaction'
-            if error:
-                raise UnauthorizedClientRequest(req.identifier, req.reqId,
-                                                error)
+            validate_multi_sig_txn(req, TRUSTEE, self.domain_state, self.MinSendersForFees)
         else:
             super().validate(req)
 
@@ -204,25 +198,20 @@ class StaticFeesReqHandler(FeeReqHandler):
     def _get_deducted_fees_xfer(self, request, required_fees):
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                      request,
-                                                      is_committed=False)
+                                                    request,
+                                                    is_committed=False)
 
             sum_outputs = TokenReqHandler.sum_outputs(request)
         except InvalidClientMessageException as ex:
             raise ex
         except Exception as ex:
                 error = 'Exception {} while processing inputs/outputs'.format(ex)
+                raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
             expected_amount = sum_outputs + required_fees
-            # Check for the happy and probably most common case first and cause early return
-            if sum_inputs == expected_amount:
-                deducted_fees = sum_inputs - sum_outputs
-                return deducted_fees
-            self._handle_incorrect_funds(sum_inputs, sum_outputs,
-                                         expected_amount, required_fees, request)
-
-        if error:
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs,
+                                                          expected_amount, request,
+                                                          'fees: {}'.format(required_fees))
 
     def _get_deducted_fees_non_xfer(self, request, required_fees):
         error = None
@@ -236,10 +225,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees
-                if sum_inputs == expected_amount:
-                    return
-                self._handle_incorrect_funds(sum_inputs, change_amount,
-                                             expected_amount, required_fees, request)
+                TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
+                                                              expected_amount, request,
+                                                              'fees: {}'.format(required_fees))
 
         if error:
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
@@ -287,19 +275,16 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
         elif typ == FEE_TXN:
-            for addr, seq_no in txn['txn']['data'][INPUTS]:
+            for addr, seq_no in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
                 TokenReqHandler.spend_input(state=self.token_state,
                                             utxo_cache=self.utxo_cache,
                                             address=addr, seq_no=seq_no,
                                             is_committed=is_committed)
             seq_no = get_seq_no(txn)
-            for addr, amount in txn['txn']['data'][OUTPUTS]:
+            for addr, amount in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
                 TokenReqHandler.add_new_output(state=self.token_state,
                                                utxo_cache=self.utxo_cache,
-                                               output=Output(
-                                                   addr,
-                                                   seq_no,
-                                                   amount),
+                                               output=Output(addr, seq_no, amount),
                                                is_committed=is_committed)
         else:
             logger.warning('Unknown type {} found while updating '
