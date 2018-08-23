@@ -128,6 +128,7 @@ class TokenReqHandler(LedgerRequestHandler):
             sigs = req.operation.pop(SIGS)
         txn = reqToTxn(req)
         if req.operation[TXN_TYPE] == XFER_PUBLIC:
+            req.operation[SIGS] = sigs
             sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
             add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn

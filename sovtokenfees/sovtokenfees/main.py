@@ -19,7 +19,10 @@ def integrate_plugin_in_node(node):
         raise ImportError('sovtoken plugin should be loaded, request ' # noqa
                                   'handler not found')
 
-    # Since the check to match inputs and outputs is done in fees handling.
+    # `handle_xfer_public_txn` in `TokenReqHandler` checks if the sum of inputs match
+    # exactly the sum of outputs. Since the check to match inputs and outputs is done
+    # during fees handling the check is avoided in `TokenReqHandler` by monkeypatching
+    # `handle_xfer_public_txn` to do nothing.
     token_req_handler.handle_xfer_public_txn = lambda _: None
 
     token_ledger = token_req_handler.ledger
