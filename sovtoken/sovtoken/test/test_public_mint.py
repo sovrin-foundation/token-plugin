@@ -85,6 +85,9 @@ def test_stewards_with_trustees(helpers, addresses, steward_wallets):
 
     outputs = [[address1, 1000], [address2, 1000]]
     request = helpers.request.mint(outputs)
+    # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
+    request.signatures.popitem()
+    # Add a steward in place of the removed Trustee
     request = helpers.wallet.sign_request(request, steward_wallets[0:1])
 
     with pytest.raises(RequestRejectedException):

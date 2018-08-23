@@ -2,6 +2,10 @@ from heapq import heappush, heappop
 from typing import List
 
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
+from plenum.common.exceptions import UnauthorizedClientRequest
+from plenum.common.types import f
+from plenum.server.domain_req_handler import DomainRequestHandler
+
 
 def register_token_wallet_with_client(client, token_wallet):
     client.registerObserver(token_wallet.on_reply_from_network)
@@ -47,3 +51,24 @@ class SortedItems:
         while self._heap:
             ordered.append(heappop(self._heap))
         return ordered
+
+
+def validate_multi_sig_txn(request, required_role, domain_state, threshold: int):
+    # Takes a request, a provided role and expects to find at least a threshold number
+    # senders roles with provided role. Can raise an exception
+    senders = request.all_identifiers
+    if len(senders) >= threshold:
+        authorized_sender_count = 0
+        for idr in senders:
+            if DomainRequestHandler.get_role(domain_state, idr, required_role):
+                authorized_sender_count += 1
+                if authorized_sender_count == threshold:
+                    return
+        error = 'only Trustees can send this transaction'
+        raise UnauthorizedClientRequest(senders,
+                                        getattr(request, f.REQ_ID.nm, None),
+                                        error)
+    else:
+        error = 'Request needs at least {} signers but only {} found'. \
+            format(threshold, len(senders))
+        raise UnauthorizedClientRequest(senders, getattr(request, f.REQ_ID.nm, None), error)

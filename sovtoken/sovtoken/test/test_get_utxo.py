@@ -1,3 +1,5 @@
+from random import randint
+
 import pytest
 
 from plenum.common.exceptions import RequestNackedException
@@ -61,7 +63,7 @@ def test_get_utxo_utxos_in_order(helpers):
 
     address_1 = Address()
     address_2 = Address()
-    total = 100
+    total = 1000
     outputs = [[address_1, total]]
     mint_result = helpers.general.do_mint(outputs)
 
@@ -69,20 +71,21 @@ def test_get_utxo_utxos_in_order(helpers):
 
     remaining = total
     for _ in range(10):
+        amount = randint(1, 10)
         inputs = [
             [address_1, seq_no],
         ]
         outputs = [
-            [address_2, 1],
-            [address_1, remaining - 1]
+            [address_2, amount],
+            [address_1, remaining - amount]
         ]
         request = helpers.request.transfer(inputs, outputs)
         response = helpers.sdk.send_and_check_request_objects([request])
         result = helpers.sdk.get_first_result(response)
         seq_no = get_seq_no(result)
-        remaining -= 1
+        remaining -= amount
 
-    request = helpers.request.get_utxo(address_1)
+    request = helpers.request.get_utxo(address_2)
     responses = helpers.sdk.send_and_check_request_objects([request])
     for response in responses:
         result = response[1]['result']
