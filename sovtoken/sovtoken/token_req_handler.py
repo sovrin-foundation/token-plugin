@@ -68,22 +68,36 @@ class TokenReqHandler(LedgerRequestHandler):
         TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs, sum_outputs, request)
 
     @staticmethod
-    def validate_given_inputs_outputs(inputs, outputs, expected_output, request,
+    def validate_given_inputs_outputs(inputs_sum, outputs_sum, required_amount, request,
                                       error_msg_suffix: Optional[str]=None):
-        if inputs == expected_output:
+        """
+        Checks three sum values against simple set of rules. inputs_sum must be equal to required_amount. Exceptions
+        are raise if it is not equal. The outputs_sum is pass not for checks but to be included in error messages.
+        This is confusing but is required in cases where the required amount is different then the sum of outputs (
+        in the case of fees).
+
+        :param inputs_sum: the sum of inputs
+        :param outputs_sum: the sum of outputs
+        :param required_amount: the required amount to validate (could be equal to output_sum, but may be different)
+        :param request: the request that is being validated
+        :param error_msg_suffix: added message to the error message
+        :return: returns if valid or will raise an exception
+        """
+
+        if inputs_sum == required_amount:
             return  # Equal is valid
-        elif inputs > expected_output:
+        elif inputs_sum > required_amount:
             error = 'Extra funds, sum of inputs is {}' \
-                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+                    'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
                                   getattr(request, f.REQ_ID.nm, None),
                                   error)
 
-        elif inputs < expected_output:
+        elif inputs_sum < required_amount:
             error = 'Insufficient funds, sum of inputs is {}' \
-                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+                    'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
