@@ -163,24 +163,24 @@ class TokenReqHandler(LedgerRequestHandler):
             sigs = req.operation.pop(SIGS)
         txn = reqToTxn(req)
         if req.operation[TXN_TYPE] == XFER_PUBLIC:
-            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
+            sigs = [(i["address"], s) for i, s in zip(req.operation[INPUTS], sigs)]
             add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn
 
     def _update_state_mint_public_txn(self, txn, is_committed=False):
         payload = get_payload_data(txn)
         seq_no = get_seq_no(txn)
-        for addr, amount in payload[OUTPUTS]:
-            self._add_new_output(Output(addr, seq_no, amount),
+        for output in payload[OUTPUTS]:
+            self._add_new_output(Output(output["address"], seq_no, output["amount"]),
                                  is_committed=is_committed)
 
     def _update_state_xfer_public(self, txn, is_committed=False):
         payload = get_payload_data(txn)
-        for addr, seq_no in payload[INPUTS]:
-            self._spend_input(addr, seq_no, is_committed=is_committed)
-        for addr, amount in payload[OUTPUTS]:
+        for inp in payload[INPUTS]:
+            self._spend_input(inp["address"], inp["seqNo"], is_committed=is_committed)
+        for output in payload[OUTPUTS]:
             seq_no = get_seq_no(txn)
-            self._add_new_output(Output(addr, seq_no, amount),
+            self._add_new_output(Output(output["address"], seq_no, output["amount"]),
                                  is_committed=is_committed)
 
     def updateState(self, txns, isCommitted=False):
@@ -277,7 +277,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def sum_outputs(request: Request) -> int:
-        return sum(o[1] for o in request.operation[OUTPUTS])
+        return sum(o["amount"] for o in request.operation[OUTPUTS])
 
     @staticmethod
     def spend_input(state, utxo_cache, address, seq_no, is_committed=False):
@@ -288,7 +288,9 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def add_new_output(state, utxo_cache, output: Output, is_committed=False):
-        address, seq_no, amount = output
+        address = output.address
+        seq_no = output.seqNo
+        amount = output.amount
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)

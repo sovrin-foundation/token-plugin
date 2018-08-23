@@ -2,6 +2,7 @@ import sovtoken.test.helpers.helper_request as token_helper_request
 
 from plenum.common.constants import TXN_TYPE
 from sovtokenfees.constants import SET_FEES, FEES, GET_FEES
+from sovtoken.constants import INPUTS, OUTPUTS, SIGS
 
 
 class HelperRequest(token_helper_request.HelperRequest):
@@ -68,7 +69,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         ]
         outputs = self._prepare_outputs(outputs)
 
-        fees = [inputs, outputs, fees_signatures]
+        fees = {INPUTS: inputs, OUTPUTS: outputs, SIGS: fees_signatures}
         setattr(request, FEES, fees)
 
         return request

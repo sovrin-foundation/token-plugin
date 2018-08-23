@@ -81,7 +81,7 @@ class TokenAuthNr(CoreAuthNr):
             # TODO: Account for `extra` field
             new_data = [inp, outputs]
             new_data.extend(extra_fields_for_signing)
-            idr = inp[0]
+            idr = inp["address"]
             ser = serialize_msg_for_signing(new_data)
             try:
                 verkey = address_to_verkey(idr)

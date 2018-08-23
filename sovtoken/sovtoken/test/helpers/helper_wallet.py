@@ -66,7 +66,7 @@ class HelperWallet():
         outputs = self._prepare_outputs(outputs)
         signatures = []
         for [address, seq_no] in inputs:
-            to_sign = [[[address.address, seq_no]], outputs]
+            to_sign = [[{"address": address.address, "seqNo": seq_no}], outputs]
             signature = address.signer.sign(to_sign)
             signatures.append(signature)
         return signatures
@@ -86,4 +86,4 @@ class HelperWallet():
         return request
 
     def _prepare_outputs(self, outputs):
-        return [[address.address, amount] for address, amount in outputs]
+        return [{"address": address.address, "amount": amount} for address, amount in outputs]

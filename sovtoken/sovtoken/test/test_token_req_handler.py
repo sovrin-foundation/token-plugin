@@ -79,7 +79,13 @@ def token_handler_d(node):
 
 def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]]},
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40
+                                                      }]},
                       None, SIGNATURES, 1)
     try:
         token_handler_a.doStaticValidation(request)
@@ -91,8 +97,17 @@ def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(token_handler_
 
 def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 20
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1
+                                                      }],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     try:
         token_handler_a.doStaticValidation(request)
@@ -123,8 +138,17 @@ def test_token_req_handler_doStaticValidation_invalid_txn_type(token_handler_a):
 # TODO: This should validate that the sum of the outputs is equal to the sum of the inputs
 def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 20
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1
+                                                      }],
                                                       SIGS: []}, None, SIGNATURES, 1)
     try:
         token_handler_a.validate(request)
@@ -135,8 +159,14 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(public_minting, token_ha
 def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
     operation = {
         TXN_TYPE: XFER_PUBLIC,
-        OUTPUTS: [[VALID_ADDR_2, 40]],
-        INPUTS: [[VALID_ADDR_3, 1]]
+        OUTPUTS: [{
+            "address": VALID_ADDR_2,
+            "amount": 40
+        }],
+        INPUTS: [{
+            "address": VALID_ADDR_3,
+            "seqNo": 1
+        }]
     }
 
     request = Request(
@@ -154,8 +184,17 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(token_handler_a):
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(public_minting, token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1}
+                                                      ]}, None, SIGNATURES, 1)
     # This test is expected to fail because
     with pytest.raises(InsufficientFundsError):
         token_handler_a.validate(request)
@@ -163,8 +202,17 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(public_minting
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(public_minting, token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 1], [VALID_ADDR_2, 1]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]]}, None, SIGNATURES, 1)
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 1
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 1
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1
+                                                      }]}, None, SIGNATURES, 1)
     # This test is expected to fail because
     with pytest.raises(ExtraFundsError):
         token_handler_a.validate(request)
@@ -172,7 +220,13 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(public_mintin
 
 def test_token_req_handler_validate_MINT_PUBLIC_success(token_handler_a):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]]},
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40
+                                                      }]},
                       None, SIGNATURES, 1)
     try:
         token_handler_a.validate(request)
@@ -188,7 +242,13 @@ def test_token_req_handler_validate_MINT_PUBLIC_invalid(token_handler_a):
                         'E7QRhdcnhAwA6E46k9EtZo':
                             'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg'}
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 40]], },
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40
+                                                      }], },
                       None, invalid_num_sigs, 1)
     with pytest.raises(UnauthorizedClientRequest):
         token_handler_a.validate(request)
@@ -196,8 +256,16 @@ def test_token_req_handler_validate_MINT_PUBLIC_invalid(token_handler_a):
 
 def test_token_req_handler_apply_xfer_public_success(public_minting, token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
-                                                      INPUTS: [[VALID_ADDR_2, 1]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 30}, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 30
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 1
+                                                      }],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
     pre_apply_outputs_addr_1 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_1)
@@ -214,8 +282,17 @@ def test_token_req_handler_apply_xfer_public_success(public_minting, token_handl
 
 def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-                                                      INPUTS: [[VALID_ADDR_2, 3]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 40
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 20
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "seqNo": 3
+                                                      }],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # test xfer now
     # This raises a OperationError because the input transaction isn't already in the UTXO_Cache
@@ -226,7 +303,7 @@ def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
 
 def test_token_req_handler_apply_MINT_PUBLIC_success(token_handler_b):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_3, 100]]},
+                                                      OUTPUTS: [{"address":VALID_ADDR_3, "amount": 100}]},
                       None, SIGNATURES, 1)
     pre_apply_outputs_addr_3 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_3)
     assert pre_apply_outputs_addr_3 == []
@@ -241,8 +318,14 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(token_handler_b):
 def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b):
     data = {
         TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: [[VALID_ADDR_1, 40], [VALID_ADDR_2, 20]],
-        INPUTS: [[VALID_ADDR_1, 1]]
+        OUTPUTS: [{
+            "address": VALID_ADDR_1,
+            "amount": 40
+        }, {
+            "address": VALID_ADDR_2,
+            "amount": 20
+        }],
+        INPUTS: [{"address": VALID_ADDR_1, "seqNo": 1}]
     }
     request = Request(VALID_IDENTIFIER, VALID_REQID, data, None, SIGNATURES, 1)
     seq_no, txn = token_handler_b.apply(request, CONS_TIME)
@@ -266,8 +349,12 @@ def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b
 def test_token_req_handler_updateState_XFER_PUBLIC_success(public_minting, token_handler_b):
     seq_no = 1
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_1, seq_no]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40}],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "seqNo": seq_no}],
                                                       SIGS: ['']}, None, SIGNATURES, 2)
     txn = reqToTxn(request)
     append_txn_metadata(txn, seq_no=seq_no)
@@ -298,7 +385,7 @@ def test_token_req_handler_onBatchCreated_success(token_handler_b, node):
     type2_key = token_handler_b.utxo_cache._create_type2_key(output.address)
     print(token_handler_b.utxo_cache.un_committed)
     assert token_handler_b.utxo_cache.un_committed == [(state_root, OrderedDict([(type1_key, str(output.value)),
-                                                                                 (type2_key, str(output.seq_no))]))]
+                                                                                 (type2_key, str(output.seqNo))]))]
 
 
 def test_token_req_handler_onBatchRejected_success(token_handler_b):
@@ -309,8 +396,17 @@ def test_token_req_handler_onBatchRejected_success(token_handler_b):
 
 def test_token_req_handler_commit_success(public_minting, token_handler_c, node):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_1, 30], [VALID_ADDR_2, 30]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]],
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "amount": 30
+                                                      }, {
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 30
+                                                      }],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "seqNo": 1
+                                                      }],
                                                       SIGS: ['']}, None, SIGNATURES, 1)
     # apply transaction
     state_root = node[2].master_replica.stateRootHash(TOKEN_LEDGER_ID)
@@ -345,8 +441,12 @@ def test_token_req_handler_get_query_response_success(public_minting, token_hand
 
 def test_token_req_handler_get_query_response_invalid_txn_type(public_minting, token_handler_d):
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [[VALID_ADDR_2, 40]],
-                                                      INPUTS: [[VALID_ADDR_1, 1]]}, None, SIGNATURES, 1)
+                                                      OUTPUTS: [{
+                                                          "address": VALID_ADDR_2,
+                                                          "amount": 40}],
+                                                      INPUTS: [{
+                                                          "address": VALID_ADDR_1,
+                                                          "seqNo": 1}]}, None, SIGNATURES, 1)
     # A KeyError is expected because get_query_responses can only handle query transaction types
     with pytest.raises(KeyError):
         token_handler_d.get_query_response(request)
@@ -395,7 +495,7 @@ def test_token_req_handler_sum_inputs_success(public_minting, token_handler_d):
                       {
                           TXN_TYPE: XFER_PUBLIC,
                           OUTPUTS: None,
-                          INPUTS: [[VALID_ADDR_4, 5], [VALID_ADDR_4, 6]]
+                          INPUTS: [{"address": VALID_ADDR_4, "seqNo": 5}, {"address": VALID_ADDR_4, "seqNo": 6}]
                       },
                       None,
                       SIGNATURES,

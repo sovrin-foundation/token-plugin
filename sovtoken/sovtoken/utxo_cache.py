@@ -47,7 +47,7 @@ class UTXOCache(OptimisticKVStore):
         except KeyError:
             seq_nos = []
         logger.debug('adding new output: type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
-        seq_no_str = str(output.seq_no)
+        seq_no_str = str(output.seqNo)
         if seq_no_str not in seq_nos:
             seq_nos.append(seq_no_str)
         type2_val = self._create_type2_val(seq_nos)
@@ -70,7 +70,7 @@ class UTXOCache(OptimisticKVStore):
         if not val:
             raise UTXOAlreadySpentError("UTXO value is None")
 
-        return Output(output.address, output.seq_no, int(val))
+        return Output(output.address, output.seqNo, int(val))
 
     # Spends the provided output by fetching it from the key value store
     # (it must have been previously added) and then doing batch ops
@@ -89,7 +89,7 @@ class UTXOCache(OptimisticKVStore):
             seq_nos = seq_nos.decode()
         logger.debug('spending output type2 key {} seq_nos {} output {}'.format(type2_key, seq_nos, output))
         seq_nos = self._parse_type2_val(seq_nos)
-        seq_no_str = str(output.seq_no)
+        seq_no_str = str(output.seqNo)
         if seq_no_str not in seq_nos:
             err_msg = "seq_no {} is not found is list of seq_nos for address -- current list: {}".format(seq_no_str,
                                                                                                          seq_nos)
@@ -125,15 +125,15 @@ class UTXOCache(OptimisticKVStore):
 
     def sum_inputs(self, inputs: list, is_committed=False):
         output_val = 0
-        for addr, seq_no in inputs:
-            output_val += self.get_output(Output(addr, seq_no, None), is_committed=is_committed).value
+        for inp in inputs:
+            output_val += self.get_output(Output(inp["address"], inp["seqNo"], None), is_committed=is_committed).value
         return output_val
 
     # Creates a type1 key with this format: '0:address:sequence_number'
     # example: '0:2d4daf5d9247997d59ba430567e0c3a4:5354'
     @staticmethod
     def _create_type1_key(output: Output) -> str:
-        return '0:{}:{}'.format(output.address, output.seq_no)
+        return '0:{}:{}'.format(output.address, output.seqNo)
 
     # Creates a type2 key with this format: '1:address'
     # example: '1:2d4daf5d9247997d59ba430567e0c3a4'

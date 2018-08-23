@@ -60,9 +60,9 @@ class HelperRequest():
     def transfer(self, inputs, outputs, extra=None):
         """ Builds a transfer request. """
         outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = [[address.address, seq_no] for address, seq_no in inputs]
+        inputs_ready = [{"address": address.address, "seqNo": seq_no} for address, seq_no in inputs]
 
-        [first_address, seq_no] = inputs_ready[0]
+        first_address = inputs_ready[0]["address"]
         payment_signatures = self._wallet.payment_signatures(inputs, outputs)
 
         payload = {
@@ -127,7 +127,7 @@ class HelperRequest():
         return request
 
     def _prepare_outputs(self, outputs):
-        return [[address.address, amount] for address, amount in outputs]
+        return [{"address": address.address, "amount": amount} for address, amount in outputs]
 
     def _create_request(self, payload, identifier=None):
         return Request(
