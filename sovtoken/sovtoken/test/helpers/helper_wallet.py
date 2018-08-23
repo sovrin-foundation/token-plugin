@@ -71,10 +71,10 @@ class HelperWallet():
             signatures.append(signature)
         return signatures
 
-    def sign_request_trustees(self, request, signers=4):
+    def sign_request_trustees(self, request, number_signers=4):
         """ Sign a request with trustees. """
         assert signers <= len(self._trustee_wallets)
-        return self.sign_request(request, self._trustee_wallets[:signers])
+        return self.sign_request(request, self._trustee_wallets[:number_signers])
 
     def sign_request_stewards(self, request):
         """ Sign a request with stewards. """
