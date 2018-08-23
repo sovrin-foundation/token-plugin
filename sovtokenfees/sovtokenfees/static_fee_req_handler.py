@@ -214,10 +214,10 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                           'fees: {}'.format(required_fees))
 
     def _get_deducted_fees_non_xfer(self, request, required_fees):
-        error = None
         if not self.has_fees(request):
             error = 'fees not present or improperly formed'
-        if not error:
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+        else:
             try:
                 sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
             except UTXOError as ex:
@@ -228,9 +228,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                 TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
                                                               expected_amount, request,
                                                               'fees: {}'.format(required_fees))
-
-        if error:
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
