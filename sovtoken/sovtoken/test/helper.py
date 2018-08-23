@@ -29,20 +29,6 @@ def public_mint_request(trustees, outputs):
     return request
 
 
-def send_public_mint(looper, trustees, outputs, sdk_pool_handle):
-    request = public_mint_request(trustees, outputs)
-    request = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict), ])
-    return sdk_get_and_check_replies(looper, request)
-
-
-def do_public_minting(looper, trustees, sdk_pool_handle, total_mint,
-                      sf_master_share, sf_address, seller_address):
-    seller_share = total_mint - sf_master_share
-    outputs = [[sf_address, sf_master_share], [seller_address, seller_share]]
-    _, reply = send_public_mint(looper, trustees, outputs, sdk_pool_handle)[0]
-    return reply['result']
-
-
 def xfer_request(inputs, outputs, extra_data=None):
     payload = {
         TXN_TYPE: XFER_PUBLIC,
