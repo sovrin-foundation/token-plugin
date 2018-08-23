@@ -269,9 +269,9 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     xfer_seq_no = get_seq_no(xfer_result)
     new_address_utxos = helpers.general.get_utxo_addresses(new_addresses)
 
-    assert new_address_utxos[0] == [[new_addresses[0], xfer_seq_no, 16]]
-    assert new_address_utxos[1] == [[new_addresses[1], xfer_seq_no, 16]]
-    assert new_address_utxos[2] == [[new_addresses[2], xfer_seq_no, 18]]
+    assert new_address_utxos[0] == [{"address": new_addresses[0], "seqNo": xfer_seq_no, "amount": 16}]
+    assert new_address_utxos[1] == [{"address": new_addresses[1], "seqNo": xfer_seq_no, "amount": 16}]
+    assert new_address_utxos[2] == [{"address": new_addresses[2], "seqNo": xfer_seq_no, "amount": 18}]
 
     # =============
     # Transfer tokens from 3 addresses back to a single address

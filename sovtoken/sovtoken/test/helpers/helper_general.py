@@ -75,5 +75,5 @@ class HelperGeneral():
 
     def _sort_utxos(self, utxos):
         """ Sort utxos by the seq_no. """
-        utxos.sort(key=lambda utxo: utxo[1])
+        utxos.sort(key=lambda utxo: utxo["seqNo"])
         return utxos
