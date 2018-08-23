@@ -24,7 +24,7 @@ from sovtoken.constants import INPUTS, OUTPUTS, \
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
-    UTXOError, InvalidFundsError, AddressNotFound
+    UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -220,7 +220,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         if not error:
             try:
                 sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
-            except (AddressNotFound, UTXOError) as ex:
+            except UTXOError as ex:
                 raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
                 change_amount = sum([a for _, a in self.get_change_for_fees(request)])

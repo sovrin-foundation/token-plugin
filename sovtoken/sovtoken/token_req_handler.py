@@ -21,7 +21,7 @@ from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, AddressNotFound
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError
 
 from state.trie.pruning_trie import rlp_decode
 
@@ -238,7 +238,7 @@ class TokenReqHandler(LedgerRequestHandler):
         try:
             inputs = request.operation[INPUTS]
             return utxo_cache.sum_inputs(inputs, is_committed=is_committed)
-        except (AddressNotFound, UTXOError) as ex:
+        except UTXOError as ex:
             raise InvalidFundsError(request.identifier, request.reqId, '{}'.format(ex))
 
     @staticmethod
