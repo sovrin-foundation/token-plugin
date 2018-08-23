@@ -13,22 +13,6 @@ from state.trie.pruning_trie import Trie
 from sovtoken.test.wallet import TokenWallet
 
 
-
-def public_mint_request(trustees, outputs):
-    signatures = {}
-    op = {
-        TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: outputs,
-    }
-    first_trustee = trustees[0]
-    request = first_trustee.sign_using_multi_sig(
-        op, identifier=first_trustee.defaultId)
-    for wallet in trustees[1:]:
-        signatures[wallet.defaultId] = wallet.do_multi_sig_on_req(
-            request, identifier=wallet.defaultId)
-    return request
-
-
 def xfer_request(inputs, outputs, extra_data=None):
     payload = {
         TXN_TYPE: XFER_PUBLIC,
