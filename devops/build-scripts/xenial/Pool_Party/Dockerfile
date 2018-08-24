@@ -48,7 +48,7 @@ RUN pip3 install -U \
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $uid indy; usermod -aG sudo indy
 
-ARG indy_stream=rc
+ARG indy_stream=stable
 
 ARG indy_anoncreds_ver=1.0.11
 ARG indy_node_ver=1.6.71
