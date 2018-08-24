@@ -9,8 +9,7 @@ from sovtoken.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
 from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import *
-from sovtoken.test.helper import send_get_utxo, send_xfer, \
-    do_public_minting
+from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers
 
 total_mint = 100
@@ -84,11 +83,22 @@ def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSe
 
 
 @pytest.fixture(scope='module') # noqa
-def public_minting(nodeSetWithIntegratedTokenPlugin, looper, sdk_pool_handle,
-                   trustee_wallets, SF_address, seller_address):
-    return do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
-                             total_mint - seller_gets, SF_address,
-                             seller_address)
+def public_minting(
+    helpers,
+    SF_token_wallet,
+    seller_token_wallet,
+    SF_address,
+    seller_address
+):
+    address_sf = SF_token_wallet.addresses[SF_address]
+    address_seller = seller_token_wallet.addresses[seller_address]
+
+    outputs = [
+        [address_sf, total_mint - seller_gets],
+        [address_seller, seller_gets]
+    ]
+
+    return helpers.general.do_mint(outputs)
 
 
 @pytest.fixture(scope="module")
