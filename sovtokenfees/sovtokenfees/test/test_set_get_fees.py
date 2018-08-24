@@ -62,7 +62,7 @@ def test_set_fees_not_enough_trustees(helpers):
     }
     fees_request = helpers.request.set_fees(fees)
     fees_request.signatures.popitem()
-    assert len(fees_request.signatures) == 3
+    assert len(fees_request.signatures) == 2
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([fees_request])
