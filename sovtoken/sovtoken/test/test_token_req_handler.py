@@ -4,23 +4,19 @@ from collections import OrderedDict
 import base58
 import pytest
 
-from plenum.common.constants import (IDENTIFIER, STATE_PROOF, TARGET_NYM,
-                                     TRUSTEE_STRING,
-                                     TXN_PAYLOAD_METADATA_REQ_ID, TXN_TYPE,
-                                     VERKEY)
+from plenum.common.constants import (IDENTIFIER, STATE_PROOF,
+                                     TXN_PAYLOAD_METADATA_REQ_ID, TXN_TYPE)
 from plenum.common.exceptions import (InvalidClientMessageException,
                                       InvalidClientRequest, OperationError,
                                       UnauthorizedClientRequest)
 from plenum.common.txn_util import (append_txn_metadata, get_from,
                                     get_payload_data, get_req_id, reqToTxn)
-from plenum.common.util import randomString
 from sovtoken.constants import (ADDRESS, GET_UTXO, INPUTS, MINT_PUBLIC,
-                                OUTPUTS, RESULT, TOKEN_LEDGER_ID)
+                                OUTPUTS, TOKEN_LEDGER_ID)
 from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-
 
 # Test Constants
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
@@ -468,38 +464,6 @@ class TestValidateMintPublic():
         outputs = [[address, 1000] for address in self.addresses]
         request = helpers.request.mint(outputs)
         return request
-
-    @pytest.fixture()
-    def increased_trustees(self, helpers, trustee_wallets, sdk_wallet_trustee):
-        seeds = [randomString(32) for _ in range(3)]
-
-        requests = [
-            helpers.request.nym(seed=seed, role=TRUSTEE_STRING)
-            for seed in seeds
-        ]
-
-        responses = helpers.sdk.send_and_check_request_objects(requests)
-
-        wallets = [helpers.wallet.create_client_wallet(seed) for seed in seeds]
-
-        yield trustee_wallets + wallets
-
-        # TODO: Not certain if this is actually changing the role.
-        def _update_nym_standard_user(response):
-            data = get_payload_data(response[RESULT])
-            request = helpers.request.nym(
-                dest=data[TARGET_NYM],
-                verkey=data[VERKEY],
-                role=None
-            )
-            return request
-
-        requests = [
-            _update_nym_standard_user(response)
-            for _, response in responses
-        ]
-
-        helpers.sdk.send_and_check_request_objects(requests)
 
     def sign_with_quorum(self, helpers, request, wallets):
         quorum = wallets[:math.ceil(len(wallets) / 2)]

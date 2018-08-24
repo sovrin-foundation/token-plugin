@@ -119,6 +119,22 @@ def test_static_fee_req_handler_validate_invalid_missing_signee(
         token_handler_a.validate(request)
 
 
+# - Static Fee Request Handler (validate)
+def test_static_fee_req_handler_validate_valid_extra_signee(
+    helpers,
+    token_handler_a,
+    increased_trustees
+):
+    request = helpers.request.set_fees(VALID_FEES)
+    request.signatures = None
+    request = helpers.wallet.sign_request(request, increased_trustees)
+    assert len(request.signatures) == 7
+
+    valid = token_handler_a.validate(request)
+
+    assert valid is None
+
+
 # - Static Fee Request Handler (apply)
 def test_static_fee_req_handler_apply(helpers, token_handler_a):
     request = helpers.request.set_fees(VALID_FEES)
