@@ -185,7 +185,7 @@ def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
             sdk_pool_handle
         )
 
-        return get_utxo_resp[OUTPUTS][0][1]
+        return get_utxo_resp[OUTPUTS][0]["seqNo"]
 
     # =============
     # Form the two xfer requests. Each request will try to spend the same UTXO.
@@ -269,9 +269,9 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     xfer_seq_no = get_seq_no(xfer_result)
     new_address_utxos = helpers.general.get_utxo_addresses(new_addresses)
 
-    assert new_address_utxos[0] == [{"address": new_addresses[0], "seqNo": xfer_seq_no, "amount": 16}]
-    assert new_address_utxos[1] == [{"address": new_addresses[1], "seqNo": xfer_seq_no, "amount": 16}]
-    assert new_address_utxos[2] == [{"address": new_addresses[2], "seqNo": xfer_seq_no, "amount": 18}]
+    assert new_address_utxos[0] == [{"address": new_addresses[0].address, "seqNo": xfer_seq_no, "amount": 16}]
+    assert new_address_utxos[1] == [{"address": new_addresses[1].address, "seqNo": xfer_seq_no, "amount": 16}]
+    assert new_address_utxos[2] == [{"address": new_addresses[2].address, "seqNo": xfer_seq_no, "amount": 18}]
 
     # =============
     # Transfer tokens from 3 addresses back to a single address
@@ -288,7 +288,7 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
         new_address3_utxos,
     ] = helpers.general.get_utxo_addresses([first_address] + new_addresses)
 
-    assert first_address_utxos == [[first_address, xfer_seq_no + 1, amount]]
+    assert first_address_utxos == [{"address": first_address.address, "seqNo": xfer_seq_no + 1, "amount": amount}]
     assert new_address1_utxos == []
     assert new_address2_utxos == []
     assert new_address3_utxos == []

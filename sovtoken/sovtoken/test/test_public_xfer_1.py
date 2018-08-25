@@ -172,14 +172,14 @@ def test_multiple_inputs_outputs_with_change(
         address5_utxos
     ] = helpers.general.get_utxo_addresses(addresses)
 
-    assert address1_utxos == [[address1, xfer_seq_no, 20]]
+    assert address1_utxos == [{"address": address1.address, "seqNo": xfer_seq_no, "amount": 20}]
     assert address2_utxos == []
     assert address3_utxos == []
     assert address4_utxos == [
-        [address4, mint_seq_no, 100],
-        [address4, xfer_seq_no, 270],
+        {"address": address4.address, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address4.address, "seqNo": xfer_seq_no, "amount": 270},
     ]
     assert address5_utxos == [
-        [address5, mint_seq_no, 100],
-        [address5, xfer_seq_no, 10],
+        {"address": address5.address, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address5.address, "seqNo": xfer_seq_no, "amount": 10},
     ]

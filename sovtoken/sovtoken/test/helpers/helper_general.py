@@ -26,7 +26,8 @@ class HelperGeneral():
         """ Get and return the utxos for each address. """
         def replace_utxos_address(utxos, address):
             for utxo in utxos:
-                utxo[0] = address
+                utxo["address"] = address.address
+                utxo.pop("value")
             return utxos
 
         utxos = self._get_utxo_addresses(addresses)
