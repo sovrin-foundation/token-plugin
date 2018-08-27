@@ -41,11 +41,11 @@ def test_same_input_address_multiple_seq_nos(tokens_distributed, looper,  # noqa
 
     res2 = send_get_utxo(looper, user3_address, sdk_wallet_client,
                          sdk_pool_handle)
-    print("{}".format(res2))
+
     assert len(res2[OUTPUTS]) > 0
-    for _, s, val in res2[OUTPUTS]:
-        if s == new_seq_no:
-            assert val == output_amount
+    for output in res2[OUTPUTS]:
+        if output["seqNo"] == new_seq_no:
+            assert output["amount"] == output_amount
             break
     else:
         raise AssertionError('Needed to find output {}:{} with val {} but not '
