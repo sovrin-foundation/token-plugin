@@ -176,7 +176,9 @@ def test_sum_inputs_same_address(utxo_cache):
         utxo_cache.add_output(output2, b)
         utxo_cache.add_output(output3, b)
 
-        assert utxo_cache.sum_inputs([[VALID_ADDR_1, 10], [VALID_ADDR_1, 11], [VALID_ADDR_1, 12]], b) == 160
+        assert utxo_cache.sum_inputs([{"address": VALID_ADDR_1, "seqNo": 10},
+                                      {"address": VALID_ADDR_1, "seqNo": 11},
+                                      {"address": VALID_ADDR_1, "seqNo": 12}], b) == 160
 
 
 def test_sum_inputs_different_addresses(utxo_cache):
@@ -193,8 +195,11 @@ def test_sum_inputs_different_addresses(utxo_cache):
         utxo_cache.add_output(output4, b)
         utxo_cache.add_output(output5, b)
 
-        assert utxo_cache.sum_inputs([[VALID_ADDR_1, 10], [VALID_ADDR_1, 11], [VALID_ADDR_2, 11],
-                                      [VALID_ADDR_1, 21], [VALID_ADDR_2, 39]], b) == 540
+        assert utxo_cache.sum_inputs([{"address": VALID_ADDR_1, "seqNo": 10},
+                                      {"address": VALID_ADDR_1, "seqNo": 11},
+                                      {"address": VALID_ADDR_2, "seqNo": 11},
+                                      {"address": VALID_ADDR_1, "seqNo": 21},
+                                      {"address": VALID_ADDR_2, "seqNo": 39}], b) == 540
 
 
 def test_create_key(utxo_cache):
