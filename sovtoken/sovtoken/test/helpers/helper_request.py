@@ -91,7 +91,7 @@ class HelperRequest():
         }
 
         request = self._create_request(payload)
-        request = self._wallet.sign_request_trustees(request)
+        request = self._wallet.sign_request_trustees(request, number_signers=3)
         return request
 
     def nym(

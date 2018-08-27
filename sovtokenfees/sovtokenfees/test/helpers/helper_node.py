@@ -10,6 +10,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     - assert_deducted_fees
     - assert_set_fees_in_memory
     - fee_handler_can_pay_fees
+    - get_fees_req_handler
     - reset_fees
     """
 
@@ -34,8 +35,12 @@ class HelperNode(sovtoken_helper_node.HelperNode):
 
     def fee_handler_can_pay_fees(self, request):
         """ Check the request can pay fees using a StaticFeeRequestHandler. """
-        request_handler = self._get_fees_req_handler(self._nodes[0])
+        request_handler = self.get_fees_req_handler()
         return request_handler.can_pay_fees(request)
+
+    def get_fees_req_handler(self):
+        """ Get the fees request handler of the first node """
+        return self._get_fees_req_handler(self._nodes[0])
 
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)

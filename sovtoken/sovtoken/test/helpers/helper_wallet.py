@@ -73,9 +73,10 @@ class HelperWallet():
 
         return self._looper.loop.run_until_complete(future)
 
-    def sign_request_trustees(self, request):
+    def sign_request_trustees(self, request, number_signers=4):
         """ Sign a request with trustees. """
-        return self.sign_request(request, self._trustee_wallets)
+        assert number_signers <= len(self._trustee_wallets)
+        return self.sign_request(request, self._trustee_wallets[:number_signers])
 
     def sign_request_stewards(self, request):
         """ Sign a request with stewards. """
