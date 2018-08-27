@@ -30,7 +30,7 @@ class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
 
-    MinSendersForPublicMint = 4
+    MinSendersForPublicMint = 3
 
     def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)

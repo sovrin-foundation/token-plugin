@@ -13,7 +13,6 @@ from state.trie.pruning_trie import Trie
 from sovtoken.test.wallet import TokenWallet
 
 
-
 def public_mint_request(trustees, outputs):
     signatures = {}
     op = {
