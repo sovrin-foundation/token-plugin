@@ -52,6 +52,25 @@ def test_non_trustee_set_fees(helpers):
     assert ledger_fees == {}
 
 
+def test_set_fees_not_enough_trustees(helpers):
+    """
+    Setting fees requires at least three trustees
+    """
+    fees = {
+        NYM: 1,
+        XFER_PUBLIC: 2
+    }
+    fees_request = helpers.request.set_fees(fees)
+    fees_request.signatures.popitem()
+    assert len(fees_request.signatures) == 2
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([fees_request])
+    
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
+
+
 def test_trustee_set_valid_fees(helpers, fees_set, fees):
     """
     Set a valid sovtokenfees

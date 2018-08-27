@@ -36,7 +36,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
-    MinSendersForFees = 4
+    MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
