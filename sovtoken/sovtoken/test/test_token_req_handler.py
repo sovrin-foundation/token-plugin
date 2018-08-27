@@ -29,20 +29,20 @@ CONS_TIME = 1518541344
 
 @pytest.fixture
 def token_handler_a(helpers):
-    return helpers.node.get_token_req_handler()
+    h = helpers.node.get_token_req_handler()
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 
 @pytest.fixture
 def token_handler_b(txnPoolNodeSet):
-    return txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
-
-
-@pytest.fixture(scope="function", autouse=True)
-def reset_token_handler(token_handler_a):
-    old_head = token_handler_a.state.committedHead
-    yield
-    token_handler_a.state.revertToHead(old_head)
-    token_handler_a.onBatchRejected()
+    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 
 @pytest.fixture(scope="module")
@@ -88,7 +88,7 @@ def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(
 
 def test_token_req_handler_doStaticValidation_GET_UTXO_success(
     helpers,
-    addresses, 
+    addresses,
     token_handler_a
 ):
     address1 = addresses[0]
@@ -114,7 +114,6 @@ def test_token_req_handler_doStaticValidation_invalid_txn_type(
 
 
 # TODO: This should validate that the sum of the outputs is equal to the sum of the inputs
-
 def test_token_req_handler_validate_XFER_PUBLIC_success(
     helpers,
     addresses,
@@ -144,7 +143,6 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(
         token_handler_a.validate(request)
 
 
-
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(
     helpers,
     addresses,
@@ -172,69 +170,6 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
     with pytest.raises(ExtraFundsError):
         token_handler_a.validate(request)
 
-
-def test_token_req_handler_validate_MINT_PUBLIC_success(helpers, addresses, token_handler_a):
-    outputs = [[addresses[0], 40], [addresses[1], 40]]
-    request = helpers.request.mint(outputs)
-    try:
-        token_handler_a.validate(request)
-    except Exception:
-        pytest.fail("Validate seems to be working improperly")
-
-
-def test_token_req_handler_apply_xfer_public_success(public_minting, token_handler_b):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [{
-                                                          "address": VALID_ADDR_1,
-                                                          "amount": 30}, {
-                                                          "address": VALID_ADDR_2,
-                                                          "amount": 30
-                                                      }],
-                                                      INPUTS: [{
-                                                          "address": VALID_ADDR_2,
-                                                          "seqNo": 1
-                                                      }],
-                                                      SIGS: ['']}, None, SIGNATURES, 1)
-    # test xfer now
-    pre_apply_outputs_addr_1 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_1)
-    pre_apply_outputs_addr_2 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_2)
-    assert pre_apply_outputs_addr_1 == [Output(VALID_ADDR_1, 1, 40)]
-    assert pre_apply_outputs_addr_2 == [Output(VALID_ADDR_2, 1, 60)]
-    token_handler_b.apply(request, CONS_TIME)
-    post_apply_outputs_addr_1 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_1)
-    post_apply_outputs_addr_2 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_2)
-    assert post_apply_outputs_addr_1 == [Output(VALID_ADDR_1, 1, 40), Output(VALID_ADDR_1, 2, 30)]
-    assert post_apply_outputs_addr_2 == [Output(VALID_ADDR_2, 2, 30)]
-    token_handler_b.onBatchRejected()
-
-
-def test_token_req_handler_apply_xfer_public_invalid(token_handler_b):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC,
-                                                      OUTPUTS: [{
-                                                          "address": VALID_ADDR_1,
-                                                          "amount": 40
-                                                      }, {
-                                                          "address": VALID_ADDR_2,
-                                                          "amount": 20
-                                                      }],
-                                                      INPUTS: [{
-                                                          "address": VALID_ADDR_2,
-                                                          "seqNo": 3
-                                                      }],
-                                                      SIGS: ['']}, None, SIGNATURES, 1)
-    # test xfer now
-    # This raises a OperationError because the input transaction isn't already in the UTXO_Cache
-    with pytest.raises(OperationError):
-        token_handler_b.apply(request, CONS_TIME)
-    token_handler_b.onBatchRejected()
-
-
-def test_token_req_handler_apply_MINT_PUBLIC_success(token_handler_b):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [{"address":VALID_ADDR_3, "amount": 100}]},
-                      None, SIGNATURES, 1)
-    pre_apply_outputs_addr_3 = token_handler_b.utxo_cache.get_unspent_outputs(VALID_ADDR_3)
-    assert pre_apply_outputs_addr_3 == []
 
 def test_token_req_handler_apply_xfer_public_success(
     helpers,
@@ -288,24 +223,22 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(
     # Applies the MINT_PUBLIC transaction request to the UTXO cache
     token_handler_a.apply(request, CONS_TIME)
     post_apply_outputs = token_handler_a.utxo_cache.get_unspent_outputs(address.address)
-    assert post_apply_outputs[0].amount == 100
+    assert post_apply_outputs[0].value == 100
 
 
 # We expect this test should pass, but in the future, we may want to exclude this case where MINT_PUBLIC txn has INPUTS
-def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(token_handler_b):
-    data = {
-        TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: [{
-            "address": VALID_ADDR_1,
-            "amount": 40
-        }, {
-            "address": VALID_ADDR_2,
-            "amount": 20
-        }],
-        INPUTS: [{"address": VALID_ADDR_1, "seqNo": 1}]
-    }
-    request = Request(VALID_IDENTIFIER, VALID_REQID, data, None, SIGNATURES, 1)
-    seq_no, txn = token_handler_b.apply(request, CONS_TIME)
+def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(
+    helpers,
+    addresses,
+    token_handler_a
+):
+    [address1, address2] = addresses
+    outputs = [[address1, 40], [address2, 20]]
+    request = helpers.request.mint(outputs)
+    request.operation[INPUTS] = [[address1.address, 1]]
+
+    seq_no, txn = token_handler_a.apply(request, CONS_TIME)
+
 
 def test_token_req_handler_apply_MINT_PUBLIC_success_with_inputs(
     helpers,
@@ -350,9 +283,8 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
     token_handler_a.validate(request)
     token_handler_a.updateState([txn])
 
-    address1 = address1.address
-    state_key = TokenReqHandler.create_state_key(address1, seq_no)
-    key = token_handler_a.utxo_cache._create_type1_key(Output(address1, seq_no, 60))
+    state_key = TokenReqHandler.create_state_key(address1.address, seq_no)
+    key = token_handler_a.utxo_cache._create_key(Output(address1.address, seq_no, 60))
     assert token_handler_a.utxo_cache._store._has_key(key)
     try:
         token_handler_a.state.get(state_key, False)
@@ -362,34 +294,21 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
 
 def test_token_req_handler_onBatchCreated_success(
     addresses,
-    token_handler_a, 
+    token_handler_a,
     txnPoolNodeSet
 ):
-    address = addresses[0].address
-    output = Output(address, 10, 100)
+    address = addresses[0]
+    output = Output(address.address, 10, 100)
     # add output to UTXO Cache
     token_handler_a.utxo_cache.add_output(output)
     state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     # run onBatchCreated
     token_handler_a.onBatchCreated(state_root)
     # Verify onBatchCreated worked properly
-    type1_key = token_handler_a.utxo_cache._create_type1_key(output)
-    type2_key = token_handler_a.utxo_cache._create_type2_key(output.address)
-    try:
-        seq_nos = token_handler_a.utxo_cache.get(type2_key, False)
-        if isinstance(seq_nos, (bytes, bytearray)):
-            seq_nos = seq_nos.decode()
-        seq_nos = token_handler_a.utxo_cache._parse_type2_val(seq_nos)
-    except KeyError:
-        seq_nos = []
-    type2_val = token_handler_a.utxo_cache._create_type2_val(seq_nos)
-
-    assert token_handler_a.utxo_cache.un_committed == [
-        (state_root, OrderedDict([
-            (type1_key, str(output.amount)),
-            (type2_key, str(type2_val))
-        ]))
-    ]
+    key = token_handler_a.utxo_cache._create_key(output)
+    assert token_handler_a.utxo_cache.un_committed[0][0] == state_root
+    assert key in token_handler_a.utxo_cache.un_committed[0][1]
+    assert '{}:{}'.format(str(output.seq_no), str(output.value)) in token_handler_a.utxo_cache.un_committed[0][1][key]
 
 
 def test_token_req_handler_onBatchRejected_success(addresses, token_handler_a):
@@ -503,7 +422,7 @@ def test_token_req_handler_create_state_key_success(addresses, token_handler_a):
 def test_token_req_handler_sum_inputs_success(helpers, token_handler_a):
     address_instance = helpers.wallet.create_address()
     address = address_instance.address
-    
+
     # Verify no outputs
     pre_add_outputs = token_handler_a.utxo_cache.get_unspent_outputs(address)
     assert pre_add_outputs == []
