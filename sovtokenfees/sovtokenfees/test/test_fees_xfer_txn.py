@@ -106,7 +106,6 @@ def test_mint_after_paying_fees(
     mint_seq_no = get_seq_no(mint_result)
 
     utxos = helpers.general.do_get_utxo(address_giver)[OUTPUTS]
-    print(utxos)
 
     assert utxos == [
         [address_giver.address, xfer_seq_no, 900 - fees[XFER_PUBLIC]],

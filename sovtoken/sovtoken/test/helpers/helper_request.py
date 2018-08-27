@@ -5,7 +5,7 @@ from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN,
 from plenum.common.request import Request
 from plenum.common.types import f
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
-    MINT_PUBLIC, GET_UTXO, ADDRESS
+    MINT_PUBLIC, GET_UTXO, ADDRESS, SEQNO, AMOUNT
 from sovtoken.util import address_to_verkey
 
 
@@ -39,7 +39,7 @@ class HelperRequest():
         """ Builds a get_utxo request. """
         payload = {
             TXN_TYPE: GET_UTXO,
-            ADDRESS: address.address
+            ADDRESS: address
         }
 
         request = self._create_request(payload, self._client_did)
@@ -60,9 +60,9 @@ class HelperRequest():
     def transfer(self, inputs, outputs, extra=None):
         """ Builds a transfer request. """
         outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = [{"address": address.address, "seqNo": seq_no} for address, seq_no in inputs]
+        inputs_ready = [{ADDRESS: address, SEQNO: seq_no} for address, seq_no in inputs]
 
-        first_address = inputs_ready[0]["address"]
+        first_address = inputs_ready[0][ADDRESS]
         payment_signatures = self._wallet.payment_signatures(inputs, outputs)
 
         payload = {
@@ -127,7 +127,16 @@ class HelperRequest():
         return request
 
     def _prepare_outputs(self, outputs):
-        return [{"address": address.address, "amount": amount} for address, amount in outputs]
+        return [
+            {ADDRESS: output[ADDRESS], AMOUNT: output[AMOUNT]}
+            for output in outputs
+        ]
+
+    def _prepare_inputs(self, inputs):
+        return [
+            {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
+            for utxo in inputs
+        ] 
 
     def _create_request(self, payload, identifier=None):
         return Request(
