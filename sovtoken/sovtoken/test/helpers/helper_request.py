@@ -153,7 +153,7 @@ class HelperRequest():
         return [
             {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
             for utxo in inputs
-        ] 
+        ]
 
     def _create_request(self, payload, identifier=None):
         return Request(
