@@ -131,14 +131,16 @@ class HelperRequest():
 
     def payment_signatures(self, inputs, outputs):
         """ Generate a list of payment signatures from inptus and outputs. """
+        signatures = []
         inputs = self._prepare_inputs(inputs)
         outputs = self._prepare_outputs(outputs)
-        signatures = []
+
         for utxo in inputs:
             to_sign = [[utxo], outputs]
-            signer = self.get_address_instance(utxo[ADDRESS]).signer
+            signer = self._wallet.get_address_instance(utxo[ADDRESS]).signer
             signature = signer.sign(to_sign)
             signatures.append(signature)
+
         return signatures
 
     def _prepare_outputs(self, outputs):
