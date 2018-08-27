@@ -128,12 +128,12 @@ def test_multiple_inputs_outputs_without_change(
     assert address2_utxos == []
     assert address3_utxos == []
     assert address4_utxos == [
-        [address4, mint_seq_no, 100],
-        [address4, xfer_seq_no, 200],
+        {"address": address4.address, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address4.address, "seqNo": xfer_seq_no, "amount": 200},
     ]
     assert address5_utxos == [
-        [address5, mint_seq_no, 100],
-        [address5, xfer_seq_no, 100],
+        {"address": address5.address, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address5.address, "seqNo": xfer_seq_no, "amount": 100},
     ]
 
 

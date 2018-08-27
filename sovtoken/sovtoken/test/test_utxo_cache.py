@@ -35,7 +35,7 @@ def test_add_unspent_output(utxo_cache):
             utxo_cache.get_output(outputs[i], True)
         utxo_cache.add_output(outputs[i], True)
         out = utxo_cache.get_output(outputs[i], True)
-        assert out.value == outputs[i].value
+        assert out.amount == outputs[i].amount
 
 # Tests spending unspent outputs
 def test_spend_unspent_output(utxo_cache):
@@ -67,7 +67,7 @@ def test_get_all_unspent_outputs(utxo_cache):
     num_outputs_per_address = 4
     address_outputs = gen_outputs(num_addresses)
     all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seqNo * (i + 1),
-                                                 ao.value * (i + 1)) for i in
+                                                 ao.amount * (i + 1)) for i in
                                           range(num_outputs_per_address)]
                                          for ao in address_outputs]))
     outputs_by_address = defaultdict(set)

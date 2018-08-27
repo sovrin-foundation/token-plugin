@@ -27,7 +27,6 @@ class HelperGeneral():
         def replace_utxos_address(utxos, address):
             for utxo in utxos:
                 utxo["address"] = address.address
-                utxo.pop("value")
             return utxos
 
         utxos = self._get_utxo_addresses(addresses)
@@ -57,6 +56,7 @@ class HelperGeneral():
         request = self._request.get_utxo(address)
         result = self._send_get_first_result(request)
         result[OUTPUTS] = self._sort_utxos(result[OUTPUTS])
+        print(result)
         return result
 
     # =============

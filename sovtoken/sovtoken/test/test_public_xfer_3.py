@@ -22,7 +22,7 @@ def test_same_input_address_multiple_seq_nos(tokens_distributed, looper,  # noqa
                    (user2_token_wallet, user2_address)]:
         inputs = [[w, a, seq_no_1],]
         amount = w.get_total_address_amount(address=a)
-        outputs = [[seller_address, amount]]
+        outputs = [{"address": seller_address, "amount": amount}]
         send_xfer(looper, inputs, outputs, sdk_pool_handle)
 
     res1 = send_get_utxo(looper, seller_address, sdk_wallet_client,
@@ -36,11 +36,12 @@ def test_same_input_address_multiple_seq_nos(tokens_distributed, looper,  # noqa
         inputs.append([seller_token_wallet, seller_address, s])
         output_amount += amt
 
-    outputs = [[user3_address, output_amount]]
+    outputs = [{"address": user3_address, "amount": output_amount}]
     new_seq_no = get_seq_no(send_xfer(looper, inputs, outputs, sdk_pool_handle))
 
     res2 = send_get_utxo(looper, user3_address, sdk_wallet_client,
                          sdk_pool_handle)
+    print("{}".format(res2))
     assert len(res2[OUTPUTS]) > 0
     for _, s, val in res2[OUTPUTS]:
         if s == new_seq_no:

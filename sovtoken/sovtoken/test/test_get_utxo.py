@@ -38,7 +38,7 @@ def test_address_utxos(helpers):
     mint_seq_no = get_seq_no(mint_result)
     get_utxo_result = helpers.general.do_get_utxo(address)
 
-    assert get_utxo_result[OUTPUTS] == [[address.address, mint_seq_no, 1000]]
+    assert get_utxo_result[OUTPUTS] == [{"address": address.address, "seqNo": mint_seq_no, "amount": 1000}]
 
 
 # We can't handle multiple addresses at the moment because it requires a more
@@ -91,6 +91,6 @@ def test_get_utxo_utxos_in_order(helpers):
         result = response[1]['result']
         seq_nos = []
         for output in result[OUTPUTS]:
-            seq_nos.append(output[1])
+            seq_nos.append(output["seqNo"])
 
         assert seq_nos == sorted(seq_nos)

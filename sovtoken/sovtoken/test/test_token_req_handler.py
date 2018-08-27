@@ -173,40 +173,13 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
         token_handler_a.validate(request)
 
 
-def test_token_req_handler_validate_MINT_PUBLIC_success(token_handler_a):
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [{
-                                                          "address": VALID_ADDR_1,
-                                                          "amount": 40
-                                                      }, {
-                                                          "address": VALID_ADDR_2,
-                                                          "amount": 40
-                                                      }]},
-                      None, SIGNATURES, 1)
+def test_token_req_handler_validate_MINT_PUBLIC_success(helpers, addresses, token_handler_a):
+    outputs = [[addresses[0], 40], [addresses[1], 40]]
+    request = helpers.request.mint(outputs)
     try:
         token_handler_a.validate(request)
     except Exception:
         pytest.fail("Validate seems to be working improperly")
-
-
-def test_token_req_handler_validate_MINT_PUBLIC_invalid(token_handler_a):
-    invalid_num_sigs = {'B8fV7naUqLATYocqu7yZ8W':
-                            '27BVCWvThxMV9pzqz3JepMLVKww7MmreweYjh15LkwvAH4qwYAMbZWeYr6E6LcQexYAikTHo212U1NKtG8Gr2PPP',
-                        'M9BJDuS24bqbJNvBRsoGg3':
-                            '5BzS7J7uSuUePRzLdF5BL5LPvnXxzQyB5BqMT19Hz8QjEyb41Mum71TeNvPW9pKbhnDK12Pciqw9WRHUvsfwdYT5',
-                        'E7QRhdcnhAwA6E46k9EtZo':
-                            'MsZsG2uQHFqMvAsQsx5dnQiqBjvxYS1QsVjqHkbvdS2jPdZQhJfackLQbxQ4RDNUrDBy8Na6yZcKbjK2feun7fg'}
-    request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: MINT_PUBLIC,
-                                                      OUTPUTS: [{
-                                                          "address": VALID_ADDR_1,
-                                                          "amount": 40
-                                                      }, {
-                                                          "address": VALID_ADDR_2,
-                                                          "amount": 40
-                                                      }], },
-                      None, invalid_num_sigs, 1)
-    with pytest.raises(UnauthorizedClientRequest):
-        token_handler_a.validate(request)
 
 
 def test_token_req_handler_apply_xfer_public_success(public_minting, token_handler_b):
@@ -315,7 +288,7 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(
     # Applies the MINT_PUBLIC transaction request to the UTXO cache
     token_handler_a.apply(request, CONS_TIME)
     post_apply_outputs = token_handler_a.utxo_cache.get_unspent_outputs(address.address)
-    assert post_apply_outputs[0].value == 100
+    assert post_apply_outputs[0].amount == 100
 
 
 # We expect this test should pass, but in the future, we may want to exclude this case where MINT_PUBLIC txn has INPUTS
@@ -392,7 +365,7 @@ def test_token_req_handler_onBatchCreated_success(
     token_handler_a, 
     txnPoolNodeSet
 ):
-    address = addresses[0]
+    address = addresses[0].address
     output = Output(address, 10, 100)
     # add output to UTXO Cache
     token_handler_a.utxo_cache.add_output(output)
@@ -402,11 +375,19 @@ def test_token_req_handler_onBatchCreated_success(
     # Verify onBatchCreated worked properly
     type1_key = token_handler_a.utxo_cache._create_type1_key(output)
     type2_key = token_handler_a.utxo_cache._create_type2_key(output.address)
+    try:
+        seq_nos = token_handler_a.utxo_cache.get(type2_key, False)
+        if isinstance(seq_nos, (bytes, bytearray)):
+            seq_nos = seq_nos.decode()
+        seq_nos = token_handler_a.utxo_cache._parse_type2_val(seq_nos)
+    except KeyError:
+        seq_nos = []
+    type2_val = token_handler_a.utxo_cache._create_type2_val(seq_nos)
 
     assert token_handler_a.utxo_cache.un_committed == [
         (state_root, OrderedDict([
-            (type1_key, str(output.value)),
-            (type2_key, str(output.seq_no))
+            (type1_key, str(output.amount)),
+            (type2_key, str(type2_val))
         ]))
     ]
 

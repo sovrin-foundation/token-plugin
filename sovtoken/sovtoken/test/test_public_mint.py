@@ -153,8 +153,8 @@ def test_trustee_valid_minting(helpers, addresses):
         address2_utxos
     ] = helpers.general.get_utxo_addresses([address1, address2])
 
-    assert address1_utxos == [[address1, mint_seq_no, sf_master_gets]]
-    assert address2_utxos == [[address2, mint_seq_no, remaining]]
+    assert address1_utxos == [{"address": address1.address, "seqNo": mint_seq_no, "amount": sf_master_gets}]
+    assert address2_utxos == [{"address": address2.address, "seqNo": mint_seq_no, "amount": remaining}]
 
 
 def test_two_mints_to_same_address(addresses, helpers):
@@ -179,22 +179,22 @@ def test_two_mints_to_same_address(addresses, helpers):
     assert first_mint_seq_no != second_mint_seq_no
 
     assert address1_utxos == [
-        [address1, first_mint_seq_no, 100],
-        [address1, second_mint_seq_no, 200],
+        {"address": address1.address, "seqNo": first_mint_seq_no, "amount": 100},
+        {"address": address1.address, "seqNo": second_mint_seq_no, "amount": 200},
     ]
     assert address2_utxos == [
-        [address2, first_mint_seq_no, 100],
-        [address2, second_mint_seq_no, 200],
+        {"address": address2.address, "seqNo": first_mint_seq_no, "amount": 100},
+        {"address": address2.address, "seqNo": second_mint_seq_no, "amount": 200},
     ]
     assert address3_utxos == [
-        [address3, first_mint_seq_no, 100],
-        [address3, second_mint_seq_no, 200],
+        {"address": address3.address, "seqNo": first_mint_seq_no, "amount": 100},
+        {"address": address3.address, "seqNo": second_mint_seq_no, "amount": 200},
     ]
     assert address4_utxos == [
-        [address4, first_mint_seq_no, 100],
-        [address4, second_mint_seq_no, 200],
+        {"address": address4.address, "seqNo": first_mint_seq_no, "amount": 100},
+        {"address": address4.address, "seqNo": second_mint_seq_no, "amount": 200},
     ]
     assert address5_utxos == [
-        [address5, first_mint_seq_no, 100],
-        [address5, second_mint_seq_no, 200],
+        {"address": address5.address, "seqNo": first_mint_seq_no, "amount": 100},
+        {"address": address5.address, "seqNo": second_mint_seq_no, "amount": 200},
     ]

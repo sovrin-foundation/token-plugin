@@ -26,10 +26,6 @@ class Output:
     def __hash__(self) -> int:
         return hash(self.address) + hash(self.seqNo) + hash(self.amount)
 
-    @property
-    def value(self):
-        return self.amount
-
 
 OutputList = NamedTuple("OutputList",
                         [("spent", Set[int]), ("unspent", Set[int])])

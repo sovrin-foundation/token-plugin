@@ -38,7 +38,7 @@ class UTXOCache(OptimisticKVStore):
 
         type1_key = self._create_type1_key(output)
         type2_key = self._create_type2_key(output.address)
-        type1_val = str(output.value)
+        type1_val = str(output.amount)
         try:
             seq_nos = self.get(type2_key, is_committed)
             if isinstance(seq_nos, (bytes, bytearray)):
@@ -126,7 +126,7 @@ class UTXOCache(OptimisticKVStore):
     def sum_inputs(self, inputs: list, is_committed=False):
         output_val = 0
         for inp in inputs:
-            output_val += self.get_output(Output(inp["address"], inp["seqNo"], None), is_committed=is_committed).value
+            output_val += self.get_output(Output(inp["address"], inp["seqNo"], None), is_committed=is_committed).amount
         return output_val
 
     # Creates a type1 key with this format: '0:address:sequence_number'

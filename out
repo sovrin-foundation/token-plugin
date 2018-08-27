@@ -1,10 +1,961 @@
-docker exec -u 0 -ti plugin_token_1 /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/ -k "test_state_proof"'
+docker exec -u 0 -ti plugin_token_1 /bin/bash -c 'cd sovtoken/ && pytest sovtoken/test/ -k "test_same_input_address_multiple_seq_nos"'
 [1m============================= test session starts ==============================[0m
-platform linux -- Python 3.5.2, pytest-3.7.2, py-1.5.4, pluggy-0.7.1
+platform linux -- Python 3.5.2, pytest-3.7.3, py-1.5.4, pluggy-0.7.1
 rootdir: /home/indy/sovtoken, inifile:
 plugins: xdist-1.22.5, forked-0.2, asyncio-0.9.0
-[1mcollecting 0 items                                                             [0m[1mcollecting 0 items                                                             [0m[1mcollecting 15 items                                                            [0m[1mcollecting 19 items                                                            [0m[1mcollecting 21 items                                                            [0m[1mcollecting 27 items                                                            [0m[1mcollecting 36 items                                                            [0m[1mcollecting 41 items                                                            [0m[1mcollecting 49 items                                                            [0m[1mcollecting 50 items                                                            [0m[1mcollecting 50 items                                                            [0m[1mcollecting 51 items                                                            [0m[1mcollecting 58 items                                                            [0m[1mcollecting 58 items                                                            [0m[1mcollecting 83 items                                                            [0m[1mcollecting 85 items                                                            [0m[1mcollecting 131 items                                                           [0m[1mcollecting 161 items                                                           [0m[1mcollecting 168 items                                                           [0m[1mcollecting 168 items                                                           [0m[1mcollecting 175 items                                                           [0m[1mcollecting 180 items                                                           [0m[1mcollecting 180 items                                                           [0m[1mcollected 180 items / 179 deselected                                           [0m
+[1mcollecting 0 items                                                             [0m[1mcollecting 0 items                                                             [0m[1mcollecting 15 items                                                            [0m[1mcollecting 16 items                                                            [0m[1mcollecting 18 items                                                            [0m[1mcollecting 24 items                                                            [0m[1mcollecting 33 items                                                            [0m[1mcollecting 38 items                                                            [0m[1mcollecting 46 items                                                            [0m[1mcollecting 47 items                                                            [0m[1mcollecting 47 items                                                            [0m[1mcollecting 48 items                                                            [0m[1mcollecting 55 items                                                            [0m[1mcollecting 55 items                                                            [0m[1mcollecting 79 items                                                            [0m[1mcollecting 81 items                                                            [0m[1mcollecting 127 items                                                           [0m[1mcollecting 157 items                                                           [0m[1mcollecting 164 items                                                           [0m[1mcollecting 164 items                                                           [0m[1mcollecting 171 items                                                           [0m[1mcollecting 173 items                                                           [0m[1mcollecting 173 items                                                           [0m[1mcollected 173 items / 172 deselected                                           [0m
 
-sovtoken/test/test_state_proof.py .[36m                                      [100%][0m
+sovtoken/test/test_public_xfer_3.py F[36m                                    [100%][0m
 
-[32m[1m================== 1 passed, 179 deselected in 44.66 seconds ===================[0m
+=================================== FAILURES ===================================
+[31m[1m___________________ test_same_input_address_multiple_seq_nos ___________________[0m
+
+tokens_distributed = 2
+looper = <stp_core.loop.looper.Looper object at 0x7f0dec9476d8>
+sdk_pool_handle = 1, sdk_wallet_client = (3, '6ouriXMZkLeHsuXrN1X1fd')
+seller_token_wallet = SELLER
+seller_address = 'dctKSXBbv2My3TGGUgTFjkxu1A9JM3Sscd5FydY4dkxnfwA7q'
+user1_address = '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es'
+user2_address = '24xHHVDRq97Hss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY'
+user3_address = 'mNYFWv9vvoQVCVLrSpbU7ZScthjNJMQxMs3gREQrwcJC1DsG5'
+user1_token_wallet = user1, user2_token_wallet = user2
+
+[1m    def test_same_input_address_multiple_seq_nos(tokens_distributed, looper,  # noqa[0m
+[1m                                                 sdk_pool_handle, sdk_wallet_client,[0m
+[1m                                                 seller_token_wallet, seller_address,[0m
+[1m                                                 user1_address, user2_address,[0m
+[1m                                                 user3_address, user1_token_wallet,[0m
+[1m                                                 user2_token_wallet):[0m
+[1m        # Send a PUBLIC_XFER with inputs using the same address but different[0m
+[1m        # sequence nos.[0m
+[1m        global seller_gets[0m
+[1m        seq_no_1 = tokens_distributed[0m
+[1m    [0m
+[1m        for (w, a) in [(user1_token_wallet, user1_address),[0m
+[1m                       (user2_token_wallet, user2_address)]:[0m
+[1m            inputs = [[w, a, seq_no_1],][0m
+[1m            amount = w.get_total_address_amount(address=a)[0m
+[1m            outputs = [{"address": seller_address, "amount": amount}][0m
+[1m            send_xfer(looper, inputs, outputs, sdk_pool_handle)[0m
+[1m    [0m
+[1m        res1 = send_get_utxo(looper, seller_address, sdk_wallet_client,[0m
+[1m                             sdk_pool_handle)[0m
+[1m        assert len(res1[OUTPUTS]) > 1[0m
+[1m    [0m
+[1m        update_token_wallet_with_result(seller_token_wallet, res1)[0m
+[1m        inputs = [][0m
+[1m        output_amount = 0[0m
+[1m        for s, amt in list(seller_token_wallet.get_all_address_utxos(seller_address).values())[0]:[0m
+[1m            inputs.append([seller_token_wallet, seller_address, s])[0m
+[1m            output_amount += amt[0m
+[1m    [0m
+[1m        outputs = [{"address": user3_address, "amount": output_amount}][0m
+[1m        new_seq_no = get_seq_no(send_xfer(looper, inputs, outputs, sdk_pool_handle))[0m
+[1m    [0m
+[1m        res2 = send_get_utxo(looper, user3_address, sdk_wallet_client,[0m
+[1m                             sdk_pool_handle)[0m
+[1m        print("{}".format(res2))[0m
+[1m        assert len(res2[OUTPUTS]) > 0[0m
+[1m        for _, s, val in res2[OUTPUTS]:[0m
+[1m            if s == new_seq_no:[0m
+[1m                assert val == output_amount[0m
+[1m                break[0m
+[1m        else:[0m
+[1m            raise AssertionError('Needed to find output {}:{} with val {} but not '[0m
+[1m                                 'found'.format(user3_address, new_seq_no,[0m
+[1m>                                               output_amount))[0m
+[31m[1mE           AssertionError: Needed to find output mNYFWv9vvoQVCVLrSpbU7ZScthjNJMQxMs3gREQrwcJC1DsG5:5 with val 27 but not found[0m
+
+[31m[1msovtoken/test/test_public_xfer_3.py[0m:53: AssertionError
+---------------------------- Captured stdout setup -----------------------------
+Generating keys for provided seed Alpha000000000000000000000000000
+Init local keys for client-stack
+Public key is 3aa0402bfedce3614021e236b32edacdebc56973350c19715bca213a63225b68
+Verification key is 0490a246940fa636235c664b8e767f2a79e48899324c607d73241e11e558bbd7
+Init local keys for node-stack
+Public key is 3aa0402bfedce3614021e236b32edacdebc56973350c19715bca213a63225b68
+Verification key is 0490a246940fa636235c664b8e767f2a79e48899324c607d73241e11e558bbd7
+BLS Public key is p2LdkcuVLnqidf9PAM1josFLfSTSTYuGqaSBx2Dq72Z5Kt2axQicYyqkQ6ZfcwzHpmLevmcXVwD4EC32wTbusvYxb5D1MJBfu67SQqxRTcK7pRBQXYiaPrzqUo9odhAgrwNPSbHcBJM6s5cNUPvjZZDuSJvhjC7tKFV9FGqyX4Zs4u
+Generating keys for provided seed Beta0000000000000000000000000000
+Init local keys for client-stack
+Public key is 0f9b6f5ae4d0b32d2ad8df06e66f8e82d4e5ee7920b525e0d08b0827db64ea36
+Verification key is b628de8ac1198031bd1dba3ab38077690ca9a65aa18aec615865578af309b3fb
+Init local keys for node-stack
+Public key is 0f9b6f5ae4d0b32d2ad8df06e66f8e82d4e5ee7920b525e0d08b0827db64ea36
+Verification key is b628de8ac1198031bd1dba3ab38077690ca9a65aa18aec615865578af309b3fb
+BLS Public key is 2JY8jXAiy3ffLu1ggSaiFTBpmb9X7wUZEedg7G3mJSU1vCnqFzYAofGR9SGEvb1C3p88Kdm2CPAdMyMc5v9KxL26vfeeHzRa2N5EHwV1JpPH5kcdYYkFhgNf8wxFAvJ9vPS1aCVms41ZC17GeovJLh4L2iACNd7ttPyS5M6a9Uux9oz
+Generating keys for provided seed Gamma000000000000000000000000000
+Init local keys for client-stack
+Public key is 9d3da0b6e67fb30360578f81b51d8659de7207f73061f95a7bbff3e01bb04a0e
+Verification key is 92d820f5eb394cfaa8d6e462f14708ddecbd4dbe0a388fbc7b5da1d85ce1c25a
+Init local keys for node-stack
+Public key is 9d3da0b6e67fb30360578f81b51d8659de7207f73061f95a7bbff3e01bb04a0e
+Verification key is 92d820f5eb394cfaa8d6e462f14708ddecbd4dbe0a388fbc7b5da1d85ce1c25a
+BLS Public key is 1JwRChBPGQTtp4m4aNBRrf2kG3mzgxtRUTAscx8iV9uDih34pKWnEA54CoNq3DhAgEURQCN6VKrSZUb6zzzLBHhQt7HBdw2kbfUR3Fap2jqE6TEDamFQpqced2GRVcDo5wgVVKydsf1rFundAk7jMSk7mLrf7zBBN9xBx2yaUkvueN
+Generating keys for provided seed Delta000000000000000000000000000
+Init local keys for client-stack
+Public key is 3d26b31dcfea36eed76a652d14cee1115569248befe10e519254bc4362747147
+Verification key is 3af81a541097e3e042cacbe8761c0f9e54326049e1ceda38017c95c432312f6f
+Init local keys for node-stack
+Public key is 3d26b31dcfea36eed76a652d14cee1115569248befe10e519254bc4362747147
+Verification key is 3af81a541097e3e042cacbe8761c0f9e54326049e1ceda38017c95c432312f6f
+BLS Public key is 4kkk7y7NQVzcfvY4SAe1HBMYnFohAJ2ygLeJd3nC77SFv2mJAmebH3BGbrGPHamLZMAFWQJNHEM81P62RfZjnb5SER6cQk1MNMeQCR3GVbEXDQRhhMQj2KqfHNFvDajrdQtyppc4MZ58r6QeiYH3R68mGSWbiWwmPZuiqgbSdSmweqc
+------------------------------ Captured log setup ------------------------------
+notifier_plugin_manager.py  121 INFO     Found notifier plugins: []
+looper.py                  106 INFO     Starting up indy-node
+conftest.py                216 INFO     no nodeCount found in the module, using the default: 4
+conftest.py                216 INFO     no nodes_wth_bls found in the module, using the default: 4
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 5.161017179489136e-05 seconds
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 4.658568650484085e-05 seconds
+conftest.py                216 INFO     no nodeCount found in the module, using the default: 4
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.052130090072751045 seconds
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.06627886788919568 seconds
+node.py                   2946 INFO     Alpha found state to be empty, recreating from ledger
+pool_manager.py            427 INFO     Alpha sets node Alpha (JpYerf4CssDrH76z7jyQPJLnZ1vwYgvKbvcp16AB5RQ) order to 5
+pool_manager.py            427 INFO     Alpha sets node Beta (DG5M4zFm33Shrhjj6JB7nmx9BoNJUq219UXDfvwBDPe2) order to 4
+pool_manager.py            427 INFO     Alpha sets node Gamma (AtDfpKFe1RPgcr5nnYBw1Wxkgyn8Zjyh5MzFoEUTeoV3) order to 5
+pool_manager.py            427 INFO     Alpha sets node Delta (4yC546FFzorLPgTNTc6V43DnpFrR8uHvtunBxb2Suaa2) order to 5
+node.py                    887 NOTIFICATION BLS: BLS Signatures will be used for Node Alpha
+node.py                   2946 INFO     Alpha found state to be empty, recreating from ledger
+stacks.py                   63 INFO     AlphaC: clients connections tracking is enabled.
+stacks.py                   66 INFO     AlphaC: client stack restart is enabled.
+node.py                    710 INFO     Alpha updated its pool parameters: f 1, totalNodes 4, allNodeNames {'Delta', 'Beta', 'Gamma', 'Alpha'}, requiredNumberOfInstances 2, minimumNodes 3, quorums {'bls_signatures': Quorum(3), 'strong': Quorum(3), 'f': 1, 'same_consistency_proof': Quorum(2), 'observer_data': Quorum(2), 'checkpoint': Quorum(2), 'weak': Quorum(2), 'ledger_status_last_3PC': Quorum(2), 'ledger_status': Quorum(2), 'propagate': Quorum(2), 'prepare': Quorum(2), 'consistency_proof': Quorum(2), 'reply': Quorum(2), 'view_change_done': Quorum(3), 'view_change': Quorum(3), 'timestamp': Quorum(2), 'propagate_primary': Quorum(2), 'commit': Quorum(3), 'election': Quorum(3)}
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+replica.py                 367 INFO     Alpha:0 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Alpha added replica Alpha:0 to instance 0 (master)
+replica.py                 367 INFO     Alpha:1 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Alpha added replica Alpha:1 to instance 1 (backup)
+node.py                    403 INFO     total plugins loaded in node: 0
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05943082179874182 seconds
+node.py                   2946 INFO     Alpha found state to be empty, recreating from ledger
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.03323648776859045 seconds
+motor.py                    33 INFO     Alpha changing status from stopped to starting
+stacks.py                  184 INFO     CONNECTION: Alpha listening for other nodes at 127.0.0.1:7793
+node.py                    959 INFO     Alpha first time running...
+node.py                   2689 INFO     Alpha reverted 0 batches before starting catch up
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05419495468959212 seconds
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05832815822213888 seconds
+node.py                   2946 INFO     Beta found state to be empty, recreating from ledger
+pool_manager.py            427 INFO     Beta sets node Alpha (JpYerf4CssDrH76z7jyQPJLnZ1vwYgvKbvcp16AB5RQ) order to 5
+pool_manager.py            427 INFO     Beta sets node Beta (DG5M4zFm33Shrhjj6JB7nmx9BoNJUq219UXDfvwBDPe2) order to 4
+pool_manager.py            427 INFO     Beta sets node Gamma (AtDfpKFe1RPgcr5nnYBw1Wxkgyn8Zjyh5MzFoEUTeoV3) order to 5
+pool_manager.py            427 INFO     Beta sets node Delta (4yC546FFzorLPgTNTc6V43DnpFrR8uHvtunBxb2Suaa2) order to 5
+node.py                    887 NOTIFICATION BLS: BLS Signatures will be used for Node Beta
+node.py                   2946 INFO     Beta found state to be empty, recreating from ledger
+stacks.py                   63 INFO     BetaC: clients connections tracking is enabled.
+stacks.py                   66 INFO     BetaC: client stack restart is enabled.
+node.py                    710 INFO     Beta updated its pool parameters: f 1, totalNodes 4, allNodeNames {'Delta', 'Beta', 'Gamma', 'Alpha'}, requiredNumberOfInstances 2, minimumNodes 3, quorums {'bls_signatures': Quorum(3), 'strong': Quorum(3), 'f': 1, 'same_consistency_proof': Quorum(2), 'observer_data': Quorum(2), 'checkpoint': Quorum(2), 'weak': Quorum(2), 'ledger_status_last_3PC': Quorum(2), 'ledger_status': Quorum(2), 'propagate': Quorum(2), 'prepare': Quorum(2), 'consistency_proof': Quorum(2), 'reply': Quorum(2), 'view_change_done': Quorum(3), 'view_change': Quorum(3), 'timestamp': Quorum(2), 'propagate_primary': Quorum(2), 'commit': Quorum(3), 'election': Quorum(3)}
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+replica.py                 367 INFO     Beta:0 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Beta added replica Beta:0 to instance 0 (master)
+replica.py                 367 INFO     Beta:1 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Beta added replica Beta:1 to instance 1 (backup)
+node.py                    403 INFO     total plugins loaded in node: 0
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05879558715969324 seconds
+node.py                   2946 INFO     Beta found state to be empty, recreating from ledger
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.034708122722804546 seconds
+motor.py                    33 INFO     Beta changing status from stopped to starting
+stacks.py                  184 INFO     CONNECTION: Beta listening for other nodes at 127.0.0.1:7795
+node.py                    959 INFO     Beta first time running...
+node.py                   2689 INFO     Beta reverted 0 batches before starting catch up
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.052396674174815416 seconds
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05120229488238692 seconds
+node.py                   2946 INFO     Gamma found state to be empty, recreating from ledger
+pool_manager.py            427 INFO     Gamma sets node Alpha (JpYerf4CssDrH76z7jyQPJLnZ1vwYgvKbvcp16AB5RQ) order to 5
+pool_manager.py            427 INFO     Gamma sets node Beta (DG5M4zFm33Shrhjj6JB7nmx9BoNJUq219UXDfvwBDPe2) order to 4
+pool_manager.py            427 INFO     Gamma sets node Gamma (AtDfpKFe1RPgcr5nnYBw1Wxkgyn8Zjyh5MzFoEUTeoV3) order to 5
+pool_manager.py            427 INFO     Gamma sets node Delta (4yC546FFzorLPgTNTc6V43DnpFrR8uHvtunBxb2Suaa2) order to 5
+node.py                    887 NOTIFICATION BLS: BLS Signatures will be used for Node Gamma
+node.py                   2946 INFO     Gamma found state to be empty, recreating from ledger
+stacks.py                   63 INFO     GammaC: clients connections tracking is enabled.
+stacks.py                   66 INFO     GammaC: client stack restart is enabled.
+node.py                    710 INFO     Gamma updated its pool parameters: f 1, totalNodes 4, allNodeNames {'Delta', 'Beta', 'Gamma', 'Alpha'}, requiredNumberOfInstances 2, minimumNodes 3, quorums {'bls_signatures': Quorum(3), 'strong': Quorum(3), 'f': 1, 'same_consistency_proof': Quorum(2), 'observer_data': Quorum(2), 'checkpoint': Quorum(2), 'weak': Quorum(2), 'ledger_status_last_3PC': Quorum(2), 'ledger_status': Quorum(2), 'propagate': Quorum(2), 'prepare': Quorum(2), 'consistency_proof': Quorum(2), 'reply': Quorum(2), 'view_change_done': Quorum(3), 'view_change': Quorum(3), 'timestamp': Quorum(2), 'propagate_primary': Quorum(2), 'commit': Quorum(3), 'election': Quorum(3)}
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+replica.py                 367 INFO     Gamma:0 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Gamma added replica Gamma:0 to instance 0 (master)
+replica.py                 367 INFO     Gamma:1 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Gamma added replica Gamma:1 to instance 1 (backup)
+node.py                    403 INFO     total plugins loaded in node: 0
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.056160055100917816 seconds
+node.py                   2946 INFO     Gamma found state to be empty, recreating from ledger
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.03010130627080798 seconds
+motor.py                    33 INFO     Gamma changing status from stopped to starting
+stacks.py                  184 INFO     CONNECTION: Gamma listening for other nodes at 127.0.0.1:7797
+node.py                    959 INFO     Gamma first time running...
+node.py                   2689 INFO     Gamma reverted 0 batches before starting catch up
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05369609594345093 seconds
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05903640761971474 seconds
+node.py                   2946 INFO     Delta found state to be empty, recreating from ledger
+pool_manager.py            427 INFO     Delta sets node Alpha (JpYerf4CssDrH76z7jyQPJLnZ1vwYgvKbvcp16AB5RQ) order to 5
+pool_manager.py            427 INFO     Delta sets node Beta (DG5M4zFm33Shrhjj6JB7nmx9BoNJUq219UXDfvwBDPe2) order to 4
+pool_manager.py            427 INFO     Delta sets node Gamma (AtDfpKFe1RPgcr5nnYBw1Wxkgyn8Zjyh5MzFoEUTeoV3) order to 5
+pool_manager.py            427 INFO     Delta sets node Delta (4yC546FFzorLPgTNTc6V43DnpFrR8uHvtunBxb2Suaa2) order to 5
+node.py                    887 NOTIFICATION BLS: BLS Signatures will be used for Node Delta
+node.py                   2946 INFO     Delta found state to be empty, recreating from ledger
+stacks.py                   63 INFO     DeltaC: clients connections tracking is enabled.
+stacks.py                   66 INFO     DeltaC: client stack restart is enabled.
+node.py                    710 INFO     Delta updated its pool parameters: f 1, totalNodes 4, allNodeNames {'Delta', 'Beta', 'Gamma', 'Alpha'}, requiredNumberOfInstances 2, minimumNodes 3, quorums {'bls_signatures': Quorum(3), 'strong': Quorum(3), 'f': 1, 'same_consistency_proof': Quorum(2), 'observer_data': Quorum(2), 'checkpoint': Quorum(2), 'weak': Quorum(2), 'ledger_status_last_3PC': Quorum(2), 'ledger_status': Quorum(2), 'propagate': Quorum(2), 'prepare': Quorum(2), 'consistency_proof': Quorum(2), 'reply': Quorum(2), 'view_change_done': Quorum(3), 'view_change': Quorum(3), 'timestamp': Quorum(2), 'propagate_primary': Quorum(2), 'commit': Quorum(3), 'election': Quorum(3)}
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+replica.py                 367 INFO     Delta:0 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Delta added replica Delta:0 to instance 0 (master)
+replica.py                 367 INFO     Delta:1 set watermarks as 0 300
+replicas.py                 47 NOTIFICATION Delta added replica Delta:1 to instance 1 (backup)
+node.py                    403 INFO     total plugins loaded in node: 0
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.05098912585526705 seconds
+node.py                   2946 INFO     Delta found state to be empty, recreating from ledger
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Any] because it does not have a 'pluginType' attribute
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: typing.Dict<~KT, ~VT>] because it does not have a 'pluginType' attribute
+plugin_loader.py           114 INFO     plugin TestStatsConsumer successfully loaded from module plugin_stats_consumer
+plugin_loader.py            96 NOTIFICATION skipping plugin plugin_stats_consumer[class: <class 'plenum.server.stats_consumer.StatsConsumer'>] because it does not have a 'pluginType' attribute
+ledger.py                  211 INFO     Starting ledger...
+ledger.py                   78 INFO     Recovering tree from transaction log
+ledger.py                   92 INFO     Recovered tree in 0.035436777863651514 seconds
+motor.py                    33 INFO     Delta changing status from stopped to starting
+stacks.py                  184 INFO     CONNECTION: Delta listening for other nodes at 127.0.0.1:7799
+node.py                    959 INFO     Delta first time running...
+node.py                   2689 INFO     Delta reverted 0 batches before starting catch up
+kit_zstack.py              114 INFO     CONNECTION: Alpha found the following missing connections: Beta, Gamma, Delta
+zstack.py                  606 INFO     CONNECTION: Alpha looking for Beta at 127.0.0.1:7795
+zstack.py                  606 INFO     CONNECTION: Alpha looking for Gamma at 127.0.0.1:7797
+zstack.py                  606 INFO     CONNECTION: Alpha looking for Delta at 127.0.0.1:7799
+kit_zstack.py              114 INFO     CONNECTION: Beta found the following missing connections: Alpha, Gamma, Delta
+zstack.py                  606 INFO     CONNECTION: Beta looking for Alpha at 127.0.0.1:7793
+zstack.py                  606 INFO     CONNECTION: Beta looking for Gamma at 127.0.0.1:7797
+zstack.py                  606 INFO     CONNECTION: Beta looking for Delta at 127.0.0.1:7799
+kit_zstack.py              114 INFO     CONNECTION: Gamma found the following missing connections: Beta, Alpha, Delta
+zstack.py                  606 INFO     CONNECTION: Gamma looking for Beta at 127.0.0.1:7795
+zstack.py                  606 INFO     CONNECTION: Gamma looking for Alpha at 127.0.0.1:7793
+zstack.py                  606 INFO     CONNECTION: Gamma looking for Delta at 127.0.0.1:7799
+kit_zstack.py              114 INFO     CONNECTION: Delta found the following missing connections: Beta, Gamma, Alpha
+zstack.py                  606 INFO     CONNECTION: Delta looking for Beta at 127.0.0.1:7795
+zstack.py                  606 INFO     CONNECTION: Delta looking for Gamma at 127.0.0.1:7797
+zstack.py                  606 INFO     CONNECTION: Delta looking for Alpha at 127.0.0.1:7793
+keep_in_touch.py            66 NOTIFICATION Alpha's connections changed from set() to {'Beta'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Alpha now connected to Beta
+node.py                   1259 INFO     Alpha joined nodes {'Beta'} but status is 2
+view_changer.py            702 INFO     Alpha has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Alpha sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Beta
+keep_in_touch.py            66 NOTIFICATION Gamma's connections changed from set() to {'Beta', 'Alpha'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Gamma now connected to Beta
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Gamma now connected to Alpha
+motor.py                    33 INFO     Gamma changing status from starting to started_hungry
+view_changer.py            702 INFO     Gamma has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Gamma sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Beta
+view_changer.py            702 INFO     Gamma has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Gamma sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Alpha
+keep_in_touch.py            66 NOTIFICATION Delta's connections changed from set() to {'Gamma'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Delta now connected to Gamma
+node.py                   1259 INFO     Delta joined nodes {'Gamma'} but status is 2
+view_changer.py            702 INFO     Delta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Delta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Gamma
+keep_in_touch.py            66 NOTIFICATION Alpha's connections changed from {'Beta'} to {'Beta', 'Gamma', 'Delta'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Alpha now connected to Gamma
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Alpha now connected to Delta
+motor.py                    33 INFO     Alpha changing status from starting to started
+view_changer.py            702 INFO     Alpha has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Alpha sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Gamma
+view_changer.py            702 INFO     Alpha has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Alpha sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Delta
+node.py                   1332 INFO     Beta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Alpha
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+keep_in_touch.py            66 NOTIFICATION Beta's connections changed from set() to {'Alpha', 'Gamma', 'Delta'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Beta now connected to Delta
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Beta now connected to Gamma
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Beta now connected to Alpha
+motor.py                    33 INFO     Beta changing status from starting to started
+view_changer.py            702 INFO     Beta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Beta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Delta
+view_changer.py            702 INFO     Beta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Beta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Gamma
+view_changer.py            702 INFO     Beta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Beta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Alpha
+keep_in_touch.py            66 NOTIFICATION Gamma's connections changed from {'Beta', 'Alpha'} to {'Beta', 'Alpha', 'Delta'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Gamma now connected to Delta
+motor.py                    33 INFO     Gamma changing status from started_hungry to started
+view_changer.py            702 INFO     Gamma has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Gamma sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Delta
+keep_in_touch.py            66 NOTIFICATION Delta's connections changed from {'Gamma'} to {'Beta', 'Gamma', 'Alpha'}
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Delta now connected to Beta
+keep_in_touch.py            92 NOTIFICATION CONNECTION: Delta now connected to Alpha
+motor.py                    33 INFO     Delta changing status from starting to started
+view_changer.py            702 INFO     Delta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Delta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Beta
+view_changer.py            702 INFO     Delta has no ViewChangeDone message to send for view 0
+node.py                   1328 INFO     Delta sending current state CURRENT_STATE{'viewNo': 0, 'primary': []} to lagged node Alpha
+node.py                   1332 INFO     Alpha processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Gamma
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+node.py                   1332 INFO     Beta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Gamma
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py          349 INFO     Beta found out from {'Gamma', 'Alpha'} that its ledger of type 0 is latest
+ledger_manager.py          351 INFO     Beta found from ledger status LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Beta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Beta reverted 0 batches before starting catch up for ledger 0
+node.py                   1984 INFO     Beta is updating txn to batch seqNo map after catchup to None for ledger_id 0 
+ledger_manager.py          875 INFO     CATCH-UP: Beta completed catching up ledger 0, caught up 0 in total
+node.py                   1290 INFO     Beta asking Alpha for ledger status of ledger 2
+node.py                   1290 INFO     Beta asking Gamma for ledger status of ledger 2
+node.py                   1290 INFO     Beta asking Delta for ledger status of ledger 2
+node.py                   1332 INFO     Gamma processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Delta
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+node.py                   1332 INFO     Gamma processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Alpha
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py          349 INFO     Gamma found out from {'Alpha', 'Delta'} that its ledger of type 0 is latest
+ledger_manager.py          351 INFO     Gamma found from ledger status LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Gamma going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Gamma reverted 0 batches before starting catch up for ledger 0
+node.py                   1984 INFO     Gamma is updating txn to batch seqNo map after catchup to None for ledger_id 0 
+ledger_manager.py          875 INFO     CATCH-UP: Gamma completed catching up ledger 0, caught up 0 in total
+node.py                   1290 INFO     Gamma asking Alpha for ledger status of ledger 2
+node.py                   1290 INFO     Gamma asking Beta for ledger status of ledger 2
+node.py                   1290 INFO     Gamma asking Delta for ledger status of ledger 2
+node.py                   1332 INFO     Gamma processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Beta
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+node.py                   1332 INFO     Delta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Alpha
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+node.py                   1332 INFO     Delta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Beta
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py          349 INFO     Delta found out from {'Beta', 'Alpha'} that its ledger of type 0 is latest
+ledger_manager.py          351 INFO     Delta found from ledger status LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Delta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Delta reverted 0 batches before starting catch up for ledger 0
+node.py                   1984 INFO     Delta is updating txn to batch seqNo map after catchup to None for ledger_id 0 
+ledger_manager.py          875 INFO     CATCH-UP: Delta completed catching up ledger 0, caught up 0 in total
+node.py                   1290 INFO     Delta asking Alpha for ledger status of ledger 2
+node.py                   1290 INFO     Delta asking Beta for ledger status of ledger 2
+node.py                   1290 INFO     Delta asking Gamma for ledger status of ledger 2
+node.py                   1332 INFO     Delta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Gamma
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+node.py                   1332 INFO     Alpha processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Beta
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py          349 INFO     Alpha found out from {'Beta', 'Gamma'} that its ledger of type 0 is latest
+ledger_manager.py          351 INFO     Alpha found from ledger status LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Alpha going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Alpha reverted 0 batches before starting catch up for ledger 0
+node.py                   1984 INFO     Alpha is updating txn to batch seqNo map after catchup to None for ledger_id 0 
+ledger_manager.py          875 INFO     CATCH-UP: Alpha completed catching up ledger 0, caught up 0 in total
+node.py                   1290 INFO     Alpha asking Beta for ledger status of ledger 2
+node.py                   1290 INFO     Alpha asking Gamma for ledger status of ledger 2
+node.py                   1290 INFO     Alpha asking Delta for ledger status of ledger 2
+node.py                   1332 INFO     Alpha processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Delta
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+node.py                   1332 INFO     Beta processing current state CURRENT_STATE{'viewNo': 0, 'primary': []} from Delta
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py          349 INFO     Beta found out from {'Gamma', 'Delta'} that its ledger of type 2 is latest
+ledger_manager.py          351 INFO     Beta found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Beta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Beta reverted 0 batches before starting catch up for ledger 2
+node.py                   1984 INFO     Beta is updating txn to batch seqNo map after catchup to None for ledger_id 2 
+ledger_manager.py          875 INFO     CATCH-UP: Beta completed catching up ledger 2, caught up 0 in total
+node.py                   1290 INFO     Beta asking Alpha for ledger status of ledger 1
+node.py                   1290 INFO     Beta asking Gamma for ledger status of ledger 1
+node.py                   1290 INFO     Beta asking Delta for ledger status of ledger 1
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Beta comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py          349 INFO     Gamma found out from {'Alpha', 'Delta'} that its ledger of type 2 is latest
+ledger_manager.py          351 INFO     Gamma found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Gamma going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Gamma reverted 0 batches before starting catch up for ledger 2
+node.py                   1984 INFO     Gamma is updating txn to batch seqNo map after catchup to None for ledger_id 2 
+ledger_manager.py          875 INFO     CATCH-UP: Gamma completed catching up ledger 2, caught up 0 in total
+node.py                   1290 INFO     Gamma asking Alpha for ledger status of ledger 1
+node.py                   1290 INFO     Gamma asking Beta for ledger status of ledger 1
+node.py                   1290 INFO     Gamma asking Delta for ledger status of ledger 1
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py          349 INFO     Delta found out from {'Beta', 'Alpha'} that its ledger of type 2 is latest
+ledger_manager.py          351 INFO     Delta found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Delta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Delta reverted 0 batches before starting catch up for ledger 2
+node.py                   1984 INFO     Delta is updating txn to batch seqNo map after catchup to None for ledger_id 2 
+ledger_manager.py          875 INFO     CATCH-UP: Delta completed catching up ledger 2, caught up 0 in total
+node.py                   1290 INFO     Delta asking Alpha for ledger status of ledger 1
+node.py                   1290 INFO     Delta asking Beta for ledger status of ledger 1
+node.py                   1290 INFO     Delta asking Gamma for ledger status of ledger 1
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Delta comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py          349 INFO     Alpha found out from {'Beta', 'Gamma'} that its ledger of type 2 is latest
+ledger_manager.py          351 INFO     Alpha found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Alpha going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Alpha reverted 0 batches before starting catch up for ledger 2
+node.py                   1984 INFO     Alpha is updating txn to batch seqNo map after catchup to None for ledger_id 2 
+ledger_manager.py          875 INFO     CATCH-UP: Alpha completed catching up ledger 2, caught up 0 in total
+node.py                   1290 INFO     Alpha asking Beta for ledger status of ledger 1
+node.py                   1290 INFO     Alpha asking Gamma for ledger status of ledger 1
+node.py                   1290 INFO     Alpha asking Delta for ledger status of ledger 1
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 2, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 2 of size 0 with 0
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          349 INFO     Beta found out from {'Gamma', 'Delta'} that its ledger of type 1 is latest
+ledger_manager.py          351 INFO     Beta found from ledger status LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Beta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Beta reverted 0 batches before starting catch up for ledger 1
+node.py                   1984 INFO     Beta is updating txn to batch seqNo map after catchup to None for ledger_id 1 
+ledger_manager.py          875 INFO     CATCH-UP: Beta completed catching up ledger 1, caught up 0 in total
+node.py                   1290 INFO     Beta asking Alpha for ledger status of ledger 1001
+node.py                   1290 INFO     Beta asking Gamma for ledger status of ledger 1001
+node.py                   1290 INFO     Beta asking Delta for ledger status of ledger 1001
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py          349 INFO     Gamma found out from {'Alpha', 'Delta'} that its ledger of type 1 is latest
+ledger_manager.py          351 INFO     Gamma found from ledger status LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Gamma going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Gamma reverted 0 batches before starting catch up for ledger 1
+node.py                   1984 INFO     Gamma is updating txn to batch seqNo map after catchup to None for ledger_id 1 
+ledger_manager.py          875 INFO     CATCH-UP: Gamma completed catching up ledger 1, caught up 0 in total
+node.py                   1290 INFO     Gamma asking Alpha for ledger status of ledger 1001
+node.py                   1290 INFO     Gamma asking Beta for ledger status of ledger 1001
+node.py                   1290 INFO     Gamma asking Delta for ledger status of ledger 1001
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          349 INFO     Delta found out from {'Beta', 'Alpha'} that its ledger of type 1 is latest
+ledger_manager.py          351 INFO     Delta found from ledger status LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Delta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Delta reverted 0 batches before starting catch up for ledger 1
+node.py                   1984 INFO     Delta is updating txn to batch seqNo map after catchup to None for ledger_id 1 
+ledger_manager.py          875 INFO     CATCH-UP: Delta completed catching up ledger 1, caught up 0 in total
+node.py                   1290 INFO     Delta asking Alpha for ledger status of ledger 1001
+node.py                   1290 INFO     Delta asking Beta for ledger status of ledger 1001
+node.py                   1290 INFO     Delta asking Gamma for ledger status of ledger 1001
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py          349 INFO     Alpha found out from {'Beta', 'Gamma'} that its ledger of type 1 is latest
+ledger_manager.py          351 INFO     Alpha found from ledger status LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Alpha going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Alpha reverted 0 batches before starting catch up for ledger 1
+node.py                   1984 INFO     Alpha is updating txn to batch seqNo map after catchup to None for ledger_id 1 
+ledger_manager.py          875 INFO     CATCH-UP: Alpha completed catching up ledger 1, caught up 0 in total
+node.py                   1290 INFO     Alpha asking Beta for ledger status of ledger 1001
+node.py                   1290 INFO     Alpha asking Gamma for ledger status of ledger 1001
+node.py                   1290 INFO     Alpha asking Delta for ledger status of ledger 1001
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE', 'protocolVersion': 2, 'ledgerId': 1, 'txnSeqNo': 12, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1 of size 12 with 12
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          349 INFO     Beta found out from {'Gamma', 'Delta'} that its ledger of type 1001 is latest
+ledger_manager.py          351 INFO     Beta found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Beta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Beta reverted 0 batches before starting catch up for ledger 1001
+node.py                   1984 INFO     Beta is updating txn to batch seqNo map after catchup to None for ledger_id 1001 
+ledger_manager.py          875 INFO     CATCH-UP: Beta completed catching up ledger 1001, caught up 0 in total
+node.py                   2071 INFO     Beta caught up to 0 txns in the last catchup
+node.py                   1975 INFO     CATCH-UP: Beta does not need any more catchups
+view_changer.py            677 INFO     Beta is sending ViewChangeDone msg to all : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]}
+view_changer.py            142 INFO     Beta needs 1 ViewChangeDone messages
+view_changer.py            577 INFO     Beta cannot start primary selection because has no view change quorum or no message from next primary
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Beta:0 selected primary Alpha:0 for instance 0 (view 0)
+node.py                    763 INFO     Beta started participating
+replica.py                 478 INFO     Beta:0 setting primaryName for view no 0 to: Alpha:0
+replica.py                1985 INFO     Beta:0 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Beta:0 declares view change 0 as completed for instance 0, new primary is Alpha:0, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Beta:1 selected primary Beta:1 for instance 1 (view 0)
+replica.py                 478 INFO     Beta:1 setting primaryName for view no 0 to: Beta:1
+replica.py                1985 INFO     Beta:1 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Beta:1 declares view change 0 as completed for instance 1, new primary is Beta:1, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+ledger_manager.py          890 INFO     Beta not found any ledger to catchup after 1001
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Beta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          349 INFO     Gamma found out from {'Alpha', 'Delta'} that its ledger of type 1001 is latest
+ledger_manager.py          351 INFO     Gamma found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Gamma going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Gamma reverted 0 batches before starting catch up for ledger 1001
+node.py                   1984 INFO     Gamma is updating txn to batch seqNo map after catchup to None for ledger_id 1001 
+ledger_manager.py          875 INFO     CATCH-UP: Gamma completed catching up ledger 1001, caught up 0 in total
+node.py                   2071 INFO     Gamma caught up to 0 txns in the last catchup
+node.py                   1975 INFO     CATCH-UP: Gamma does not need any more catchups
+view_changer.py            677 INFO     Gamma is sending ViewChangeDone msg to all : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]}
+view_changer.py            142 INFO     Gamma needs 1 ViewChangeDone messages
+view_changer.py            577 INFO     Gamma cannot start primary selection because has no view change quorum or no message from next primary
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Gamma:0 selected primary Alpha:0 for instance 0 (view 0)
+node.py                    763 INFO     Gamma started participating
+replica.py                 478 INFO     Gamma:0 setting primaryName for view no 0 to: Alpha:0
+replica.py                1985 INFO     Gamma:0 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Gamma:0 declares view change 0 as completed for instance 0, new primary is Alpha:0, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Gamma:1 selected primary Beta:1 for instance 1 (view 0)
+replica.py                 478 INFO     Gamma:1 setting primaryName for view no 0 to: Beta:1
+replica.py                1985 INFO     Gamma:1 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Gamma:1 declares view change 0 as completed for instance 1, new primary is Beta:1, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+ledger_manager.py          890 INFO     Gamma not found any ledger to catchup after 1001
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 1001 of size 0 with 0
+view_changer.py            371 INFO     Gamma's primary selector started processing of ViewChangeDone msg from Beta : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Gamma discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Alpha
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          349 INFO     Delta found out from {'Beta', 'Alpha'} that its ledger of type 1001 is latest
+ledger_manager.py          351 INFO     Delta found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Delta going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Delta reverted 0 batches before starting catch up for ledger 1001
+node.py                   1984 INFO     Delta is updating txn to batch seqNo map after catchup to None for ledger_id 1001 
+ledger_manager.py          875 INFO     CATCH-UP: Delta completed catching up ledger 1001, caught up 0 in total
+node.py                   2071 INFO     Delta caught up to 0 txns in the last catchup
+node.py                   1975 INFO     CATCH-UP: Delta does not need any more catchups
+view_changer.py            677 INFO     Delta is sending ViewChangeDone msg to all : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]}
+view_changer.py            142 INFO     Delta needs 1 ViewChangeDone messages
+view_changer.py            577 INFO     Delta cannot start primary selection because has no view change quorum or no message from next primary
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Delta:0 selected primary Alpha:0 for instance 0 (view 0)
+node.py                    763 INFO     Delta started participating
+replica.py                 478 INFO     Delta:0 setting primaryName for view no 0 to: Alpha:0
+replica.py                1985 INFO     Delta:0 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Delta:0 declares view change 0 as completed for instance 0, new primary is Alpha:0, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Delta:1 selected primary Beta:1 for instance 1 (view 0)
+replica.py                 478 INFO     Delta:1 setting primaryName for view no 0 to: Beta:1
+replica.py                1985 INFO     Delta:1 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Delta:1 declares view change 0 as completed for instance 1, new primary is Beta:1, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+ledger_manager.py          890 INFO     Delta not found any ledger to catchup after 1001
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Delta comparing its ledger 1001 of size 0 with 0
+view_changer.py            371 INFO     Delta's primary selector started processing of ViewChangeDone msg from Beta : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Delta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Delta's primary selector started processing of ViewChangeDone msg from Gamma : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Delta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Beta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Gamma
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+ledger_manager.py          349 INFO     Alpha found out from {'Beta', 'Gamma'} that its ledger of type 1001 is latest
+ledger_manager.py          351 INFO     Alpha found from ledger status LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} that it does not need catchup
+node.py                   1907 INFO     Alpha going to process any ordered requests before starting catchup.
+node.py                   1913 INFO     Alpha reverted 0 batches before starting catch up for ledger 1001
+node.py                   1984 INFO     Alpha is updating txn to batch seqNo map after catchup to None for ledger_id 1001 
+ledger_manager.py          875 INFO     CATCH-UP: Alpha completed catching up ledger 1001, caught up 0 in total
+node.py                   2071 INFO     Alpha caught up to 0 txns in the last catchup
+node.py                   1975 INFO     CATCH-UP: Alpha does not need any more catchups
+view_changer.py            677 INFO     Alpha is sending ViewChangeDone msg to all : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]}
+view_changer.py            142 INFO     Alpha needs 1 ViewChangeDone messages
+view_changer.py            577 INFO     Alpha cannot start primary selection because has no view change quorum or no message from next primary
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Alpha:0 selected primary Alpha:0 for instance 0 (view 0)
+node.py                    763 INFO     Alpha started participating
+replica.py                 478 INFO     Alpha:0 setting primaryName for view no 0 to: Alpha:0
+replica.py                1985 INFO     Alpha:0 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Alpha:0 declares view change 0 as completed for instance 0, new primary is Alpha:0, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+node.py                   2654 NOTIFICATION PRIMARY SELECTION: Alpha:1 selected primary Beta:1 for instance 1 (view 0)
+replica.py                 478 INFO     Alpha:1 setting primaryName for view no 0 to: Beta:1
+replica.py                1985 INFO     Alpha:1 cleaning up till (0, 0)
+node.py                   2676 NOTIFICATION VIEW CHANGE: Alpha:1 declares view change 0 as completed for instance 1, new primary is Beta:1, ledger info is [(0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'), (1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'), (2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'), (1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn')]
+ledger_manager.py          890 INFO     Alpha not found any ledger to catchup after 1001
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn', 'protocolVersion': 2, 'ledgerId': 1001, 'txnSeqNo': 0, 'viewNo': None, 'ppSeqNo': None} from Delta
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 1001 of size 0 with 0
+view_changer.py            371 INFO     Alpha's primary selector started processing of ViewChangeDone msg from Gamma : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Alpha discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Alpha's primary selector started processing of ViewChangeDone msg from Delta : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Alpha discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Beta's primary selector started processing of ViewChangeDone msg from Gamma : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Beta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Beta's primary selector started processing of ViewChangeDone msg from Delta : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Beta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Beta's primary selector started processing of ViewChangeDone msg from Alpha : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Beta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Gamma's primary selector started processing of ViewChangeDone msg from Delta : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Gamma discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Gamma's primary selector started processing of ViewChangeDone msg from Alpha : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Gamma discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+view_changer.py            371 INFO     Delta's primary selector started processing of ViewChangeDone msg from Alpha : VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]}
+message_processor.py        29 INFO     Delta discarding message VIEW_CHANGE_DONE{'viewNo': 0, 'name': 'Alpha', 'ledgerInfo': [[0, 4, 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN'], [1, 12, '7zFCD5tqFVRdiF2p2VotJgPCMLfSaLMJXAcVPsjW4bvE'], [2, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn'], [1001, 0, 'GKot5hBsd81kMupNCXHaqbhv3huEbxAFMLnpcX2hniwn']]} because it already decided primary which is Alpha:0
+ledger_manager.py          272 INFO     Alpha received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from b'.kalAk&!iFiOP&j*!@@%1R=RgBC/^c6FYMvZBpGq'
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Alpha comparing its ledger 0 of size 4 with 4
+ledger_manager.py          272 INFO     Beta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from b'.kalAk&!iFiOP&j*!@@%1R=RgBC/^c6FYMvZBpGq'
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Beta comparing its ledger 0 of size 4 with 4
+ledger_manager.py          272 INFO     Gamma received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from b'.kalAk&!iFiOP&j*!@@%1R=RgBC/^c6FYMvZBpGq'
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Gamma comparing its ledger 0 of size 4 with 4
+ledger_manager.py          272 INFO     Delta received ledger status: LEDGER_STATUS{'merkleRoot': 'AdUT5LHDLyCN8Bce5t1SKnTY2dLBvQMUaV5HCMgGgtrN', 'protocolVersion': 2, 'ledgerId': 0, 'txnSeqNo': 4, 'viewNo': None, 'ppSeqNo': None} from b'.kalAk&!iFiOP&j*!@@%1R=RgBC/^c6FYMvZBpGq'
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+ledger_manager.py         1040 INFO     Delta comparing its ledger 0 of size 4 with 4
+conftest.py                216 INFO     no nodeCount found in the module, using the default: 4
+replica.py                 377 INFO     Beta:1 set last ordered as (0, 1)
+replica.py                1749 INFO     Beta:1 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:1 set last ordered as (0, 1)
+replica.py                1749 INFO     Gamma:1 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:1 set last ordered as (0, 1)
+replica.py                1749 INFO     Delta:1 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:0 set last ordered as (0, 1)
+replica.py                1749 INFO     Alpha:0 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root 8tJkWdp9wdz3bpb5s5hPDfrjWCQTPmsFKrSdoPmTTnea, txn root ibMQDtJ57UbWHuwwZUXbTJkvV4FDNfN9XjYbTcqbn38, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:1 set last ordered as (0, 1)
+replica.py                1749 INFO     Alpha:1 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:0 set last ordered as (0, 1)
+replica.py                1749 INFO     Beta:0 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root 8tJkWdp9wdz3bpb5s5hPDfrjWCQTPmsFKrSdoPmTTnea, txn root ibMQDtJ57UbWHuwwZUXbTJkvV4FDNfN9XjYbTcqbn38, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:0 set last ordered as (0, 1)
+replica.py                1749 INFO     Gamma:0 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root 8tJkWdp9wdz3bpb5s5hPDfrjWCQTPmsFKrSdoPmTTnea, txn root ibMQDtJ57UbWHuwwZUXbTJkvV4FDNfN9XjYbTcqbn38, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:0 set last ordered as (0, 1)
+replica.py                1749 INFO     Delta:0 ordered batch request, view no 0, ppSeqNo 1, ledger 1001, state root 8tJkWdp9wdz3bpb5s5hPDfrjWCQTPmsFKrSdoPmTTnea, txn root ibMQDtJ57UbWHuwwZUXbTJkvV4FDNfN9XjYbTcqbn38, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:1 set last ordered as (0, 2)
+replica.py                1749 INFO     Beta:1 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:1 set last ordered as (0, 2)
+replica.py                1749 INFO     Gamma:1 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:1 set last ordered as (0, 2)
+replica.py                1749 INFO     Delta:1 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:0 set last ordered as (0, 2)
+replica.py                1749 INFO     Alpha:0 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root 5AeRzDuuS8GA3LR94yrT1HWY4FEsfJbnViiYtCHvS5ib, txn root 7HAxTp9qZPGDyQgTpN9pvGCR4zcSHtKJnBGGUJBXGYXA, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:1 set last ordered as (0, 2)
+replica.py                1749 INFO     Alpha:1 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:0 set last ordered as (0, 2)
+replica.py                1749 INFO     Beta:0 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root 5AeRzDuuS8GA3LR94yrT1HWY4FEsfJbnViiYtCHvS5ib, txn root 7HAxTp9qZPGDyQgTpN9pvGCR4zcSHtKJnBGGUJBXGYXA, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:0 set last ordered as (0, 2)
+replica.py                1749 INFO     Gamma:0 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root 5AeRzDuuS8GA3LR94yrT1HWY4FEsfJbnViiYtCHvS5ib, txn root 7HAxTp9qZPGDyQgTpN9pvGCR4zcSHtKJnBGGUJBXGYXA, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:0 set last ordered as (0, 2)
+replica.py                1749 INFO     Delta:0 ordered batch request, view no 0, ppSeqNo 2, ledger 1001, state root 5AeRzDuuS8GA3LR94yrT1HWY4FEsfJbnViiYtCHvS5ib, txn root 7HAxTp9qZPGDyQgTpN9pvGCR4zcSHtKJnBGGUJBXGYXA, requests ordered 1, discarded 0
+conftest.py                216 INFO     no whitelist found in the module, using the default: []
+conftest.py                216 INFO     no concerningLogLevels found in the module, using the default: [40, 50]
+----------------------------- Captured stdout call -----------------------------
+{'identifier': '6ouriXMZkLeHsuXrN1X1fd', 'state_proof': {'root_hash': 'BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU', 'multi_signature': {'value': {'txn_root_hash': '3cLdxsmyUjMrZYs2UcxgJMDvTPWATGyZqBADMuVAhyqb', 'state_root_hash': 'BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU', 'timestamp': 1535379215, 'ledger_id': 1001, 'pool_state_root_hash': '6j6MfJ3mM2MedVD3SxbeyQtFNi2x3j1d6Pr5aUsnbumy'}, 'signature': 'RWNFiLVR36P2eKXvTP7FSJR3WqpKE8H6T1o1GxgzRyPRMaqT1WL5XC5MPGrGguaSgJBrHZUN2YXmwaZ1RGdRqrqRPQRmPvCabwcnyL4M8i8mKQvrXvLYWZXs45zY9R9z6Ek6UsGndscaxjcaGtkSbcSaNRpUKZUac7qJLQMfTcYZy9', 'participants': ['Beta', 'Gamma', 'Delta']}, 'proof_nodes': '+QEZ+FGAgICAoFxUMcP+psUc5PGtdRx+MBQ3BTGB6qqbcFUbYuIt4Sp4gICAgICAgICgCVw0qndJJa5z9oEHKJPCtLuzI1QA3e6Mk/QuSWAracaAgID4UbIU5ZRld2OXZ2b1FWQ1ZMclNwYlU3WlNjdGhqTkpNUXhNczNnUkVRcndjSkMxRHNHNTo92AgMYghMOCMTOAgMYghMOCMjeAgICAgICAgICAgPhxgICAoCgRrWn/0pelRuXdGdaFTMd8gXR7SPAZn6I61tB8vnIPgICgKnVNnRbTC+ETuTGyghdI8Va76VbpVCc2uJalXuSYaKygX+ypP01Uj+EW4XNDwtQVLKYgo6k4b2d6kXb35MHZtY6AgICAgICAgIA='}, 'outputs': [{'seqNo': 2, 'address': 'mNYFWv9vvoQVCVLrSpbU7ZScthjNJMQxMs3gREQrwcJC1DsG5', 'amount': 13}, {'seqNo': 5, 'address': 'mNYFWv9vvoQVCVLrSpbU7ZScthjNJMQxMs3gREQrwcJC1DsG5', 'amount': 27}], 'reqId': 80520, 'type': '10002', 'address': 'mNYFWv9vvoQVCVLrSpbU7ZScthjNJMQxMs3gREQrwcJC1DsG5'}
+------------------------------ Captured log call -------------------------------
+replica.py                 377 INFO     Beta:1 set last ordered as (0, 3)
+replica.py                1749 INFO     Beta:1 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:1 set last ordered as (0, 3)
+replica.py                1749 INFO     Gamma:1 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:1 set last ordered as (0, 3)
+replica.py                1749 INFO     Delta:1 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:1 set last ordered as (0, 3)
+replica.py                1749 INFO     Alpha:1 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:0 set last ordered as (0, 3)
+replica.py                1749 INFO     Alpha:0 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root 9AbUdPGxNpqpfbfR1LcBaip1Xxkku1rrhq7BQLRog4c, txn root 6FzzQFgp3eimykGLXb3LboeY19sEAtVKVyWScMy1rsn4, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:0 set last ordered as (0, 3)
+replica.py                1749 INFO     Beta:0 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root 9AbUdPGxNpqpfbfR1LcBaip1Xxkku1rrhq7BQLRog4c, txn root 6FzzQFgp3eimykGLXb3LboeY19sEAtVKVyWScMy1rsn4, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:0 set last ordered as (0, 3)
+replica.py                1749 INFO     Gamma:0 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root 9AbUdPGxNpqpfbfR1LcBaip1Xxkku1rrhq7BQLRog4c, txn root 6FzzQFgp3eimykGLXb3LboeY19sEAtVKVyWScMy1rsn4, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:0 set last ordered as (0, 3)
+replica.py                1749 INFO     Delta:0 ordered batch request, view no 0, ppSeqNo 3, ledger 1001, state root 9AbUdPGxNpqpfbfR1LcBaip1Xxkku1rrhq7BQLRog4c, txn root 6FzzQFgp3eimykGLXb3LboeY19sEAtVKVyWScMy1rsn4, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:1 set last ordered as (0, 4)
+replica.py                1749 INFO     Beta:1 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:1 set last ordered as (0, 4)
+replica.py                1749 INFO     Gamma:1 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:1 set last ordered as (0, 4)
+replica.py                1749 INFO     Delta:1 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:1 set last ordered as (0, 4)
+replica.py                1749 INFO     Alpha:1 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:0 set last ordered as (0, 4)
+replica.py                1749 INFO     Alpha:0 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root CKCBu9Vxdxoi3fjfNrHKjbaMKrE94R64TGkgxtDbCgBa, txn root 8kw23ADctM54DbDVkpsEJaYsUKPb9xjVTssAfBC7v12s, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:0 set last ordered as (0, 4)
+replica.py                1749 INFO     Beta:0 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root CKCBu9Vxdxoi3fjfNrHKjbaMKrE94R64TGkgxtDbCgBa, txn root 8kw23ADctM54DbDVkpsEJaYsUKPb9xjVTssAfBC7v12s, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:0 set last ordered as (0, 4)
+replica.py                1749 INFO     Gamma:0 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root CKCBu9Vxdxoi3fjfNrHKjbaMKrE94R64TGkgxtDbCgBa, txn root 8kw23ADctM54DbDVkpsEJaYsUKPb9xjVTssAfBC7v12s, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:0 set last ordered as (0, 4)
+replica.py                1749 INFO     Delta:0 ordered batch request, view no 0, ppSeqNo 4, ledger 1001, state root CKCBu9Vxdxoi3fjfNrHKjbaMKrE94R64TGkgxtDbCgBa, txn root 8kw23ADctM54DbDVkpsEJaYsUKPb9xjVTssAfBC7v12s, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:1 set last ordered as (0, 5)
+replica.py                1749 INFO     Beta:1 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:1 set last ordered as (0, 5)
+replica.py                1749 INFO     Gamma:1 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:1 set last ordered as (0, 5)
+replica.py                1749 INFO     Delta:1 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:0 set last ordered as (0, 5)
+replica.py                1749 INFO     Alpha:0 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU, txn root 3cLdxsmyUjMrZYs2UcxgJMDvTPWATGyZqBADMuVAhyqb, requests ordered 1, discarded 0
+replica.py                 377 INFO     Alpha:1 set last ordered as (0, 5)
+replica.py                1749 INFO     Alpha:1 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root None, txn root None, requests ordered 1, discarded 0
+replica.py                 377 INFO     Beta:0 set last ordered as (0, 5)
+replica.py                1749 INFO     Beta:0 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU, txn root 3cLdxsmyUjMrZYs2UcxgJMDvTPWATGyZqBADMuVAhyqb, requests ordered 1, discarded 0
+replica.py                 377 INFO     Gamma:0 set last ordered as (0, 5)
+replica.py                1749 INFO     Gamma:0 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU, txn root 3cLdxsmyUjMrZYs2UcxgJMDvTPWATGyZqBADMuVAhyqb, requests ordered 1, discarded 0
+replica.py                 377 INFO     Delta:0 set last ordered as (0, 5)
+replica.py                1749 INFO     Delta:0 ordered batch request, view no 0, ppSeqNo 5, ledger 1001, state root BubCdnKyRFxjJA8LahSUYoHh9NXte5RCAB3XaapYBbEU, txn root 3cLdxsmyUjMrZYs2UcxgJMDvTPWATGyZqBADMuVAhyqb, requests ordered 1, discarded 0
+---------------------------- Captured log teardown -----------------------------
+conftest.py                216 INFO     no TestRunningTimeLimitSec found in the module, using the default: 100
+motor.py                    33 INFO     Delta changing status from started to stopping
+node.py                   3218 INFO     node Delta current stats
+--------------------------------------------------------
+node inbox size         : 0
+client inbox size       : 0
+age (seconds)           : 11.136022090911865
+next check for reconnect: -4.727434263098985
+node connections        : {'Beta', 'Gamma', 'Alpha'}
+f                       : 1
+master instance         : 0
+replicas                : 2
+view no                 : 0
+rank                    : 3
+msgs to replicas        : 0
+msgs to view changer    : 0
+action queue            : 0 139697744415968
+action queue stash      : 3 139697744416072
+node.py                   1064 INFO     Delta reseting...
+zstack.py                  341 NOTIFICATION stack Delta closing its listener
+zstack.py                  344 NOTIFICATION stack Delta stopped
+zstack.py                  341 NOTIFICATION stack DeltaC closing its listener
+zstack.py                  344 NOTIFICATION stack DeltaC stopped
+node.py                   1051 INFO     Delta closing key-value storages
+motor.py                    33 INFO     Delta changing status from stopping to stopped
+motor.py                    33 INFO     Gamma changing status from started to stopping
+node.py                   3218 INFO     node Gamma current stats
+--------------------------------------------------------
+node inbox size         : 0
+client inbox size       : 0
+age (seconds)           : 11.908781051635742
+next check for reconnect: -4.721851498819888
+node connections        : {'Beta', 'Alpha', 'Delta'}
+f                       : 1
+master instance         : 0
+replicas                : 2
+view no                 : 0
+rank                    : 2
+msgs to replicas        : 0
+msgs to view changer    : 0
+action queue            : 0 139697744283336
+action queue stash      : 3 139697744283440
+node.py                   1064 INFO     Gamma reseting...
+zstack.py                  341 NOTIFICATION stack Gamma closing its listener
+zstack.py                  344 NOTIFICATION stack Gamma stopped
+zstack.py                  341 NOTIFICATION stack GammaC closing its listener
+zstack.py                  344 NOTIFICATION stack GammaC stopped
+node.py                   1051 INFO     Gamma closing key-value storages
+motor.py                    33 INFO     Gamma changing status from stopping to stopped
+motor.py                    33 INFO     Beta changing status from started to stopping
+node.py                   3218 INFO     node Beta current stats
+--------------------------------------------------------
+node inbox size         : 0
+client inbox size       : 0
+age (seconds)           : 12.724831342697144
+next check for reconnect: -4.717078655958176
+node connections        : {'Alpha', 'Gamma', 'Delta'}
+f                       : 1
+master instance         : 0
+replicas                : 2
+view no                 : 0
+rank                    : 1
+msgs to replicas        : 0
+msgs to view changer    : 0
+action queue            : 0 139697744679088
+action queue stash      : 3 139697744679192
+node.py                   1064 INFO     Beta reseting...
+zstack.py                  341 NOTIFICATION stack Beta closing its listener
+zstack.py                  344 NOTIFICATION stack Beta stopped
+zstack.py                  341 NOTIFICATION stack BetaC closing its listener
+zstack.py                  344 NOTIFICATION stack BetaC stopped
+node.py                   1051 INFO     Beta closing key-value storages
+motor.py                    33 INFO     Beta changing status from stopping to stopped
+motor.py                    33 INFO     Alpha changing status from started to stopping
+node.py                   3218 INFO     node Alpha current stats
+--------------------------------------------------------
+node inbox size         : 0
+client inbox size       : 0
+age (seconds)           : 13.547183990478516
+next check for reconnect: -4.7105976566672325
+node connections        : {'Beta', 'Gamma', 'Delta'}
+f                       : 1
+master instance         : 0
+replicas                : 2
+view no                 : 0
+rank                    : 0
+msgs to replicas        : 0
+msgs to view changer    : 0
+action queue            : 0 139697761646904
+action queue stash      : 3 139697761647008
+node.py                   1064 INFO     Alpha reseting...
+zstack.py                  341 NOTIFICATION stack Alpha closing its listener
+zstack.py                  344 NOTIFICATION stack Alpha stopped
+zstack.py                  341 NOTIFICATION stack AlphaC closing its listener
+zstack.py                  344 NOTIFICATION stack AlphaC stopped
+node.py                   1051 INFO     Alpha closing key-value storages
+motor.py                    33 INFO     Alpha changing status from stopping to stopped
+looper.py                  275 NOTIFICATION Looper shutting down now...
+motor.py                    62 INFO     Alpha is already stopped
+motor.py                    62 INFO     Beta is already stopped
+motor.py                    62 INFO     Gamma is already stopped
+motor.py                    62 INFO     Delta is already stopped
+looper.py                  282 NOTIFICATION Looper shut down in 0.002 seconds.
+[31m[1m================== 1 failed, 172 deselected in 13.79 seconds ===================[0m
