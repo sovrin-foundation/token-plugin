@@ -29,20 +29,20 @@ CONS_TIME = 1518541344
 
 @pytest.fixture
 def token_handler_a(helpers):
-    return helpers.node.get_token_req_handler()
+    h = helpers.node.get_token_req_handler()
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 
 @pytest.fixture
 def token_handler_b(txnPoolNodeSet):
-    return txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
-
-
-@pytest.fixture(scope="function", autouse=True)
-def reset_token_handler(token_handler_a):
-    old_head = token_handler_a.state.committedHead
-    yield
-    token_handler_a.state.revertToHead(old_head)
-    token_handler_a.onBatchRejected()
+    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 
 @pytest.fixture(scope="module")
@@ -88,7 +88,7 @@ def test_token_req_handler_doStaticValidation_XFER_PUBLIC_success(
 
 def test_token_req_handler_doStaticValidation_GET_UTXO_success(
     helpers,
-    addresses, 
+    addresses,
     token_handler_a
 ):
     address1 = addresses[0]
@@ -268,10 +268,8 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
 
     token_handler_a.validate(request)
     token_handler_a.updateState([txn])
-
-    address1 = address1.address
-    state_key = TokenReqHandler.create_state_key(address1, seq_no)
-    key = token_handler_a.utxo_cache._create_type1_key(Output(address1, seq_no, 60))
+    state_key = TokenReqHandler.create_state_key(address1.address, seq_no)
+    key = token_handler_a.utxo_cache._create_key(Output(address1.address, seq_no, 60))
     assert token_handler_a.utxo_cache._store._has_key(key)
     try:
         token_handler_a.state.get(state_key, False)
@@ -281,26 +279,21 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
 
 def test_token_req_handler_onBatchCreated_success(
     addresses,
-    token_handler_a, 
+    token_handler_a,
     txnPoolNodeSet
 ):
     address = addresses[0]
-    output = Output(address, 10, 100)
+    output = Output(address.address, 10, 100)
     # add output to UTXO Cache
     token_handler_a.utxo_cache.add_output(output)
     state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     # run onBatchCreated
     token_handler_a.onBatchCreated(state_root)
     # Verify onBatchCreated worked properly
-    type1_key = token_handler_a.utxo_cache._create_type1_key(output)
-    type2_key = token_handler_a.utxo_cache._create_type2_key(output.address)
-
-    assert token_handler_a.utxo_cache.un_committed == [
-        (state_root, OrderedDict([
-            (type1_key, str(output.value)),
-            (type2_key, str(output.seq_no))
-        ]))
-    ]
+    key = token_handler_a.utxo_cache._create_key(output)
+    assert token_handler_a.utxo_cache.un_committed[0][0] == state_root
+    assert key in token_handler_a.utxo_cache.un_committed[0][1]
+    assert '{}:{}'.format(str(output.seq_no), str(output.value)) in token_handler_a.utxo_cache.un_committed[0][1][key]
 
 
 def test_token_req_handler_onBatchRejected_success(addresses, token_handler_a):
@@ -414,7 +407,7 @@ def test_token_req_handler_create_state_key_success(addresses, token_handler_a):
 def test_token_req_handler_sum_inputs_success(helpers, token_handler_a):
     address_instance = helpers.wallet.create_address()
     address = address_instance.address
-    
+
     # Verify no outputs
     pre_add_outputs = token_handler_a.utxo_cache.get_unspent_outputs(address)
     assert pre_add_outputs == []
