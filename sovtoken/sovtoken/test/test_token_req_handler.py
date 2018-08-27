@@ -223,7 +223,7 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(
     # Applies the MINT_PUBLIC transaction request to the UTXO cache
     token_handler_a.apply(request, CONS_TIME)
     post_apply_outputs = token_handler_a.utxo_cache.get_unspent_outputs(address.address)
-    assert post_apply_outputs[0].value == 100
+    assert post_apply_outputs[0].amount == 100
 
 
 # We expect this test should pass, but in the future, we may want to exclude this case where MINT_PUBLIC txn has INPUTS
@@ -308,7 +308,7 @@ def test_token_req_handler_onBatchCreated_success(
     key = token_handler_a.utxo_cache._create_key(output)
     assert token_handler_a.utxo_cache.un_committed[0][0] == state_root
     assert key in token_handler_a.utxo_cache.un_committed[0][1]
-    assert '{}:{}'.format(str(output.seq_no), str(output.value)) in token_handler_a.utxo_cache.un_committed[0][1][key]
+    assert '{}:{}'.format(str(output.seqNo), str(output.amount)) in token_handler_a.utxo_cache.un_committed[0][1][key]
 
 
 def test_token_req_handler_onBatchRejected_success(addresses, token_handler_a):
