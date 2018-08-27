@@ -44,7 +44,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
-        # needed then a new function should be created.
+            # needed then a new function should be created.
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
                                                     request,
