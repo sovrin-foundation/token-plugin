@@ -4,7 +4,7 @@ from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
 from plenum.common.constants import NYM
 from sovtokenfees.constants import FEES
-from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID
+from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO
 from sovtoken.exceptions import InvalidFundsError
 from plenum.common.exceptions import UnauthorizedClientRequest, InvalidClientRequest
 
@@ -25,7 +25,7 @@ def reset_token_handler(token_handler_a):
     token_handler_a.onBatchRejected()
 
 
-def test_non_existent_input_xfer(helpers, user1_token_wallet):
+def test_non_existent_input_xfer(helpers):
     """
     Expect an InvalidFundsError on a xfer request with inputs which don't
     contain a valid utxo.
@@ -36,10 +36,10 @@ def test_non_existent_input_xfer(helpers, user1_token_wallet):
     [
         address1,
         address2
-    ] = helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+    ] = helpers.wallet.create_new_addresses(2)
 
-    inputs = [[address1, 1]]
-    outputs = [[address2, 290]]
+    inputs = [{ADDRESS: address1, SEQNO: 1}]
+    outputs = [{ADDRESS: address2, AMOUNT: 290}]
 
     request = helpers.request.transfer(inputs, outputs)
 
@@ -54,7 +54,11 @@ def test_non_existent_input_non_xfer(helpers):
     """
     helpers.general.do_set_fees(VALID_FEES)
 
-    utxos = [[helpers.wallet.create_address(), 1, 10]]
+    utxos = [{
+        ADDRESS: helpers.wallet.create_address(),
+        SEQNO: 1,
+        AMOUNT: 10
+    }]
 
     request = helpers.request.nym()
     request = helpers.request.add_fees(request, utxos, 10)
