@@ -99,3 +99,5 @@
        ./run-test.sh token test_token_req_handler
     #+END_SRC
 
+** How To Contribute
+   Please follow the guide [[./doc/pull-request.org][here]]. 
