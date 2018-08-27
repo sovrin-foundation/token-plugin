@@ -2,17 +2,17 @@ import pytest
 
 from plenum.common.exceptions import RequestRejectedException
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import XFER_PUBLIC, OUTPUTS
+from sovtoken.constants import XFER_PUBLIC, OUTPUTS, ADDRESS, AMOUNT, SEQNO
 
 
 @pytest.fixture()
-def addresses(helpers, user1_token_wallet):
-    return helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
 
 
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
-    outputs = [[addresses[0], 1000]]
+    outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
     return helpers.general.do_mint(outputs)
 
 
@@ -23,8 +23,11 @@ def send_transfer_request(helpers, mint_result, fees, addresses, adjust_fees=0):
     mint_seq_no = get_seq_no(mint_result)
     fee_amount = fees[XFER_PUBLIC] + adjust_fees
 
-    inputs = [[address_giver, mint_seq_no]]
-    outputs = [[address_receiver, 100], [address_giver, 900 - fee_amount]]
+    inputs = [{ADDRESS: address_giver, SEQNO: mint_seq_no}]
+    outputs = [
+        {ADDRESS: address_receiver, AMOUNT: 100},
+        {ADDRESS: address_giver, AMOUNT: 900 - fee_amount},
+    ]
     result = helpers.general.do_transfer(inputs, outputs)
 
     return result
@@ -80,12 +83,16 @@ def test_xfer_with_sufficient_fees(
         address_receiver_utxos,
     ] = helpers.general.get_utxo_addresses(addresses)
 
-    assert address_giver_utxos == [
-        [address_giver, transfer_seq_no, 900 - fee_amount]
-    ]
-    assert address_receiver_utxos == [
-        [address_receiver, transfer_seq_no, 100]
-    ]
+    assert address_giver_utxos == [{
+        ADDRESS: address_giver,
+        SEQNO: transfer_seq_no,
+        AMOUNT: 900 - fee_amount
+    }]
+    assert address_receiver_utxos == [{
+        ADDRESS: address_receiver,
+        SEQNO: transfer_seq_no,
+        AMOUNT: 100
+    }]
 
     helpers.node.assert_deducted_fees(XFER_PUBLIC, transfer_seq_no, fee_amount)
 
@@ -100,7 +107,7 @@ def test_mint_after_paying_fees(
     xfer_result = send_transfer_request(helpers, mint_tokens, fees, addresses)
 
     address_giver = addresses[0]
-    outputs = [[address_giver, 1000]]
+    outputs = [{ADDRESS: address_giver, AMOUNT: 1000}]
     mint_result = helpers.general.do_mint(outputs)
     xfer_seq_no = get_seq_no(xfer_result)
     mint_seq_no = get_seq_no(mint_result)
@@ -108,6 +115,14 @@ def test_mint_after_paying_fees(
     utxos = helpers.general.do_get_utxo(address_giver)[OUTPUTS]
 
     assert utxos == [
-        [address_giver.address, xfer_seq_no, 900 - fees[XFER_PUBLIC]],
-        [address_giver.address, mint_seq_no, 1000],
+        {
+            ADDRESS: address_giver,
+            SEQNO: xfer_seq_no,
+            AMOUNT: 900 - fees[XFER_PUBLIC]
+        },
+        {
+            ADDRESS: address_giver,
+            SEQNO: mint_seq_no,
+            AMOUNT: 1000
+        }
     ]

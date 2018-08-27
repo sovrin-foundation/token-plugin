@@ -7,7 +7,6 @@ from plenum.common.exceptions import (RequestNackedException,
 from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, XFER_PUBLIC
 from sovtoken.test.helper import decode_proof
-from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from state.db.persistent_db import PersistentDB
@@ -98,7 +97,7 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
 
 def test_mint_after_set_fees(helpers, fees_set):
     # Try another minting after setting fees
-    address = Address()
+    address = helpers.wallet.create_address()
     mint_req = helpers.general.do_mint([[address, 60]])
     utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
     assert utxos == [[address.address, get_seq_no(mint_req), 60]]

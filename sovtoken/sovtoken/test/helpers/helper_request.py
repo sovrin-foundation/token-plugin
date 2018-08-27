@@ -17,6 +17,8 @@ class HelperRequest():
     - get_utxo
     - transfer
     - mint
+    - nym
+    - payment_signatures
     """
 
     def __init__(
@@ -59,11 +61,12 @@ class HelperRequest():
 
     def transfer(self, inputs, outputs, extra=None):
         """ Builds a transfer request. """
+        payment_signatures = self.payment_signatures(inputs, outputs)
+
         outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = [{ADDRESS: address, SEQNO: seq_no} for address, seq_no in inputs]
+        inputs_ready = self._prepare_inputs(inputs)
 
         first_address = inputs_ready[0][ADDRESS]
-        payment_signatures = self._wallet.payment_signatures(inputs, outputs)
 
         payload = {
             TXN_TYPE: XFER_PUBLIC,
@@ -125,6 +128,18 @@ class HelperRequest():
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
         return request
+
+    def payment_signatures(self, inputs, outputs):
+        """ Generate a list of payment signatures from inptus and outputs. """
+        inputs = self._prepare_inputs(inputs)
+        outputs = self._prepare_outputs(outputs)
+        signatures = []
+        for utxo in inputs:
+            to_sign = [[utxo], outputs]
+            signer = self.get_address_instance(utxo[ADDRESS]).signer
+            signature = signer.sign(to_sign)
+            signatures.append(signature)
+        return signatures
 
     def _prepare_outputs(self, outputs):
         return [

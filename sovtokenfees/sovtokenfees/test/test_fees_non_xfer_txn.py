@@ -6,7 +6,6 @@ from plenum.common.exceptions import RequestRejectedException, RequestNackedExce
 from plenum.common.txn_util import get_seq_no, get_payload_data, get_txn_time
 from plenum.common.types import f
 from plenum.test.pool_transactions.helper import sdk_build_get_txn_request
-from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO
