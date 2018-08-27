@@ -7,7 +7,7 @@ from plenum.common.exceptions import (RequestNackedException,
 from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, XFER_PUBLIC
 from sovtoken.test.helper import decode_proof
-from sovtokenfees.constants import FEES
+from sovtokenfees.constants import FEES, ADDRESS, SEQNO, AMOUNT
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from state.db.persistent_db import PersistentDB
 from state.trie.pruning_trie import Trie, rlp_encode
@@ -100,4 +100,8 @@ def test_mint_after_set_fees(helpers, fees_set):
     address = helpers.wallet.create_address()
     mint_req = helpers.general.do_mint([[address, 60]])
     utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
-    assert utxos == [[address.address, get_seq_no(mint_req), 60]]
+    assert utxos == [{
+        ADDRESS: address.address,
+        SEQNO: get_seq_no(mint_req),
+        AMOUNT: 60
+    }]
