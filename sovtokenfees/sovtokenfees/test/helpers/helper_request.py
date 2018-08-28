@@ -2,6 +2,7 @@ import sovtoken.test.helpers.helper_request as token_helper_request
 
 from plenum.common.constants import TXN_TYPE
 from sovtokenfees.constants import SET_FEES, FEES, GET_FEES
+from sovtoken.constants import AMOUNT, ADDRESS
 
 
 class HelperRequest(token_helper_request.HelperRequest):
