@@ -107,7 +107,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
+                sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         TXN_TYPE: FEE_TXN,
