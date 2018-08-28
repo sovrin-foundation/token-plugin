@@ -1,14 +1,31 @@
 from typing import NamedTuple, Set, Optional
-
-Output = NamedTuple('Output', [('address', str), ('seq_no', int),
-                               ('value', Optional[int])])
+import json
 
 
-def less_than(self, other):
-    return self.seq_no < other.seq_no
+class Output:
+    def __init__(self, address: str, seq_no: str, value: Optional[int]):
+        self.address = address
+        self.seqNo = seq_no
+        self.amount = value
 
-# This is added to make this sortable by python's heap implementation
-Output.__lt__ = less_than
+    def less_than(self, other):
+        return self.seqNo < other.seqNo
+
+    def __lt__(self, other):
+        return self.less_than(other)
+
+    def __repr__(self):
+        return json.dumps(self.__dict__)
+
+    def __eq__(self, other):
+        return isinstance(other, Output) \
+               and self.address == other.address \
+               and self.seqNo == other.seqNo \
+               and self.amount == other.amount
+
+    def __hash__(self) -> int:
+        return hash(self.address) + hash(self.seqNo) + hash(self.amount)
+
 
 
 OutputList = NamedTuple("OutputList",

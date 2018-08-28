@@ -44,7 +44,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
-        # needed then a new function should be created.
+            # needed then a new function should be created.
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
                                                     request,
@@ -68,22 +68,36 @@ class TokenReqHandler(LedgerRequestHandler):
         TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs, sum_outputs, request)
 
     @staticmethod
-    def validate_given_inputs_outputs(inputs, outputs, expected_output, request,
+    def validate_given_inputs_outputs(inputs_sum, outputs_sum, required_amount, request,
                                       error_msg_suffix: Optional[str]=None):
-        if inputs == expected_output:
+        """
+        Checks three sum values against simple set of rules. inputs_sum must be equal to required_amount. Exceptions
+        are raise if it is not equal. The outputs_sum is pass not for checks but to be included in error messages.
+        This is confusing but is required in cases where the required amount is different then the sum of outputs (
+        in the case of fees).
+
+        :param inputs_sum: the sum of inputs
+        :param outputs_sum: the sum of outputs
+        :param required_amount: the required amount to validate (could be equal to output_sum, but may be different)
+        :param request: the request that is being validated
+        :param error_msg_suffix: added message to the error message
+        :return: returns if valid or will raise an exception
+        """
+
+        if inputs_sum == required_amount:
             return  # Equal is valid
-        elif inputs > expected_output:
+        elif inputs_sum > required_amount:
             error = 'Extra funds, sum of inputs is {}' \
-                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+                    'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
                                   getattr(request, f.REQ_ID.nm, None),
                                   error)
 
-        elif inputs < expected_output:
+        elif inputs_sum < required_amount:
             error = 'Insufficient funds, sum of inputs is {}' \
-                    'but required is {}. sum of outputs: {}'.format(inputs, outputs, expected_output)
+                    'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
@@ -129,24 +143,24 @@ class TokenReqHandler(LedgerRequestHandler):
         txn = reqToTxn(req)
         if req.operation[TXN_TYPE] == XFER_PUBLIC:
             req.operation[SIGS] = sigs
-            sigs = [(i[0], s) for i, s in zip(req.operation[INPUTS], sigs)]
+            sigs = [(i["address"], s) for i, s in zip(req.operation[INPUTS], sigs)]
             add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn
 
     def _update_state_mint_public_txn(self, txn, is_committed=False):
         payload = get_payload_data(txn)
         seq_no = get_seq_no(txn)
-        for addr, amount in payload[OUTPUTS]:
-            self._add_new_output(Output(addr, seq_no, amount),
+        for output in payload[OUTPUTS]:
+            self._add_new_output(Output(output["address"], seq_no, output["amount"]),
                                  is_committed=is_committed)
 
     def _update_state_xfer_public(self, txn, is_committed=False):
         payload = get_payload_data(txn)
-        for addr, seq_no in payload[INPUTS]:
-            self._spend_input(addr, seq_no, is_committed=is_committed)
-        for addr, amount in payload[OUTPUTS]:
+        for inp in payload[INPUTS]:
+            self._spend_input(inp["address"], inp["seqNo"], is_committed=is_committed)
+        for output in payload[OUTPUTS]:
             seq_no = get_seq_no(txn)
-            self._add_new_output(Output(addr, seq_no, amount),
+            self._add_new_output(Output(output["address"], seq_no, output["amount"]),
                                  is_committed=is_committed)
 
     def updateState(self, txns, isCommitted=False):
@@ -243,7 +257,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def sum_outputs(request: Request) -> int:
-        return sum(o[1] for o in request.operation[OUTPUTS])
+        return sum(o["amount"] for o in request.operation[OUTPUTS])
 
     @staticmethod
     def spend_input(state, utxo_cache, address, seq_no, is_committed=False):
@@ -254,7 +268,9 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def add_new_output(state, utxo_cache, output: Output, is_committed=False):
-        address, seq_no, amount = output
+        address = output.address
+        seq_no = output.seqNo
+        amount = output.amount
         state_key = TokenReqHandler.create_state_key(address, seq_no)
         state.set(state_key, str(amount).encode())
         utxo_cache.add_output(output, is_committed=is_committed)
