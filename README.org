@@ -8,7 +8,7 @@
 
   * Requires docker image `indy_pool` to be already built. https://github.com/hyperledger/indy-sdk
 
-  *run the following command: 
+  * run the following command: 
 
   #+BEGIN_SRC bash
     ./build_indy_pool
