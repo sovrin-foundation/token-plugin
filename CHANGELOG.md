@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+* refactor to unify validation between fees and payments
+* relies on stable versions of all artifacts
+* Number of trustees required for MINT transaction set to 3
+* UTXO cache optimization
+* additional testing
+* bugfixes
+
 ## 0.9.0
 
 * Significant refactoring and updated tests

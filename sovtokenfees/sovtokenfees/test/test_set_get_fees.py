@@ -5,9 +5,8 @@ from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException)
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import OUTPUTS, XFER_PUBLIC
+from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT
 from sovtoken.test.helper import decode_proof
-from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from state.db.persistent_db import PersistentDB
@@ -48,6 +47,25 @@ def test_non_trustee_set_fees(helpers):
     fees_request = helpers.wallet.sign_request_stewards(fees_request)
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([fees_request])
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
+
+
+def test_set_fees_not_enough_trustees(helpers):
+    """
+    Setting fees requires at least three trustees
+    """
+    fees = {
+        NYM: 1,
+        XFER_PUBLIC: 2
+    }
+    fees_request = helpers.request.set_fees(fees)
+    fees_request.signatures.popitem()
+    assert len(fees_request.signatures) == 2
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([fees_request])
+    
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
 
@@ -98,7 +116,12 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
 
 def test_mint_after_set_fees(helpers, fees_set):
     # Try another minting after setting fees
-    address = Address()
-    mint_req = helpers.general.do_mint([[address, 60]])
+    address = helpers.wallet.create_address()
+    outputs = [{ADDRESS: address, AMOUNT: 60}]
+    mint_req = helpers.general.do_mint(outputs)
     utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
-    assert utxos == [[address.address, get_seq_no(mint_req), 60]]
+    assert utxos == [{
+        ADDRESS: address,
+        SEQNO: get_seq_no(mint_req),
+        AMOUNT: 60
+    }]

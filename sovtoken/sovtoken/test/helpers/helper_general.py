@@ -1,4 +1,4 @@
-from sovtoken.constants import RESULT, OUTPUTS
+from sovtoken.constants import RESULT, OUTPUTS, SEQNO
 
 
 class HelperGeneral():
@@ -24,6 +24,7 @@ class HelperGeneral():
 
     def get_utxo_addresses(self, addresses):
         """ Get and return the utxos for each address. """
+<<<<<<< HEAD
         def replace_utxos_address(utxos, address):
             for utxo in utxos:
                 utxo["address"] = address.address
@@ -40,6 +41,12 @@ class HelperGeneral():
             utxos_with_address_object.append(address_utxos)
 
         return utxos_with_address_object
+=======
+        requests = [self._request.get_utxo(address) for address in addresses]
+        responses = self._sdk.send_and_check_request_objects(requests)
+        utxos = [response[RESULT][OUTPUTS] for _request, response in responses]
+        return utxos
+>>>>>>> master
 
     def do_mint(self, outputs):
         """ Build and send a mint request. """
@@ -63,12 +70,6 @@ class HelperGeneral():
     # Private Methods
     # =============
 
-    def _get_utxo_addresses(self, addresses):
-        requests = [self._request.get_utxo(address) for address in addresses]
-        responses = self._sdk.send_and_check_request_objects(requests)
-        utxos = [response[RESULT][OUTPUTS] for _request, response in responses]
-        return utxos
-
     def _send_get_first_result(self, request_object):
         responses = self._sdk.send_and_check_request_objects([request_object])
         result = self._sdk.get_first_result(responses)
@@ -76,5 +77,9 @@ class HelperGeneral():
 
     def _sort_utxos(self, utxos):
         """ Sort utxos by the seq_no. """
+<<<<<<< HEAD
         utxos.sort(key=lambda utxo: utxo["seqNo"])
+=======
+        utxos.sort(key=lambda utxo: utxo[SEQNO])
+>>>>>>> master
         return utxos
