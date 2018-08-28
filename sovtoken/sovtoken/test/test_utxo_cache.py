@@ -67,7 +67,7 @@ def test_get_all_unspent_outputs(utxo_cache):
     num_addresses = 5
     num_outputs_per_address = 4
     address_outputs = gen_outputs(num_addresses)
-    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seq_no * (i + 1),
+    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seqNo * (i + 1),
                                                  ao.value * (i + 1)) for i in
                                           range(num_outputs_per_address)]
                                          for ao in address_outputs]))

@@ -1,5 +1,6 @@
 import pytest
 
+from sovtoken.constants import ADDRESS, SEQNO, AMOUNT
 from sovtokenfees.client_authnr import FeesAuthNr
 from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
@@ -24,7 +25,6 @@ class FeeData:
         self.reqId = VALID_REQID
         self.identifier = VALID_IDENTIFIER
         self.signatures = SIGNATURES
-    pass
 
     @property
     def digest(self):
@@ -155,8 +155,14 @@ def test_verify_signature_success():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 1]], [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 9]],
-                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
+    inputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', SEQNO: 1}]
+    outputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', AMOUNT: 9}]
+    signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
+    setattr(msg, "fees", {
+        "inputs": inputs,
+        "outputs": outputs,
+        "signatures": signatures,
+    })
 
     fees_authenticator.verify_signature(msg)
 
@@ -182,8 +188,14 @@ def test_verify_signature_invalid_signature_format(node):
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
-                          ['000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']])
+    inputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', SEQNO: 2}]
+    outputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', AMOUNT: 10}]
+    signatures = ['000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']
+    setattr(msg, "fees", {
+        "inputs": inputs,
+        "outputs": outputs,
+        "signatures": signatures
+    })
 
     with pytest.raises(InvalidSignatureFormat):
         fees_authenticator.verify_signature(msg)
@@ -197,8 +209,14 @@ def test_verify_signature_incorrect_signatures():
     msg = FeeData()
     msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    setattr(msg, "fees", [[['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 2]], [['2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', 10]],
-                          ['5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']])
+    inputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', SEQNO: 2}]
+    outputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', AMOUNT: 10}]
+    signatures = ['5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']
+    setattr(msg, "fees", {
+        "inputs": inputs,
+        "outputs": outputs,
+        "signatures": signatures
+    })
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)
@@ -216,11 +234,21 @@ def test_verify_signature_mismatch_of_signatures():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 1],
-                           ['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 2]],
-                          [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 4],
-                           ['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 5]],
-                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
+    address = '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1'
+    inputs = [
+        {ADDRESS: address, SEQNO: 1},
+        {ADDRESS: address, SEQNO: 1}
+    ]
+    outputs = [
+        {ADDRESS: address, AMOUNT: 4},
+        {ADDRESS: address, AMOUNT: 5},
+    ]
+    signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
+    setattr(msg, "fees", {
+        "inputs": inputs,
+        "outputs": outputs,
+        "signatures": signatures
+    })
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)
@@ -238,8 +266,15 @@ def test_verify_signature_sequence_order_wrong():
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    setattr(msg, "fees", [[['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 2]], [['2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', 9]],
-                          ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']])
+    address = '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1'
+    inputs = [{ADDRESS: address, SEQNO: 2}]
+    outputs = [{ADDRESS: address, AMOUNT: 9}]
+    signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
+    setattr(msg, "fees", {
+        "inputs": inputs,
+        "outputs": outputs,
+        "signatures": signatures
+    })
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)

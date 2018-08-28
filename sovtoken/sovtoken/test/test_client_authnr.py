@@ -161,7 +161,7 @@ def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
 def test_authenticate_xfer_success(node, user2_token_wallet, user2_address, user1_address):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": user2_address, "amount": 10}]
     request = xfer_request(inputs, outputs)
     req_data = request.as_dict
     correct_sigs = token_authnr.authenticate_xfer(req_data, AddressSigVerifier)

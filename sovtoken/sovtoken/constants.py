@@ -6,6 +6,8 @@ EXTRA = 'extra'
 ADDRESS = 'address'
 SIGS = 'signatures'
 RESULT = 'result'
+AMOUNT = 'amount'
+SEQNO = 'seqNo'
 
 TOKEN_LEDGER_ID = 1001
 
