@@ -146,6 +146,7 @@ def test_authenticate_invalid():
 
 # ------------------------------------------------------------------------------------
 # the signature and fees sections are populated with correct data
+@pytest.mark.skip(reason = "Skipped until libsovtoken updates formats")
 def test_verify_signature_success():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
