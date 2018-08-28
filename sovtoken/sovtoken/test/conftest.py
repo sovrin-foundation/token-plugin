@@ -94,8 +94,8 @@ def public_minting(
     address_seller = seller_token_wallet.addresses[seller_address]
 
     outputs = [
-        [address_sf, total_mint - seller_gets],
-        [address_seller, seller_gets]
+        {"address": address_sf.address, "amount": total_mint - seller_gets},
+        {"address": address_seller.address, "amount": seller_gets}
     ]
 
     return helpers.general.do_mint(outputs)

@@ -14,7 +14,7 @@ def addresses(helpers, user1_token_wallet):
 
 @pytest.fixture
 def initial_mint(helpers, addresses):
-    outputs = [[address, 100] for address in addresses]
+    outputs = [{"address": address, "amount": 100} for address in addresses]
     mint_request = helpers.request.mint(outputs)
     responses = helpers.sdk.send_and_check_request_objects([mint_request])
     result = helpers.sdk.get_first_result(responses)
@@ -31,8 +31,8 @@ def test_multiple_inputs_with_1_incorrect_input_sig(  # noqa
 
     # Multiple inputs are used in a transaction but one of the inputs
     # has incorrect signature
-    inputs = [[address1, mint_seq_no], [address2, mint_seq_no]]
-    outputs = [[address3, 200]]
+    inputs = [{"address": address1, "seqNo": mint_seq_no}, {"address": address2, "seqNo": mint_seq_no}]
+    outputs = [{"address": address3, "amount": 200}]
 
     request = helpers.request.transfer(inputs, outputs)
     operation = getattr(request, OPERATION)
@@ -52,8 +52,8 @@ def test_multiple_inputs_with_1_missing_sig(  # noqa
     mint_seq_no = get_seq_no(initial_mint)
     [address1, address2, address3, *_] = addresses
 
-    inputs = [[address1, mint_seq_no], [address2, mint_seq_no]]
-    outputs = [[address3, 200]]
+    inputs = [{"address": address1, "seqNo": mint_seq_no}, {"address": address2, "seqNo": mint_seq_no}]
+    outputs = [{"address": address3, "amount": 200}]
 
     # Remove signature for 2nd input
     request = helpers.request.transfer(inputs, outputs)
@@ -74,13 +74,13 @@ def test_inputs_contain_signature_not_in_inputs(
     mint_seq_no = get_seq_no(initial_mint)
     [address1, address2, address3, address4, *_] = addresses
 
-    inputs = [[address1, mint_seq_no], [address2, mint_seq_no]]
-    outputs = [[address3, 200]]
+    inputs = [{"address": address1, "seqNo": mint_seq_no}, {"address": address2, "seqNo": mint_seq_no}]
+    outputs = [{"address": address3, "amount": 200}]
 
     request = helpers.request.transfer(inputs, outputs)
 
     extra_sig = helpers.wallet.payment_signatures(
-        [[address4, mint_seq_no]],
+        [{"address": address4, "seqNo": mint_seq_no}],
         outputs
     )[0]
 
@@ -100,14 +100,14 @@ def test_multiple_inputs_outputs_without_change(
     mint_seq_no = get_seq_no(initial_mint)
 
     inputs = [
-        [address1, mint_seq_no],
-        [address2, mint_seq_no],
-        [address3, mint_seq_no],
+        {"address": address1, "seqNo": mint_seq_no},
+        {"address": address2, "seqNo": mint_seq_no},
+        {"address": address3, "seqNo": mint_seq_no},
     ]
 
     outputs = [
-        [address4, 200],
-        [address5, 100],
+        {"address": address4, "amount": 200},
+        {"address": address5, "amount": 100},
     ]
 
     request = helpers.request.transfer(inputs, outputs)
@@ -128,12 +128,12 @@ def test_multiple_inputs_outputs_without_change(
     assert address2_utxos == []
     assert address3_utxos == []
     assert address4_utxos == [
-        {"address": address4.address, "seqNo": mint_seq_no, "amount": 100},
-        {"address": address4.address, "seqNo": xfer_seq_no, "amount": 200},
+        {"address": address4, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address4, "seqNo": xfer_seq_no, "amount": 200},
     ]
     assert address5_utxos == [
-        {"address": address5.address, "seqNo": mint_seq_no, "amount": 100},
-        {"address": address5.address, "seqNo": xfer_seq_no, "amount": 100},
+        {"address": address5, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address5, "seqNo": xfer_seq_no, "amount": 100},
     ]
 
 
@@ -147,15 +147,15 @@ def test_multiple_inputs_outputs_with_change(
     mint_seq_no = get_seq_no(initial_mint)
 
     inputs = [
-        [address1, mint_seq_no],
-        [address2, mint_seq_no],
-        [address3, mint_seq_no],
+        {"address": address1, "seqNo": mint_seq_no},
+        {"address": address2, "seqNo": mint_seq_no},
+        {"address": address3, "seqNo": mint_seq_no},
     ]
 
     outputs = [
-        [address4, 270],
-        [address5, 10],
-        [address1, 20]
+        {"address": address4, "amount": 270},
+        {"address": address5, "amount": 10},
+        {"address": address1, "amount": 20},
     ]
 
     request = helpers.request.transfer(inputs, outputs)
@@ -172,14 +172,14 @@ def test_multiple_inputs_outputs_with_change(
         address5_utxos
     ] = helpers.general.get_utxo_addresses(addresses)
 
-    assert address1_utxos == [{"address": address1.address, "seqNo": xfer_seq_no, "amount": 20}]
+    assert address1_utxos == [{"address": address1, "seqNo": xfer_seq_no, "amount": 20}]
     assert address2_utxos == []
     assert address3_utxos == []
     assert address4_utxos == [
-        {"address": address4.address, "seqNo": mint_seq_no, "amount": 100},
-        {"address": address4.address, "seqNo": xfer_seq_no, "amount": 270},
+        {"address": address4, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address4, "seqNo": xfer_seq_no, "amount": 270},
     ]
     assert address5_utxos == [
-        {"address": address5.address, "seqNo": mint_seq_no, "amount": 100},
-        {"address": address5.address, "seqNo": xfer_seq_no, "amount": 10},
+        {"address": address5, "seqNo": mint_seq_no, "amount": 100},
+        {"address": address5, "seqNo": xfer_seq_no, "amount": 10},
     ]

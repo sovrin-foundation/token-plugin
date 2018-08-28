@@ -10,6 +10,6 @@ def assert_address_contains(helpers, addresses, name, expected):
     total = sum(map(lambda utxo: utxo["amount"], utxos))
 
     template = "{} address {} has {} sovatoms."
-    demo_logger.log_blue(template.format(name, address.address, total))
+    demo_logger.log_blue(template.format(name, address, total))
 
     assert total == expected

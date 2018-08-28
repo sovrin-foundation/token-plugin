@@ -42,7 +42,7 @@ class HelperWallet():
         """ Create and add n new addresses to a wallet. """
         addresses = self.create_new_addresses(n)
         for address in addresses:
-            wallet.add_new_address(address=address)
+            wallet.add_new_address(address=self.address_map[address])
 
         return addresses
 
@@ -77,9 +77,9 @@ class HelperWallet():
         """ Generate a list of payment signatures from inptus and outputs. """
         outputs = self._prepare_outputs(outputs)
         signatures = []
-        for [address, seq_no] in inputs:
-            to_sign = [[{"address": address.address, "seqNo": seq_no}], outputs]
-            signature = address.signer.sign(to_sign)
+        for inp in inputs:
+            to_sign = [[inp], outputs]
+            signature = self.address_map[inp["address"]].signer.sign(to_sign)
             signatures.append(signature)
         return signatures
 
@@ -99,4 +99,4 @@ class HelperWallet():
         return request
 
     def _prepare_outputs(self, outputs):
-        return [{"address": address.address, "amount": amount} for address, amount in outputs]
+        return [{"address": address, "amount": amount} for address, amount in outputs]

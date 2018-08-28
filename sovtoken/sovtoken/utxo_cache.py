@@ -69,15 +69,9 @@ class UTXOCache(OptimisticKVStore):
     def sum_inputs(self, inputs: list, is_committed=False):
         addresses = defaultdict(set)
         for inp in inputs:
-<<<<<<< HEAD
             addr = inp["address"]
             seq_no = inp["seqNo"]
             addresses[addr].add(seq_no)
-=======
-            address = inp["address"]
-            seq_no = inp["seqNo"]
-            addresses[address].add(seq_no)
->>>>>>> master
 
         output_val = 0
         for addr, seq_nos in addresses.items():

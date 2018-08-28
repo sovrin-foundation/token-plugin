@@ -5,66 +5,64 @@ import pytest
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from sovtoken.constants import OUTPUTS, ADDRESS
-from sovtoken.test.wallet import Address
 
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
 
 def test_empty_address(helpers):
-    address = Address()
-    address.address = ''
     with pytest.raises(RequestNackedException):
-        helpers.general.do_get_utxo(address)
+        helpers.general.do_get_utxo('')
 
 
-def test_invalid_address(helpers):
+def test_invalid_address(helpers, addresses):
+    address = addresses[0]
     # Replace three characters in address
-    address = Address()
-    address.address = address.address[:3] + "000" + address.address[6:]
+    address = address[:3] + "000" + address[6:]
     with pytest.raises(RequestNackedException):
         helpers.general.do_get_utxo(address)
 
 
-def test_address_no_utxos(helpers):
-    response = helpers.general.do_get_utxo(Address())
+def test_address_no_utxos(helpers, addresses):
+    response = helpers.general.do_get_utxo(addresses[0])
     assert response[OUTPUTS] == []
 
 
-def test_address_utxos(helpers):
+def test_address_utxos(helpers, addresses):
     """ Mint tokens and get the utxos for an address """
 
-    address = Address()
-    outputs = [[address, 1000]]
+    address = addresses[0]
+    outputs = [{"address": address, "amount": 1000}]
     mint_result = helpers.general.do_mint(outputs)
 
     mint_seq_no = get_seq_no(mint_result)
     get_utxo_result = helpers.general.do_get_utxo(address)
 
-    assert get_utxo_result[OUTPUTS] == [{"address": address.address, "seqNo": mint_seq_no, "amount": 1000}]
+    assert get_utxo_result[OUTPUTS] == [{"address": address, "seqNo": mint_seq_no, "amount": 1000}]
 
 
 # We can't handle multiple addresses at the moment because it requires a more
 # complicated state proof. So this test has been changed to show that multiple
 # addresses are not accepted.
-def test_get_multiple_addresses(helpers):
-    addresses = [Address(), Address()]
+def test_get_multiple_addresses(helpers, addresses):
     
     # Create a request with a single address and then replace it to check for
     # multiple addresses.
     request = helpers.request.get_utxo(addresses[0])
-    request.operation[ADDRESS] = [address.address for address in addresses]
+    request.operation[ADDRESS] = [address for address in addresses]
 
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
 
 
-def test_get_utxo_utxos_in_order(helpers):
+def test_get_utxo_utxos_in_order(helpers, addresses):
     """
     In response of GET_UTXO make sure all UTXOs are ordered in the same way; ascending order of seq_no
     """
 
-    address_1 = Address()
-    address_2 = Address()
+    address_1, address_2 = addresses
     total = 1000
-    outputs = [[address_1, total]]
+    outputs = [{"address": address_1, "amount": total}]
     mint_result = helpers.general.do_mint(outputs)
 
     seq_no = get_seq_no(mint_result)
@@ -73,11 +71,11 @@ def test_get_utxo_utxos_in_order(helpers):
     for _ in range(10):
         amount = randint(1, 10)
         inputs = [
-            [address_1, seq_no],
+            {"address": address_1, "seqNo": seq_no},
         ]
         outputs = [
-            [address_2, amount],
-            [address_1, remaining - amount]
+            {"address": address_2, "amount": amount},
+            {"address": address_1, "amount": remaining - amount}
         ]
         request = helpers.request.transfer(inputs, outputs)
         response = helpers.sdk.send_and_check_request_objects([request])
