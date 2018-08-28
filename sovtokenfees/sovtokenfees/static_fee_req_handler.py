@@ -20,7 +20,7 @@ from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC
+    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \

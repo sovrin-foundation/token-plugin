@@ -3,7 +3,6 @@ import json
 from indy import did
 from plenum.client.wallet import Wallet
 from plenum.common.util import randomString
-from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
 from sovtoken.test.wallet import Address
 
 
