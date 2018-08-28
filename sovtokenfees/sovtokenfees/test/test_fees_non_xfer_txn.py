@@ -124,7 +124,7 @@ def test_fees_incorrect_sig(
     )
     fees = getattr(request, FEES)
     # reverse the signatures to make them incorrect
-    fees["signatures"] = [sig[::-1] for sig in fees["signatures"]]
+    fees[2] = [sig[::-1] for sig in fees[2]]
     setattr(request, FEES, fees)
 
     with pytest.raises(RequestNackedException):
@@ -149,7 +149,7 @@ def test_fees_insufficient_sig(
     )
     fees = getattr(request, FEES)
     # set only one signature instead of two
-    fees["signatures"] = []
+    fees[2] = []
     setattr(request, FEES, fees)
 
     with pytest.raises(RequestNackedException):
@@ -271,7 +271,7 @@ def test_fees_utxo_reuse(
         outputs,
         req.digest
     )
-    fees = {"inputs": inputs, "outputs": outputs, "signatures": fee_sigs}
+    fees = [inputs, outputs, fee_sigs]
     setattr(req, FEES, fees)
 
     with pytest.raises(RequestRejectedException):

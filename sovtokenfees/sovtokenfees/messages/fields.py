@@ -1,10 +1,9 @@
-from plenum.common.messages.fields import MapField, AnyMapField, \
+from plenum.common.messages.fields import MapField, \
     NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField
 from plenum.config import SIGNATURE_FIELD_LIMIT
 
 from sovtoken.messages.fields import PublicInputsField, \
     PublicOutputsField
-from sovtoken.constants import INPUTS, SIGS, OUTPUTS
 
 
 class FeesStructureField(MapField):
@@ -13,33 +12,33 @@ class FeesStructureField(MapField):
                          **kwargs)
 
 
-class TxnFeesField(AnyMapField):
-    _base_types = (dict,)
+class TxnFeesField(FixedLengthField):
+    _base_types = (list, tuple)
     inputs_validator = PublicInputsField()
     outputs_validator = PublicOutputsField()
     signatures_validator = IterableField(SignatureField(max_length=SIGNATURE_FIELD_LIMIT))
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(length=3, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
             return error
 
-        error = self.inputs_validator.validate(val[INPUTS])
+        error = self.inputs_validator.validate(val[0])
         if error:
             return error
 
-        error = self.outputs_validator.validate(val[OUTPUTS])
+        error = self.outputs_validator.validate(val[1])
         if error:
             return error
 
-        error = self.signatures_validator.validate(val[SIGS])
+        error = self.signatures_validator.validate(val[2])
         if error:
             return error
 
-        if len(val[INPUTS]) != len(val[SIGS]):
+        if len(val[0]) != len(val[2]):
             return 'Number of signatures and number of inputs should match but are {} and {} ' \
-                   'respectively.'.format(len(val[SIGS]), len(val[INPUTS]))
+                   'respectively.'.format(len(val[2]), len(val[0]))
 

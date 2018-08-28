@@ -1,6 +1,5 @@
 import pytest
 
-from sovtoken.constants import ADDRESS, SEQNO, AMOUNT
 from sovtokenfees.client_authnr import FeesAuthNr
 from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
@@ -159,11 +158,7 @@ def test_verify_signature_success():
     inputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', SEQNO: 1}]
     outputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', AMOUNT: 9}]
     signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
-    setattr(msg, "fees", {
-        "inputs": inputs,
-        "outputs": outputs,
-        "signatures": signatures,
-    })
+    setattr(msg, "fees", [inputs, outputs, signatures])
 
     fees_authenticator.verify_signature(msg)
 
@@ -192,11 +187,8 @@ def test_verify_signature_invalid_signature_format(node):
     inputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', SEQNO: 2}]
     outputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', AMOUNT: 10}]
     signatures = ['000kKoLEAP1YCYULYqxSNKvcYigGG1fHRMbZ6N1byFhaRut4P5RDF2KGR73ffgQoyzMHabrcTvrRGHhEfQ6ZdzxB']
-    setattr(msg, "fees", {
-        "inputs": inputs,
-        "outputs": outputs,
-        "signatures": signatures
-    })
+    setattr(msg, "fees", [inputs, outputs, signatures
+    ])
 
     with pytest.raises(InvalidSignatureFormat):
         fees_authenticator.verify_signature(msg)
@@ -213,11 +205,7 @@ def test_verify_signature_incorrect_signatures():
     inputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', SEQNO: 2}]
     outputs = [{ADDRESS: '2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es', AMOUNT: 10}]
     signatures = ['5wuXGeWyrM2xcp68rRsYEaegaguEJBBTDQioeSgDv5jMFeaeSLPAcMs4XwcxNXBwoUAUWgxSMN9WUnZ7ADctdPyQ']
-    setattr(msg, "fees", {
-        "inputs": inputs,
-        "outputs": outputs,
-        "signatures": signatures
-    })
+    setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)
@@ -245,11 +233,7 @@ def test_verify_signature_mismatch_of_signatures():
         {ADDRESS: address, AMOUNT: 5},
     ]
     signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
-    setattr(msg, "fees", {
-        "inputs": inputs,
-        "outputs": outputs,
-        "signatures": signatures
-    })
+    setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)
@@ -271,11 +255,7 @@ def test_verify_signature_sequence_order_wrong():
     inputs = [{ADDRESS: address, SEQNO: 2}]
     outputs = [{ADDRESS: address, AMOUNT: 9}]
     signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
-    setattr(msg, "fees", {
-        "inputs": inputs,
-        "outputs": outputs,
-        "signatures": signatures
-    })
+    setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
         fees_authenticator.verify_signature(msg)

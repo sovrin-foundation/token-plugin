@@ -5,7 +5,6 @@ from plenum.common.verifier import DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from sovtokenfees import AcceptableWriteTypes, AcceptableQueryTypes
 from sovtokenfees.constants import SET_FEES
-from sovtoken.constants import INPUTS, OUTPUTS, SIGS
 from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 
 
@@ -49,6 +48,6 @@ class FeesAuthNr(CoreAuthNr):
             return
 
         digest = msg.digest
-        return TokenAuthNr.verify_signtures_on_payments(fees[INPUTS], fees[OUTPUTS], fees[SIGS],
+        return TokenAuthNr.verify_signtures_on_payments(fees[0], fees[1], fees[2],
                                                         AddressSigVerifier, digest)
 

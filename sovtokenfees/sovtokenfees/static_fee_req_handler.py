@@ -17,7 +17,6 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
     get_req_id
 from plenum.common.types import f, OPERATION
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
-from sovtoken.constants import INPUTS, OUTPUTS, SIGS, ADDRESS, AMOUNT, SEQNO
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
@@ -70,16 +69,13 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     @staticmethod
     def has_fees(request) -> bool:
-        return hasattr(request, FEES) and isinstance(request.fees, dict) \
-               and len(request.fees) > 0 and isinstance(request.fees[INPUTS], list) \
-               and len(request.fees[INPUTS]) > 0
+        return hasattr(request, FEES) and isinstance(request.fees, list) \
+               and len(request.fees) > 0 and isinstance(request.fees[0], list) \
+               and len(request.fees[0]) > 0
 
     @staticmethod
     def get_change_for_fees(request) -> list:
-        try:
-            return request.fees[OUTPUTS]
-        except KeyError:
-            return []
+        return request.fees[1] if len(request.fees) >= 2 else []
 
     @staticmethod
     def get_ref_for_txn_fees(ledger_id, seq_no):
@@ -107,14 +103,11 @@ class StaticFeesReqHandler(FeeReqHandler):
                 self.deducted_fees[fees_key] = self.deducted_fees_xfer.pop(request.key)
         else:
             if self.has_fees(request):
-                fees_obj = getattr(request, f.FEES.nm)
-                inputs = fees_obj[INPUTS]
-                outputs = fees_obj[OUTPUTS]
-                signatures = fees_obj[SIGS]
+                inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
+                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         TXN_TYPE: FEE_TXN,
@@ -226,7 +219,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
             try:
-                sum_inputs = self.utxo_cache.sum_inputs(request.fees[INPUTS], is_committed=False)
+                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
             except UTXOError as ex:
                 raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
