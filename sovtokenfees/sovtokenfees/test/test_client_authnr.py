@@ -28,7 +28,7 @@ class FeeData:
 
     @property
     def digest(self):
-        return "c15db202e391a35fbf5eb7203bba015fa5142f49dda87041ecf25271384e70d7"
+        return "5b87c6c6f36df259af3682abdee5ce072941186b8f03abde24ee362a19f5b5b5"
 
 
 # ------------------------------------------------------------------------------------
@@ -146,19 +146,18 @@ def test_authenticate_invalid():
 
 # ------------------------------------------------------------------------------------
 # the signature and fees sections are populated with correct data
-@pytest.mark.skip(reason = "Skipped until libsovtoken updates formats")
 def test_verify_signature_success():
     state = pruning_state()
     fees_authenticator = FeesAuthNr(state, None)
 
     msg = FeeData()
-    msg.signatures = {'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
+    msg.signatures = {'V4SGRU86Z58d6TV7PBUe6f': 'dYZZFV6Fk59bFaNFaKwXfY9AqP6cr3wqTSPjoRLoLcgAi28RNErweRXRskzZ4cwRyzBCpZyzewmSPdrQb1oES83'}
 
     #                                 1         2         3         4   4
     #                        12345678901234567890123456789012345678901234567890
-    inputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', SEQNO: 1}]
-    outputs = [{ADDRESS: '2JMyZgFBFyp5YMsBta4gCFA5TMdUzMXrWbRvMFkW7KDNbaMrk1', AMOUNT: 9}]
-    signatures = ['2z34R9vCyohVS2V7SXf8VnkHuAm8a224D6hopKJBMbdV4z8meR8aTdLMbMiknRXnKD4YkGtZnYY1D6jSQz23FziG']
+    inputs = [{ADDRESS: '2gWVuNmy8rdJrDHzQ9PDDpHkfcypyUZRsSHaqA9q1K3Gti3YXw', SEQNO: 153}]
+    outputs = [{ADDRESS: '2gWVuNmy8rdJrDHzQ9PDDpHkfcypyUZRsSHaqA9q1K3Gti3YXw', AMOUNT: 9}]
+    signatures = ['5cEsNP3tfVLG5hdKfW5dCNVyM6gtoUAgGDsTUsikfNw6ZEJXme4v6KxZPP6wvniwg6FZbeTMtkcQ5TY4uf3ihWsG']
     setattr(msg, "fees", [inputs, outputs, signatures])
 
     fees_authenticator.verify_signature(msg)
