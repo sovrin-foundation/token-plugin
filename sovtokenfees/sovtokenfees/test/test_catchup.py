@@ -1,14 +1,19 @@
+import pytest
+
 from plenum.common.config_helper import PNodeConfigHelper
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_seq_no
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test.test_node import TestNode
-from sovtoken.constants import XFER_PUBLIC, TOKEN_LEDGER_ID
+from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
+                                XFER_PUBLIC)
+from sovtoken.main import \
+    integrate_plugin_in_node as integrate_token_plugin_in_node
 from sovtoken.test.helper import user1_token_wallet
-from sovtoken.test.test_public_xfer_1 import addresses
-from sovtoken.main import integrate_plugin_in_node as integrate_token_plugin_in_node
-from sovtokenfees.main import integrate_plugin_in_node as integrate_fees_plugin_in_node
-from sovtokenfees.test.test_fees_non_xfer_txn import pay_fees, mint_tokens, address_main
+from sovtokenfees.main import \
+    integrate_plugin_in_node as integrate_fees_plugin_in_node
+from sovtokenfees.test.test_fees_non_xfer_txn import (address_main,
+                                                      mint_tokens, pay_fees)
 
 TestRunningTimeLimitSec = 250
 
@@ -16,6 +21,11 @@ TXN_FEES = {
     NYM: 1,
     XFER_PUBLIC: 1
 }
+
+
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(5)
 
 
 def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
@@ -33,11 +43,11 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
 
     for address in addresses:
         inputs = [
-            [address_main, seq_no],
+            {ADDRESS: address_main, SEQNO: seq_no},
         ]
         outputs = [
-            [address, 1],
-            [address_main, remaining - 2]   # XFER fee is 1
+            {ADDRESS: address, AMOUNT: 1},
+            {ADDRESS: address_main, AMOUNT: remaining - 2}, # XFER fee is 1
         ]
         request = helpers.request.transfer(inputs, outputs)
         response = helpers.sdk.send_and_check_request_objects([request])

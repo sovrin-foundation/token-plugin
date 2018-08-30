@@ -43,7 +43,7 @@ class UTXOCache(OptimisticKVStore):
 
         seq_nos_amounts = UTXOAmounts.get_amounts(output.address, self, make_new=True, is_committed=is_committed)
 
-        seq_nos_amounts.add_amount(output.seq_no, output.value)
+        seq_nos_amounts.add_amount(output.seqNo, output.amount)
         self.set(output.address, seq_nos_amounts.as_str(), is_committed=is_committed)
 
     # Spends the provided output by fetching it from the key value store
@@ -55,7 +55,7 @@ class UTXOCache(OptimisticKVStore):
 
         seq_nos_amounts = UTXOAmounts.get_amounts(output.address, self, is_committed=is_committed)
 
-        seq_nos_amounts.remove_seq_no(output.seq_no)
+        seq_nos_amounts.remove_seq_no(output.seqNo)
 
         self.set(output.address, seq_nos_amounts.as_str(), is_committed=is_committed)
 
@@ -68,7 +68,9 @@ class UTXOCache(OptimisticKVStore):
 
     def sum_inputs(self, inputs: list, is_committed=False):
         addresses = defaultdict(set)
-        for addr, seq_no in inputs:
+        for inp in inputs:
+            addr = inp["address"]
+            seq_no = inp["seqNo"]
             addresses[addr].add(seq_no)
 
         output_val = 0

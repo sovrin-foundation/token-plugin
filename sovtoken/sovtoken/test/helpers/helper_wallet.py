@@ -15,7 +15,6 @@ class HelperWallet():
     - create_address
     - create_client_wallet
     - create_new_addresses
-    - payment_signatures
     - sign_request
     - sign_request_trustees
     - sign_request_stewards
@@ -26,9 +25,13 @@ class HelperWallet():
         self._client_wallet = client_wallet
         self._trustee_wallets = trustee_wallets
         self._steward_wallets = steward_wallets
+        self.address_map = {}
 
     def create_address(self):
-        return Address()
+        """ Create a new address and add it to the address_map """
+        address = Address()
+        self.address_map[address.address] = address
+        return address.address
 
     def create_new_addresses(self, n):
         """ Create n new addresses """
@@ -38,9 +41,17 @@ class HelperWallet():
         """ Create and add n new addresses to a wallet. """
         addresses = self.create_new_addresses(n)
         for address in addresses:
-            wallet.add_new_address(address=address)
+            wallet.add_new_address(address=self.address_map[address])
 
         return addresses
+
+    def get_address_instance(self, address):
+        if address in self.address_map:
+            return self.address_map[address]
+        else:
+            message = ("{} wasn't found in the address_map. Did you create "
+                       "this address with HelperWallet?").format(address)
+            raise Exception(message)
 
     def create_client_wallet(self, seed):
         """ Create a plenum client wallet from a seed. """
@@ -65,9 +76,9 @@ class HelperWallet():
         """ Generate a list of payment signatures from inptus and outputs. """
         outputs = self._prepare_outputs(outputs)
         signatures = []
-        for [address, seq_no] in inputs:
-            to_sign = [[[address.address, seq_no]], outputs]
-            signature = address.signer.sign(to_sign)
+        for inp in inputs:
+            to_sign = [[inp], outputs]
+            signature = self.address_map[inp["address"]].signer.sign(to_sign)
             signatures.append(signature)
         return signatures
 
@@ -87,4 +98,4 @@ class HelperWallet():
         return request
 
     def _prepare_outputs(self, outputs):
-        return [[address.address, amount] for address, amount in outputs]
+        return [{"address": address, "amount": amount} for address, amount in outputs]

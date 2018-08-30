@@ -20,7 +20,7 @@ from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC
+    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
@@ -107,7 +107,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
+                sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         TXN_TYPE: FEE_TXN,
@@ -223,7 +223,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             except UTXOError as ex:
                 raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
             else:
-                change_amount = sum([a for _, a in self.get_change_for_fees(request)])
+                change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
                 expected_amount = change_amount + required_fees
                 TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
                                                               expected_amount, request,
@@ -272,17 +272,24 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
         elif typ == FEE_TXN:
-            for addr, seq_no in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
-                TokenReqHandler.spend_input(state=self.token_state,
-                                            utxo_cache=self.utxo_cache,
-                                            address=addr, seq_no=seq_no,
-                                            is_committed=is_committed)
+            for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
+                TokenReqHandler.spend_input(
+                    state=self.token_state,
+                    utxo_cache=self.utxo_cache,
+                    address=utxo[ADDRESS],
+                    seq_no=utxo[SEQNO],
+                    is_committed=is_committed
+                )
             seq_no = get_seq_no(txn)
-            for addr, amount in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
-                TokenReqHandler.add_new_output(state=self.token_state,
-                                               utxo_cache=self.utxo_cache,
-                                               output=Output(addr, seq_no, amount),
-                                               is_committed=is_committed)
+            for output in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
+                TokenReqHandler.add_new_output(
+                    state=self.token_state,
+                    utxo_cache=self.utxo_cache,
+                    output=Output(
+                        output[ADDRESS],
+                        seq_no,
+                        output[AMOUNT]),
+                    is_committed=is_committed)
         else:
             logger.warning('Unknown type {} found while updating '
                            'state with txn {}'.format(typ, txn))

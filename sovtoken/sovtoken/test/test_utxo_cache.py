@@ -36,7 +36,7 @@ def test_add_unspent_output(utxo_cache):
         assert utxo_cache.get_unspent_outputs(outputs[i].address, True) == []
         utxo_cache.add_output(outputs[i], True)
         outs = utxo_cache.get_unspent_outputs(outputs[i].address, True)
-        assert outputs[i].value in [o.value for o in outs]
+        assert outputs[i].amount in [o.amount for o in outs]
 
 
 # Tests spending unspent outputs
@@ -45,7 +45,7 @@ def test_spend_unspent_output(utxo_cache):
     outputs = gen_outputs(num_outputs)
     for i in range(num_outputs):
         utxo_cache.add_output(outputs[i], True)
-        new_out = Output(outputs[i].address, outputs[i].seq_no, None)
+        new_out = Output(outputs[i].address, outputs[i].seqNo, None)
         assert utxo_cache.get_unspent_outputs(outputs[i].address, True)
         utxo_cache.spend_output(new_out, True)
         assert utxo_cache.get_unspent_outputs(outputs[i].address, True) == []
@@ -67,8 +67,8 @@ def test_get_all_unspent_outputs(utxo_cache):
     num_addresses = 5
     num_outputs_per_address = 4
     address_outputs = gen_outputs(num_addresses)
-    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seq_no * (i + 1),
-                                                 ao.value * (i + 1)) for i in
+    all_outputs = list(itertools.chain(*[[Output(ao.address, ao.seqNo * (i + 1),
+                                                 ao.amount * (i + 1)) for i in
                                           range(num_outputs_per_address)]
                                          for ao in address_outputs]))
     outputs_by_address = defaultdict(set)
@@ -176,7 +176,9 @@ def test_sum_inputs_same_address(utxo_cache):
         utxo_cache.add_output(output2, b)
         utxo_cache.add_output(output3, b)
 
-        assert utxo_cache.sum_inputs([[VALID_ADDR_1, 10], [VALID_ADDR_1, 11], [VALID_ADDR_1, 12]], b) == 160
+        assert utxo_cache.sum_inputs([{"address": VALID_ADDR_1, "seqNo": 10},
+                                      {"address": VALID_ADDR_1, "seqNo": 11},
+                                      {"address": VALID_ADDR_1, "seqNo": 12}], b) == 160
 
 
 def test_sum_inputs_different_addresses(utxo_cache):
@@ -193,17 +195,14 @@ def test_sum_inputs_different_addresses(utxo_cache):
         utxo_cache.add_output(output4, b)
         utxo_cache.add_output(output5, b)
 
-        assert utxo_cache.sum_inputs([[VALID_ADDR_1, 10], [VALID_ADDR_1, 11], [VALID_ADDR_2, 11],
-                                      [VALID_ADDR_1, 21], [VALID_ADDR_2, 39]], b) == 540
+        assert utxo_cache.sum_inputs([{"address": VALID_ADDR_1, "seqNo": 10},
+                                      {"address": VALID_ADDR_1, "seqNo": 11},
+                                      {"address": VALID_ADDR_2, "seqNo": 11},
+                                      {"address": VALID_ADDR_1, "seqNo": 21},
+                                      {"address": VALID_ADDR_2, "seqNo": 39}], b) == 540
 
 
 def test_create_key(utxo_cache):
     output = Output(VALID_ADDR_1, 10, 10)
     key = utxo_cache._create_key(output)
     assert key == '6baBEYA94sAphWBA5efEsaA6X2wCdyaH7PXuBtv2H5S1'
-
-
-
-
-
-
