@@ -6,10 +6,9 @@ from plenum.common.exceptions import RequestRejectedException, RequestNackedExce
 from plenum.common.txn_util import get_seq_no, get_payload_data, get_txn_time
 from plenum.common.types import f
 from plenum.test.pool_transactions.helper import sdk_build_get_txn_request
-from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import INPUTS, OUTPUTS
+from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO
 
 
 def add_fees_request_with_address(helpers, fees_set, request, address):
@@ -25,13 +24,15 @@ def add_fees_request_with_address(helpers, fees_set, request, address):
 
 
 @pytest.fixture(scope="module")
-def address_main():
-    return Address()
+def address_main(helpers):
+    return helpers.wallet.create_address()
 
 
 @pytest.fixture(scope="module")
 def mint_tokens(helpers, address_main):
-    return helpers.general.do_mint([[address_main, 1000]])
+    return helpers.general.do_mint([
+        {ADDRESS: address_main, AMOUNT: 1000},
+    ])
 
 
 def pay_fees(helpers, fees_set, address_main, mint_tokens):
@@ -155,10 +156,10 @@ def test_fees_incorrect_sig(
 
 
 def test_fees_insufficient_sig(
-        helpers,
-        fees_set,
-        address_main,
-        mint_tokens
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens
 ):
     """
     The fee amount is correct but signature over the fee is incorrect.
@@ -252,8 +253,12 @@ def test_valid_txn_with_fees(
 
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     last_utxo = utxos[-1]
-    expected_amount = fee_payload_from_resp[OUTPUTS][0][-1]
-    assert last_utxo == [address_main, get_seq_no(fee_txn), expected_amount]
+    expected_amount = fee_payload_from_resp[OUTPUTS][0][AMOUNT]
+    assert last_utxo == {
+        ADDRESS: address_main,
+        SEQNO: get_seq_no(fee_txn),
+        AMOUNT: expected_amount
+    }
 
 
 def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
@@ -284,14 +289,10 @@ def test_fees_utxo_reuse(
     outputs = nym_fees_data[OUTPUTS]
     fee_amount = fees_set[FEES][NYM]
 
-    # Set inputs and outputs to have Address object
-    inputs_addr = [[address_main, seq_no, None] for _, seq_no in inputs]
-    outputs_addr = [[address_main, amount] for _, amount in outputs]
-
     req = helpers.request.nym()
     fee_sigs = helpers.request.fees_signatures(
-        inputs_addr,
-        outputs_addr,
+        inputs,
+        outputs,
         req.digest
     )
     fees = [inputs, outputs, fee_sigs]

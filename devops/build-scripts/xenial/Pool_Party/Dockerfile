@@ -56,8 +56,8 @@ ARG python3_indy_crypto_ver=0.4.1
 ARG indy_crypto_ver=0.4.0
 ARG indy_plenum_ver=1.6.50
 
-ARG sovtoken_pkg_name=sovtoken_0.9.0_amd64.deb
-ARG sovtokenfees_pkg_name=sovtokenfees_0.9.0_amd64.deb
+ARG sovtoken_pkg_name=sovtoken_0.9.1_amd64.deb
+ARG sovtokenfees_pkg_name=sovtokenfees_0.9.1_amd64.deb
 
 COPY ${sovtoken_pkg_name} /root
 COPY ${sovtokenfees_pkg_name} /root

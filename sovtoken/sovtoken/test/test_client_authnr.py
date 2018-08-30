@@ -105,7 +105,7 @@ def test_verify_fail():
 def test_authenticate_invalid_signatures_format(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
     req_data[f.SIGS.nm] = {
@@ -121,7 +121,7 @@ def test_authenticate_invalid_signatures_format(helpers, node, addresses):
 def test_authenticate_insufficient_valid_signatures_data(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
     req_data[f.SIGS.nm]['E7QRhdcnhAwA6E46k9EtZo'] = \
@@ -134,7 +134,7 @@ def test_authenticate_insufficient_valid_signatures_data(helpers, node, addresse
 def test_authenticate_success_3_sigs(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
     correct_sigs = token_authnr.authenticate(req_data)
@@ -145,8 +145,8 @@ def test_authenticate_success_3_sigs(helpers, node, addresses):
 def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [[SF_address, 1]]
-    outputs = [[user1_address, 10], [SF_address, 10]]
+    inputs = [{"address": SF_address, "seqNo": 1}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
     req_data = request.as_dict
 
@@ -161,7 +161,7 @@ def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
 def test_authenticate_xfer_success(node, user2_token_wallet, user2_address, user1_address):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": user2_address, "amount": 10}]
     request = xfer_request(inputs, outputs)
     req_data = request.as_dict
     correct_sigs = token_authnr.authenticate_xfer(req_data, AddressSigVerifier)

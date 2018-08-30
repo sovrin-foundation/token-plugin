@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import XFER_PUBLIC
+from sovtoken.constants import XFER_PUBLIC, ADDRESS, AMOUNT, SEQNO
 from sovtokenfees.constants import FEES
 
 
