@@ -16,20 +16,20 @@ def test_utxo_reuse(helpers, addresses, initial_mint):
     address1, address2, address3, _, _ = addresses
     mint_seq_no = get_seq_no(initial_mint)
     inputs = [
-        [address1, mint_seq_no],
+        {"address": address1, "seqNo": mint_seq_no},
     ]
     outputs = [
-        [address1, 100],
+        {"address": address1, "amount": 100},
     ]
     request = helpers.request.transfer(inputs, outputs)
     helpers.sdk.send_and_check_request_objects([request])
 
     inputs = [
-        [address2, mint_seq_no],
-        [address1, mint_seq_no],
+        {"address": address2, "seqNo": mint_seq_no},
+        {"address": address1, "seqNo": mint_seq_no},
     ]
     outputs = [
-        [address3, 100],
+        {"address": address3, "amount": 100},
     ]
     request = helpers.request.transfer(inputs, outputs)
     with pytest.raises(RequestRejectedException):
@@ -42,7 +42,7 @@ def test_incorrect_funds(helpers, addresses, initial_mint):
     _, _, _, address4, address5 = addresses
     mint_seq_no = get_seq_no(initial_mint)
     inputs = [
-        [address4, mint_seq_no],
+        {"address": address4, "seqNo": mint_seq_no},
     ]
 
     for i in range(200):
@@ -52,14 +52,14 @@ def test_incorrect_funds(helpers, addresses, initial_mint):
             amount = randint(101, 200)
 
         outputs = [
-            [address5, amount],
+            {"address": address5, "amount": amount},
         ]
         request = helpers.request.transfer(inputs, outputs)
         with pytest.raises(RequestRejectedException):
             helpers.sdk.send_and_check_request_objects([request])
 
     outputs = [
-        [address5, 100],
+        {"address": address5, "amount": 100},
     ]
     request = helpers.request.transfer(inputs, outputs)
     helpers.sdk.send_and_check_request_objects([request])

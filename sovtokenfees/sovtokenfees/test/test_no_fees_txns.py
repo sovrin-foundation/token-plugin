@@ -2,7 +2,7 @@ import json
 
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import XFER_PUBLIC
+from sovtoken.constants import XFER_PUBLIC, ADDRESS, AMOUNT, SEQNO
 from sovtokenfees.constants import FEES
 
 
@@ -21,7 +21,8 @@ def test_txn_with_no_fees_specified(helpers):
 def test_txn_with_0_fees_specified(helpers):
     helpers.general.do_set_fees(TXN_FEES)
     address = helpers.wallet.create_address()
-    helpers.general.do_mint([[address, 1000]])
+    outputs = [{ADDRESS: address, AMOUNT: 1000}]
+    helpers.general.do_mint(outputs)
     utxos = helpers.general.get_utxo_addresses([address])[0]
 
     request = helpers.request.nym()
@@ -37,4 +38,8 @@ def test_txn_with_0_fees_specified(helpers):
 
     utxos = helpers.general.get_utxo_addresses([address])[0]
 
-    assert utxos == [[address, fee_seq_no, 1000]]
+    assert utxos == [{
+        ADDRESS: address,
+        SEQNO: fee_seq_no,
+        AMOUNT: 1000
+    }]

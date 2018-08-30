@@ -171,7 +171,8 @@ def test_token_wallet_on_reply_from_network_success(test_wallet, address0):
     req_id = 1517251781147288
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : address0.address,
-              "outputs": [[address0.address, 6, 10000]], "type": "10002", "reqId" : 1517251781147288}
+              "outputs": [{"address": address0.address, "seqNo": 6, "amount": 10000}],
+              "type": "10002", "reqId" : 1517251781147288}
     num_replies = 2
     test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
     outputs = address0.outputs
@@ -184,7 +185,8 @@ def test_token_wallet_on_reply_from_network_invalid(test_wallet, address0):
     req_id = 1517251781147288
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : invalid_address.address,
-              "outputs": [[invalid_address.address, 6, 10000]], "type": "10002", "reqId" : 1517251781147288}
+              "outputs": [{"address": invalid_address.address, "seqNo": 6, "amount": 10000}],
+              "type": "10002", "reqId" : 1517251781147288}
     num_replies = 2
     test_wallet.on_reply_from_network(observer_name, req_id, frm, result, num_replies)
     # Raises KeyError because (6, 10000) has been added to invalid_address obj not address0 obj
@@ -198,7 +200,8 @@ def test_token_wallet_on_reply_from_network_success2(test_wallet, address0):
     seq_no = 6
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : address0.address,
-              "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1,]],
+              "outputs": [{"address": address0.address, "amount": 10000}],
+              "inputs": [{"address": address0.address, "seqNo": 1}],
               "type": "10001", "reqId" : 1517251781147288, "seqNo": seq_no}
     num_replies = 2
     txn = TxnResponse("10001", result, seq_no=seq_no).form_response()
@@ -213,7 +216,8 @@ def test_token_wallet_on_reply_from_network_invalid_address2(test_wallet, addres
     seq_no = 6
     frm = "GammaC"
     result = {"Identifier": "6ouriXMZkLeHsuXrN1X1fd", "address" : invalid_address.address,
-              "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+              "outputs": [{"address": invalid_address.address, "amount": 10000}],
+              "inputs": [{"address": invalid_address.address, "seqNo": 1}],
               "type": "10001", "reqId" : 1517251781147288, "seqNo": seq_no}
     num_replies = 2
     txn = TxnResponse("10001", result, seq_no=seq_no).form_response()
@@ -223,7 +227,8 @@ def test_token_wallet_on_reply_from_network_invalid_address2(test_wallet, addres
 
 
 def test_token_wallet_handle_get_utxo_response_success(test_wallet, address0):
-    response = {"address": address0.address, "outputs": [[address0.address, 6, 10000]],
+    response = {"address": address0.address,
+                "outputs": [{"address": address0.address, "seqNo": 6, "amount": 10000}],
                 "reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
     test_wallet.handle_get_utxo_response(response)
     assert address0.outputs[0][6] == 10000
@@ -231,7 +236,8 @@ def test_token_wallet_handle_get_utxo_response_success(test_wallet, address0):
 
 def test_token_wallet_handle_get_utxo_response_invalid_address(test_wallet, address0):
     invalid_address = Address()
-    response = {"address": invalid_address.address, "outputs": [[invalid_address.address, 6, 10000]],
+    response = {"address": invalid_address.address,
+                "outputs": [{"address": invalid_address.address, "seqNo": 6, "amount": 10000}],
                 "reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
     test_wallet.handle_get_utxo_response(response)
     with pytest.raises(KeyError):
@@ -241,7 +247,8 @@ def test_token_wallet_handle_get_utxo_response_invalid_address(test_wallet, addr
 def test_token_wallet_handle_xfer_success(test_wallet, address0):
     seq_no = 6
     response = {"address": address0.address,
-                "outputs": [[address0.address, 10000]], "inputs": [[address0.address, 1]],
+                "outputs": [{"address": address0.address, "amount": 10000}],
+                "inputs": [{"address": address0.address, "seqNo": 1}],
                 "seqNo": seq_no, "reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
 
     txn = TxnResponse("10002", response, seq_no=seq_no).form_response()
@@ -253,7 +260,8 @@ def test_token_wallet_handle_xfer_invalid_address(test_wallet, address0):
     invalid_address = Address()
     seq_no = 6
     response = {"address": invalid_address.address,
-                "outputs": [[invalid_address.address, 10000]], "inputs": [[invalid_address.address, 1]],
+                "outputs": [{"address": invalid_address.address, "amount": 10000}],
+                "inputs": [{"address": invalid_address.address, "seqNo": 1}],
                 "seqNo": seq_no,"reqId": 23432, "Identifier": "6ouriXMZkLeHsuXrN1X1fd", "type": "10002"}
 
     txn = TxnResponse("10002", response, seq_no=seq_no).form_response()
