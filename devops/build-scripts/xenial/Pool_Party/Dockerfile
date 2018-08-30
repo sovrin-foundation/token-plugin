@@ -66,8 +66,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y \
-        indy-plenum \        
-		indy-node \
+	indy-plenum=${indy_plenum_ver} \        
+        indy-node=${indy_node_ver} \
         indy-anoncreds=${indy_anoncreds_ver} \
         python3-indy-crypto=${python3_indy_crypto_ver} \
         libindy-crypto=${indy_crypto_ver} \
