@@ -60,6 +60,30 @@ def fees_paid(
     return pay_fees(helpers, fees_set, address_main, mint_tokens)
 
 
+def test_zero_fees(
+    helpers,
+    address_main,
+    mint_tokens,
+):
+    """
+    The fee amount is zero
+    """
+
+    helpers.general.do_set_fees({NYM: 0})
+
+    req = helpers.request.nym()
+    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+    helpers.request.add_fees(
+        req,
+        utxos,
+        0,
+        change_address=address_main
+    )
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([req])
+
+
 def test_insufficient_fees(
     helpers,
     address_main,
