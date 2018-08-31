@@ -5,7 +5,7 @@ from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN,
 from plenum.common.request import Request
 from plenum.common.types import f
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
-    MINT_PUBLIC, GET_UTXO, ADDRESS
+    MINT_PUBLIC, GET_UTXO, ADDRESS, SEQNO, AMOUNT
 from sovtoken.util import address_to_verkey
 
 
@@ -17,6 +17,8 @@ class HelperRequest():
     - get_utxo
     - transfer
     - mint
+    - nym
+    - payment_signatures
     """
 
     def __init__(
@@ -39,7 +41,7 @@ class HelperRequest():
         """ Builds a get_utxo request. """
         payload = {
             TXN_TYPE: GET_UTXO,
-            ADDRESS: address.address
+            ADDRESS: address
         }
 
         request = self._create_request(payload, self._client_did)
@@ -59,11 +61,12 @@ class HelperRequest():
 
     def transfer(self, inputs, outputs, extra=None):
         """ Builds a transfer request. """
-        outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = [[address.address, seq_no] for address, seq_no in inputs]
+        payment_signatures = self.payment_signatures(inputs, outputs)
 
-        [first_address, seq_no] = inputs_ready[0]
-        payment_signatures = self._wallet.payment_signatures(inputs, outputs)
+        outputs_ready = self._prepare_outputs(outputs)
+        inputs_ready = self._prepare_inputs(inputs)
+
+        first_address = inputs_ready[0][ADDRESS]
 
         payload = {
             TXN_TYPE: XFER_PUBLIC,
@@ -126,8 +129,31 @@ class HelperRequest():
 
         return request
 
+    def payment_signatures(self, inputs, outputs):
+        """ Generate a list of payment signatures from inptus and outputs. """
+        signatures = []
+        inputs = self._prepare_inputs(inputs)
+        outputs = self._prepare_outputs(outputs)
+
+        for utxo in inputs:
+            to_sign = [[utxo], outputs]
+            signer = self._wallet.get_address_instance(utxo[ADDRESS]).signer
+            signature = signer.sign(to_sign)
+            signatures.append(signature)
+
+        return signatures
+
     def _prepare_outputs(self, outputs):
-        return [[address.address, amount] for address, amount in outputs]
+        return [
+            {ADDRESS: output[ADDRESS], AMOUNT: output[AMOUNT]}
+            for output in outputs
+        ]
+
+    def _prepare_inputs(self, inputs):
+        return [
+            {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
+            for utxo in inputs
+        ]
 
     def _create_request(self, payload, identifier=None):
         return Request(

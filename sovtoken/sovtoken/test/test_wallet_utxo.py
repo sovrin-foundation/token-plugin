@@ -6,7 +6,7 @@ from sovtoken.constants import OUTPUTS
 @pytest.fixture
 def addresses(helpers, wallet):
     addresses = helpers.wallet.add_new_addresses(wallet, 3)
-    return [address.address for address in addresses]
+    return [address for address in addresses]
 
 
 @pytest.fixture
@@ -16,7 +16,11 @@ def wallet():
 
 @pytest.fixture
 def vals1(addresses):
-    return [(addresses[0], 1), (addresses[1], 2), (addresses[2], 10)]
+    return [
+        {"address": addresses[0], "amount": 1},
+        {"address": addresses[1], "amount": 2},
+        {"address": addresses[2], "amount": 10}
+    ]
 
 
 def test_wallet_update_outputs_with_invalid_output_format(wallet, addresses):
@@ -49,11 +53,11 @@ def test_wallet_get_total_address_amount_same_txn_seq_no(
 def test_wallet_get_total_address_amount_diff_txn_seq_no(wallet, addresses):
     [address1, address2, address3] = addresses
     vals = [
-        (address1, 3002, 2),
-        (address2, 3002, 15),
-        (address2, 3003, 15),
-        (address2, 3004, 15),
-        (address3, 3003, 19)
+        {"address": address1, "seqNo": 3002, "amount": 2},
+        {"address": address2, "seqNo": 3002, "amount": 15},
+        {"address": address2, "seqNo": 3003, "amount": 15},
+        {"address": address2, "seqNo": 3004, "amount": 15},
+        {"address": address3, "seqNo": 3003, "amount": 19}
     ]
 
     wallet._update_outputs(outputs=vals)
@@ -67,22 +71,22 @@ def test_wallet_get_total_address_amount_diff_txn_seq_no(wallet, addresses):
 def test_get_min_utxo_ge(wallet, addresses):
     [address1, address2, _] = addresses
 
-    wallet._update_outputs(outputs=[(address1, 3001, 1)])
+    wallet._update_outputs(outputs=[{"address": address1, "seqNo": 3001, "amount": 1}])
     wallet._update_outputs(outputs=[
-        (address2, 3004, 3),
-        (address2, 9010, 4),
-        (address2, 3005, 15),
-        (address2, 1010, 16),
+        {"address": address2, "seqNo": 3004, "amount": 3},
+        {"address": address2, "seqNo": 9010, "amount": 4},
+        {"address": address2, "seqNo": 3005, "amount": 15},
+        {"address": address2, "seqNo": 1010, "amount": 16},
     ])
 
-    assert wallet.get_min_utxo_ge(1) == (address1, 3001, 1)
-    assert wallet.get_min_utxo_ge(0, address=address1) == (address1, 3001, 1)
-    assert wallet.get_min_utxo_ge(1, address=address1) == (address1, 3001, 1)
-    assert wallet.get_min_utxo_ge(1, address=address2) == (address2, 3004, 3)
-    assert wallet.get_min_utxo_ge(3, address=address2) == (address2, 3004, 3)
-    assert wallet.get_min_utxo_ge(4, address=address2) == (address2, 9010, 4)
-    assert wallet.get_min_utxo_ge(11, address=address2) == (address2, 3005, 15)
-    assert wallet.get_min_utxo_ge(16, address=address2) == (address2, 1010, 16)
+    assert wallet.get_min_utxo_ge(1) == {"address": address1, "seqNo": 3001, "amount": 1}
+    assert wallet.get_min_utxo_ge(0, address=address1) == {"address": address1, "seqNo": 3001, "amount": 1}
+    assert wallet.get_min_utxo_ge(1, address=address1) == {"address": address1, "seqNo": 3001, "amount": 1}
+    assert wallet.get_min_utxo_ge(1, address=address2) == {"address": address2, "seqNo": 3004, "amount": 3}
+    assert wallet.get_min_utxo_ge(3, address=address2) == {"address": address2, "seqNo": 3004, "amount": 3}
+    assert wallet.get_min_utxo_ge(4, address=address2) == {"address": address2, "seqNo": 9010, "amount": 4}
+    assert wallet.get_min_utxo_ge(11, address=address2) == {"address": address2, "seqNo": 3005, "amount": 15}
+    assert wallet.get_min_utxo_ge(16, address=address2) == {"address": address2, "seqNo": 1010, "amount": 16}
     assert not wallet.get_min_utxo_ge(20, address=address2)
 
 
@@ -95,10 +99,10 @@ def test_update_multiple_address_outputs():
     wallet.add_new_address(address2)
     fake_get_utxo_resp = {
         OUTPUTS: [
-            (address1.address, 1, 10),
-            (address1.address, 2, 10),
-            (address2.address, 3, 10),
-            (address3.address, 4, 30)
+            {"address": address1.address, "seqNo": 1, "amount": 10},
+            {"address": address1.address, "seqNo": 2, "amount": 10},
+            {"address": address2.address, "seqNo": 3, "amount": 10},
+            {"address": address3.address, "seqNo": 4, "amount": 30}
         ]
     }
     wallet.handle_get_utxo_response(fake_get_utxo_resp)

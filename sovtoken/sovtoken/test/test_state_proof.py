@@ -30,7 +30,7 @@ def test_state_proof(public_minting, looper,  # noqa
                  for _ in lst]
         seq_no, amount = utxos[0]
         inputs = [[seller_token_wallet, seller_address, seq_no]]
-        outputs = [[user1_address, 1], [seller_address, amount-1]]
+        outputs = [{"address": user1_address, "amount": 1}, {"address": seller_address, "amount": amount-1}]
         res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
         update_token_wallet_with_result(seller_token_wallet, res)
         res = send_get_utxo(looper, seller_address, sdk_wallet_client,
@@ -48,8 +48,8 @@ def test_state_proof(public_minting, looper,  # noqa
     encoded = {}
     outputs = res[OUTPUTS]
     for out in outputs:
-        state_key = TokenReqHandler.create_state_key(out[0], out[1])
-        encoded[state_key] = rlp_encode([str(out[2])])
+        state_key = TokenReqHandler.create_state_key(out["address"], out["seqNo"])
+        encoded[state_key] = rlp_encode([str(out["amount"])])
     proof_nodes = decode_proof(res[STATE_PROOF][PROOF_NODES])
     client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))
     assert client_trie.verify_spv_proof_multi(

@@ -94,8 +94,8 @@ def public_minting(
     address_seller = seller_token_wallet.addresses[seller_address]
 
     outputs = [
-        [address_sf, total_mint - seller_gets],
-        [address_seller, seller_gets]
+        {"address": address_sf.address, "amount": total_mint - seller_gets},
+        {"address": address_seller.address, "amount": seller_gets}
     ]
 
     return helpers.general.do_mint(outputs)
@@ -115,10 +115,10 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
     inputs = [[seller_token_wallet, seller_address, seq_no] for seq_no, _ in
               next(iter(seller_token_wallet.get_all_address_utxos(seller_address).values()))]
     each_user_share = total_amount // 3
-    outputs = [[user1_address, each_user_share],
-               [user2_address, each_user_share],
-               [user3_address, each_user_share],
-               [seller_address, total_amount % 3]]
+    outputs = [{"address": user1_address, "amount": each_user_share},
+               {"address": user2_address, "amount": each_user_share},
+               {"address": user3_address, "amount": each_user_share},
+               {"address": seller_address, "amount": total_amount % 3}]
     res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
     update_token_wallet_with_result(seller_token_wallet, res)
     seq_no = get_seq_no(res)
