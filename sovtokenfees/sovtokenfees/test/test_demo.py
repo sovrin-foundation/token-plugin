@@ -2,7 +2,7 @@ import pytest
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_payload_data, get_seq_no
 from sovtokenfees.constants import FEES
-from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID
+from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO
 from sovtoken.test.demo.demo_helpers import demo_logger
 
 
@@ -20,7 +20,7 @@ def create_client_address(helpers):
     client_address = helpers.wallet.create_address()
 
     demo_logger.log_header(step1_info)
-    demo_logger.log_blue("Client address is {}".format(client_address.address))
+    demo_logger.log_blue("Client address is {}".format(client_address))
 
     return client_address
 
@@ -54,19 +54,24 @@ step4_info = """
     Mint tokens for the client.
 """
 def mint_tokens_to_client(helpers, client_address):
-    result = helpers.general.do_mint([[client_address, MINT_TOKEN_AMOUNT]])
-    [reply_address, reply_tokens] = get_payload_data(result)[OUTPUTS][0]
-    assert reply_address == client_address.address
-    assert reply_tokens == MINT_TOKEN_AMOUNT
+    outputs = [{ADDRESS: client_address, AMOUNT: MINT_TOKEN_AMOUNT}]
+    result = helpers.general.do_mint(outputs)
+    assert get_payload_data(result)[OUTPUTS][0] == {
+        ADDRESS: client_address,
+        AMOUNT: MINT_TOKEN_AMOUNT
+    }
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
-    assert client_utxos == [[client_address, 1, MINT_TOKEN_AMOUNT]]
+    assert client_utxos == [{
+        ADDRESS: client_address,
+        SEQNO: 1,
+        AMOUNT: MINT_TOKEN_AMOUNT
+    }]
 
-    formatted_utxos = [(utxo[0].address, utxo[1], utxo[2]) for utxo in client_utxos]
+    formatted_utxos = demo_logger.format_json(client_utxos)
     demo_logger.log_header(step4_info)
     demo_logger.log_blue("Minted {} tokens to Client".format(MINT_TOKEN_AMOUNT))
-    demo_logger.log_blue("Client address {} contained utxo:".format(client_address.address))
-    demo_logger.log_yellow(formatted_utxos[0])
-    demo_logger.log_blue("utxo format is (address, sequence_number, tokens)")
+    demo_logger.log_blue("Client address {} contained utxo:".format(client_address))
+    demo_logger.log_yellow(formatted_utxos)
 
     return client_utxos
 
@@ -108,13 +113,16 @@ step6_info = """
 def check_tokens_at_address(helpers, client_address):
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
     expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
-    assert client_utxos == [[client_address, 2, expected_amount]]
+    assert client_utxos == [{
+        ADDRESS: client_address,
+        SEQNO: 2,
+        AMOUNT: expected_amount
+    }]
 
-    formatted_utxos = [(utxo[0].address, utxo[1], utxo[2]) for utxo in client_utxos]
+    formatted_utxos = demo_logger.format_json(client_utxos)
     demo_logger.log_header(step6_info)
-    demo_logger.log_blue("Client address {} contained utxo:".format(client_address.address))
-    demo_logger.log_yellow(formatted_utxos[0])
-    demo_logger.log_blue("utxo format is (address, sequence_number, tokens)")
+    demo_logger.log_blue("Client address {} contained utxo:".format(client_address))
+    demo_logger.log_yellow(formatted_utxos)
 
 
 step7_info = """
@@ -124,7 +132,10 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
     transactions = helpers.node.get_last_ledger_transaction_on_nodes(TOKEN_LEDGER_ID)
     for fee_txn in transactions:
         fee_data = get_payload_data(fee_txn)
-        assert fee_data[OUTPUTS] == [[client_address.address, MINT_TOKEN_AMOUNT - TXN_FEES[NYM]]]
+        assert fee_data[OUTPUTS] == [{
+            ADDRESS: client_address,
+            AMOUNT: MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
+        }]
         assert fee_data[FEES] == TXN_FEES[NYM]
         assert get_seq_no(fee_txn) == 2
 

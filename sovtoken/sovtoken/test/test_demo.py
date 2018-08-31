@@ -24,23 +24,23 @@ def create_addresses(helpers):
 
     template = "{} created the address {}."
     for name, address in addresses.items():
-        demo_logger.log_blue(template.format(name, address.address))
+        demo_logger.log_blue(template.format(name, address))
 
     return addresses
 
 
 def mint_tokens(helpers, addresses):
-    result = helpers.general.do_mint([[addresses[SOVRIN], NEW_TOKENS]])
+    result = helpers.general.do_mint([{"address": addresses[SOVRIN], "amount": NEW_TOKENS}])
     template = "Minted {} sovatoms to {}."
     demo_logger.log_blue(template.format(NEW_TOKENS, SOVRIN))
 
 
 def sovrin_sends_tokens(helpers, addresses):
-    inputs = [[addresses[SOVRIN], 1]]
+    inputs = [{"address": addresses[SOVRIN], "seqNo": 1}]
     outputs = [
-        [addresses[USER1], SOVRIN_TO_USER1],
-        [addresses[USER2], SOVRIN_TO_USER2],
-        [addresses[SOVRIN], NEW_TOKENS - SOVRIN_TO_USER1 - SOVRIN_TO_USER2],
+        {"address": addresses[USER1], "amount": SOVRIN_TO_USER1},
+        {"address": addresses[USER2], "amount": SOVRIN_TO_USER2},
+        {"address": addresses[SOVRIN], "amount": NEW_TOKENS - SOVRIN_TO_USER1 - SOVRIN_TO_USER2},
     ]
     helpers.general.do_transfer(inputs, outputs)
 
@@ -50,10 +50,10 @@ def sovrin_sends_tokens(helpers, addresses):
 
 
 def user1_sends_tokens(helpers, addresses):
-    inputs = [[addresses[USER1], 2]]
+    inputs = [{"address": addresses[USER1], "seqNo": 2}]
     outputs = [
-        [addresses[USER2], USER1_TO_USER2],
-        [addresses[USER1], SOVRIN_TO_USER1 - USER1_TO_USER2],
+        {"address": addresses[USER2], "amount": USER1_TO_USER2},
+        {"address": addresses[USER1], "amount": SOVRIN_TO_USER1 - USER1_TO_USER2},
     ]
     helpers.general.do_transfer(inputs, outputs)
 

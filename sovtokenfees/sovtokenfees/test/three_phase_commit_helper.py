@@ -1,5 +1,6 @@
 from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE
 from plenum.common.types import f
+from sovtoken.constants import ADDRESS, AMOUNT
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
 from sovtoken import TOKEN_LEDGER_ID
 from state.trie.pruning_trie import BLANK_ROOT
@@ -36,7 +37,8 @@ def pp_valid(monkeypatch, three_phase_handler):
 @pytest.fixture(scope="module")
 def user_address(helpers):
     address = helpers.wallet.create_address()
-    helpers.general.do_mint([[address, 1000]])
+    outputs = [{ADDRESS: address, AMOUNT: 1000}]
+    helpers.general.do_mint(outputs)
     return address
 
 
