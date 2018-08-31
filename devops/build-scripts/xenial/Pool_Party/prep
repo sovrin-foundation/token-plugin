@@ -10,6 +10,6 @@ echo "Your current sovtoken debian package: $fpn \n"
 
 
 echo "summoning warlocks to correct debian package names in the pool dockerfile\n"
-sed -i -r "s/sovtoken_pkg_name=/sovtoken_pkg_name=$tpn/" "devops/build-scripts/xenial/Pool_Party/Dockerfile"
-sed -i -r "s/sovtokenfees_pkg_name=/sovtokenfees_pkg_name=$tpn/" "devops/build-scripts/xenial/Pool_Party/Dockerfile" 
+sed -i -r "s/sovtoken_pkg_name=sovtoken_[0-9]\.[0-9]\.[0-9]_amd64.deb/sovtoken_pkg_name=$tpn/" "devops/build-scripts/xenial/Pool_Party/Dockerfile"
+sed -i -r "s/sovtokenfees_pkg_name=sovtokenfees_[0-9]\.[0-9]\.[0-9]_amd64.deb/sovtokenfees_pkg_name=$fpn/" "devops/build-scripts/xenial/Pool_Party/Dockerfile" 
 
