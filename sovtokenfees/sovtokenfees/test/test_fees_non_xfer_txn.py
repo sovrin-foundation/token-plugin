@@ -147,7 +147,7 @@ def test_fees_too_many_outputs(
         req,
         utxos,
         fee_amount,
-        change_address=[address_main, Address().addres]
+        change_address=[address_main, Address().address]
     )
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([req])
