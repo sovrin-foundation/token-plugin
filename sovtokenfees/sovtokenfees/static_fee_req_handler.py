@@ -30,6 +30,8 @@ from state.trie.pruning_trie import rlp_decode
 
 logger = getlogger()
 
+MAX_FEE_OUTPUTS = 1
+
 
 class StaticFeesReqHandler(FeeReqHandler):
     valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
@@ -95,6 +97,15 @@ class StaticFeesReqHandler(FeeReqHandler):
             self._get_deducted_fees_xfer(request, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
+            # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
+            # We could consider lock this down even more by requiring OUTPUT address to be one of the
+            # INPUT address
+            outputs = request.fees[1]
+            if len(outputs) > MAX_FEE_OUTPUTS:
+                raise InvalidClientRequest(request.identifier,
+                                           request.reqId,
+                                           "Only {} OUTPUT is allow for Transaction fees".format(MAX_FEE_OUTPUTS))
+
             self._get_deducted_fees_non_xfer(request, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
@@ -144,12 +155,12 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             super().doStaticValidation(request)
 
-    def validate(self, req: Request):
-        operation = req.operation
+    def validate(self, request: Request):
+        operation = request.operation
         if operation[TXN_TYPE] == SET_FEES:
-            validate_multi_sig_txn(req, TRUSTEE, self.domain_state, self.MinSendersForFees)
+            validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForFees)
         else:
-            super().validate(req)
+            super().validate(request)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -307,8 +318,8 @@ class StaticFeesReqHandler(FeeReqHandler):
             raise InsufficientFundsError(request.identifier, request.reqId, error)
         if sum_inputs > expected_amount:
             error = 'Extra funds, sum of inputs is {} ' \
-                    'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
+                    'but required is: {} -- sum of outputs: {} ' \
+                    '-- fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
             raise ExtraFundsError(request.identifier, request.reqId, error)
 
     @staticmethod
