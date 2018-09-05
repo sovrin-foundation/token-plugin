@@ -5,7 +5,8 @@ from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, NYM, DATA
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data, get_txn_time
 from plenum.common.types import f
-from plenum.test.pool_transactions.helper import sdk_build_get_txn_request
+
+from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO
@@ -128,6 +129,29 @@ def test_fees_larger(
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([req])
+
+
+def test_fees_too_many_outputs(
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens,
+):
+    """
+    More than one output adress
+    """
+    req = helpers.request.nym()
+    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
+    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+    helpers.request.add_fees(
+        req,
+        utxos,
+        fee_amount,
+        change_address=[address_main, Address().address]
+    )
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([req])
+
 
 
 def test_fees_incorrect_sig(
