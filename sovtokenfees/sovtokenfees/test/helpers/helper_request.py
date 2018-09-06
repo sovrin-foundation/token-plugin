@@ -4,6 +4,9 @@ from plenum.common.constants import TXN_TYPE
 from sovtokenfees.constants import SET_FEES, FEES, GET_FEES
 from sovtoken.constants import AMOUNT, ADDRESS
 
+from stp_core.common.log import getlogger
+
+logger = getlogger()
 
 class HelperRequest(token_helper_request.HelperRequest):
     """
@@ -56,10 +59,21 @@ class HelperRequest(token_helper_request.HelperRequest):
         change = total_inputs - fee_amount
 
         if change > 0 and change_address:
-            outputs = [{ADDRESS: change_address, AMOUNT: change}]
+            if not isinstance(change_address, list):
+                change_address = [change_address]
+            change_part = change // len(change_address)
+            if change_part <= 0:
+                raise Exception("Unable to divide {}, {} ways".format(change, len(change_address)))
+            change_mod = change % len(change_address)
+            outputs = []
+            for address in change_address:
+                outputs.append({ADDRESS: address, AMOUNT: change_part+change_mod})
+                change_mod = 0 # Only add remainder once
         else:
             outputs = []
 
+        logger.info("*"*20)
+        logger.info(str(outputs))
         fees_signatures = self.fees_signatures(inputs, outputs, request.digest)
 
         inputs = self._prepare_inputs(inputs)

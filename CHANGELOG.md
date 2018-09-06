@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+* Changed from using LevelDB to RocksDB
+* Changed transactions to use JSON objects rather than unlabeled arrays
+* Relies on indy-plenum and indy-crypto with BLS sigs fix
+* bugfixes
+
 ## 0.9.1
 * refactor to unify validation between fees and payments
 * relies on stable versions of all artifacts

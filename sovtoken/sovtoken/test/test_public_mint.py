@@ -4,9 +4,15 @@
 import pytest
 
 from plenum.common.exceptions import (RequestNackedException,
-                                      RequestRejectedException)
+                                      RequestRejectedException,
+                                      PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
 from sovtoken.test.conftest import build_wallets_from_data
+from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
+
+
+TOKENAMT = int(1e8)
+BILLION = int(1e9)
 
 
 @pytest.fixture
@@ -31,19 +37,19 @@ def test_trustee_invalid_minting(helpers, addresses):
     """
     [address1, address2, *_] = addresses
 
-    outputs = [{"address": address1, "amount": -20}, {"address": address2, "amount": 100}]
+    outputs = [{ADDRESS: address1, AMOUNT: -20}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 
-    outputs = [{"address": address1, "amount": "100"}, {"address": address2, "amount": 100}]
+    outputs = [{ADDRESS: address1, AMOUNT: "100"}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 
-    outputs = [{"address": address1, "amount": 0}, {"address": address2, "amount": 100}]
+    outputs = [{ADDRESS: address1, AMOUNT: 0}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 
-    outputs = [{"address": address1, "amount": 20.5}, {"address": address2, "amount": 100}]
+    outputs = [{ADDRESS: address1, AMOUNT: 20.5}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 
@@ -54,7 +60,7 @@ def test_non_trustee_minting(helpers, steward_wallets, addresses):
     Non trustees (stewards in this case) should not be able to mint new tokens
     """
     [address1, address2, *_] = addresses
-    outputs = [{"address": address1, "amount": 100}, {"address": address2, "amount": 60}]
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures = {}
     request = helpers.wallet.sign_request(request, steward_wallets)
@@ -72,7 +78,7 @@ def test_less_than_min_trustee_minting(helpers, addresses):
     hence the txn fails
     """
     [address1, address2, *_] = addresses
-    outputs = [{"address": address1, "amount": 100}, {"address": address2, "amount": 60}]
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     # Remove one signature.
     request.signatures.popitem()
@@ -83,7 +89,7 @@ def test_less_than_min_trustee_minting(helpers, addresses):
 def test_stewards_with_trustees(helpers, addresses, steward_wallets):
     [address1, address2, *_] = addresses
 
-    outputs = [{"address": address1, "amount": 1000}, {"address": address2, "amount": 1000}]
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
     request = helpers.request.mint(outputs)
     # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
     request.signatures.popitem()
@@ -102,7 +108,7 @@ def test_non_existant_did_with_trustees(
     [address1, address2, *_] = addresses
     signing_wallets = wallets_non_existant_dids[0:1]
 
-    outputs = [{"address": address1, "amount": 1000}, {"address": address2, "amount": 1000}]
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
     request = helpers.request.mint(outputs)
     request = helpers.wallet.sign_request(request, signing_wallets)
 
@@ -110,7 +116,7 @@ def test_non_existant_did_with_trustees(
 def test_non_existant_dids(helpers, addresses, wallets_non_existant_dids):
     [address1, address2, *_] = addresses
 
-    outputs = [{"address": address1, "amount": 1000}, {"address": address2, "amount": 1000}]
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
     request = helpers.request.mint(outputs)
 
     request.signatures = {}
@@ -125,7 +131,7 @@ def test_repeat_trustee(helpers, addresses):
         Should not be possible to use the same trustee more than once
     """
     [address1, address2, *_] = addresses
-    outputs = [{"address": address1, "amount": 100}, {"address": address2, "amount": 60}]
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures.popitem()
     (did, sig) = request.signatures.popitem()
@@ -141,10 +147,10 @@ def test_trustee_valid_minting(helpers, addresses):
     and seller_address
     """
     [address1, address2, *_] = addresses
-    total_mint = 1000000000000000000
-    sf_master_gets = 600000000000000000
+    total_mint = 10 * BILLION * TOKENAMT
+    sf_master_gets = 6 * BILLION * TOKENAMT
     remaining = total_mint - sf_master_gets
-    outputs = [{"address": address1, "amount": sf_master_gets}, {"address": address2, "amount": remaining}]
+    outputs = [{ADDRESS: address1, AMOUNT: sf_master_gets}, {ADDRESS: address2, AMOUNT: remaining}]
     result = helpers.general.do_mint(outputs)
     mint_seq_no = get_seq_no(result)
 
@@ -153,15 +159,15 @@ def test_trustee_valid_minting(helpers, addresses):
         address2_utxos
     ] = helpers.general.get_utxo_addresses([address1, address2])
 
-    assert address1_utxos == [{"address": address1, "seqNo": mint_seq_no, "amount": sf_master_gets}]
-    assert address2_utxos == [{"address": address2, "seqNo": mint_seq_no, "amount": remaining}]
+    assert address1_utxos == [{ADDRESS: address1, SEQNO: mint_seq_no, AMOUNT: sf_master_gets}]
+    assert address2_utxos == [{ADDRESS: address2, SEQNO: mint_seq_no, AMOUNT: remaining}]
 
 
 def test_two_mints_to_same_address(addresses, helpers):
 
-    outputs = [{"address": address, "amount": 100} for address in addresses]
+    outputs = [{ADDRESS: address, AMOUNT: 100} for address in addresses]
     first_mint_result = helpers.general.do_mint(outputs)
-    outputs = [{"address": address, "amount": 200} for address in addresses]
+    outputs = [{ADDRESS: address, AMOUNT: 200} for address in addresses]
     second_mint_result = helpers.general.do_mint(outputs)
     first_mint_seq_no = get_seq_no(first_mint_result)
     second_mint_seq_no = get_seq_no(second_mint_result)
@@ -179,22 +185,49 @@ def test_two_mints_to_same_address(addresses, helpers):
     assert first_mint_seq_no != second_mint_seq_no
 
     assert address1_utxos == [
-        {"address": address1, "seqNo": first_mint_seq_no, "amount": 100},
-        {"address": address1, "seqNo": second_mint_seq_no, "amount": 200},
+        {ADDRESS: address1, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address1, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address2_utxos == [
-        {"address": address2, "seqNo": first_mint_seq_no, "amount": 100},
-        {"address": address2, "seqNo": second_mint_seq_no, "amount": 200},
+        {ADDRESS: address2, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address2, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address3_utxos == [
-        {"address": address3, "seqNo": first_mint_seq_no, "amount": 100},
-        {"address": address3, "seqNo": second_mint_seq_no, "amount": 200},
+        {ADDRESS: address3, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address3, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address4_utxos == [
-        {"address": address4, "seqNo": first_mint_seq_no, "amount": 100},
-        {"address": address4, "seqNo": second_mint_seq_no, "amount": 200},
+        {ADDRESS: address4, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address4, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address5_utxos == [
-        {"address": address5, "seqNo": first_mint_seq_no, "amount": 100},
-        {"address": address5, "seqNo": second_mint_seq_no, "amount": 200},
+        {ADDRESS: address5, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address5, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
+
+
+def test_different_mint_amounts(helpers):
+
+    i64 = 9223372036854775807
+
+    def assert_valid_minting(helpers, amount):
+        address = helpers.wallet.create_address()
+        outputs = [{ADDRESS: address, AMOUNT: amount}]
+        result = helpers.general.do_mint(outputs)
+        utxos = helpers.general.get_utxo_addresses([address])[0]
+
+        expected = {ADDRESS: address, SEQNO: get_seq_no(result), AMOUNT: amount}
+        matches = [utxo for utxo in utxos if utxo is expected]
+
+    # 1 sovatom
+    assert_valid_minting(helpers, 1)
+
+    # 10 billion tokens
+    assert_valid_minting(helpers, 10 * BILLION * TOKENAMT)
+
+    # i64 max sovatoms.
+    assert_valid_minting(helpers, i64)
+
+    # ujson has a limit at deserializing i64.
+    with pytest.raises(PoolLedgerTimeoutException):
+        assert_valid_minting(helpers, i64 + 1)
