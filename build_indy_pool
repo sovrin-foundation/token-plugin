@@ -10,8 +10,8 @@ sov_token_fees=$(eval "SRC_DIR_NAME=sovtokenfees make -C devops/ package_in_dock
 prep=$(./devops/build-scripts/xenial/Pool_Party/prep)
 
 # the script calls for debians to be in the Pool_Party directory and this moves them there
-mv devops/_build/sovtoken/*.deb devops/build-scripts/xenial/Pool_Party/.
-mv devops/_build/sovtokenfees/*.deb devops/build-scripts/xenial/Pool_Party/.
+cp devops/_build/sovtoken/*.deb devops/build-scripts/xenial/Pool_Party/.
+cp devops/_build/sovtokenfees/*.deb devops/build-scripts/xenial/Pool_Party/.
 
 # change to correct directory and begin building the pool
 cd devops/build-scripts/xenial/Pool_Party/
