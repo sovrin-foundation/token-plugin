@@ -150,7 +150,7 @@ class PP:
             # reqIdr
             ['B8fV7naUqLATYocqu7yZ8WM9BJDuS24bqbJNvBRsoGg3'],
             # discarded
-            1,
+            "",
             # digest
             'ccb7388bc43a1e4669a23863c2b8c43efa183dde25909541b06c0f5196ac4f3b',
             # ledger id
@@ -159,6 +159,10 @@ class PP:
             '5BU5Rc3sRtTJB6tVprGiTSqiRaa9o6ei11MjH4Vu16ms',
             # txn root
             'EdxDR8GUeMXGMGtQ6u7pmrUgKfc2XdunZE79Z9REEHg6',
+            # sub_seq_no
+            0,
+            # final
+            True
         ]
 
         return PrePrepare(*pre_prepare_args)
@@ -200,11 +204,13 @@ class PP:
             replica.lastPrePrepareSeqNo + 1,
             get_utc_epoch(),
             [req.digest],
-            1,
+            "",
             req.digest,
             CONFIG_LEDGER_ID,
             replica.stateRootHash(TOKEN_LEDGER_ID),
             replica.txnRootHash(TOKEN_LEDGER_ID),
+            0,
+            True
         ]
         return PrePrepare(*args)
 
@@ -236,7 +242,8 @@ class Ord:
         ord_args = [
             pp.instId,
             pp.viewNo,
-            pp.reqIdr[:pp.discarded],
+            pp.reqIdr,
+            [],
             pp.ppSeqNo,
             pp.ppTime,
             pp.ledgerId,
