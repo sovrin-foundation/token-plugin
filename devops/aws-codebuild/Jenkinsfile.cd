@@ -19,6 +19,7 @@ pipelineWrapper({
         }
 
         def evernymRepo = evLibrary.EvernymRepo.new(this)
+        def sovrinRepo = evLibrary.SovrinRepo.new(this)
         def utils = evLibrary.Utils.new(this)
         def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
@@ -110,7 +111,7 @@ pipelineWrapper({
                     }
                 }
 
-                stage('Upload deb to Evernym repo') {
+                stage('Upload deb to repositories') {
                     String debName
 
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
@@ -120,6 +121,14 @@ pipelineWrapper({
                         evernymRepo.upload {
                             repoDistr = 'agency_dev'
                             packagePath = debName
+                        }
+
+                        if (env.BRANCH_NAME == 'stable') {
+                            logger.info("Uploading debian package '$debName' to sovrin repo")
+                            SovrinRepo.upload {
+                                repoDistr = 'sdk'
+                                packagePath = debName
+                            }
                         }
                     }
 
