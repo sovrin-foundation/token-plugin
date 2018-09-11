@@ -51,14 +51,14 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $ui
 ARG indy_stream=stable
 
 ARG indy_anoncreds_ver=1.0.11
-ARG indy_node_ver=1.6.71
-ARG python3_indy_crypto_ver=0.4.1
-ARG indy_crypto_ver=0.4.0
-ARG indy_plenum_ver=1.6.50
+ARG indy_node_ver=1.6.73
+ARG python3_indy_crypto_ver=0.4.3
+ARG indy_crypto_ver=0.4.3
+ARG indy_plenum_ver=1.6.51
 
  
-ARG sovtoken_pkg_name=sovtoken_0.9.1_amd64.deb
-ARG sovtokenfees_pkg_name=sovtokenfees_0.9.1_amd64.deb
+ARG sovtoken_pkg_name=sovtoken_0.9.2_amd64.deb
+ARG sovtokenfees_pkg_name=sovtokenfees_0.9.2_amd64.deb
 
 COPY ${sovtoken_pkg_name} /root
 COPY ${sovtokenfees_pkg_name} /root

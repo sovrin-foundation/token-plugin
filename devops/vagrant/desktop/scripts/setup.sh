@@ -47,8 +47,8 @@ sudo apt-get update -y && apt-get install -y \
 echo ${CYAN}libindy
 sudo apt-get update -y && apt-get install -y \
         python3-nacl \
-        libindy-crypto=0.4.1 \
-        libindy=1.6.1
+        libindy-crypto=0.4.3 \
+        libindy=1.6.5
 
 echo ${CYAN}python
 sudo pip3 install -U \
@@ -57,16 +57,16 @@ sudo pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.6.1 \
+    python3-indy==1.6.5 \
     mock
 
 echo ${CYAN}plenum
 echo "deb https://repo.sovrin.org/deb xenial stable" >> /etc/apt/sources.list \
 sudo apt-get update && apt-get install -y \
          supervisor \
-         python3-indy-crypto=0.4.1 \
-         indy-plenum=1.6.50 \
-         indy-node=1.6.71 \
+         python3-indy-crypto=0.4.3 \
+         indy-plenum=1.6.51 \
+         indy-node=1.6.73 \
      && rm -rf /var/lib/apt/lists/*
 
 
