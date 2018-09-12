@@ -1,3 +1,4 @@
+import sys
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer  # , txn_root_serializer
 # TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
@@ -26,6 +27,7 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
+
 
 
 logger = getlogger()
@@ -71,9 +73,67 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     @staticmethod
     def has_fees(request) -> bool:
-        return hasattr(request, FEES) and isinstance(request.fees, list) \
-               and len(request.fees) > 0 and isinstance(request.fees[0], list) \
-               and len(request.fees[0]) > 0
+        try:
+            StaticFeesReqHandler.validate_fees(request)
+            return True
+        except StaticFeesReqHandler:
+            return False
+
+    @staticmethod
+    def validate_fees(request):
+        has_fees = hasattr(request, FEES)
+        if has_fees:
+            def _validate_list(l, min_len, max_len, list_name):
+                if not isinstance(l, list):
+                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                        getattr(request, f.REQ_ID.nm, None),
+                                                        "{} list is NOT a list -- was {}".format(list_name, type(l)))
+                if not (min_len <= len(l) <= max_len):
+                    msg = "{} list is not expected length -- was: {} - ".format(list_name, len(l))
+                    if min_len == max_len:
+                        msg += "expected to be {}".format(str(min_len))
+                    else:
+                        msg += "expected to be between {} and {}".format(str(min_len), str(max_len))
+                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                        getattr(request, f.REQ_ID.nm, None),
+                                                        msg)
+
+            def _validate_type(t, expected_t, field_name):
+                if not isinstance(t, expected_t):
+                    msg = "{} field is not expected type -- value: {} - type: {} - expected: {}".format(field_name,
+                                                                                                        str(t),
+                                                                                                        type(t),
+                                                                                                        str(expected_t))
+                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                        getattr(request, f.REQ_ID.nm, None),
+                                                        msg)
+
+            fees = request.fees
+            _validate_list(fees, 3, 3, "Fees")
+
+            _validate_list(fees[0], 1, sys.maxsize, "INPUTS")
+            for input in fees[0]:
+                _validate_list(input, 2, 2, "input")
+                _validate_type(input[0], str, "input address")
+                _validate_type(input[1], int, "input sequence number")
+
+            # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
+            # We could consider lock this down even more by requiring OUTPUT address to be one of the
+            # INPUT address
+            _validate_list(fees[1], 0, MAX_FEE_OUTPUTS, "OUTPUT")
+            for output in fees[1]:
+                _validate_list(output, 2, 2, "output")
+                _validate_type(input[0], str, "output address")
+                _validate_type(input[1], int, "output amount")
+
+            _validate_list(fees[2], 1, len(fees[0]), "signatures")
+            for sig in fees[2]:
+                _validate_type(sig, str, "signature")
+
+        else:
+            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                getattr(request, f.REQ_ID.nm, None),
+                                                "Client request does not include {}".format(FEES))
 
     @staticmethod
     def get_change_for_fees(request) -> list:
@@ -88,25 +148,19 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
-        if self.has_fees(request) and not required_fees:
-            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                getattr(request, f.REQ_ID.nm, None),
-                                                'Fees are not allowed for this txn type')
+
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
             self._get_deducted_fees_xfer(request, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
-            # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
-            # We could consider lock this down even more by requiring OUTPUT address to be one of the
-            # INPUT address
-            outputs = request.fees[1]
-            if len(outputs) > MAX_FEE_OUTPUTS:
-                raise InvalidClientRequest(request.identifier,
-                                           request.reqId,
-                                           "Only {} OUTPUT is allow for Transaction fees".format(MAX_FEE_OUTPUTS))
-
-            self._get_deducted_fees_non_xfer(request, required_fees)
+            StaticFeesReqHandler.validate_fees(request)
+            self._validate_fees_can_pay(request, required_fees)
+        else:
+            if StaticFeesReqHandler.has_fees(request):
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are not allowed for this txn type')
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -228,21 +282,28 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                           expected_amount, request,
                                                           'fees: {}'.format(required_fees))
 
-    def _get_deducted_fees_non_xfer(self, request, required_fees):
-        if not self.has_fees(request):
-            error = 'fees not present or improperly formed'
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+    def _validate_fees_can_pay(self, request, required_fees):
+        """
+        Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
+
+        This function ASSUMES that validation of the fees for the request has already been done.
+
+        :param request:
+        :param required_fees:
+        :return:
+        """
+
+        try:
+            sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
+        except UTXOError as ex:
+            raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
         else:
-            try:
-                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
-            except UTXOError as ex:
-                raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
-            else:
-                change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
-                expected_amount = change_amount + required_fees
-                TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
-                                                              expected_amount, request,
-                                                              'fees: {}'.format(required_fees))
+            change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
+            expected_amount = change_amount + required_fees
+            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
+                                                          expected_amount, request,
+                                                          'fees: {}'.format(required_fees))
+
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
