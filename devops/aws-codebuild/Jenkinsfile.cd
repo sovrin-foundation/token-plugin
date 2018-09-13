@@ -127,7 +127,7 @@ pipelineWrapper({
                         }
 	                if (env.BRANCH_NAME == 'stable') {
                             logger.info("Uploading debian package '$debName' to sovrin repo")
-                            SovrinRepo.upload {
+                            sovrinRepo.upload {
                                 repoDistr = 'deb'
                                 packagePath = debName
                             }
