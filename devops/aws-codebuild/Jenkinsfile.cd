@@ -1,6 +1,6 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@aws-codebuild', retriever: modernSCM(
+def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.8.0-aws-codebuild', retriever: modernSCM(
     github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
 )).com.evernym.pipeline
 
@@ -9,6 +9,9 @@ notifier = evLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
 pipelineWrapper({
+
+    //put code build containers inside a vpc under our dev account
+    env.USE_VPC_CONFIG = true
 
     nodeWrapper {
         def osname = 'xenial'
@@ -111,7 +114,9 @@ pipelineWrapper({
                     }
                 }
 
-                stage('Upload deb to repositories') {
+
+                stage('Upload debs to repos') {
+                  
                     String debName
 
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
@@ -123,10 +128,11 @@ pipelineWrapper({
                             packagePath = debName
                         }
 
-                        if (env.BRANCH_NAME == 'stable') {
+	                if (env.BRANCH_NAME == 'stable') {
                             logger.info("Uploading debian package '$debName' to sovrin repo")
                             SovrinRepo.upload {
-                                repoDistr = 'sdk'
+                                repoDistr = 'deb'
+
                                 packagePath = debName
                             }
                         }
