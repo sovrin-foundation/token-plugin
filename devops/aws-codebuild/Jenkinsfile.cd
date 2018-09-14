@@ -1,6 +1,6 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@aws-codebuild', retriever: modernSCM(
+def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.8.0-aws-codebuild', retriever: modernSCM(
     github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
 )).com.evernym.pipeline
 
@@ -9,6 +9,9 @@ notifier = evLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
 pipelineWrapper({
+
+    //put code build containers inside a vpc under our dev account
+    env.USE_VPC_CONFIG = true
 
     nodeWrapper {
         def osname = 'xenial'
@@ -19,6 +22,7 @@ pipelineWrapper({
         }
 
         def evernymRepo = evLibrary.EvernymRepo.new(this)
+        def sovrinRepo = evLibrary.SovrinRepo.new(this)
         def utils = evLibrary.Utils.new(this)
         def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
@@ -110,7 +114,7 @@ pipelineWrapper({
                     }
                 }
 
-                stage('Upload deb to Evernym repo') {
+                stage('Upload debs to repos') {
                     String debName
 
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
@@ -120,6 +124,13 @@ pipelineWrapper({
                         evernymRepo.upload {
                             repoDistr = 'agency_dev'
                             packagePath = debName
+                        }
+	                if (env.BRANCH_NAME == 'stable') {
+                            logger.info("Uploading debian package '$debName' to sovrin repo")
+                            sovrinRepo.upload {
+                                repoDistr = 'deb'
+                                packagePath = debName
+                            }
                         }
                     }
 

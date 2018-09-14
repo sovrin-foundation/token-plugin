@@ -19,7 +19,7 @@ metadata = {}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.6.5']
+tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy>=1.6.5']
 
 setup(
     name=metadata['__title__'],
@@ -37,12 +37,7 @@ setup(
         '': ['*.txt', '*.md', '*.rst', '*.json', '*.conf', '*.html',
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
-    # TODO change to 'indy-plenum' with proper version
-    # once sovtoken starts using indy-plenum from stable
-    #
-    # '>=' here seems makes sense since usually indy-plenum is
-    # installed as indy-node's dependency and might be with greater
-    # version (just to not update each time new indy-node is released)
+
     install_requires=['indy-plenum==1.6.51'],
     setup_requires=['pytest-runner'],
     extras_require={
