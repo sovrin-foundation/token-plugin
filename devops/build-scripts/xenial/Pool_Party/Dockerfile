@@ -57,8 +57,8 @@ ARG indy_crypto_ver=0.4.3
 ARG indy_plenum_ver=1.6.51
 
  
-ARG sovtoken_pkg_name=sovtoken_0.9.2_amd64.deb
-ARG sovtokenfees_pkg_name=sovtokenfees_0.9.2_amd64.deb
+ARG sovtoken_pkg_name=sovtoken_0.9.3_amd64.deb
+ARG sovtokenfees_pkg_name=sovtokenfees_0.9.3_amd64.deb
 
 COPY ${sovtoken_pkg_name} /root
 COPY ${sovtokenfees_pkg_name} /root
@@ -67,7 +67,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y \
-	indy-plenum=${indy_plenum_ver} \        
+	indy-plenum=${indy_plenum_ver} \
         indy-node=${indy_node_ver} \
         indy-anoncreds=${indy_anoncreds_ver} \
         python3-indy-crypto=${python3_indy_crypto_ver} \
