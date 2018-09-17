@@ -28,8 +28,6 @@ from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
-
-
 logger = getlogger()
 
 MAX_FEE_OUTPUTS = 1
@@ -76,7 +74,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         try:
             StaticFeesReqHandler.validate_fees(request)
             return True
-        except StaticFeesReqHandler:
+        except InvalidClientMessageException:
             return False
 
     @staticmethod
@@ -108,23 +106,31 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                         getattr(request, f.REQ_ID.nm, None),
                                                         msg)
 
+            def _validate_dict(d, field_map, dict_name):
+                if not isinstance(d, dict):
+                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                        getattr(request, f.REQ_ID.nm, None),
+                                                        "{} dict is NOT a dict -- was {}".format(dict_name, type(d)))
+                for k, v in d.items():
+                    if k not in field_map:
+                        raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                            getattr(request, f.REQ_ID.nm, None),
+                                                            "has extra field {} -- not allowed".format(str(k)))
+                    _validate_type(v, field_map[k], k)
+
             fees = request.fees
             _validate_list(fees, 3, 3, "Fees")
 
             _validate_list(fees[0], 1, sys.maxsize, "INPUTS")
             for input in fees[0]:
-                _validate_list(input, 2, 2, "input")
-                _validate_type(input[0], str, "input address")
-                _validate_type(input[1], int, "input sequence number")
+                _validate_dict(input, {ADDRESS: str, SEQNO: int}, "input")
 
             # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
             # We could consider lock this down even more by requiring OUTPUT address to be one of the
             # INPUT address
             _validate_list(fees[1], 0, MAX_FEE_OUTPUTS, "OUTPUT")
             for output in fees[1]:
-                _validate_list(output, 2, 2, "output")
-                _validate_type(input[0], str, "output address")
-                _validate_type(input[1], int, "output amount")
+                _validate_dict(output, {ADDRESS: str, AMOUNT: int}, "output")
 
             _validate_list(fees[2], 1, len(fees[0]), "signatures")
             for sig in fees[2]:
@@ -157,7 +163,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             StaticFeesReqHandler.validate_fees(request)
             self._validate_fees_can_pay(request, required_fees)
         else:
-            if StaticFeesReqHandler.has_fees(request):
+            if hasattr(request, FEES):
                 raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                                     getattr(request, f.REQ_ID.nm, None),
                                                     'Fees are not allowed for this txn type')
