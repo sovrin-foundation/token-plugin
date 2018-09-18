@@ -1,6 +1,6 @@
 #+author: Cam Parra
 
-<p align="center"><img src="banner.png" /></p>
+<p align="center"><img src="./banner.png" /></p>
 
 
 * Sovrin Token Plugins
