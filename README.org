@@ -1,7 +1,7 @@
 #+author: Cam Parra
 
-<p align="center"><img src="./banner.png" /></p>
-
+#+ATTR_HTML: :style margin-left: auto; margin-right: auto;
+[[./banner.png]]
 
 * Sovrin Token Plugins
   
