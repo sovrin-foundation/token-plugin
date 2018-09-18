@@ -1,10 +1,11 @@
 import pytest
-from plenum.common.exceptions import InvalidClientMessageException
-from stp_core.common.util import adict
 
-from sovtokenfees.constants import FEES
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+from sovtokenfees.messages.fields import TxnFeesField
 
+
+def _val_to_exception(validation_result):
+    if validation_result:
+        raise Exception(validation_result)
 
 def test_fees_variations():
     test_fees = [  # valid
@@ -16,10 +17,7 @@ def test_fees_variations():
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj = adict()
-
-    test_obj[FEES] = test_fees
-    StaticFeesReqHandler.validate_fees(test_obj)
+    _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid address type
         [
@@ -30,9 +28,8 @@ def test_fees_variations():
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid input seqNo
         [
@@ -43,9 +40,8 @@ def test_fees_variations():
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid input as tuple
         [
@@ -56,9 +52,8 @@ def test_fees_variations():
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid, No sig
         [
@@ -68,9 +63,8 @@ def test_fees_variations():
             {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}
         ]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid too many OUTPUTS
         [
@@ -78,13 +72,12 @@ def test_fees_variations():
         ],
         [
             {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9},
-            {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}
+            {"address": "dctKSXBbv2My3TGGUgTFjkxu1A9JM3Sscd5FydY4dkxnfwA7q", "amount": 9}
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # valid - no outputs
         [
@@ -95,9 +88,17 @@ def test_fees_variations():
         ],
         ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
     ]
-    test_obj[FEES] = test_fees
-    StaticFeesReqHandler.validate_fees(test_obj)
+    _val_to_exception(TxnFeesField().validate(test_fees))
 
+    test_fees = [  # invalid - no inputs
+        [],
+        [
+            {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}
+        ],
+        []
+    ]
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))
 
     test_fees = [  # invalid too many sigs
         [
@@ -111,23 +112,5 @@ def test_fees_variations():
             "5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"
         ]
     ]
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
-
-    test_fees = (  # invalid not list
-        [
-            {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "seqNo": 2}
-        ],
-        [
-            {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}
-        ],
-        ["5Z7ktpfVQAhj2gMFR8L6JnG7fQQJzqWwqrDgXQP1CYf2vrjKPe2a27borFVuAcQh2AttoejgAoTzJ36wfyKxu5ox"]
-    )
-    test_obj[FEES] = test_fees
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
-
-    test_obj = "test"
-    with pytest.raises(InvalidClientMessageException):
-        StaticFeesReqHandler.validate_fees(test_obj)
+    with pytest.raises(Exception):
+        _val_to_exception(TxnFeesField().validate(test_fees))

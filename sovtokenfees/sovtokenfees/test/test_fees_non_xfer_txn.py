@@ -149,7 +149,7 @@ def test_fees_too_many_outputs(
         fee_amount,
         change_address=[address_main, Address().address]
     )
-    with pytest.raises(RequestRejectedException):
+    with pytest.raises(Exception):
         helpers.sdk.send_and_check_request_objects([req])
 
 

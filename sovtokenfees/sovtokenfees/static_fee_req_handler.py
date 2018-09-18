@@ -1,7 +1,5 @@
-import sys
 from common.serializers.serialization import proof_nodes_serializer, \
-    state_roots_serializer  # , txn_root_serializer
-# TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
+    state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
@@ -19,7 +17,7 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
 from plenum.common.types import f, OPERATION
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import FeesStructureField
+from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
 from sovtoken.token_req_handler import TokenReqHandler
@@ -30,14 +28,13 @@ from state.trie.pruning_trie import rlp_decode
 
 logger = getlogger()
 
-MAX_FEE_OUTPUTS = 1
-
 
 class StaticFeesReqHandler(FeeReqHandler):
     valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
     write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
+    _txn_fees_validator = TxnFeesField()
     MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
@@ -69,73 +66,22 @@ class StaticFeesReqHandler(FeeReqHandler):
         # paying sovtokenfees
         self.uncommitted_state_roots_for_batches = []
 
-    @staticmethod
-    def has_fees(request) -> bool:
+    def has_fees(self, request) -> bool:
         try:
-            StaticFeesReqHandler.validate_fees(request)
+            self.validate_fees(request)
             return True
         except InvalidClientMessageException:
             return False
 
-    @staticmethod
-    def validate_fees(request):
+    def validate_fees(self, request):
         has_fees = hasattr(request, FEES)
         if has_fees:
-            def _validate_list(l, min_len, max_len, list_name):
-                if not isinstance(l, list):
-                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                        getattr(request, f.REQ_ID.nm, None),
-                                                        "{} list is NOT a list -- was {}".format(list_name, type(l)))
-                if not (min_len <= len(l) <= max_len):
-                    msg = "{} list is not expected length -- was: {} - ".format(list_name, len(l))
-                    if min_len == max_len:
-                        msg += "expected to be {}".format(str(min_len))
-                    else:
-                        msg += "expected to be between {} and {}".format(str(min_len), str(max_len))
-                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                        getattr(request, f.REQ_ID.nm, None),
-                                                        msg)
-
-            def _validate_type(t, expected_t, field_name):
-                if not isinstance(t, expected_t):
-                    msg = "{} field is not expected type -- value: {} - type: {} - expected: {}".format(field_name,
-                                                                                                        str(t),
-                                                                                                        type(t),
-                                                                                                        str(expected_t))
-                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                        getattr(request, f.REQ_ID.nm, None),
-                                                        msg)
-
-            def _validate_dict(d, field_map, dict_name):
-                if not isinstance(d, dict):
-                    raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                        getattr(request, f.REQ_ID.nm, None),
-                                                        "{} dict is NOT a dict -- was {}".format(dict_name, type(d)))
-                for k, v in d.items():
-                    if k not in field_map:
-                        raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                            getattr(request, f.REQ_ID.nm, None),
-                                                            "has extra field {} -- not allowed".format(str(k)))
-                    _validate_type(v, field_map[k], k)
-
             fees = request.fees
-            _validate_list(fees, 3, 3, "Fees")
-
-            _validate_list(fees[0], 1, sys.maxsize, "INPUTS")
-            for input in fees[0]:
-                _validate_dict(input, {ADDRESS: str, SEQNO: int}, "input")
-
-            # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
-            # We could consider lock this down even more by requiring OUTPUT address to be one of the
-            # INPUT address
-            _validate_list(fees[1], 0, MAX_FEE_OUTPUTS, "OUTPUT")
-            for output in fees[1]:
-                _validate_dict(output, {ADDRESS: str, AMOUNT: int}, "output")
-
-            _validate_list(fees[2], 1, len(fees[0]), "signatures")
-            for sig in fees[2]:
-                _validate_type(sig, str, "signature")
-
+            error = self._txn_fees_validator.validate(fees)
+            if error:
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    error)
         else:
             raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                                 getattr(request, f.REQ_ID.nm, None),
@@ -160,7 +106,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             self._get_deducted_fees_xfer(request, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
-            StaticFeesReqHandler.validate_fees(request)
+            self.validate_fees(request)
             self._validate_fees_can_pay(request, required_fees)
         else:
             if hasattr(request, FEES):
