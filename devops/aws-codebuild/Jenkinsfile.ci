@@ -1,6 +1,6 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@aws-codebuild', retriever: modernSCM(
+def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.3.0-aws-codebuild', retriever: modernSCM(
     github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
 )).com.evernym.pipeline
 
@@ -14,6 +14,9 @@ pipelineWrapper({
         List osnames = ['xenial']
         List projects = ['sovtoken', 'sovtokenfees']
         List goals = ['test']
+
+        //put code build containers inside a vpc under our dev account
+        env.USE_VPC_CONFIG = true
 
         stage('Checkout from SCM') {
             checkout scm
