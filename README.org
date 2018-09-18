@@ -1,5 +1,8 @@
 #+author: Cam Parra
-[[./banner.png]]
+
+<p align="center"><img src="banner.png" /></p>
+
+
 * Sovrin Token Plugins
   
   This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
