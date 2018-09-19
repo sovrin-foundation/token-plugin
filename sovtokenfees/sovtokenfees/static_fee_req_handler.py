@@ -34,7 +34,6 @@ class StaticFeesReqHandler(FeeReqHandler):
     write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
-    _txn_fees_validator = TxnFeesField()
     MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
@@ -66,26 +65,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         # paying sovtokenfees
         self.uncommitted_state_roots_for_batches = []
 
-    def has_fees(self, request) -> bool:
-        try:
-            self.validate_fees(request)
-            return True
-        except InvalidClientMessageException:
-            return False
-
-    def validate_fees(self, request):
-        has_fees = hasattr(request, FEES)
-        if has_fees:
-            fees = request.fees
-            error = self._txn_fees_validator.validate(fees)
-            if error:
-                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                    getattr(request, f.REQ_ID.nm, None),
-                                                    error)
-        else:
-            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                getattr(request, f.REQ_ID.nm, None),
-                                                "Client request does not include {}".format(FEES))
+    @staticmethod
+    def has_fees(request) -> bool:
+        return hasattr(request, FEES) and request.fees is not None
 
     @staticmethod
     def get_change_for_fees(request) -> list:
@@ -106,10 +88,14 @@ class StaticFeesReqHandler(FeeReqHandler):
             self._get_deducted_fees_xfer(request, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
-            self.validate_fees(request)
-            self._validate_fees_can_pay(request, required_fees)
+            if StaticFeesReqHandler.has_fees(request):
+                self._validate_fees_can_pay(request, required_fees)
+            else:
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are required for this txn type')
         else:
-            if hasattr(request, FEES):
+            if StaticFeesReqHandler.has_fees(request):
                 raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                                     getattr(request, f.REQ_ID.nm, None),
                                                     'Fees are not allowed for this txn type')
