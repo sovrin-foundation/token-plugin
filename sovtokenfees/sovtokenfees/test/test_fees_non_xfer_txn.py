@@ -138,7 +138,7 @@ def test_fees_too_many_outputs(
     mint_tokens,
 ):
     """
-    More than one output adress
+    More than one output address
     """
     req = helpers.request.nym()
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
@@ -152,6 +152,35 @@ def test_fees_too_many_outputs(
     with pytest.raises(Exception):
         helpers.sdk.send_and_check_request_objects([req])
 
+
+def test_no_fees_when_required(
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens,
+):
+    """
+    No fees, both null fee field and no fee field
+    """
+    req = helpers.request.nym()
+    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
+    assert(fee_amount != 0)
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([req])
+
+    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+    helpers.request.add_fees(
+        req,
+        utxos,
+        fee_amount,
+        change_address=[address_main, Address().address]
+    )
+
+    setattr(req, FEES, None)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([req])
 
 
 def test_fees_incorrect_sig(
