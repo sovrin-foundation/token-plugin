@@ -37,10 +37,10 @@ class PublicOutputField(AnyMapField):
 
         addr_error = self.public_address_field.validate(val["address"])
         if addr_error:
-            return addr_error
+            return "address -- " + addr_error
         amt_error = self.public_amount_field.validate(val["amount"])
         if amt_error:
-            return amt_error
+            return "amount -- " + amt_error
 
 
 # class PublicAddressesField(IterableField):
@@ -74,10 +74,10 @@ class PublicInputField(AnyMapField):
 
         addr_error = self.public_address_field.validate(val["address"])
         if addr_error:
-            return addr_error
+            return "address -- " + addr_error
         amt_error = self.seq_no_field.validate(val["seqNo"])
         if amt_error:
-            return amt_error
+            return "seqNo -- " + amt_error
 
 
 class PublicInputsField(IterableField):
