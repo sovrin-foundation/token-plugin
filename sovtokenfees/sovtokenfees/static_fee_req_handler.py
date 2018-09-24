@@ -1,6 +1,5 @@
 from common.serializers.serialization import proof_nodes_serializer, \
-    state_roots_serializer  # , txn_root_serializer
-# TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
+    state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
@@ -18,7 +17,7 @@ from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq
 from plenum.common.types import f, OPERATION
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import FeesStructureField
+from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
 from sovtoken.token_req_handler import TokenReqHandler
@@ -27,10 +26,7 @@ from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
-
 logger = getlogger()
-
-MAX_FEE_OUTPUTS = 1
 
 
 class StaticFeesReqHandler(FeeReqHandler):
@@ -71,9 +67,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     @staticmethod
     def has_fees(request) -> bool:
-        return hasattr(request, FEES) and isinstance(request.fees, list) \
-               and len(request.fees) > 0 and isinstance(request.fees[0], list) \
-               and len(request.fees[0]) > 0
+        return hasattr(request, FEES) and request.fees is not None
 
     @staticmethod
     def get_change_for_fees(request) -> list:
@@ -88,25 +82,23 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
-        if self.has_fees(request) and not required_fees:
-            raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                getattr(request, f.REQ_ID.nm, None),
-                                                'Fees are not allowed for this txn type')
+
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
             self._get_deducted_fees_xfer(request, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
-            # We don't want to allow transfers on txn fees. So only one OUTPUT address can be used.
-            # We could consider lock this down even more by requiring OUTPUT address to be one of the
-            # INPUT address
-            outputs = request.fees[1]
-            if len(outputs) > MAX_FEE_OUTPUTS:
-                raise InvalidClientRequest(request.identifier,
-                                           request.reqId,
-                                           "Only {} OUTPUT is allow for Transaction fees".format(MAX_FEE_OUTPUTS))
-
-            self._get_deducted_fees_non_xfer(request, required_fees)
+            if StaticFeesReqHandler.has_fees(request):
+                self._validate_fees_can_pay(request, required_fees)
+            else:
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are required for this txn type')
+        else:
+            if StaticFeesReqHandler.has_fees(request):
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are not allowed for this txn type')
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -228,21 +220,28 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                           expected_amount, request,
                                                           'fees: {}'.format(required_fees))
 
-    def _get_deducted_fees_non_xfer(self, request, required_fees):
-        if not self.has_fees(request):
-            error = 'fees not present or improperly formed'
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
+    def _validate_fees_can_pay(self, request, required_fees):
+        """
+        Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
+
+        This function ASSUMES that validation of the fees for the request has already been done.
+
+        :param request:
+        :param required_fees:
+        :return:
+        """
+
+        try:
+            sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
+        except UTXOError as ex:
+            raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
         else:
-            try:
-                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
-            except UTXOError as ex:
-                raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
-            else:
-                change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
-                expected_amount = change_amount + required_fees
-                TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
-                                                              expected_amount, request,
-                                                              'fees: {}'.format(required_fees))
+            change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
+            expected_amount = change_amount + required_fees
+            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
+                                                          expected_amount, request,
+                                                          'fees: {}'.format(required_fees))
+
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
