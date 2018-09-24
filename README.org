@@ -1,6 +1,9 @@
 #+author: Cam Parra
 
-* Sovrin Ledger Payment plugins
+#+ATTR_HTML: :style margin-left: auto; margin-right: auto;
+[[./banner.png]]
+
+* Sovrin Token Plugins
   
   This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
 
@@ -99,3 +102,5 @@
        ./run-test.sh token test_token_req_handler
     #+END_SRC
 
+** How To Contribute
+   Please follow the guide [[./doc/pull-request.org][here]]. 
