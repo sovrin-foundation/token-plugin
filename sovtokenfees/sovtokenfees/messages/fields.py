@@ -4,6 +4,7 @@ from plenum.config import SIGNATURE_FIELD_LIMIT
 
 from sovtoken.messages.fields import PublicInputsField, \
     PublicOutputsField
+from sovtokenfees.constants import MAX_FEE_OUTPUTS
 
 
 class FeesStructureField(MapField):
@@ -14,8 +15,8 @@ class FeesStructureField(MapField):
 
 class TxnFeesField(FixedLengthField):
     _base_types = (list, tuple)
-    inputs_validator = PublicInputsField()
-    outputs_validator = PublicOutputsField()
+    inputs_validator = PublicInputsField(min_length=1)
+    outputs_validator = PublicOutputsField(max_length=MAX_FEE_OUTPUTS)
     signatures_validator = IterableField(SignatureField(max_length=SIGNATURE_FIELD_LIMIT))
 
     def __init__(self, **kwargs):
@@ -24,21 +25,20 @@ class TxnFeesField(FixedLengthField):
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
-            return error
+            return "fees -- " + error
 
         error = self.inputs_validator.validate(val[0])
         if error:
-            return error
+            return "inputs -- " + error
 
         error = self.outputs_validator.validate(val[1])
         if error:
-            return error
+            return "outputs -- " + error
 
         error = self.signatures_validator.validate(val[2])
         if error:
-            return error
+            return "signatures -- " + error
 
         if len(val[0]) != len(val[2]):
-            return 'Number of signatures and number of inputs should match but are {} and {} ' \
+            return 'signatures -- Number of signatures and number of inputs should match but are {} and {} ' \
                    'respectively.'.format(len(val[2]), len(val[0]))
-
