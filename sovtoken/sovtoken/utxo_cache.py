@@ -13,19 +13,21 @@ logger = getlogger()
 class UTXOCache(OptimisticKVStore):
     """
     Used to answer 2 questions:
-        1. Given​ ​an​ ​output,​ ​check​ ​if​ ​it's​ ​spent​ ​or​ ​not​ ​and​ ​return​ ​the​ ​amount​ ​
-        held​ ​by​ ​it​ ​if​ ​not spent
-        2. Given​ ​an​ ​address,​ ​return​ ​all​ ​valid​ ​UTXOs
+        1. Given an output, check whether it is spent. Return the amout it holds when not spent.
+        2. Given an address, return all valid UTXOs.
 
-    The key value looks like this `<key is address> -> <value is a list of unspent seq nos and amounts>`
+    The key value looks like this 
+        `<key is address> -> <value is a list of unspent seq nos and amounts>`
+
     If address `a1` has 3 UTXOs with seq no 4, 6, 19 and amount 1, 31, 100 respectively,
-    the key value would be `a1 -> 4:1:6:31:19:100`; for `n` seq_nos, there will be `2*n` items.
-    The seq no lives at index `i` and value lives at `i+1`
-    Intentionally not using tuples or any delimiter for seq_no, value pairs to avoid serialization and
-    deserialization cost
+    the key value would be `a1 -> 4:1:6:31:19:100`
+        * For `n` seq_nos, there will be `2*n` items in the value list
+        * The seq no lives at index `i` and the corresponding value lives at `i+1`
+        * Avoiding tuples or any additional delimiters for seq_no:value pairs to avoid serialization and
+        deserialization cost
 
-    An unspent output is combination of an address and a reference (seq no)
-    to a txn in which this address was transferred some tokens
+    An unspent output is the combination of an address and a reference (seq no) to a txn in which this address was
+    transferred some tokens
     """
     def __init__(self, kv_store: KeyValueStorage):
         super().__init__(kv_store)
