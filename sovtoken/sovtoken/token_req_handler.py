@@ -56,8 +56,7 @@ class TokenReqHandler(LedgerRequestHandler):
                 raise ex
             error = 'Exception {} while processing inputs/outputs'.format(ex)
             raise InvalidClientMessageException(request.identifier,
-                                                getattr(
-                                                    request, 'reqId', None),
+                                                getattr(request, 'reqId', None),
                                                 error)
         else:
             return TokenReqHandler._validate_xfer_public_txn(request,
@@ -66,8 +65,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def _validate_xfer_public_txn(request: Request, sum_inputs: int, sum_outputs: int):
-        TokenReqHandler.validate_given_inputs_outputs(
-            sum_inputs, sum_outputs, sum_outputs, request)
+        TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs, sum_outputs, request)
 
     @staticmethod
     def validate_given_inputs_outputs(inputs_sum, outputs_sum, required_amount, request,
@@ -90,8 +88,7 @@ class TokenReqHandler(LedgerRequestHandler):
             return  # Equal is valid
         elif inputs_sum > required_amount:
             error = 'Extra funds, sum of inputs is {} ' \
-                    'but required amount: {} -- sum of outputs: {}'.format(
-                        inputs_sum, required_amount, outputs_sum)
+                    'but required amount: {} -- sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise ExtraFundsError(getattr(request, f.IDENTIFIER.nm, None),
@@ -100,8 +97,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
         elif inputs_sum < required_amount:
             error = 'Insufficient funds, sum of inputs is {}' \
-                    'but required amount is {}. sum of outputs: {}'.format(
-                        inputs_sum, required_amount, outputs_sum)
+                    'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
             raise InsufficientFundsError(getattr(request, f.IDENTIFIER.nm, None),
@@ -109,8 +105,7 @@ class TokenReqHandler(LedgerRequestHandler):
                                          error)
 
         raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                            getattr(
-                                                request, f.REQ_ID.nm, None),
+                                            getattr(request, f.REQ_ID.nm, None),
                                             'Request to not meet minimum requirements')
 
     def doStaticValidation(self, request: Request):
@@ -148,8 +143,7 @@ class TokenReqHandler(LedgerRequestHandler):
         txn = reqToTxn(req)
         if req.operation[TXN_TYPE] == XFER_PUBLIC:
             req.operation[SIGS] = sigs
-            sigs = [(i["address"], s)
-                    for i, s in zip(req.operation[INPUTS], sigs)]
+            sigs = [(i["address"], s) for i, s in zip(req.operation[INPUTS], sigs)]
             add_sigs_to_txn(txn, sigs, sig_type=ED25519)
         return txn
 
@@ -172,15 +166,16 @@ class TokenReqHandler(LedgerRequestHandler):
     def updateState(self, txns, isCommitted=False):
         try:
             _update_state_mint_public_txn = self._update_state_mint_public_txn
+            _update_state_xfer_public = self._update_state_xfer_public
+
             for txn in txns:
                 typ = get_type(txn)
                 if typ == MINT_PUBLIC:
-                    _update_state_mint_public_txn(
-                        txn, is_committed=isCommitted)
+                    _update_state_mint_public_txn(txn, is_committed=isCommitted)
 
                 if typ == XFER_PUBLIC:
-                    self._update_state_xfer_public(
-                        txn, is_committed=isCommitted)
+                    _update_state_xfer_public(txn, is_committed=isCommitted)
+
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)
             raise OperationError(error)
@@ -263,8 +258,7 @@ class TokenReqHandler(LedgerRequestHandler):
             inputs = request.operation[INPUTS]
             return utxo_cache.sum_inputs(inputs, is_committed=is_committed)
         except UTXOError as ex:
-            raise InvalidFundsError(
-                request.identifier, request.reqId, '{}'.format(ex))
+            raise InvalidFundsError(request.identifier, request.reqId, '{}'.format(ex))
 
     @staticmethod
     def sum_outputs(request: Request) -> int:
