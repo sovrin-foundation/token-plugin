@@ -2,7 +2,9 @@
 
 ## Upgrade Ledger with Token Software
 
-To install token software you need to install `sovrin` package with version `1.1.20`. **TODO:  This version is still a stub. Define first version with plugins and with trust anchor restriction**
+1) POOL_UPGRADE with the `indy-node` package version 1.6.70 to support `sovrin` package in POOL_UPGRADE txn
+2) Upgrade the CLI (locally) to 1.6.6 libindy, indy-CLI
+3) POOL_UPGRADE with the `sovrin` package version `1.1.20` to have TDE-ready version of plugins installed. **TODO:  This version is still a stub. Define first version with plugins and with trust anchor restriction**
 It might be done with [POOL_UPGRADE](https://github.com/hyperledger/indy-node/blob/master/docs/pool-upgrade.md) transaction. You can do it from `indy-cli` with this command:
 ```
 Command:
