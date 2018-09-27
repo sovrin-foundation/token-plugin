@@ -4,6 +4,7 @@ from typing import List
 from base58 import b58decode_check, b58encode_check, b58encode, b58decode
 from plenum.common.exceptions import UnauthorizedClientRequest
 from plenum.common.types import f
+from plenum.common.roles import Roles
 from plenum.server.domain_req_handler import DomainRequestHandler
 
 
@@ -57,6 +58,7 @@ def validate_multi_sig_txn(request, required_role, domain_state, threshold: int)
     # Takes a request, a provided role and expects to find at least a threshold number
     # senders roles with provided role. Can raise an exception
     senders = request.all_identifiers
+    error = ''
     if len(senders) >= threshold:
         authorized_sender_count = 0
         for idr in senders:
@@ -64,11 +66,12 @@ def validate_multi_sig_txn(request, required_role, domain_state, threshold: int)
                 authorized_sender_count += 1
                 if authorized_sender_count == threshold:
                     return
-        error = 'only Trustees can send this transaction'
-        raise UnauthorizedClientRequest(senders,
-                                        getattr(request, f.REQ_ID.nm, None),
-                                        error)
+        error = 'only {} can send this transaction'. \
+            format(Roles(required_role).name)
     else:
         error = 'Request needs at least {} signers but only {} found'. \
             format(threshold, len(senders))
+
+    if error:
         raise UnauthorizedClientRequest(senders, getattr(request, f.REQ_ID.nm, None), error)
+
