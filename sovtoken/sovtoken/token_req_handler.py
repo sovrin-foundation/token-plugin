@@ -150,20 +150,20 @@ class TokenReqHandler(LedgerRequestHandler):
     def _update_state_mint_public_txn(self, txn, is_committed=False):
         payload = get_payload_data(txn)
         seq_no = get_seq_no(txn)
-        [self._add_new_output(Output(output["address"], seq_no,
-                                     output["amount"]), is_committed=is_committed) for output in payload[OUTPUTS]]
+        [self._add_new_output(Output(output[ADDRESS], seq_no,
+                                     output[AMOUNT]), is_committed=is_committed) for output in payload[OUTPUTS]]
 
     def _update_state_xfer_public(self, txn, is_committed=False):
         payload = get_payload_data(txn)
         seq_no = get_seq_no(txn)
 
-        [self._spend_input(inp["address"], inp["seqNo"],
+        [self._spend_input(inp[ADDRESS], inp[SEQNO],
                            is_committed=is_committed) for inp in payload[INPUTS]]
 
-        [self._add_new_output(Output(output["address"], seq_no, output["amount"]),
+        [self._add_new_output(Output(output[ADDRESS], seq_no, output[AMOUNT]),
                               is_committed=is_committed) for output in payload[OUTPUTS]]
 
-    def updateState(self, txns, isCommitted=False):
+    def updateState(self, txns, is_committed=False):
         try:
             _update_state_mint_public_txn = self._update_state_mint_public_txn
             _update_state_xfer_public = self._update_state_xfer_public
@@ -171,10 +171,10 @@ class TokenReqHandler(LedgerRequestHandler):
             for txn in txns:
                 typ = get_type(txn)
                 if typ == MINT_PUBLIC:
-                    _update_state_mint_public_txn(txn, is_committed=isCommitted)
+                    _update_state_mint_public_txn(txn, is_committed=is_committed)
 
                 if typ == XFER_PUBLIC:
-                    _update_state_xfer_public(txn, is_committed=isCommitted)
+                    _update_state_xfer_public(txn, is_committed=is_committed)
 
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)
@@ -223,7 +223,7 @@ class TokenReqHandler(LedgerRequestHandler):
         # Since no of outputs can be large, a concious choice to not use `operator.attrgetter` on an
         # already constructed list was made
         outputs = SortedItems()
-        
+
         for k, v in rv.items():
             addr, seq_no = self.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
