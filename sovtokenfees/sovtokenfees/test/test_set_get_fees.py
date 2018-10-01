@@ -5,7 +5,7 @@ from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException)
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT
+from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
@@ -27,6 +27,19 @@ def test_trustee_set_invalid_fees(helpers):
     fees = {
         NYM: -1,
         XFER_PUBLIC: 2
+    }
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_set_fees(fees)
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
+
+def test_trustee_set_fees_for_invalid_txns(helpers):
+    """
+    Fees are not allowed for MINT_PUBLIC
+    """
+    fees = {
+        NYM: 1,
+        MINT_PUBLIC: 2
     }
     with pytest.raises(RequestNackedException):
         helpers.general.do_set_fees(fees)
