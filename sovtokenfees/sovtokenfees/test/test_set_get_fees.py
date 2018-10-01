@@ -35,7 +35,7 @@ def test_trustee_set_invalid_fees(helpers):
 
 def test_trustee_set_fees_for_invalid_txns(helpers):
     """
-    Fees cannot be negative
+    Fees are not allowed for MINT_PUBLIC
     """
     fees = {
         NYM: 1,
