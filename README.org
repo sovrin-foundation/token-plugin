@@ -28,11 +28,11 @@
 
     
     #+BEGIN_SRC bash
-      `MAKE=/usr/bin/make SRC_DIR_NAME=sovtoken make -C devops/ test_in_docker`
+      MAKE=/usr/bin/make SRC_DIR_NAME=sovtoken make -C devops/ test_in_docker
     #+END_SRC
 
     #+BEGIN_SRC bash
-      `MAKE=/usr/bin/make SRC_DIR_NAME=sovtokenfees make -C devops/ test_in_docker`
+      MAKE=/usr/bin/make SRC_DIR_NAME=sovtokenfees make -C devops/ test_in_docker
     #+END_SRC    
 
 ** How To Contribute
