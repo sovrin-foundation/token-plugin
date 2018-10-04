@@ -11,6 +11,9 @@ test:
 test_fees:	
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtokenfees/ && pytest sovtokenfees/test/'
 
+test_helpers:
+	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtokenfees/sovtokenfees/test/helpers/test && pytest --test_helpers'
+
 start:
 	docker-sync-stack start
 deps: 
