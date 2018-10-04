@@ -14,8 +14,6 @@ from plenum.test.conftest import *
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers
 
-from plenum.common.signer_did import DidSigner
-
 total_mint = 100
 seller_gets = 40
 
