@@ -1,4 +1,7 @@
 
+![img](./banner.png)
+
+
 # Table of Contents
 
 1.  [Sovrin Token Plugins](#org581a5d8)
@@ -10,8 +13,6 @@
         4.  [Starting Dev Env](#orgb33d5f6)
         5.  [Alternative for running tests](#orga76b3c6)
     3.  [How To Contribute](#orgd389b14)
-
-![img](./banner.png)
 
 
 <a id="org581a5d8"></a>
