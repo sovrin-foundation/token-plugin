@@ -12,6 +12,7 @@ def get_nym_details(helpers, dest):
     return domain_req_handler.getNymDetails(domain_req_handler.state, dest, False)
 
 
+@pytest.mark.helper_test
 class TestNym:
     def test_nym_request_with_defaults(self, helpers):
         result = helpers.general.do_nym()

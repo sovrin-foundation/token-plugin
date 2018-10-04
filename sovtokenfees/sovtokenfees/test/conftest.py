@@ -70,3 +70,18 @@ def helpers(
 @pytest.fixture(autouse=True)
 def reset_fees(helpers):
     helpers.node.reset_fees()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_helpers",
+        action="store_true",
+        dest="test_helpers",
+        default=False,
+        help="run helper tests"
+    )
+
+
+def pytest_configure(config):
+    if not config.option.test_helpers:
+        setattr(config.option, 'markexpr', 'not helper_test')
