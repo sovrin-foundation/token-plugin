@@ -86,6 +86,24 @@ def test_less_than_min_trustee_minting(helpers, addresses):
         helpers.sdk.send_and_check_request_objects([request])
 
 
+def test_more_than_min_trustee(capsys, helpers, addresses, increased_trustees):
+    """
+    Should be able to mint with more than the minimum number of trustees.
+    """
+    [address1, *_] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: 100}]
+    request = helpers.request.mint(outputs)
+    request = helpers.wallet.sign_request(request, increased_trustees)
+
+    result = helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.get_first_result(result)
+    seq_no = get_seq_no(result)
+
+    [address1_utxos, *_] = helpers.general.get_utxo_addresses(addresses)
+
+    assert [{ADDRESS: address1, SEQNO: seq_no, AMOUNT: 100}] == address1_utxos
+
+
 def test_stewards_with_trustees(helpers, addresses, steward_wallets):
     [address1, address2, *_] = addresses
 
@@ -112,6 +130,9 @@ def test_non_existant_did_with_trustees(
     request = helpers.request.mint(outputs)
     request = helpers.wallet.sign_request(request, signing_wallets)
 
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
 
 def test_non_existant_dids(helpers, addresses, wallets_non_existant_dids):
     [address1, address2, *_] = addresses
@@ -136,7 +157,7 @@ def test_repeat_trustee(helpers, addresses):
     request.signatures.popitem()
     (did, sig) = request.signatures.popitem()
     request.signatures[did] = sig
-    request.signatures[did] = sig
+
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
 
@@ -204,6 +225,22 @@ def test_two_mints_to_same_address(addresses, helpers):
         {ADDRESS: address5, SEQNO: first_mint_seq_no, AMOUNT: 100},
         {ADDRESS: address5, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
+
+
+def test_mint_duplicate_address_single_mint(helpers, addresses):
+    """
+    Can't mint with duplicate address.
+    """
+
+    [address1, address2, *_] = addresses
+    outputs = [
+        {ADDRESS: address1, AMOUNT: 100},
+        {ADDRESS: address2, AMOUNT: 100},
+        {ADDRESS: address1, AMOUNT: 100}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
 
 
 def test_different_mint_amounts(helpers):
