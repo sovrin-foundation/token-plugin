@@ -14,6 +14,8 @@
         5.  [Alternative for running tests](#orga76b3c6)
     3.  [How To Contribute](#orgd389b14)
 
+<a href="https://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">![Hex.pm](https://img.shields.io/hexpm/l/plug.svg?style=plastic)</a>
+<a href="https://badge.fury.io/gh/sovrin-foundation%2Ftoken-plugin">[![GitHub version](https://badge.fury.io/gh/sovrin-foundation%2Flibsovtoken.svg)](https://badge.fury.io/gh/sovrin-foundation%2Ftoken-plugin)</a>
 
 <a id="org581a5d8"></a>
 
