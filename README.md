@@ -121,5 +121,5 @@ The third parameter is the name of the test.
 
 ## How To Contribute
 
-Please follow the guide [here](./doc/pull-request.md). 
+Please follow the guide [here](./docs/pull-request.md). 
 
