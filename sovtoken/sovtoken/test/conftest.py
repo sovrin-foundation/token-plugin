@@ -172,13 +172,12 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
 
     yield trustee_wallets + wallets
 
-    # TODO: Not certain if this is actually changing the role.
     def _update_nym_standard_user(response):
         data = get_payload_data(response[RESULT])
         request = helpers.request.nym(
             dest=data[TARGET_NYM],
             verkey=data[VERKEY],
-            role=None
+            role=''
         )
         return request
 

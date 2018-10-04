@@ -103,7 +103,16 @@ class HelperRequest():
         verkey=None,
         sdk_wallet=None,
     ):
-        """ Builds a nym request. """
+        """
+        Builds a nym request.
+
+        Role can be:
+            None  => No change,
+            ''    => Standard User,
+            '0'   => Trustee,
+            '2'   => Steward,
+            '101' => Trust Anchor,
+        """
         sdk_wallet_did = self._find_wallet_did(sdk_wallet)
 
         if not dest:
