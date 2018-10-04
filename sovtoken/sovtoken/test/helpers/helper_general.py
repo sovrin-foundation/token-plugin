@@ -34,6 +34,19 @@ class HelperGeneral():
         request = self._request.mint(outputs)
         return self._send_get_first_result(request)
 
+    def do_nym(
+        self,
+        seed=None,
+        alias=None,
+        role=None,
+        dest=None,
+        verkey=None,
+        sdk_wallet=None
+    ):
+        """ Build and send a nym request. """
+        request = self._request.nym(seed, alias, role, dest, verkey, sdk_wallet)
+        return self._send_get_first_result(request)
+
     def do_transfer(self, inputs, outputs):
         """ Build and send a transfer request. """
         request = self._request.transfer(inputs, outputs)
@@ -44,7 +57,7 @@ class HelperGeneral():
         request = self._request.get_utxo(address)
         result = self._send_get_first_result(request)
         result[OUTPUTS] = self._sort_utxos(result[OUTPUTS])
-        print(result)
+
         return result
 
     # =============

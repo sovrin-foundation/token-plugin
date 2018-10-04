@@ -7,7 +7,8 @@ from plenum.test.conftest import *
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
-from sovtoken.test.conftest import trustee_wallets, steward_wallets
+from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
+    increased_trustees
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.test.helpers import form_helpers
 

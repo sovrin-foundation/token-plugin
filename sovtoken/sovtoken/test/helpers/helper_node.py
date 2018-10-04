@@ -1,3 +1,4 @@
+from plenum.common.constants import DOMAIN_LEDGER_ID
 from sovtoken.constants import TOKEN_LEDGER_ID
 
 
@@ -26,3 +27,7 @@ class HelperNode():
     def get_token_req_handler(self):
         """ Get the token request handler of the first node. """
         return self._nodes[0].get_req_handler(ledger_id=TOKEN_LEDGER_ID)
+
+    def get_domain_req_handler(self):
+        """ Get the domain request handler of the first node. """
+        return self._nodes[0].get_req_handler(ledger_id=DOMAIN_LEDGER_ID)
