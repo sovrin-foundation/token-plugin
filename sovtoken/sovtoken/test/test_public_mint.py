@@ -162,6 +162,18 @@ def test_repeat_trustee(helpers, addresses):
         helpers.sdk.send_and_check_request_objects([request])
 
 
+def test_invalid_address(helpers, addresses):
+    """
+    Minting fails when address is incorrect format.
+    """
+
+    invalid_address = "CKRdjCxMb7oXYos33fugTVw3RWAi5MGmEf4n"
+    outputs = [{ADDRESS: invalid_address, AMOUNT: 100}]
+
+    with pytest.raises(RequestNackedException):
+        result = helpers.general.do_mint(outputs)
+
+
 def test_trustee_valid_minting(helpers, addresses):
     """
     Trustees should mint new tokens increasing the balance of `SF_MASTER`
