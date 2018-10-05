@@ -59,14 +59,12 @@ class HelperRequest():
 
         return request
 
-    def transfer(self, inputs, outputs, extra=None):
+    def transfer(self, inputs, outputs, extra=None, identifier=None):
         """ Builds a transfer request. """
         payment_signatures = self.payment_signatures(inputs, outputs)
 
         outputs_ready = self._prepare_outputs(outputs)
         inputs_ready = self._prepare_inputs(inputs)
-
-        first_address = inputs_ready[0][ADDRESS]
 
         payload = {
             TXN_TYPE: XFER_PUBLIC,
@@ -76,7 +74,10 @@ class HelperRequest():
             SIGS: payment_signatures
         }
 
-        identifier = address_to_verkey(first_address)
+        if not identifier:
+            first_address = inputs_ready[0][ADDRESS]
+            identifier = address_to_verkey(first_address)
+
         request = self._create_request(payload, identifier)
 
         return request
