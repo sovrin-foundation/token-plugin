@@ -90,9 +90,10 @@ class HelperWallet():
         assert number_signers <= len(self._trustee_wallets)
         return self.sign_request(request, self._trustee_wallets[:number_signers])
 
-    def sign_request_stewards(self, request):
+    def sign_request_stewards(self, request, number_signers=4):
         """ Sign a request with stewards. """
-        return self.sign_request(request, self._steward_wallets)
+        assert number_signers <= len(self._steward_wallets)
+        return self.sign_request(request, self._steward_wallets[:number_signers])
 
     def sign_request(self, request, wallets):
         """ Sign a request with wallets from plenum/client/wallet """
