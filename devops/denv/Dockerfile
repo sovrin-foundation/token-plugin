@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install -y \
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
-RUN echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
+RUN echo "deb https://repo.sovrin.org/sdk/deb xenial rc" >> /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y \
     # common stuff
@@ -40,7 +40,7 @@ RUN apt-get update -y && apt-get install -y \
     # libindy 
         python3-nacl \
         libindy-crypto=0.4.3 \
-        libindy=1.6.5
+        libindy=1.6.7~35 \
         #//python3-indy-crypto
 
 RUN pip3 install -U \
@@ -49,7 +49,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.6.5 \
+    python3-indy==1.6.7~35 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy
@@ -57,10 +57,10 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 100
 WORKDIR /home/indy
 
 # indy-node along with supervisor
-ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.73}
-ARG indy_plenum_ver=1.6.51
+ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.74}
+ARG indy_plenum_ver=1.6.52
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
-RUN echo "deb https://repo.sovrin.org/deb xenial stable" >> /etc/apt/sources.list \
+RUN echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \
         python3-indy-crypto=0.4.3 \
