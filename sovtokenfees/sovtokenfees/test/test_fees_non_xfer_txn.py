@@ -186,7 +186,7 @@ def test_fees_too_many_outputs(
         fee_amount,
         change_address=[address_main, Address().address]
     )
-    with pytest.raises(Exception):
+    with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([req])
 
 
@@ -295,6 +295,26 @@ def test_valid_fees_invalid_payload_sig(
         helpers.sdk.send_and_check_request_objects([request])
 
 
+def test_fees_extra_field(helpers, address_main, mint_tokens, fees_set):
+    """
+    The fees section has an extra field.
+    """
+    request = helpers.request.nym()
+    request = add_fees_request_with_address(
+        helpers,
+        fees_set,
+        request,
+        address_main
+    )
+
+    fees = getattr(request, FEES)
+    fees.append([])
+    setattr(request, FEES, fees)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
+
 def test_valid_fees_invalid_payload(
     helpers,
     fees_set,
@@ -390,3 +410,46 @@ def test_fees_utxo_reuse(
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([req])
+
+
+def test_unset_fees_transfer_tokens_with_fees(helpers, address_main, mint_tokens):
+    """
+    Tokens can't be exchanged through fees when fees aren't set for the request.
+    """
+
+    fees = {NYM: 0}
+    helpers.general.do_set_fees(fees)
+
+    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+    receiving_address = helpers.wallet.create_address()
+
+    request = helpers.request.nym()
+    request = helpers.request.add_fees(
+        request,
+        utxos,
+        0,
+        change_address=receiving_address
+    )
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
+
+def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens):
+    fees = {NYM: 1}
+    helpers.general.do_set_fees(fees)
+    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+
+    request = helpers.request.nym()
+    request = helpers.request.add_fees(
+        request,
+        utxos,
+        fees[NYM],
+        change_address=address_main
+    )
+
+    new_request = helpers.request.nym()
+    setattr(new_request, FEES, getattr(request, FEES))
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([new_request])

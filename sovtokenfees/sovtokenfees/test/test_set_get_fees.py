@@ -33,6 +33,27 @@ def test_trustee_set_invalid_fees(helpers):
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
 
+
+def test_fees_can_be_zero(helpers):
+    """
+    Fees can be set to zero.
+    """
+    fees = {NYM: 1}
+    helpers.general.do_set_fees(fees)
+
+    with pytest.raises(RequestRejectedException):
+        result = helpers.general.do_nym()
+
+    fees = {NYM: 0}
+    helpers.general.do_set_fees(fees)
+
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert fees == ledger_fees
+    helpers.node.assert_set_fees_in_memory(fees)
+
+    helpers.general.do_nym()
+
+
 def test_trustee_set_fees_for_invalid_txns(helpers):
     """
     Fees are not allowed for MINT_PUBLIC
@@ -78,9 +99,32 @@ def test_set_fees_not_enough_trustees(helpers):
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([fees_request])
-    
+
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
+
+
+def test_set_fees_with_stewards(helpers):
+    """
+    Setting fees fails with stewards.
+    """
+    fees = {NYM: 1}
+    fees_request = helpers.request.set_fees(fees)
+    fees_request.signatures.popitem()
+    assert len(fees_request.signatures) == 2
+
+    fees_request = helpers.wallet.sign_request_stewards(
+        fees_request,
+        number_signers=1
+    )
+    assert len(fees_request.signatures) == 3
+
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([fees_request])
+
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == {}
+    helpers.node.assert_set_fees_in_memory({})
 
 
 def test_trustee_set_valid_fees(helpers, fees_set, fees):
