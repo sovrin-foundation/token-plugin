@@ -9,3 +9,5 @@ FEES_SEQ_NO = 'fees_seqNo'
 SET_FEES = FeesTransactions.SET_FEES.value
 GET_FEES = FeesTransactions.GET_FEES.value
 FEE_TXN = FeesTransactions.FEES.value
+
+MAX_FEE_OUTPUTS = 1

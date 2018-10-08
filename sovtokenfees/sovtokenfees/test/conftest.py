@@ -2,15 +2,13 @@ from sovtoken.constants import XFER_PUBLIC, RESULT
 from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
-from plenum.common.util import randomString
-from plenum.common.constants import TARGET_NYM, TRUSTEE_STRING, VERKEY
-
 # fixtures, do not remove
 from plenum.test.conftest import *
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
-from sovtoken.test.conftest import trustee_wallets, steward_wallets
+from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
+    increased_trustees
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.test.helpers import form_helpers
 
@@ -74,34 +72,16 @@ def reset_fees(helpers):
     helpers.node.reset_fees()
 
 
-@pytest.fixture()
-def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
-    seeds = [randomString(32) for _ in range(3)]
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_helpers",
+        action="store_true",
+        dest="test_helpers",
+        default=False,
+        help="run helper tests"
+    )
 
-    requests = [
-        helpers.request.nym(seed=seed, role=TRUSTEE_STRING)
-        for seed in seeds
-    ]
 
-    responses = helpers.sdk.send_and_check_request_objects(requests)
-
-    wallets = [helpers.wallet.create_client_wallet(seed) for seed in seeds]
-
-    yield trustee_wallets + wallets
-
-    # TODO: Not certain if this is actually changing the role.
-    def _update_nym_standard_user(response):
-        data = get_payload_data(response[RESULT])
-        request = helpers.request.nym(
-            dest=data[TARGET_NYM],
-            verkey=data[VERKEY],
-            role=None
-        )
-        return request
-
-    requests = [
-        _update_nym_standard_user(response)
-        for _, response in responses
-    ]
-
-    helpers.sdk.send_and_check_request_objects(requests)
+def pytest_configure(config):
+    if not config.option.test_helpers:
+        setattr(config.option, 'markexpr', 'not helper_test')

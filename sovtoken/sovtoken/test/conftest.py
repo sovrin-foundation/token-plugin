@@ -2,11 +2,13 @@ import pytest
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
-from plenum.common.constants import STEWARD
+from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY
 from plenum.common.txn_util import get_seq_no
+from plenum.common.util import randomString
 from sovtoken.main import integrate_plugin_in_node
 from sovtoken.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
+from sovtoken.constants import RESULT
 from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import *
 from sovtoken.test.helper import send_get_utxo, send_xfer
@@ -149,3 +151,39 @@ def helpers(
         sdk_wallet_client,
         sdk_wallet_steward
     )
+
+
+@pytest.fixture()
+def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
+    wallets = [helpers.wallet.create_client_wallet() for _ in range(3)]
+
+    def _nym_request_from_client_wallet(wallet):
+        identifier = wallet.defaultId
+        signer = wallet.idsToSigners[identifier]
+        return helpers.request.nym(
+            dest=identifier,
+            verkey=signer.verkey,
+            role=TRUSTEE_STRING
+        )
+
+    requests = map(_nym_request_from_client_wallet, wallets)
+
+    responses = helpers.sdk.send_and_check_request_objects(requests)
+
+    yield trustee_wallets + wallets
+
+    def _update_nym_standard_user(response):
+        data = get_payload_data(response[RESULT])
+        request = helpers.request.nym(
+            dest=data[TARGET_NYM],
+            verkey=data[VERKEY],
+            role=''
+        )
+        return request
+
+    requests = [
+        _update_nym_standard_user(response)
+        for _, response in responses
+    ]
+
+    helpers.sdk.send_and_check_request_objects(requests)

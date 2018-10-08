@@ -53,10 +53,13 @@ class HelperWallet():
                        "this address with HelperWallet?").format(address)
             raise Exception(message)
 
-    def create_client_wallet(self, seed):
-        """ Create a plenum client wallet from a seed. """
+    def create_client_wallet(self, seed=None):
+        """ Create a plenum client wallet with an identifier. """
+        if seed:
+            seed = seed.encode()
+
         wallet = Wallet()
-        wallet.addIdentifier(seed=seed.encode())
+        wallet.addIdentifier(seed=seed)
         return wallet
 
     def create_did(self, seed=None, sdk_wallet=None):

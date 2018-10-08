@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
-    && add-apt-repository "deb https://repo.sovrin.org/deb xenial stable" \
+    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
         zlib1g-dev \
@@ -22,10 +22,10 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
 
 # libindy and libindy-crypto
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
-RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial stable" \
+RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial rc" \
     && apt-get update && apt-get install -y \
         libindy-crypto=0.4.3 \
-        libindy=1.6.5 \
+        libindy=1.6.7~35 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
@@ -43,4 +43,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.8.0
+ENV CI_ENV_VERSION=0.9.0
