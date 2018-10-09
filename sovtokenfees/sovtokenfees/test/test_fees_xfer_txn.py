@@ -97,6 +97,25 @@ def test_xfer_with_sufficient_fees(
     helpers.node.assert_deducted_fees(XFER_PUBLIC, transfer_seq_no, fee_amount)
 
 
+def test_xfer_fees_with_empty_output(helpers, addresses, fees):
+    """
+    Pay fees without transferring tokens in a transfer request.
+    """
+
+    [address_giver, _] = addresses
+    outputs = [{ADDRESS: address_giver, AMOUNT: int(fees[XFER_PUBLIC])}]
+
+    result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(result)
+
+    helpers.general.do_set_fees(fees)
+
+    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    outputs = []
+
+    helpers.general.do_transfer(inputs, outputs)
+
+
 def test_invalid_xfer_with_valid_fees(
     helpers,
     addresses,

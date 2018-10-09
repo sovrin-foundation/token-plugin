@@ -27,12 +27,12 @@ def add_fees_request_with_address(helpers, fees_set, request, address):
     return request
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def address_main(helpers):
     return helpers.wallet.create_address()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([
         {ADDRESS: address_main, AMOUNT: 1000},
@@ -188,6 +188,30 @@ def test_fees_too_many_outputs(
     )
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([req])
+
+
+def test_fees_output_with_zero_tokens(
+    helpers,
+    address_main,
+    fees,
+    fees_set,
+):
+    """
+    A fee output can't be set to zero tokens.
+    """
+    outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM])}]
+    result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(result)
+
+    empty_address = helpers.wallet.create_address()
+    inputs = [{ADDRESS: address_main, SEQNO: seq_no}]
+    outputs = [{ADDRESS: empty_address, AMOUNT: 0}]
+
+    request = helpers.request.nym()
+    request = helpers.request.add_fees_specific(request, inputs, outputs)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
 
 
 def test_no_fees_when_required(
@@ -348,6 +372,7 @@ def test_valid_txn_with_fees(
     Provide sufficient sovtokenfees for transaction with correct signatures and payload
     """
     fee_payload_from_resp = get_payload_data(fees_paid[FEES])
+    print(fee_payload_from_resp)
 
     for node in nodeSetWithIntegratedTokenPlugin:
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)
