@@ -273,6 +273,23 @@ def test_mint_duplicate_address_single_mint(helpers, addresses):
         helpers.general.do_mint(outputs)
 
 
+def test_repeat_mint(helpers, addresses):
+    """
+    Can't use the same mint request twice.
+    """
+    address = addresses[0]
+    outputs = [{ADDRESS: address, AMOUNT: 100}]
+    request = helpers.request.mint(outputs)
+
+    helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.send_and_check_request_objects([request])
+
+    seq_no_1 = get_seq_no(helpers.sdk.get_first_result(result))
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+
+    assert utxos == [{ADDRESS: address, AMOUNT: 100, SEQNO: seq_no_1}]
+
+
 def test_different_mint_amounts(helpers):
 
     i64 = 9223372036854775807
@@ -298,20 +315,3 @@ def test_different_mint_amounts(helpers):
     # ujson has a limit at deserializing i64.
     with pytest.raises(PoolLedgerTimeoutException):
         assert_valid_minting(helpers, i64 + 1)
-
-
-def test_repeat_mint(helpers, addresses):
-    """
-    Can't use the same mint request twice.
-    """
-    address = addresses[0]
-    outputs = [{ADDRESS: address, AMOUNT: 100}]
-    request = helpers.request.mint(outputs)
-
-    helpers.sdk.send_and_check_request_objects([request])
-    result = helpers.sdk.send_and_check_request_objects([request])
-
-    seq_no_1 = get_seq_no(helpers.sdk.get_first_result(result))
-    utxos = helpers.general.get_utxo_addresses([address])[0]
-
-    assert utxos == [{ADDRESS: address, AMOUNT: 100, SEQNO: seq_no_1}]
