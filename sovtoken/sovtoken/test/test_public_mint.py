@@ -3,10 +3,12 @@
 # responsible for giving tokens to "users".
 import pytest
 
+from base58 import b58encode_check
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException,
                                       PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
+from plenum.common.util import randomString
 from sovtoken.test.conftest import build_wallets_from_data
 from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
 
@@ -167,11 +169,27 @@ def test_invalid_address(helpers, addresses):
     Minting fails when address is incorrect format.
     """
 
-    invalid_address = "CKRdjCxMb7oXYos33fugTVw3RWAi5MGmEf4n"
-    outputs = [{ADDRESS: invalid_address, AMOUNT: 100}]
+    def _update_char(s, index, func):
+        return s[:index] + func(s[index]) + s[index + 1:]
 
-    with pytest.raises(RequestNackedException):
-        result = helpers.general.do_mint(outputs)
+    def _test_invalid_address(address):
+        outputs = [{ADDRESS: address, AMOUNT: 100}]
+
+        with pytest.raises(RequestNackedException):
+            helpers.general.do_mint(outputs)
+
+    valid_address = addresses[0]
+    invalid_address_length = b58encode_check(randomString(33).encode()).decode()
+    invalid_address_character = _update_char(valid_address, 2, lambda _: '!')
+    invalid_address_checksum = _update_char(
+        valid_address,
+        2,
+        lambda c: 'B' if c == 'A' else 'A'
+    )
+
+    _test_invalid_address(invalid_address_length)
+    _test_invalid_address(invalid_address_character)
+    _test_invalid_address(invalid_address_checksum)
 
 
 def test_trustee_valid_minting(helpers, addresses):
