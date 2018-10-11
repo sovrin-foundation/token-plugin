@@ -24,8 +24,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial rc" \
     && apt-get update && apt-get install -y \
-        libindy-crypto=0.4.3 \
-        libindy=1.6.7~35 \
+        libindy-crypto=0.4.5 \
+        libindy=1.6.7 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
