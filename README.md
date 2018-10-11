@@ -42,9 +42,7 @@ run the following command:
 
 ### Why is a docker environment included?
 
-You are welcome to do that. We provide a docker environment that comes
-pre-loaded with all required dependencies and consider this to be the easiest
-way for any new developer to get setup and start testing their code.
+We provide a docker environment that comes pre-loaded with all required dependencies and consider this to be the easiest way for any new developer to get setup and start testing their code.
 
 <a id="orgf42e059"></a>
 
