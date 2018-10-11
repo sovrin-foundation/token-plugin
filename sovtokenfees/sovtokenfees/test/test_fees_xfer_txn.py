@@ -1,7 +1,7 @@
 import pytest
 
 from plenum.common.exceptions import RequestRejectedException
-from plenum.common.txn_util import get_seq_no
+from plenum.common.txn_util import get_seq_no, get_payload_data
 from sovtoken.constants import XFER_PUBLIC, OUTPUTS, ADDRESS, AMOUNT, SEQNO
 
 
@@ -95,6 +95,87 @@ def test_xfer_with_sufficient_fees(
     }]
 
     helpers.node.assert_deducted_fees(XFER_PUBLIC, transfer_seq_no, fee_amount)
+
+
+def test_xfer_fees_with_empty_output(helpers, addresses, fees):
+    """
+    Pay fees without transferring tokens in a transfer request.
+    """
+
+    [address_giver, _] = addresses
+    outputs = [{ADDRESS: address_giver, AMOUNT: int(fees[XFER_PUBLIC])}]
+
+    result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(result)
+
+    helpers.general.do_set_fees(fees)
+
+    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    outputs = []
+
+    helpers.general.do_transfer(inputs, outputs)
+
+
+def test_invalid_xfer_with_valid_fees(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees
+):
+    """
+    Fees aren't paid when the payment address doesn't contain enough tokens for
+    the transfer.
+    """
+    helpers.general.do_set_fees(fees)
+    [address_giver, address_receiver] = addresses
+    seq_no = get_seq_no(mint_tokens)
+
+    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    outputs = [{ADDRESS: address_receiver, AMOUNT: 1000}]
+
+    with pytest.raises(RequestRejectedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+    utxos = helpers.general.get_utxo_addresses([address_giver])
+
+    assert utxos == [[
+        {ADDRESS: address_giver, AMOUNT: 1000, SEQNO: seq_no}
+    ]]
+
+
+def test_xfer_with_additional_fees_attached(
+    helpers,
+    addresses,
+    mint_tokens,
+    fees
+):
+    """ Transfer request with fees and with fees attached on the fees field. """
+
+    helpers.general.do_set_fees(fees)
+    [address_giver, address_receiver] = addresses
+    seq_no = get_seq_no(mint_tokens)
+
+    utxos = [{ADDRESS: address_giver, AMOUNT: 1000, SEQNO: seq_no}]
+    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    outputs = [{ADDRESS: address_receiver, AMOUNT: 1000 - fees[XFER_PUBLIC]}]
+
+    request = helpers.request.transfer(inputs, outputs)
+    request = helpers.request.add_fees(
+        request,
+        utxos,
+        fees[XFER_PUBLIC],
+        change_address=address_giver
+    )
+
+    result = helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.get_first_result(result)
+
+    xfer_seq_no = get_seq_no(result)
+    key = "{}#{}".format(XFER_PUBLIC, xfer_seq_no)
+    fees_req_handler = helpers.node.get_fees_req_handler()
+
+    assert fees[XFER_PUBLIC] == fees_req_handler.deducted_fees[key]
+    assert key not in fees_req_handler.deducted_fees_xfer
 
 
 # Mint after a transfer transaction with fees

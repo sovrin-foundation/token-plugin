@@ -2,8 +2,11 @@ from random import randint
 
 import pytest
 
+from base58 import b58encode_check
+
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
+from plenum.common.util import randomString
 from sovtoken.constants import OUTPUTS, ADDRESS
 
 @pytest.fixture
@@ -16,11 +19,29 @@ def test_empty_address(helpers):
 
 
 def test_invalid_address(helpers, addresses):
-    address = addresses[0]
-    # Replace three characters in address
-    address = address[:3] + "000" + address[6:]
-    with pytest.raises(RequestNackedException):
-        helpers.general.do_get_utxo(address)
+    """
+    Get utxo with invalid address.
+    """
+
+    def _update_char(s, index, func):
+        return s[:index] + func(s[index]) + s[index + 1:]
+
+    def _test_invalid_address(address):
+        with pytest.raises(RequestNackedException):
+            helpers.general.get_utxo_addresses([address])
+
+    valid_address = addresses[0]
+    invalid_address_length = b58encode_check(randomString(33).encode()).decode()
+    invalid_address_character = _update_char(valid_address, 2, lambda _: '!')
+    invalid_address_checksum = _update_char(
+        valid_address,
+        2,
+        lambda c: 'B' if c == 'A' else 'A'
+    )
+
+    _test_invalid_address(invalid_address_length)
+    _test_invalid_address(invalid_address_character)
+    _test_invalid_address(invalid_address_checksum)
 
 
 def test_address_no_utxos(helpers, addresses):

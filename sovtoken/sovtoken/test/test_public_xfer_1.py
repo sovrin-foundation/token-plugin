@@ -3,7 +3,7 @@ import pytest
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS
+from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT
 from sovtoken.test.helper import user1_token_wallet
 
 
@@ -89,6 +89,44 @@ def test_inputs_contain_signature_not_in_inputs(
     assert len(request.operation[SIGS]) == len(inputs)
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
+
+
+def test_empty_xfer(helpers):
+    inputs = []
+    outputs = []
+    identifier = "5oXnyuywuz6TvnMDXjjGUm47gToPzdCKZbDvsNdYB4Cy"
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs, identifier=identifier)
+
+
+def test_xfer_output_with_zero_tokens(helpers, addresses, initial_mint):
+    """
+    Can't transfer 0 tokens to an address.
+    """
+
+    [address1, address2, address3, *_] = addresses
+    seq_no = get_seq_no(initial_mint)
+
+    inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 0}]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+
+def test_xfer_to_negative_output(helpers, addresses, initial_mint):
+    [address1, address2, *_] = addresses
+    seq_no = get_seq_no(initial_mint)
+
+    inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+    outputs = [
+        {ADDRESS: address2, AMOUNT: -50},
+        {ADDRESS: address1, AMOUNT: 150}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
 
 
 def test_multiple_inputs_outputs_without_change(
@@ -183,3 +221,4 @@ def test_multiple_inputs_outputs_with_change(
         {"address": address5, "seqNo": mint_seq_no, "amount": 100},
         {"address": address5, "seqNo": xfer_seq_no, "amount": 10},
     ]
+

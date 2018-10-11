@@ -1,11 +1,12 @@
 import pytest
 import json
 
+from base58 import b58encode_check
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
 from plenum.common.txn_util import get_seq_no
-from plenum.common.util import lxor
-from sovtoken.constants import OUTPUTS
+from plenum.common.util import lxor, randomString
+from sovtoken.constants import OUTPUTS, ADDRESS, SEQNO, AMOUNT
 from sovtoken.test.helper import check_output_val_on_all_nodes, \
     xfer_request, send_get_utxo
 from sovtoken.test.conftest import seller_gets
@@ -155,6 +156,35 @@ def test_seller_xfer_invalid_inputs(
 
     with pytest.raises(RequestNackedException):
         helpers.general.do_transfer(inputs, outputs)
+
+
+def test_invalid_address(helpers, addresses, initial_mint):
+    """
+    Transfer with invalid address.
+    """
+
+    def _update_char(s, index, func):
+        return s[:index] + func(s[index]) + s[index + 1:]
+
+    def _test_invalid_address(address):
+        inputs = [{ADDRESS: addresses[0], SEQNO: get_seq_no(initial_mint)}]
+        outputs = [{ADDRESS: address, AMOUNT: 100}]
+
+        with pytest.raises(RequestNackedException):
+            helpers.general.do_mint(outputs)
+
+    valid_address = addresses[1]
+    invalid_address_length = b58encode_check(randomString(33).encode()).decode()
+    invalid_address_character = _update_char(valid_address, 2, lambda _: '!')
+    invalid_address_checksum = _update_char(
+        valid_address,
+        2,
+        lambda c: 'B' if c == 'A' else 'A'
+    )
+
+    _test_invalid_address(invalid_address_length)
+    _test_invalid_address(invalid_address_character)
+    _test_invalid_address(invalid_address_checksum)
 
 
 def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa

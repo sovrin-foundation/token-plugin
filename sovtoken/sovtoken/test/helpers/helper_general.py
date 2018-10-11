@@ -47,9 +47,9 @@ class HelperGeneral():
         request = self._request.nym(seed, alias, role, dest, verkey, sdk_wallet)
         return self._send_get_first_result(request)
 
-    def do_transfer(self, inputs, outputs):
+    def do_transfer(self, inputs, outputs, identifier=None):
         """ Build and send a transfer request. """
-        request = self._request.transfer(inputs, outputs)
+        request = self._request.transfer(inputs, outputs, identifier=identifier)
         return self._send_get_first_result(request)
 
     def do_get_utxo(self, address):
