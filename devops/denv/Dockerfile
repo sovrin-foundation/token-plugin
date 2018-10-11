@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install -y \
 
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
-RUN echo "deb https://repo.sovrin.org/sdk/deb xenial rc" >> /etc/apt/sources.list
+RUN echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
 RUN apt-get update -y && apt-get install -y \
     # common stuff

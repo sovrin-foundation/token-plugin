@@ -13,7 +13,7 @@ sudo apt-get update -y && apt-get install -y \
 
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
-echo "deb https://repo.sovrin.org/sdk/deb xenial rc" >> /etc/apt/sources.list
+echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
 echo ${CYAN}common stuff
 sudo apt-get update -y && apt-get install -y \
