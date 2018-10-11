@@ -1,10 +1,13 @@
 import json
 import pytest
 
+from base58 import b58encode_check
+
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, NYM, DATA
 from plenum.common.exceptions import RequestRejectedException, RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data, get_txn_time
 from plenum.common.types import f
+from plenum.common.util import randomString
 
 from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
@@ -24,12 +27,12 @@ def add_fees_request_with_address(helpers, fees_set, request, address):
     return request
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def address_main(helpers):
     return helpers.wallet.create_address()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([
         {ADDRESS: address_main, AMOUNT: 1000},
@@ -131,6 +134,40 @@ def test_fees_larger(
         helpers.sdk.send_and_check_request_objects([req])
 
 
+def test_invalid_address(helpers, address_main, mint_tokens, fees, fees_set):
+    """
+    Fees with invalid address.
+    """
+
+    def _update_char(s, index, func):
+        return s[:index] + func(s[index]) + s[index + 1:]
+
+    def _test_invalid_address(address):
+        utxos = helpers.general.get_utxo_addresses([address_main])[0]
+        request = helpers.request.nym()
+        request = helpers.request.add_fees(
+            request,
+            utxos,
+            fees[NYM],
+            change_address=[address]
+        )
+
+        with pytest.raises(RequestNackedException):
+            helpers.sdk.send_and_check_request_objects([request])
+
+    invalid_address_length = b58encode_check(randomString(33).encode()).decode()
+    invalid_address_character = _update_char(address_main, 2, lambda _: '!')
+    invalid_address_checksum = _update_char(
+        address_main,
+        2,
+        lambda c: 'B' if c == 'A' else 'A'
+    )
+
+    _test_invalid_address(invalid_address_length)
+    _test_invalid_address(invalid_address_character)
+    _test_invalid_address(invalid_address_checksum)
+
+
 def test_fees_too_many_outputs(
     helpers,
     fees_set,
@@ -151,6 +188,30 @@ def test_fees_too_many_outputs(
     )
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([req])
+
+
+def test_fees_output_with_zero_tokens(
+    helpers,
+    address_main,
+    fees,
+    fees_set,
+):
+    """
+    A fee output can't be set to zero tokens.
+    """
+    outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM])}]
+    result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(result)
+
+    empty_address = helpers.wallet.create_address()
+    inputs = [{ADDRESS: address_main, SEQNO: seq_no}]
+    outputs = [{ADDRESS: empty_address, AMOUNT: 0}]
+
+    request = helpers.request.nym()
+    request = helpers.request.add_fees_specific(request, inputs, outputs)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
 
 
 def test_no_fees_when_required(
@@ -311,6 +372,7 @@ def test_valid_txn_with_fees(
     Provide sufficient sovtokenfees for transaction with correct signatures and payload
     """
     fee_payload_from_resp = get_payload_data(fees_paid[FEES])
+    print(fee_payload_from_resp)
 
     for node in nodeSetWithIntegratedTokenPlugin:
         token_ledger = node.getLedger(TOKEN_LEDGER_ID)

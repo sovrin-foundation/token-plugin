@@ -58,10 +58,5 @@ def integrate_plugin_in_node(node):
                                       three_pc_handler.add_to_ordered)
     node.master_replica.register_hook(ReplicaHooks.APPLY_PPR,
                                       three_pc_handler.check_recvd_pre_prepare)
-    node.master_replica.register_hook(ReplicaHooks.VALIDATE_PR,
-                                      three_pc_handler.check_recvd_prepare)
-    node.master_replica.register_hook(ReplicaHooks.BATCH_CREATED,
-                                      three_pc_handler.batch_created)
-    node.master_replica.register_hook(ReplicaHooks.BATCH_REJECTED,
-                                      three_pc_handler.batch_rejected)
+
     return node
