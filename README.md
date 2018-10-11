@@ -40,11 +40,11 @@ run the following command:
 
 <a id="orga843a17"></a>
 
-### Why cant I use my own local machine as my enviroment?
+### Why is a docker environment included?
 
-Due to some compatibility issues we have decided that a docker enviroment would be the easiest way
-for any new developer to get setup and start testing their code.
-
+You are welcome to do that. We provide a docker environment that comes
+pre-loaded with all required dependencies and consider this to be the easiest
+way for any new developer to get setup and start testing their code.
 
 <a id="orgf42e059"></a>
 
@@ -103,7 +103,7 @@ We have a shell script to assist with running tests.  Here's an example:
 
     ./run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output
 
-The first parameter is required.  It can be either *token* or *fees*.  Anything else is an error.
+The first parameter is required.  It can be either *token* or *fees*.  Anything else will return an error.
 
 The remaining parameters are optional.
 
@@ -111,11 +111,11 @@ The second parameter is file name **without the .py**.
 
 The third parameter is the name of the test.
 
-1.  To run all tests call it like this:
+1.  To run all sovtoken tests call it like this:
 
         ./run-test.sh token
 
-2.  To run all tests in a file, call it like this:
+2.  To run all sovtoken tests in a file, call it like this:
 
         ./run-test.sh token test_token_req_handler
 
