@@ -1,4 +1,5 @@
 from plenum.common.exceptions import InvalidClientMessageException
+from common.exceptions import PlenumValueError
 
 
 class InsufficientFundsError(InvalidClientMessageException):
@@ -29,4 +30,7 @@ class UTXOAddressNotFound(UTXONotFound):
     pass
 
 class UTXOAlreadySpentError(UTXOError):
+    pass
+
+class TokenValueError(PlenumValueError):
     pass
