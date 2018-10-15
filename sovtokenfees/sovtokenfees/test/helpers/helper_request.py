@@ -16,6 +16,7 @@ class HelperRequest(token_helper_request.HelperRequest):
     - set_fees
     - get_fees
     - add_fees
+    - add_fees_specific
     - find_utxos_can_pay
     - fees_signatures
     """
@@ -74,10 +75,19 @@ class HelperRequest(token_helper_request.HelperRequest):
 
         logger.info("*"*20)
         logger.info(str(outputs))
-        fees_signatures = self.fees_signatures(inputs, outputs, request.digest)
 
+        request = self.add_fees_specific(request, inputs, outputs)
+
+        return request
+
+    def add_fees_specific(self, request, inputs, outputs):
+        """
+        Sign the fees and add them to a request.
+        """
         inputs = self._prepare_inputs(inputs)
         outputs = self._prepare_outputs(outputs)
+
+        fees_signatures = self.fees_signatures(inputs, outputs, request.digest)
 
         fees = [inputs, outputs, fees_signatures]
         setattr(request, FEES, fees)

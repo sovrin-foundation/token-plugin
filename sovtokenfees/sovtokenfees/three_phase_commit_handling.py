@@ -54,10 +54,6 @@ class ThreePhaseCommitHandler:
                 prepare = updateNamedTuple(prepare, **extra)
         return prepare
 
-    def add_to_commit(self, commit):
-        # Nothing needed in commit
-        return commit
-
     # ?
     def add_to_ordered(self, ordered, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
@@ -114,25 +110,6 @@ class ThreePhaseCommitHandler:
                                                                 f.TXN_ROOT.nm,
                                                                 self.fees_req_handler.token_ledger.uncommittedRootHash,
                                                                 recvd_txn_root))
-
-    # Checks to make sure the prepare message was properly appended and formatted with fee info
-    def check_recvd_prepare(self, prepare, pre_prepare):
-        # TODO:
-        return
-
-    # Checks to make sure the commit message was properly appended and formatted with fee info
-    def check_recvd_commit(self, commit):
-        # No check needed in commit
-        return
-
-    # ?
-    def batch_created(self, ledger_id, state_root):
-        # Need old state root hash to preserve
-        pass
-
-    # ?
-    def batch_rejected(self, ledger_id):
-        pass
 
     # Makes sure that the "plugins_fields" member is contained in a message. This field is what distinguishes normal
     # messages from messages that support the sovrin plugin
