@@ -337,3 +337,50 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     assert new_address1_utxos == []
     assert new_address2_utxos == []
     assert new_address3_utxos == []
+
+
+def test_xfer_breakdown_and_consolidate(helpers, addresses):
+    """
+    Breakdown utxo into separate utxos with different sequence numbers and then
+    combine them.
+    """
+    amount = 11
+    [address1, address2] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: amount}]
+
+    mint_result = helpers.general.do_mint(outputs)
+    mint_seq_no = get_seq_no(mint_result)
+    seq_no = mint_seq_no
+
+    for change in range(1, amount):
+        inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+        outputs = [
+            {ADDRESS: address2, AMOUNT: 1},
+            {ADDRESS: address1, AMOUNT: amount - change}
+        ]
+        result = helpers.general.do_transfer(inputs, outputs)
+        seq_no = get_seq_no(result)
+
+    utxos = helpers.general.get_utxo_addresses([address2])[0]
+
+    expected_utxos = [
+        {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
+        for seq_no in range(mint_seq_no + 1, mint_seq_no + amount)
+    ]
+
+    assert utxos == expected_utxos
+
+    inputs = [
+        {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
+        for seq_no in range(mint_seq_no + 1, mint_seq_no + amount)
+    ]
+
+    outputs = [{ADDRESS: address2, AMOUNT: amount - 1}]
+
+    result = helpers.general.do_transfer(inputs, outputs)
+
+    utxos = helpers.general.get_utxo_addresses([address2])[0]
+
+    assert utxos == [
+        {ADDRESS: address2, SEQNO: get_seq_no(result), AMOUNT: amount - 1}
+    ]
