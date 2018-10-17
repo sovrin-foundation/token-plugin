@@ -206,7 +206,7 @@ def test_fees_output_with_zero_tokens(
     empty_address = helpers.wallet.create_address()
     inputs = [{ADDRESS: address_main, SEQNO: seq_no}]
     outputs = [{ADDRESS: empty_address, AMOUNT: 0}]
-
+ 
     request = helpers.request.nym()
     request = helpers.request.add_fees_specific(request, inputs, outputs)
 
@@ -218,7 +218,6 @@ def test_no_fees_when_required(
     helpers,
     fees_set,
     address_main,
-    mint_tokens,
 ):
     """
     No fees, both null fee field and no fee field
@@ -231,12 +230,6 @@ def test_no_fees_when_required(
         helpers.sdk.send_and_check_request_objects([req])
 
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
-    helpers.request.add_fees(
-        req,
-        utxos,
-        fee_amount,
-        change_address=[address_main, Address().address]
-    )
 
     setattr(req, FEES, None)
 
