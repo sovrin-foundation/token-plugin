@@ -85,11 +85,15 @@ class StaticFeesReqHandler(FeeReqHandler):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
-            self._get_deducted_fees_xfer(request, required_fees)
+            inputs = request.operation[INPUTS]
+            outputs = request.operation[OUTPUTS]
+            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
             if StaticFeesReqHandler.has_fees(request):
-                self._validate_fees_can_pay(request, required_fees)
+                inputs = request.fees[0]
+                outputs = self.get_change_for_fees(request)
+                self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             else:
                 raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                                     getattr(request, f.REQ_ID.nm, None),
@@ -202,25 +206,8 @@ class StaticFeesReqHandler(FeeReqHandler):
                     txn[FEES] = r[i]
                     i += 1
 
-    def _get_deducted_fees_xfer(self, request, required_fees):
-        try:
-            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                    request,
-                                                    is_committed=False)
 
-            sum_outputs = TokenReqHandler.sum_outputs(request)
-        except InvalidClientMessageException as ex:
-            raise ex
-        except Exception as ex:
-                error = 'Exception {} while processing inputs/outputs'.format(ex)
-                raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
-        else:
-            expected_amount = sum_outputs + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs,
-                                                          expected_amount, request,
-                                                          'fees: {}'.format(required_fees))
-
-    def _validate_fees_can_pay(self, request, required_fees):
+    def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
         """
         Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
 
@@ -232,15 +219,22 @@ class StaticFeesReqHandler(FeeReqHandler):
         """
 
         try:
-            sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
+            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
         except UTXOError as ex:
             raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
+        except Exception as ex:
+            error = 'Exception {} while processing inputs/outputs'.format(ex)
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
-            change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
+            change_amount = sum([a[AMOUNT] for a in outputs])
             expected_amount = change_amount + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
-                                                          expected_amount, request,
-                                                          'fees: {}'.format(required_fees))
+            TokenReqHandler.validate_given_inputs_outputs(
+                sum_inputs,
+                change_amount,
+                expected_amount,
+                request,
+                'fees: {}'.format(required_fees)
+            )
 
 
     def _get_fees(self, is_committed=False, with_proof=False):
