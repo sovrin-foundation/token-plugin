@@ -344,15 +344,16 @@ def test_xfer_breakdown_and_consolidate(helpers, addresses):
     Breakdown utxo into separate utxos with different sequence numbers and then
     combine them.
     """
-    amount = 11
+    amount = 10
     [address1, address2] = addresses
-    outputs = [{ADDRESS: address1, AMOUNT: amount}]
+    # Mint an extra token, so all xfer requests can have a change value.
+    outputs = [{ADDRESS: address1, AMOUNT: amount + 1}]
 
     mint_result = helpers.general.do_mint(outputs)
-    mint_seq_no = get_seq_no(mint_result)
-    seq_no = mint_seq_no
+    seq_no = get_seq_no(mint_result)
+    xfer_seq_no = seq_no + 1
 
-    for change in range(1, amount):
+    for change in range(0, amount):
         inputs = [{ADDRESS: address1, SEQNO: seq_no}]
         outputs = [
             {ADDRESS: address2, AMOUNT: 1},
@@ -365,22 +366,17 @@ def test_xfer_breakdown_and_consolidate(helpers, addresses):
 
     expected_utxos = [
         {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
-        for seq_no in range(mint_seq_no + 1, mint_seq_no + amount)
+        for seq_no in range(xfer_seq_no, xfer_seq_no + amount)
     ]
 
     assert utxos == expected_utxos
 
-    inputs = [
-        {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
-        for seq_no in range(mint_seq_no + 1, mint_seq_no + amount)
-    ]
+    outputs = [{ADDRESS: address2, AMOUNT: amount}]
 
-    outputs = [{ADDRESS: address2, AMOUNT: amount - 1}]
-
-    result = helpers.general.do_transfer(inputs, outputs)
+    result = helpers.general.do_transfer(expected_utxos, outputs)
 
     utxos = helpers.general.get_utxo_addresses([address2])[0]
 
     assert utxos == [
-        {ADDRESS: address2, SEQNO: get_seq_no(result), AMOUNT: amount - 1}
+        {ADDRESS: address2, SEQNO: get_seq_no(result), AMOUNT: amount}
     ]
