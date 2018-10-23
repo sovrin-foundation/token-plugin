@@ -148,7 +148,10 @@ def test_seller_xfer_invalid_inputs(
     seq_no = get_seq_no(initial_mint)
     [seller_address, user1_address] = addresses
 
-    inputs = [{"address": seller_address, "seqNo": seq_no}, {"address": seller_address, "seqNo": seq_no}]
+    inputs = [
+        {"address": seller_address, "seqNo": seq_no},
+        {"address": seller_address, "seqNo": seq_no}
+    ]
     outputs = [
         {"address": user1_address, "amount": 10},
         {"address": seller_address, "amount": 90}
