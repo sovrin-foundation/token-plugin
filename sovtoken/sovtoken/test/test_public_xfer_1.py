@@ -3,7 +3,7 @@ import pytest
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT
+from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS
 from sovtoken.test.helper import user1_token_wallet
 
 
@@ -100,26 +100,44 @@ def test_empty_xfer(helpers):
         helpers.general.do_transfer(inputs, outputs, identifier=identifier)
 
 
-def test_xfer_output_with_zero_tokens(helpers, addresses, initial_mint):
+def test_invalid_output_numeric_amounts(helpers, addresses, initial_mint):
     """
-    Can't transfer 0 tokens to an address.
+    Test transfer with different invalid numeric amounts
     """
 
-    [address1, address2, address3, *_] = addresses
-    seq_no = get_seq_no(initial_mint)
-
-    inputs = [{ADDRESS: address1, SEQNO: seq_no}]
-    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 0}]
-
-    with pytest.raises(RequestNackedException):
-        helpers.general.do_transfer(inputs, outputs)
-
-
-def test_xfer_to_negative_output(helpers, addresses, initial_mint):
     [address1, address2, *_] = addresses
     seq_no = get_seq_no(initial_mint)
 
     inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+
+    # Floats
+    outputs = [
+        {ADDRESS: address2, AMOUNT: 40.5},
+        {ADDRESS: address1, AMOUNT: 59.5}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+    # None value
+    outputs = [
+        {ADDRESS: address2, AMOUNT: 100},
+        {ADDRESS: address1, AMOUNT: None}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+    # String number
+    outputs = [
+        {ADDRESS: address2, AMOUNT: 80},
+        {ADDRESS: address1, AMOUNT: "20"}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+    # Negative Number
     outputs = [
         {ADDRESS: address2, AMOUNT: -50},
         {ADDRESS: address1, AMOUNT: 150}
@@ -127,6 +145,44 @@ def test_xfer_to_negative_output(helpers, addresses, initial_mint):
 
     with pytest.raises(RequestNackedException):
         helpers.general.do_transfer(inputs, outputs)
+
+    # Zero value
+    outputs = [
+        {ADDRESS: address1, AMOUNT: 100},
+        {ADDRESS: address2, AMOUNT: 0}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_transfer(inputs, outputs)
+
+    # Output without amount
+    request = helpers.request.transfer(inputs, outputs)
+    request.operation[OUTPUTS][1].pop(AMOUNT)
+
+    with pytest.raises(RequestNackedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
+
+def test_invalid_input_seq_no(helpers, addresses, initial_mint):
+    """
+    Test transfer with different invalid numeric seq_no
+    """
+
+    [address1, address2, *_] = addresses
+    seq_no = get_seq_no(initial_mint)
+    outputs = [{ADDRESS: address2, AMOUNT: 100}]
+
+    def _test_invalid_seq_no(seq_no):
+        inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+
+        with pytest.raises(RequestNackedException):
+            helpers.general.do_transfer(inputs, outputs)
+
+    _test_invalid_seq_no(0)
+    _test_invalid_seq_no(-1)
+    _test_invalid_seq_no(str(seq_no))
+    _test_invalid_seq_no(None)
+    _test_invalid_seq_no(1.0)
 
 
 def test_multiple_inputs_outputs_without_change(
@@ -221,4 +277,3 @@ def test_multiple_inputs_outputs_with_change(
         {"address": address5, "seqNo": mint_seq_no, "amount": 100},
         {"address": address5, "seqNo": xfer_seq_no, "amount": 10},
     ]
-
