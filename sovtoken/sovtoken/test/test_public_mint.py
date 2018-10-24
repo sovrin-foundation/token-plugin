@@ -55,6 +55,10 @@ def test_trustee_invalid_minting(helpers, addresses):
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 
+    outputs = [{ADDRESS: address1, AMOUNT: None}, {ADDRESS: address2, AMOUNT: 100}]
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
+
     outputs = []
     with pytest.raises(RequestNackedException, match="Outputs for a mint request can't be empty."):
         helpers.general.do_mint(outputs)
