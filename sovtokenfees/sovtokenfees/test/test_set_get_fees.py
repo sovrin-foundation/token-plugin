@@ -20,18 +20,27 @@ def test_get_fees_when_no_fees_set(helpers):
     helpers.node.assert_set_fees_in_memory({})
 
 
-def test_trustee_set_invalid_fees(helpers):
+def test_set_fees_invalid_numeric(helpers):
     """
-    Fees cannot be negative
+    Test set fees with invalid numeric amount.
     """
-    fees = {
-        NYM: -1,
-        XFER_PUBLIC: 2
-    }
-    with pytest.raises(RequestNackedException):
-        helpers.general.do_set_fees(fees)
-    ledger_fees = helpers.general.do_get_fees()[FEES]
-    assert ledger_fees == {}
+    def _test_invalid_fees(amount):
+        fees = {
+            NYM: amount,
+            XFER_PUBLIC: 5
+        }
+
+        with pytest.raises(RequestNackedException):
+            helpers.general.do_set_fees(fees)
+
+        ledger_fees = helpers.general.do_get_fees()[FEES]
+        assert ledger_fees == {}
+        helpers.node.assert_set_fees_in_memory({})
+
+    _test_invalid_fees(-1)
+    _test_invalid_fees(5.5)
+    _test_invalid_fees("3")
+    _test_invalid_fees(None)
 
 
 def test_fees_can_be_zero(helpers):

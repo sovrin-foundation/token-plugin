@@ -1,4 +1,5 @@
 import json
+import math
 import pytest
 
 from base58 import b58encode_check
@@ -62,6 +63,42 @@ def fees_paid(
     mint_tokens
 ):
     return pay_fees(helpers, fees_set, address_main, mint_tokens)
+
+
+def test_invalid_fees_numeric(helpers, address_main, mint_tokens):
+    """
+    Testing fees outputs with an invalid numeric type
+    """
+    def _test_invalid_fees(amount, fees=False):
+        if fees:
+            fees_amount = {
+                NYM: fees
+            }
+            helpers.general.do_set_fees(fees_amount)
+
+        seq_no = get_seq_no(mint_tokens)
+        inputs = [
+            {ADDRESS: address_main, SEQNO: seq_no}
+        ]
+        outputs = [
+            {ADDRESS: address_main, AMOUNT: amount}
+        ]
+
+        request = helpers.request.nym()
+
+        request = helpers.request.add_fees_specific(
+            request,
+            inputs,
+            outputs
+        )
+
+        with pytest.raises(RequestNackedException):
+            helpers.sdk.send_and_check_request_objects([request])
+
+    _test_invalid_fees(-1, fees=1001)
+    _test_invalid_fees(0, fees=1000)
+    _test_invalid_fees(4.5, fees=None)
+    _test_invalid_fees(None, fees=None) 
 
 
 def test_zero_fees(
