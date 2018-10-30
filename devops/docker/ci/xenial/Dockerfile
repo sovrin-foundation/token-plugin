@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
-    && add-apt-repository "deb https://repo.sovrin.org/deb xenial stable" \
+    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
         zlib1g-dev \
@@ -43,4 +43,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.8.0
+ENV CI_ENV_VERSION=0.9.0
