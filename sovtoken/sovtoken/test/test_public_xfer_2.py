@@ -148,7 +148,10 @@ def test_seller_xfer_invalid_inputs(
     seq_no = get_seq_no(initial_mint)
     [seller_address, user1_address] = addresses
 
-    inputs = [{"address": seller_address, "seqNo": seq_no}, {"address": seller_address, "seqNo": seq_no}]
+    inputs = [
+        {"address": seller_address, "seqNo": seq_no},
+        {"address": seller_address, "seqNo": seq_no}
+    ]
     outputs = [
         {"address": user1_address, "amount": 10},
         {"address": seller_address, "amount": 90}
@@ -334,3 +337,46 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     assert new_address1_utxos == []
     assert new_address2_utxos == []
     assert new_address3_utxos == []
+
+
+def test_xfer_breakdown_and_consolidate(helpers, addresses):
+    """
+    Breakdown utxo into separate utxos with different sequence numbers and then
+    combine them.
+    """
+    amount = 10
+    [address1, address2] = addresses
+    # Mint an extra token, so all xfer requests can have a change value.
+    outputs = [{ADDRESS: address1, AMOUNT: amount + 1}]
+
+    mint_result = helpers.general.do_mint(outputs)
+    seq_no = get_seq_no(mint_result)
+    xfer_seq_no = seq_no + 1
+
+    for change in range(0, amount):
+        inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+        outputs = [
+            {ADDRESS: address2, AMOUNT: 1},
+            {ADDRESS: address1, AMOUNT: amount - change}
+        ]
+        result = helpers.general.do_transfer(inputs, outputs)
+        seq_no = get_seq_no(result)
+
+    utxos = helpers.general.get_utxo_addresses([address2])[0]
+
+    expected_utxos = [
+        {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
+        for seq_no in range(xfer_seq_no, xfer_seq_no + amount)
+    ]
+
+    assert utxos == expected_utxos
+
+    outputs = [{ADDRESS: address2, AMOUNT: amount}]
+
+    result = helpers.general.do_transfer(expected_utxos, outputs)
+
+    utxos = helpers.general.get_utxo_addresses([address2])[0]
+
+    assert utxos == [
+        {ADDRESS: address2, SEQNO: get_seq_no(result), AMOUNT: amount}
+    ]

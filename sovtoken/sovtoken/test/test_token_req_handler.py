@@ -13,7 +13,7 @@ from plenum.common.txn_util import (append_txn_metadata, get_from,
                                     get_payload_data, get_req_id, reqToTxn)
 from sovtoken.constants import (ADDRESS, GET_UTXO, INPUTS, MINT_PUBLIC,
                                 OUTPUTS, TOKEN_LEDGER_ID)
-from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError
+from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError, TokenValueError
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
@@ -47,6 +47,13 @@ def addresses(helpers):
     outputs = [{"address": addresses[0], "amount": 40}, {"address": addresses[1], "amount": 60}]
     helpers.general.do_mint(outputs)
     return addresses
+
+
+def test_token_req_handler_commit_batch_different_state_root(
+        token_handler_a
+):
+    with pytest.raises(TokenValueError):
+        token_handler_a._commit_to_utxo_cache(token_handler_a.utxo_cache, 1)
 
 
 def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(
