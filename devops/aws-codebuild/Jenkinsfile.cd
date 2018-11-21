@@ -23,7 +23,6 @@ pipelineWrapper({
         }
 
         def sovrinRepo = sovLibrary.SovrinRepo.new(this)
-        def sovrinRepo = sovLibrary.SovrinRepo.new(this)
         def utils = sovLibrary.Utils.new(this)
         def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
@@ -55,7 +54,7 @@ pipelineWrapper({
                     lastRevision = sovrinRepo.getLastRevision {
                         delegate.packageName = packageName
                         packageSrcVersion = srcVersion
-                        repoDistr = 'agency-dev'
+                        repoDistr = 'xenial-rc'
                     }
 
                     if (lastRevision) {
@@ -68,7 +67,7 @@ pipelineWrapper({
                 stage('Set release parameters') {
                     def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "${lastRevision ? lastRevision[0] + 1: 1}.$BUILD_NUMBER"
 
-                    debPVersion = utils.packageVersion('deb', srcVersion, releaseVersion, env.BRANCH_NAME == 'master')
+                    debPVersion = utils.packageVersion('deb', srcVersion, releaseVersion)
                     logger.info("Package version for sovrin repo: $debPVersion")
                 }
 
@@ -124,21 +123,21 @@ pipelineWrapper({
                         debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
 
                         logger.info("Uploading debian package '$debName' to sovrin repo")
-                        sovrinRepo.upload {
-                            repoDistr = 'agency_dev'
+                        sovrinRepo.uploadDeb {
+                            repoDistr = 'xenial-rc'
                             packagePath = debName
                         }
 
-	                if (env.BRANCH_NAME == 'stable') {
-                            logger.info("Uploading debian package '$debName' to sovrin repo")
-                            sshagent(credentials: ['SovrinRepoSSHKey']) {
-                                sovrinRepo.upload {
-                                    repoDistr = 'deb'
-                                    packagePath = debName
-                                    component = 'rc'
-                                }
-                            }
-                        }
+	                //if (env.BRANCH_NAME == 'stable') {
+                        //    logger.info("Uploading debian package '$debName' to sovrin repo")
+                        //    sshagent(credentials: ['SovrinRepoSSHKey']) {
+                        //        sovrinRepo.uploadDeb {
+                        //            repoDistr = 'deb'
+                        //            packagePath = debName
+                        //            component = 'rc'
+                        //        }
+                        //    }
+                        //}
                     }
 
                     notifier.email {
