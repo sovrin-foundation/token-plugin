@@ -1,11 +1,11 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.4.0-aws-codebuild', retriever: modernSCM(
-    github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
-)).com.evernym.pipeline
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@master', retriever: modernSCM(
+    github(credentialsId: 'sovrin-ci', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
+)).com.sovrin.pipeline
 
-logger = evLibrary.Logger.new(this)
-notifier = evLibrary.Notifier.new(this)
+logger = sovLibrary.Logger.new(this)
+notifier = sovLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
 pipelineWrapper({
@@ -22,10 +22,10 @@ pipelineWrapper({
             checkout scm
         }
 
-        def utils = evLibrary.Utils.new(this)
-        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+        def utils = sovLibrary.Utils.new(this)
+        def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
-        def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
+        def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
         stage('Upload source to S3') {
             awsCBHelper.uploadSourceToS3()

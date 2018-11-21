@@ -1,11 +1,11 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.4.0-aws-codebuild', retriever: modernSCM(
-    github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
-)).com.evernym.pipeline
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@master', retriever: modernSCM(
+    github(credentialsId: 'sovrin-ci', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
+)).com.sovrin.pipeline
 
-logger = evLibrary.Logger.new(this)
-notifier = evLibrary.Notifier.new(this)
+logger = sovLibrary.Logger.new(this)
+notifier = sovLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
 pipelineWrapper({
@@ -22,12 +22,12 @@ pipelineWrapper({
             checkout scm
         }
 
-        def evernymRepo = evLibrary.EvernymRepo.new(this)
-        def sovrinRepo = evLibrary.SovrinRepo.new(this)
-        def utils = evLibrary.Utils.new(this)
-        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+        def sovrinRepo = sovLibrary.SovrinRepo.new(this)
+        def sovrinRepo = sovLibrary.SovrinRepo.new(this)
+        def utils = sovLibrary.Utils.new(this)
+        def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
-        def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
+        def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
 
         stage('Upload source to S3') {
@@ -52,7 +52,7 @@ pipelineWrapper({
                 }
 
                 stage('Get last revision') {
-                    lastRevision = evernymRepo.getLastRevision {
+                    lastRevision = sovrinRepo.getLastRevision {
                         delegate.packageName = packageName
                         packageSrcVersion = srcVersion
                         repoDistr = 'agency-dev'
@@ -69,7 +69,7 @@ pipelineWrapper({
                     def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "${lastRevision ? lastRevision[0] + 1: 1}.$BUILD_NUMBER"
 
                     debPVersion = utils.packageVersion('deb', srcVersion, releaseVersion, env.BRANCH_NAME == 'master')
-                    logger.info("Package version for evernym repo: $debPVersion")
+                    logger.info("Package version for sovrin repo: $debPVersion")
                 }
 
                 stage("$osname:$proj: Resolve image tag") {
@@ -123,8 +123,8 @@ pipelineWrapper({
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
                         debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
 
-                        logger.info("Uploading debian package '$debName' to evernym repo")
-                        evernymRepo.upload {
+                        logger.info("Uploading debian package '$debName' to sovrin repo")
+                        sovrinRepo.upload {
                             repoDistr = 'agency_dev'
                             packagePath = debName
                         }

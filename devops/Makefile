@@ -57,7 +57,7 @@ FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
 endif
 
 # docker related variables
-DOCKER_NAME ?= evernym/plugin
+DOCKER_NAME ?= sovrin/plugin
 DOCKER_TAG ?=
 CI_DOCKERFILE_PATH = docker/ci/$(OSNAME)/Dockerfile
 
@@ -78,7 +78,7 @@ src_version:
 	echo $(call metadata_value,__version__)
 
 image_ci_base_version:
-	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'evernym/python3',$(CI_DOCKERFILE_PATH)))
+	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'sovrin/python3',$(CI_DOCKERFILE_PATH)))
 	echo $(PYTHON3_DOCKER_VERSION)
 
 image_ci_version:
