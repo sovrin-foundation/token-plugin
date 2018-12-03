@@ -1,4 +1,5 @@
 import pytest
+import base58
 
 from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
                                      TXN_TYPE)
@@ -22,6 +23,23 @@ VALID_FEES = {
     XFER_PUBLIC: 1
 }
 
+CONS_TIME = 1518541344
+
+@pytest.fixture(scope="module")
+def addresses(helpers):
+    addresses = helpers.wallet.create_new_addresses(2)
+    outputs = [{"address": addresses[0], "amount": 40}, {"address": addresses[1], "amount": 60}]
+    helpers.general.do_mint(outputs)
+
+    return addresses
+
+@pytest.fixture
+def token_handler_b(txnPoolNodeSet):
+    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 @pytest.fixture
 def fee_handler(helpers):
@@ -182,10 +200,10 @@ class TestValidation():
             fee_handler.validate(request)
 
     def test_set_fees_test_extra_signees(
-        self,
-        helpers,
-        fee_handler,
-        increased_trustees
+            self,
+            helpers,
+            fee_handler,
+            increased_trustees
     ):
         """
         Validation of a set_fees request passes with extra signees.
@@ -285,11 +303,11 @@ class TestCanPayFees():
         return request
 
     def test_xfer_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_xfer_fees
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_xfer_fees
     ):
         """
         Transfer request with valid fees and fees are set.
@@ -297,11 +315,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_xfer_fees)
 
     def test_xfer_set_without_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_xfer,
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_xfer,
     ):
         """
         Transfer request without fees and fees are set.
@@ -310,10 +328,10 @@ class TestCanPayFees():
             fee_handler.can_pay_fees(request_xfer)
 
     def test_xfer_not_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        request_xfer_fees
+            self,
+            helpers,
+            fee_handler,
+            request_xfer_fees
     ):
         """
         Transfer request with fees and fees are not set.
@@ -328,12 +346,12 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_xfer)
 
     def test_xfer_set_with_additional_fees(
-        self,
-        helpers,
-        fee_handler,
-        request_xfer_fees,
-        inputs_outputs,
-        fees_set
+            self,
+            helpers,
+            fee_handler,
+            request_xfer_fees,
+            inputs_outputs,
+            fees_set
     ):
         """
         Transfer request with extra set of fees, and fees are set.
@@ -347,11 +365,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request)
 
     def test_nym_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_nym_fees
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_nym_fees
     ):
         """
         Nym request with fees and fees are set.
@@ -359,11 +377,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_nym_fees)
 
     def test_nym_set_with_invalid_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        inputs_outputs
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            inputs_outputs
     ):
         """
         Nym request with invalid fees and fees are set.
@@ -386,8 +404,8 @@ class TestCanPayFees():
         request = helpers.request.nym()
 
         with pytest.raises(
-            InvalidClientMessageException,
-            message='Fees are required for this txn type'
+                InvalidClientMessageException,
+                message='Fees are required for this txn type'
         ):
             fee_handler.can_pay_fees(request)
 
@@ -396,8 +414,8 @@ class TestCanPayFees():
         Nym request with fees, and fees are not set
         """
         with pytest.raises(
-            InvalidClientMessageException,
-            message='Fees are not allowed for this txn type'
+                InvalidClientMessageException,
+                message='Fees are not allowed for this txn type'
         ):
             fee_handler.can_pay_fees(request_nym_fees)
 
@@ -416,3 +434,28 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     prev_size = fee_handler.ledger.uncommitted_size
     ret_value = fee_handler.apply(request, 10)
     assert ret_value[0] == prev_size + 1
+
+
+def test_num_uncommited_3pc_batches_with_fees(helpers,
+                                              token_handler_b,
+                                              txnPoolNodeSet):
+    request = helpers.request.nym()
+
+    # apply transaction
+    old_token_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    old_token_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+
+    token_handler_b.apply(request, CONS_TIME)
+
+    fee_nym_handler = helpers.node.get_fees_req_handler()
+    fee_nym_handler.state.revertToHead(old_token_state_root)
+
+    new_token_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    new_token_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    # add batch
+    token_handler_b.onBatchCreated(base58.b58decode(new_token_state_root.encode()))
+
+    #for n in txnPoolNodeSet:
+    assert txnPoolNodeSet[1].getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != txnPoolNodeSet[1].getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+
+
