@@ -40,7 +40,7 @@ def mint_tokens(helpers, address_main):
     ])
 
 
-def pay_fees(helpers, fees_set, address_main, mint_tokens):
+def pay_fees(helpers, fees_set, address_main):
     request = helpers.request.nym()
 
     request = add_fees_request_with_address(
@@ -62,7 +62,7 @@ def fees_paid(
     address_main,
     mint_tokens
 ):
-    return pay_fees(helpers, fees_set, address_main, mint_tokens)
+    return pay_fees(helpers, fees_set, address_main)
 
 
 def test_invalid_fees_numeric(helpers, address_main, mint_tokens):

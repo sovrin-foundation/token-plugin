@@ -1,16 +1,27 @@
+import json
+
 import pytest
 
 from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
-                                     TXN_TYPE)
+                                     TXN_TYPE, TRUSTEE_STRING)
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
+from plenum.common.util import randomString
+from plenum.test.delayers import cDelay
+from plenum.test.helper import sdk_send_signed_requests
+from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
+    sdk_sign_and_send_prepared_request
+
+from plenum.test.stasher import delay_rules
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+from stp_core.loop.eventually import eventually
+
+from sovtokenfees.test.test_fees_non_xfer_txn import address_main, mint_tokens, add_fees_request_with_address
 
 VALID_FEES = {
     NYM: 1,
@@ -21,6 +32,31 @@ VALID_FEES = {
     "114": 1,
     XFER_PUBLIC: 1
 }
+
+CONS_TIME = 1518541344
+
+
+def sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, creators_wallet,
+                                    alias=None, role=None, seed=None,
+                                    dest=None, verkey=None, skipverkey=False):
+    seed = seed or randomString(32)
+    alias = alias or randomString(5)
+    wh, _ = creators_wallet
+
+    nym_request, new_did = looper.loop.run_until_complete(
+        prepare_nym_request(creators_wallet, seed,
+                            alias, role, dest, verkey, skipverkey))
+    return sdk_sign_and_send_prepared_request(looper, creators_wallet,
+                                       sdk_pool_handle, nym_request)
+
+
+@pytest.fixture
+def token_handler_b(txnPoolNodeSet):
+    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+    old_head = h.state.committedHead
+    yield h
+    h.state.revertToHead(old_head)
+    h.onBatchRejected()
 
 
 @pytest.fixture
@@ -182,10 +218,10 @@ class TestValidation():
             fee_handler.validate(request)
 
     def test_set_fees_test_extra_signees(
-        self,
-        helpers,
-        fee_handler,
-        increased_trustees
+            self,
+            helpers,
+            fee_handler,
+            increased_trustees
     ):
         """
         Validation of a set_fees request passes with extra signees.
@@ -285,11 +321,11 @@ class TestCanPayFees():
         return request
 
     def test_xfer_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_xfer_fees
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_xfer_fees
     ):
         """
         Transfer request with valid fees and fees are set.
@@ -297,11 +333,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_xfer_fees)
 
     def test_xfer_set_without_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_xfer,
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_xfer,
     ):
         """
         Transfer request without fees and fees are set.
@@ -310,10 +346,10 @@ class TestCanPayFees():
             fee_handler.can_pay_fees(request_xfer)
 
     def test_xfer_not_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        request_xfer_fees
+            self,
+            helpers,
+            fee_handler,
+            request_xfer_fees
     ):
         """
         Transfer request with fees and fees are not set.
@@ -328,12 +364,12 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_xfer)
 
     def test_xfer_set_with_additional_fees(
-        self,
-        helpers,
-        fee_handler,
-        request_xfer_fees,
-        inputs_outputs,
-        fees_set
+            self,
+            helpers,
+            fee_handler,
+            request_xfer_fees,
+            inputs_outputs,
+            fees_set
     ):
         """
         Transfer request with extra set of fees, and fees are set.
@@ -347,11 +383,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request)
 
     def test_nym_set_with_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        request_nym_fees
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            request_nym_fees
     ):
         """
         Nym request with fees and fees are set.
@@ -359,11 +395,11 @@ class TestCanPayFees():
         fee_handler.can_pay_fees(request_nym_fees)
 
     def test_nym_set_with_invalid_fees(
-        self,
-        helpers,
-        fee_handler,
-        fees_set,
-        inputs_outputs
+            self,
+            helpers,
+            fee_handler,
+            fees_set,
+            inputs_outputs
     ):
         """
         Nym request with invalid fees and fees are set.
@@ -386,8 +422,8 @@ class TestCanPayFees():
         request = helpers.request.nym()
 
         with pytest.raises(
-            InvalidClientMessageException,
-            message='Fees are required for this txn type'
+                InvalidClientMessageException,
+                message='Fees are required for this txn type'
         ):
             fee_handler.can_pay_fees(request)
 
@@ -396,8 +432,8 @@ class TestCanPayFees():
         Nym request with fees, and fees are not set
         """
         with pytest.raises(
-            InvalidClientMessageException,
-            message='Fees are not allowed for this txn type'
+                InvalidClientMessageException,
+                message='Fees are not allowed for this txn type'
         ):
             fee_handler.can_pay_fees(request_nym_fees)
 
@@ -416,3 +452,40 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     prev_size = fee_handler.ledger.uncommitted_size
     ret_value = fee_handler.apply(request, 10)
     assert ret_value[0] == prev_size + 1
+
+
+def not_equal_to_assert(n):
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
+
+    assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
+           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+
+    assert n.getState(DOMAIN_LEDGER_ID).headHash != \
+           n.getState(DOMAIN_LEDGER_ID).committedHeadHash
+
+    assert n.getState(TOKEN_LEDGER_ID).headHash != \
+           n.getState(TOKEN_LEDGER_ID).committedHeadHash
+
+
+def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
+                                              txnPoolNodeSet,
+                                              sdk_pool_handle,
+                                              sdk_wallet_trustee,
+                                              fees_set, address_main, mint_tokens):
+    
+    node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
+
+    with delay_rules(node_set, cDelay()):
+        request = helpers.request.nym()
+
+        request = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request,
+            address_main
+        )
+
+        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
+
+        for n in txnPoolNodeSet:
+            looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
