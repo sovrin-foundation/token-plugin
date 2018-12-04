@@ -463,12 +463,14 @@ def not_equal_to_assert(n):
            n.getState(TOKEN_LEDGER_ID).committedHeadHash
 
 
-def test_num_uncommited_3pc_batches_with_fees(looper,
+def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
                                               txnPoolNodeSet,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee):
 
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
+
+    request = helpers.request.set_fees(VALID_FEES)
 
     with delay_rules(node_set, cDelay()):
         sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, sdk_wallet_trustee, role=TRUSTEE_STRING)
