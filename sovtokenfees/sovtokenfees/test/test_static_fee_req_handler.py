@@ -16,8 +16,7 @@ from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
-
-
+from stp_core.loop.eventually import eventually
 
 VALID_FEES = {
     NYM: 1,
@@ -450,25 +449,27 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     assert ret_value[0] == prev_size + 1
 
 
+def not_equal_to_assert(n):
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
+           n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
+
+    assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
+           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+    assert n.getState(DOMAIN_LEDGER_ID).headHash != \
+           n.getState(DOMAIN_LEDGER_ID).committedHeadHash
+
+    assert n.getState(TOKEN_LEDGER_ID).headHash != \
+           n.getState(TOKEN_LEDGER_ID).committedHeadHash
+
+
 def test_num_uncommited_3pc_batches_with_fees(looper,
                                               txnPoolNodeSet,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee):
-
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
     with delay_rules(node_set, cDelay()):
-
         sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, sdk_wallet_trustee, role=TRUSTEE_STRING)
 
         for n in txnPoolNodeSet:
-            assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
-                   n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
-
-            assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
-                   n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
-            assert n.getState(DOMAIN_LEDGER_ID).headHash != \
-                   n.getState(DOMAIN_LEDGER_ID).committedHeadHash
-
-            assert n.getState(TOKEN_LEDGER_ID).headHash != \
-                   n.getState(TOKEN_LEDGER_ID).committedHeadHash
+            looper.loop.run_until_complete(eventually(not_equal_to_assert(n)))
