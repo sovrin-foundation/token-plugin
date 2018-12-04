@@ -2,11 +2,12 @@ import pytest
 import base58
 
 from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
-                                     TXN_TYPE)
+                                     TXN_TYPE, TRUSTEE_STRING)
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
 from plenum.test.delayers import cDelay
+from plenum.test.pool_transactions.helper import sdk_add_new_nym
 from plenum.test.stasher import delay_rules
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
@@ -432,13 +433,16 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     assert ret_value[0] == prev_size + 1
 
 
-def test_num_uncommited_3pc_batches_with_fees(helpers, txnPoolNodeSet):
+def test_num_uncommited_3pc_batches_with_fees(looper,
+                                              txnPoolNodeSet,
+                                              sdk_pool_handle,
+                                              sdk_wallet_steward):
 
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
     with delay_rules(node_set, cDelay()):
 
-        helpers.general.do_nym()
+        sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
 
         for n in txnPoolNodeSet:
             assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
