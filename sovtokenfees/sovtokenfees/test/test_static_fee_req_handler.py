@@ -1,20 +1,23 @@
 import pytest
-import base58
 
 from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
                                      TXN_TYPE, TRUSTEE_STRING)
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
+from plenum.common.util import randomString
 from plenum.test.delayers import cDelay
-from plenum.test.pool_transactions.helper import sdk_add_new_nym
+from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
+    sdk_sign_and_send_prepared_request
+
 from plenum.test.stasher import delay_rules
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+
+
 
 VALID_FEES = {
     NYM: 1,
@@ -27,6 +30,20 @@ VALID_FEES = {
 }
 
 CONS_TIME = 1518541344
+
+
+def sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, creators_wallet,
+                                    alias=None, role=None, seed=None,
+                                    dest=None, verkey=None, skipverkey=False):
+    seed = seed or randomString(32)
+    alias = alias or randomString(5)
+    wh, _ = creators_wallet
+
+    nym_request, new_did = looper.loop.run_until_complete(
+        prepare_nym_request(creators_wallet, seed,
+                            alias, role, dest, verkey, skipverkey))
+    sdk_sign_and_send_prepared_request(looper, creators_wallet,
+                                       sdk_pool_handle, nym_request)
 
 
 @pytest.fixture
@@ -436,13 +453,13 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
 def test_num_uncommited_3pc_batches_with_fees(looper,
                                               txnPoolNodeSet,
                                               sdk_pool_handle,
-                                              sdk_wallet_steward):
+                                              sdk_wallet_trustee):
 
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
     with delay_rules(node_set, cDelay()):
 
-        sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
+        sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, sdk_wallet_trustee, role=TRUSTEE_STRING)
 
         for n in txnPoolNodeSet:
             assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
