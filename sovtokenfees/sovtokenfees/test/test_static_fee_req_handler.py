@@ -466,10 +466,11 @@ def test_num_uncommited_3pc_batches_with_fees(looper,
                                               txnPoolNodeSet,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee):
+
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
     with delay_rules(node_set, cDelay()):
         sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, sdk_wallet_trustee, role=TRUSTEE_STRING)
 
         for n in txnPoolNodeSet:
-            looper.loop.run_until_complete(eventually(not_equal_to_assert(n)))
+            looper.run(eventually(not_equal_to_assert, n))
