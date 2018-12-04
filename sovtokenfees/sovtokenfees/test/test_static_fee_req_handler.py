@@ -6,6 +6,8 @@ from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
+from plenum.test.delayers import cDelay
+from plenum.test.stasher import delay_rules
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
@@ -25,13 +27,6 @@ VALID_FEES = {
 
 CONS_TIME = 1518541344
 
-@pytest.fixture(scope="module")
-def addresses(helpers):
-    addresses = helpers.wallet.create_new_addresses(2)
-    outputs = [{"address": addresses[0], "amount": 40}, {"address": addresses[1], "amount": 60}]
-    helpers.general.do_mint(outputs)
-
-    return addresses
 
 @pytest.fixture
 def token_handler_b(txnPoolNodeSet):
@@ -40,6 +35,7 @@ def token_handler_b(txnPoolNodeSet):
     yield h
     h.state.revertToHead(old_head)
     h.onBatchRejected()
+
 
 @pytest.fixture
 def fee_handler(helpers):
@@ -436,26 +432,22 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     assert ret_value[0] == prev_size + 1
 
 
-def test_num_uncommited_3pc_batches_with_fees(helpers,
-                                              token_handler_b,
-                                              txnPoolNodeSet):
-    request = helpers.request.nym()
+def test_num_uncommited_3pc_batches_with_fees(helpers, txnPoolNodeSet):
 
-    # apply transaction
-    old_token_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    old_token_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
-    token_handler_b.apply(request, CONS_TIME)
+    with delay_rules(node_set, cDelay()):
 
-    fee_nym_handler = helpers.node.get_fees_req_handler()
-    fee_nym_handler.state.revertToHead(old_token_state_root)
+        request = helpers.request.nym()
 
-    new_token_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    new_token_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
-    # add batch
-    token_handler_b.onBatchCreated(base58.b58decode(new_token_state_root.encode()))
+        for n in txnPoolNodeSet:
+            assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
+                   n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
 
-    #for n in txnPoolNodeSet:
-    assert txnPoolNodeSet[1].getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != txnPoolNodeSet[1].getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+            assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
+                   n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+            assert n.getState(DOMAIN_LEDGER_ID).headHash != \
+                   n.getState(DOMAIN_LEDGER_ID).committedHeadHash
 
-
+            assert n.getState(TOKEN_LEDGER_ID).headHash != \
+                   n.getState(TOKEN_LEDGER_ID).committedHeadHash
