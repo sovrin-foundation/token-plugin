@@ -455,6 +455,7 @@ def not_equal_to_assert(n):
 
     assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
            n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+
     assert n.getState(DOMAIN_LEDGER_ID).headHash != \
            n.getState(DOMAIN_LEDGER_ID).committedHeadHash
 
