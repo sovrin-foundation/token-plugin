@@ -438,7 +438,7 @@ def test_num_uncommited_3pc_batches_with_fees(helpers, txnPoolNodeSet):
 
     with delay_rules(node_set, cDelay()):
 
-        request = helpers.request.nym()
+        helpers.general.do_nym()
 
         for n in txnPoolNodeSet:
             assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
