@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
@@ -7,6 +9,7 @@ from plenum.common.exceptions import (InvalidClientRequest,
                                       UnauthorizedClientRequest)
 from plenum.common.util import randomString
 from plenum.test.delayers import cDelay
+from plenum.test.helper import sdk_send_signed_requests
 from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
     sdk_sign_and_send_prepared_request
 
@@ -17,6 +20,8 @@ from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
 from stp_core.loop.eventually import eventually
+
+from sovtokenfees.test.test_fees_non_xfer_txn import address_main, mint_tokens, add_fees_request_with_address
 
 VALID_FEES = {
     NYM: 1,
@@ -41,7 +46,7 @@ def sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, creators_wallet,
     nym_request, new_did = looper.loop.run_until_complete(
         prepare_nym_request(creators_wallet, seed,
                             alias, role, dest, verkey, skipverkey))
-    sdk_sign_and_send_prepared_request(looper, creators_wallet,
+    return sdk_sign_and_send_prepared_request(looper, creators_wallet,
                                        sdk_pool_handle, nym_request)
 
 
@@ -450,8 +455,7 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
 
 
 def not_equal_to_assert(n):
-    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != \
-           n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
 
     assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
            n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
@@ -466,14 +470,22 @@ def not_equal_to_assert(n):
 def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
                                               txnPoolNodeSet,
                                               sdk_pool_handle,
-                                              sdk_wallet_trustee):
+                                              sdk_wallet_trustee,
+                                              fees_set, address_main, mint_tokens):
     
-    request = helpers.request.set_fees(VALID_FEES)
-
     node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
 
     with delay_rules(node_set, cDelay()):
-        sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, sdk_wallet_trustee, role=TRUSTEE_STRING)
+        request = helpers.request.nym()
+
+        request = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request,
+            address_main
+        )
+
+        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
         for n in txnPoolNodeSet:
-            looper.run(eventually(not_equal_to_assert, n))
+            looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
