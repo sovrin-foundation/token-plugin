@@ -2,69 +2,82 @@ import pytest
 
 from plenum.common.txn_util import get_seq_no
 from sovtoken.util import update_token_wallet_with_result
-from sovtoken.test.helper import do_public_minting, send_xfer, check_output_val_on_all_nodes, send_get_utxo
-
-from sovtoken.test.demo.demo_helpers import *
-demo_logger.log_green('Performing some setup')
-
-NEW_TOKENS = 100000
-SELLER_RECEIVES = 35000
-SF_RECEIVES = NEW_TOKENS - SELLER_RECEIVES
-RECIPIENT_RECEIVES = 10000
-
-wallet_names = ["Sender", "Recipient", "SF"]
-wallets = {wallet_name: create_wallet_with_default_identifier(wallet_name) for wallet_name in wallet_names}
-addresses = {wallet_name:create_address_add_wallet_log(wallet) for wallet_name,wallet in wallets.items()}
+from sovtoken.test.demo.demo_helpers import demo_logger, assert_address_contains
 
 
-@pytest.fixture(scope='module', autouse=True)
-def setup_teardown(looper, sdk_pool_handle, sdk_wallet_client, trustee_wallets):
-    demo_logger.log_green('Starting test\n')
-    resp = public_mint(looper, sdk_pool_handle, sdk_wallet_client, trustee_wallets)
-    xfer_partial_amount(looper, sdk_pool_handle, get_seq_no(resp))
-    yield
-    demo_logger.log_green('Test ended')
+SOVATOM = int(1e8)
+NEW_TOKENS = int(3e6) * SOVATOM
+SOVRIN_TO_USER1 = 10 * SOVATOM
+SOVRIN_TO_USER2 = 3 * SOVATOM
+USER1_TO_USER2 = int(5 * SOVATOM / 10)
+
+SOVRIN = "Sovrin Foundation"
+USER1 = "User 1"
+USER2 = "User 2"
 
 
-def public_mint(looper, sdk_pool_handle, sdk_wallet_client, trustee_wallets):
-    demo_logger.log_blue("Minting {:,} tokens.".format(NEW_TOKENS))
+def create_addresses(helpers):
+    addresses = dict(zip(
+        [SOVRIN, USER1, USER2],
+        helpers.wallet.create_new_addresses(3)
+    ))
 
-    resp = do_public_minting(looper, trustee_wallets, sdk_pool_handle, NEW_TOKENS,
-                             SF_RECEIVES, addresses["SF"], addresses["Sender"])
+    template = "{} created the address {}."
+    for name, address in addresses.items():
+        demo_logger.log_blue(template.format(name, address))
 
-    demo_logger.log_blue("The seller address, {} received {:,} tokens.".format(addresses["Sender"], SELLER_RECEIVES))
-    demo_logger.log_blue("The SF address, {} received {:,} tokens".format(addresses["SF"], SF_RECEIVES))
-
-    for wallet, address in zip(wallets.values(), addresses.values()):
-        utxo_resp = send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle)
-        update_token_wallet_with_result(wallet, utxo_resp)
-    return resp
+    return addresses
 
 
-def xfer_partial_amount(looper, sdk_pool_handle, seqNo):
-    inputs = [[wallets["Sender"], addresses["Sender"], seqNo]]
-    outputs = [[addresses["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES], [addresses["Recipient"], RECIPIENT_RECEIVES]]
-
-    demo_logger.log_blue("The Sender is sending {} tokens ot the Recipient".format(RECIPIENT_RECEIVES))
-
-    resp = send_xfer(looper, inputs, outputs, sdk_pool_handle)
-    for wallet in wallets.values():
-        update_token_wallet_with_result(wallet, resp)
+def mint_tokens(helpers, addresses):
+    result = helpers.general.do_mint([{"address": addresses[SOVRIN], "amount": NEW_TOKENS}])
+    template = "Minted {} sovatoms to {}."
+    demo_logger.log_blue(template.format(NEW_TOKENS, SOVRIN))
 
 
-def test_addresses_on_nodes(nodeSetWithIntegratedTokenPlugin):
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin,addresses["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, addresses["Recipient"], RECIPIENT_RECEIVES)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, addresses["SF"], SF_RECEIVES)
+def sovrin_sends_tokens(helpers, addresses):
+    inputs = [{"address": addresses[SOVRIN], "seqNo": 1}]
+    outputs = [
+        {"address": addresses[USER1], "amount": SOVRIN_TO_USER1},
+        {"address": addresses[USER2], "amount": SOVRIN_TO_USER2},
+        {"address": addresses[SOVRIN], "amount": NEW_TOKENS - SOVRIN_TO_USER1 - SOVRIN_TO_USER2},
+    ]
+    helpers.general.do_transfer(inputs, outputs)
+
+    template = "{} sent {} sovatoms to {}."
+    demo_logger.log_blue(template.format(SOVRIN, SOVRIN_TO_USER1, USER1))
+    demo_logger.log_blue(template.format(SOVRIN, SOVRIN_TO_USER2, USER2))
 
 
-def test_sender_wallet():
-    assert_wallet_amount(wallets["Sender"], SELLER_RECEIVES - RECIPIENT_RECEIVES, SELLER_RECEIVES)
+def user1_sends_tokens(helpers, addresses):
+    inputs = [{"address": addresses[USER1], "seqNo": 2}]
+    outputs = [
+        {"address": addresses[USER2], "amount": USER1_TO_USER2},
+        {"address": addresses[USER1], "amount": SOVRIN_TO_USER1 - USER1_TO_USER2},
+    ]
+    helpers.general.do_transfer(inputs, outputs)
+
+    template = "{} sent {} sovatoms to {}."
+    demo_logger.log_blue(template.format(SOVRIN, SOVRIN_TO_USER1, USER1))
 
 
-def test_recipient_wallet():
-    assert_wallet_amount(wallets["Recipient"], RECIPIENT_RECEIVES, 0)
+def check_tokens(helpers, addresses):
+    expected_sovrin = NEW_TOKENS - SOVRIN_TO_USER1 - SOVRIN_TO_USER2
+    expected_user1 = SOVRIN_TO_USER1 - USER1_TO_USER2
+    expected_user2 = SOVRIN_TO_USER2 + USER1_TO_USER2
+
+    assert_address_contains(helpers, addresses, SOVRIN, expected_sovrin)
+    assert_address_contains(helpers, addresses, USER1, expected_user1)
+    assert_address_contains(helpers, addresses, USER2, expected_user2)
 
 
-def test_sf_wallet():
-    assert_wallet_amount(wallets["SF"], SF_RECEIVES, 0)
+def test_transfer(helpers):
+    demo_logger.log_header("Started demo")
+
+    addresses = create_addresses(helpers)
+    mint_tokens(helpers, addresses)
+    sovrin_sends_tokens(helpers, addresses)
+    user1_sends_tokens(helpers, addresses)
+    check_tokens(helpers, addresses)
+
+    demo_logger.log_header("Ended demo")

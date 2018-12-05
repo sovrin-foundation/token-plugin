@@ -12,19 +12,18 @@ def integrate_plugin_in_node(node):
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
-        raise ModuleNotFoundError('sovtoken plugin should be loaded, ' # noqa
+        raise ImportError('sovtoken plugin should be loaded, ' # noqa
                                   'authenticator not found')
     token_req_handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
     if not token_req_handler:
-        raise ModuleNotFoundError('sovtoken plugin should be loaded, request ' # noqa
+        raise ImportError('sovtoken plugin should be loaded, request ' # noqa
                                   'handler not found')
 
-    # Since `token_req_handler` does not know about fees, it will expect inputs and outputs to match exactly.
-    # Disabling that check since in case of XFER_PUBLIC with fees `token_req_handler` will find the sum of
-    # inputs greater than outputs since its agnostic of fees. Thus in case of XFER_PUBLIC with fees, `StaticFeeReqHandler`
-    # guarantees the equality of inputs and outputs
-    # `StaticFeeReqHandler` checks for the equality of inputs and outputs in `_get_deducted_fees_xfer`.
-    token_req_handler.ALLOW_INPUTS_TO_EXCEED_OUTPUTS = True
+    # `handle_xfer_public_txn` in `TokenReqHandler` checks if the sum of inputs match
+    # exactly the sum of outputs. Since the check to match inputs and outputs is done
+    # during fees handling the check is avoided in `TokenReqHandler` by monkeypatching
+    # `handle_xfer_public_txn` to do nothing.
+    token_req_handler.handle_xfer_public_txn = lambda _: None
 
     token_ledger = token_req_handler.ledger
     token_state = token_req_handler.state
@@ -59,10 +58,5 @@ def integrate_plugin_in_node(node):
                                       three_pc_handler.add_to_ordered)
     node.master_replica.register_hook(ReplicaHooks.APPLY_PPR,
                                       three_pc_handler.check_recvd_pre_prepare)
-    node.master_replica.register_hook(ReplicaHooks.VALIDATE_PR,
-                                      three_pc_handler.check_recvd_prepare)
-    node.master_replica.register_hook(ReplicaHooks.BATCH_CREATED,
-                                      three_pc_handler.batch_created)
-    node.master_replica.register_hook(ReplicaHooks.BATCH_REJECTED,
-                                      three_pc_handler.batch_rejected)
+
     return node

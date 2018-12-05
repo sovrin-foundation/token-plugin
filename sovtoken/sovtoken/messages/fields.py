@@ -1,6 +1,6 @@
 from base58 import b58decode_check
 
-from plenum.common.messages.fields import FieldBase, FixedLengthField, TxnSeqNoField, IterableField
+from plenum.common.messages.fields import FieldBase, AnyMapField, FixedLengthField, TxnSeqNoField, IterableField
 from sovtoken.util import decode_address_to_vk_bytes
 
 
@@ -26,25 +26,21 @@ class PublicAmountField(FieldBase):
             return 'negative or zero value'
 
 
-class PublicOutputField(FixedLengthField):
-    _base_types = (list, tuple)
+class PublicOutputField(AnyMapField):
     public_address_field = PublicAddressField()
     public_amount_field = PublicAmountField()
-
-    def __init__(self, **kwargs):
-        super().__init__(length=2, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
             return error
 
-        addr_error = self.public_address_field.validate(val[0])
+        addr_error = self.public_address_field.validate(val["address"])
         if addr_error:
-            return addr_error
-        amt_error = self.public_amount_field.validate(val[1])
+            return "address -- " + addr_error
+        amt_error = self.public_amount_field.validate(val["amount"])
         if amt_error:
-            return amt_error
+            return "amount -- " + amt_error
 
 
 # class PublicAddressesField(IterableField):
@@ -61,28 +57,27 @@ class PublicOutputsField(IterableField):
         if error:
             return error
 
-        if len(val) != len({a for a, _ in val}):
+        if len(val) != len({a["address"] for a in val}):
             error = 'Each output should contain unique address'
         if error:
             return error
 
 
-class PublicInputField(FixedLengthField):
-    _base_types = (list, tuple)
+class PublicInputField(AnyMapField):
     public_address_field = PublicAddressField()
     seq_no_field = TxnSeqNoField()
-
-    def __init__(self, **kwargs):
-        super().__init__(length=2, **kwargs)
 
     def _specific_validation(self, val):
         error = super()._specific_validation(val)
         if error:
             return error
 
-        for (field, val) in zip((self.public_address_field, self.seq_no_field), val):
-            err = field.validate(val)
-            return err
+        addr_error = self.public_address_field.validate(val["address"])
+        if addr_error:
+            return "address -- " + addr_error
+        amt_error = self.seq_no_field.validate(val["seqNo"])
+        if amt_error:
+            return "seqNo -- " + amt_error
 
 
 class PublicInputsField(IterableField):
@@ -94,7 +89,7 @@ class PublicInputsField(IterableField):
         if error:
             return error
 
-        if len(val) != len({(a, s) for a, s in val}):
+        if len(val) != len({(a["address"], a["seqNo"]) for a in val}):
             error = 'Each input should be unique'
         if error:
             return error

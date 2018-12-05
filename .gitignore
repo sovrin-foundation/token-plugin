@@ -31,7 +31,7 @@ var/
 .viminfo
 .pytest_cache/
 *.deb
-devops/build-scripts/xenial/Pool_Party/Docker-r
+Docker-r
 Pipfile
 
 # PyInstaller

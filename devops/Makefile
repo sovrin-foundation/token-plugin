@@ -52,7 +52,7 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # remove that once sovtoken starts using indy-plenum from stable:
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
-FPM_P_DEPENDS := indy-plenum(>=1.4.442)
+FPM_P_DEPENDS := indy-plenum(>=1.6.53)
 FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
 endif
 

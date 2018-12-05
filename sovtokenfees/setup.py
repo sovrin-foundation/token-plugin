@@ -20,7 +20,7 @@ metadata={}
 with open(os.path.join(here, 'sovtokenfees', 'metadata.json'), 'r') as f:
     metadata = json.load(f)
 
-tests_require = ['pytest', 'pytest-xdist', 'python3-indy==1.6.1-dev-657']
+tests_require = ['pytest', 'pytest-xdist', 'python3-indy==1.6.7']
 
 setup(
 

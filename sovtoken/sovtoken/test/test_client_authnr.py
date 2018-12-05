@@ -9,8 +9,7 @@ from sovtoken.test.wallet import TokenWallet
 from sovtoken.client_authnr import TokenAuthNr, AddressSigVerifier
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA
 from plenum.common.types import f, OPERATION
-from sovtoken.test.helper import public_mint_request, \
-    xfer_request
+from sovtoken.test.helper import xfer_request
 
 
 # -------------------------Class fixtures-------------------------------------------------------------------------------
@@ -59,6 +58,11 @@ def SF_address(SF_token_wallet):
     return next(iter(SF_token_wallet.addresses.keys()))
 
 
+@pytest.fixture()
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
+
+
 # -------------------------VALID TEST CONSTANTS-------------------------------------------------------------------------
 
 # this valid identifier represents a DID that submitted the transaction
@@ -98,10 +102,11 @@ def test_verify_fail():
 # -------------------------Test authenticate method---------------------------------------------------------------------
 
 # This test is used to check that invalid signatures are throwing an InsufficientCorrectSignatures exception
-def test_authenticate_invalid_signatures_format(node, trustee_wallets, SF_address, user1_address):
+def test_authenticate_invalid_signatures_format(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
-    request = public_mint_request(trustee_wallets, outputs)
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
+    request = helpers.request.mint(outputs)
     req_data = request.as_dict
     req_data[f.SIGS.nm] = {
         'M9BJDuS24bqbJNvBRsoGg3': 'INVALID_SIG1',
@@ -113,10 +118,11 @@ def test_authenticate_invalid_signatures_format(node, trustee_wallets, SF_addres
 
 
 # This test is to validate properly formed invalid signatures are throwing an InsufficientCorrectSignatures
-def test_authenticate_insufficient_valid_signatures_data(node, trustee_wallets, SF_address, user1_address):
+def test_authenticate_insufficient_valid_signatures_data(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
-    request = public_mint_request(trustee_wallets, outputs)
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
+    request = helpers.request.mint(outputs)
     req_data = request.as_dict
     req_data[f.SIGS.nm]['E7QRhdcnhAwA6E46k9EtZo'] = \
         '2EBZxZ3E2r2ZjCCBwgD6ipnHbskZb4Y4Yqm6haYEsr7hdM1m36yqLFrmNSB7JPqjAsMx6qjw6dWV5sRou1DgiKrM'
@@ -125,25 +131,28 @@ def test_authenticate_insufficient_valid_signatures_data(node, trustee_wallets, 
 
 
 # This test is checking to make sure a threshold of correct signatures is met
-def test_authenticate_success_4_sigs(node, trustee_wallets, SF_address, user1_address):
+def test_authenticate_success_3_sigs(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    outputs = [[SF_address, 30], [user1_address, 30]]
-    request = public_mint_request(trustee_wallets, outputs)
+    outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
+    request = helpers.request.mint(outputs)
     req_data = request.as_dict
     correct_sigs = token_authnr.authenticate(req_data)
-    assert len(correct_sigs) == 4
+    assert len(correct_sigs) == 3
 
 
 # This test is used to verify that authenticate_xfer is called with a XFER_PUBLIC type is given
-@mock.patch.object(TokenAuthNr, 'authenticate_xfer', return_value=True)
-def test_authenticate_calls_authenticate_xfer(node, user2_token_wallet, user1_address, user2_address):
+def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
-    request = xfer_request(inputs, outputs)
-    req_data = request.__dict__
-    monkeypatch_val = token_authnr.authenticate(req_data)
-    assert monkeypatch_val == True
+    inputs = [{"address": SF_address, "seqNo": 1}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
+    request = helpers.request.transfer(inputs, outputs)
+    req_data = request.as_dict
+
+    token_authnr.authenticate_xfer = mock.Mock()
+    token_authnr.authenticate(req_data)
+    token_authnr.authenticate_xfer.assert_called()
 
 
 # -------------------------Test authenticate_xfer method----------------------------------------------------------------
@@ -152,7 +161,7 @@ def test_authenticate_calls_authenticate_xfer(node, user2_token_wallet, user1_ad
 def test_authenticate_xfer_success(node, user2_token_wallet, user2_address, user1_address):
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": user2_address, "amount": 10}]
     request = xfer_request(inputs, outputs)
     req_data = request.as_dict
     correct_sigs = token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
@@ -166,20 +175,8 @@ def test_authenticate_xfer_invalid_signature_format(node, user2_token_wallet, us
     outputs = [[user1_address, 10], [user2_address, 10]]
     request = xfer_request(inputs, outputs)
     req_data = request.as_dict
-    req_data[OPERATION]["signatures"][0] =  'INVALID_SIGNATURE'
+    req_data[OPERATION]["signatures"][0] = 'INVALID_SIGNATURE'
     with pytest.raises(InvalidSignatureFormat):
-        token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
-
-
-# This test verifies that authenticate_xfer raises an error when an invalid formatted signature is submitted
-@mock.patch.object(TokenAuthNr, 'getVerkey', return_value=None)
-def test_authenticate_xfer_could_not_authenticate(node, user2_token_wallet, user2_address, user1_address):
-    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [[user2_token_wallet, user2_address, 1]]
-    outputs = [[user1_address, 10], [user2_address, 10]]
-    request = xfer_request(inputs, outputs)
-    req_data = request.as_dict
-    with pytest.raises(CouldNotAuthenticate):
         token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
 
 
@@ -214,14 +211,15 @@ def test_serializeForSig_XFER_PUBLIC_path(node, user2_token_wallet, user2_addres
 
 
 # This test that the serializeForSig method is being called when a MINT_PUBLIC request is submitted
-@mock.patch.object(CoreAuthNr, 'serializeForSig', return_value=True)
-def test_serializeForSig_MINT_PUBLIC_path(node, SF_address, user1_address, trustee_wallets):
+@mock.patch.object(CoreAuthNr, 'serializeForSig')
+def test_serializeForSig_MINT_PUBLIC_path(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
     outputs = [[SF_address, 30], [user1_address, 30]]
-    request = public_mint_request(trustee_wallets, outputs)
+    request = helpers.request.mint(outputs)
     msg = request.as_dict
     serialize_for_sig_called = token_authnr.serializeForSig(msg, VALID_IDENTIFIER, None)
-    assert serialize_for_sig_called == True
+    token_authnr.serializeForSig.assert_called()
 
 
 # -------------------------Test getVerkey method------------------------------------------------------------------------

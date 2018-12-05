@@ -1,19 +1,18 @@
+import sovtoken.test.helpers.helper_node as sovtoken_helper_node
 from plenum.common.constants import CONFIG_LEDGER_ID
 
 
-class HelperNode():
+class HelperNode(sovtoken_helper_node.HelperNode):
     """
-    Helper for dealing with the nodes.
+    Extends the sovtoken HelperNode for fee functionality.
 
     # Methods
     - assert_deducted_fees
     - assert_set_fees_in_memory
-    - get_last_ledger_transaction_on_nodes
+    - fee_handler_can_pay_fees
+    - get_fees_req_handler
     - reset_fees
     """
-
-    def __init__(self, nodes):
-        self._nodes = nodes
 
     def assert_deducted_fees(self, txn_type, seq_no, amount):
         """ Assert nodes have paid fees stored in memory """
@@ -29,20 +28,19 @@ class HelperNode():
             req_handler = self._get_fees_req_handler(node)
             assert req_handler.fees == fees
 
-    def get_last_ledger_transaction_on_nodes(self, ledger_id):
-        """ Return last transaction stored on ledger from each node. """
-        transactions = []
-        for node in self._nodes:
-            ledger = node.getLedger(ledger_id)
-            last_sequence_number = ledger.size
-            transactions.append(ledger.getBySeqNo(last_sequence_number))
-
-        return transactions
-
     def reset_fees(self):
         """ Reset the fees on each node. """
         for node in self._nodes:
             self._reset_fees(node)
+
+    def fee_handler_can_pay_fees(self, request):
+        """ Check the request can pay fees using a StaticFeeRequestHandler. """
+        request_handler = self.get_fees_req_handler()
+        return request_handler.can_pay_fees(request)
+
+    def get_fees_req_handler(self):
+        """ Get the fees request handler of the first node """
+        return self._get_fees_req_handler(self._nodes[0])
 
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)

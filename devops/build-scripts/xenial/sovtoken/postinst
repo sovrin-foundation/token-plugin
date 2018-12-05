@@ -17,7 +17,7 @@ add_plugin_if_missing()
         echo -e "\n\nENABLED_PLUGINS=[]" >> $INDY_CONFIG_PATH
     fi
 
-    if [ $(grep -c "ENABLED_PLUGINS.*$1" $INDY_CONFIG_PATH) -eq 0 ]; then
+    if [ $(grep -c "ENABLED_PLUGINS.*'$1'" $INDY_CONFIG_PATH) -eq 0 ]; then
         echo -e "\nENABLED_PLUGINS.append('$1')" >> $INDY_CONFIG_PATH
     fi
 }

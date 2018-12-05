@@ -1,13 +1,12 @@
 import json
 
+from indy.ledger import build_nym_request, build_schema_request
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from plenum.common.util import randomString
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
-    MINT_PUBLIC, GET_UTXO, ADDRESS
+    MINT_PUBLIC, GET_UTXO, ADDRESS, SEQNO, AMOUNT
 from sovtoken.util import address_to_verkey
-from plenum.test.pool_transactions.helper import prepare_nym_request
 
 
 class HelperRequest():
@@ -18,6 +17,8 @@ class HelperRequest():
     - get_utxo
     - transfer
     - mint
+    - nym
+    - payment_signatures
     """
 
     def __init__(
@@ -40,7 +41,7 @@ class HelperRequest():
         """ Builds a get_utxo request. """
         payload = {
             TXN_TYPE: GET_UTXO,
-            ADDRESS: address.address
+            ADDRESS: address
         }
 
         request = self._create_request(payload, self._client_did)
@@ -58,13 +59,12 @@ class HelperRequest():
 
         return request
 
-    def transfer(self, inputs, outputs, extra=None):
+    def transfer(self, inputs, outputs, extra=None, identifier=None):
         """ Builds a transfer request. """
-        outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = [[address.address, seq_no] for address, seq_no in inputs]
+        payment_signatures = self.payment_signatures(inputs, outputs)
 
-        [first_address, seq_no] = inputs_ready[0]
-        payment_signatures = self._wallet.payment_signatures(inputs, outputs)
+        outputs_ready = self._prepare_outputs(outputs)
+        inputs_ready = self._prepare_inputs(inputs)
 
         payload = {
             TXN_TYPE: XFER_PUBLIC,
@@ -74,7 +74,10 @@ class HelperRequest():
             SIGS: payment_signatures
         }
 
-        identifier = address_to_verkey(first_address)
+        if not identifier:
+            first_address = inputs_ready[0][ADDRESS]
+            identifier = address_to_verkey(first_address)
+
         request = self._create_request(payload, identifier)
 
         return request
@@ -89,7 +92,7 @@ class HelperRequest():
         }
 
         request = self._create_request(payload)
-        request = self._wallet.sign_request_trustees(request)
+        request = self._wallet.sign_request_trustees(request, number_signers=3)
         return request
 
     def nym(
@@ -97,32 +100,86 @@ class HelperRequest():
         seed=None,
         alias=None,
         role=None,
-        sdk_wallet=None
+        dest=None,
+        verkey=None,
+        sdk_wallet=None,
     ):
-        """ Builds a nym request. """
-        if not seed:
-            seed = randomString(32)
-  
-        if not alias:
-            alias = randomString(6)
+        """
+        Builds a nym request.
 
-        sdk_wallet = sdk_wallet or self._steward_wallet
+        Role can be:
+            None  => No change,
+            ''    => Standard User,
+            '0'   => Trustee,
+            '2'   => Steward,
+            '101' => Trust Anchor,
+        """
+        sdk_wallet_did = self._find_wallet_did(sdk_wallet)
 
-        nym_request_future = prepare_nym_request(
-            sdk_wallet,
-            seed,
+        if not dest:
+            (dest, new_verkey) = self._wallet.create_did(
+                seed=seed,
+                sdk_wallet=sdk_wallet
+            )
+
+        verkey = verkey or new_verkey
+
+        nym_request_future = build_nym_request(
+            sdk_wallet_did,
+            dest,
+            verkey,
             alias,
-            role
+            role,
         )
 
-        nym_request, _did = self._looper.loop.run_until_complete(nym_request_future)
+        nym_request = self._looper.loop.run_until_complete(nym_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
         return request
 
+    def schema(
+            self,
+            schema_data,
+            sdk_wallet=None
+    ):
+        sdk_wallet_did = self._find_wallet_did(sdk_wallet)
+        schema_request_future = build_schema_request(sdk_wallet_did, schema_data)
+        schema_request = self._looper.loop.run_until_complete(schema_request_future)
+        request = self._sdk.sdk_json_to_request_object(json.loads(schema_request))
+        request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
+        return request
+
+    def _find_wallet_did(self, sdk_wallet):
+        sdk_wallet = sdk_wallet or self._steward_wallet
+        _, sdk_wallet_did = sdk_wallet
+        return sdk_wallet_did
+
+    def payment_signatures(self, inputs, outputs):
+        """ Generate a list of payment signatures from inptus and outputs. """
+        signatures = []
+        inputs = self._prepare_inputs(inputs)
+        outputs = self._prepare_outputs(outputs)
+
+        for utxo in inputs:
+            to_sign = [[utxo], outputs]
+            signer = self._wallet.get_address_instance(utxo[ADDRESS]).signer
+            signature = signer.sign(to_sign)
+            signatures.append(signature)
+
+        return signatures
+
     def _prepare_outputs(self, outputs):
-        return [[address.address, amount] for address, amount in outputs]
+        return [
+            {ADDRESS: output[ADDRESS], AMOUNT: output[AMOUNT]}
+            for output in outputs
+        ]
+
+    def _prepare_inputs(self, inputs):
+        return [
+            {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
+            for utxo in inputs
+        ]
 
     def _create_request(self, payload, identifier=None):
         return Request(

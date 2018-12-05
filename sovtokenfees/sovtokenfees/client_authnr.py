@@ -1,16 +1,11 @@
-import base58
-
-from common.serializers.serialization import serialize_msg_for_signing
 from plenum.common.constants import TXN_TYPE
-from plenum.common.exceptions import InvalidSignatureFormat, \
-    InsufficientCorrectSignatures, InvalidClientRequest
+from plenum.common.exceptions import InvalidClientRequest
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import DidVerifier
 from plenum.server.client_authn import CoreAuthNr
 from sovtokenfees import AcceptableWriteTypes, AcceptableQueryTypes
-from sovtokenfees.constants import SET_FEES, FEES
-from sovtoken.client_authnr import AddressSigVerifier
-from sovtoken.util import address_to_verkey
+from sovtokenfees.constants import SET_FEES
+from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 
 
 class FeesAuthNr(CoreAuthNr):
@@ -52,32 +47,7 @@ class FeesAuthNr(CoreAuthNr):
         except (AttributeError, KeyError):
             return
 
-        correct_sigs_from = set()
-        required_sigs_from = set()
-        outputs = fees[1]
         digest = msg.digest
-
-        for (addr, seq_no), sig in zip(fees[0], fees[2]):
-
-            required_sigs_from.add(addr)
-
-            try:
-                sig = base58.b58decode(sig.encode())
-            except Exception as ex:
-                raise InvalidSignatureFormat from ex
-
-            to_ser = [[addr, seq_no], outputs, digest]
-            serz = serialize_msg_for_signing(to_ser)
-            try:
-                verkey = address_to_verkey(addr)
-            except ValueError:
-                continue
-
-            verifier = AddressSigVerifier(verkey=verkey)
-            if verifier.verify(sig, serz):
-                correct_sigs_from.add(addr)
-
-        if correct_sigs_from != required_sigs_from:
-            raise InsufficientCorrectSignatures(len(correct_sigs_from),
-                                                len(fees[0]))
+        return TokenAuthNr.verify_signtures_on_payments(fees[0], fees[1], fees[2],
+                                                        AddressSigVerifier, digest)
 

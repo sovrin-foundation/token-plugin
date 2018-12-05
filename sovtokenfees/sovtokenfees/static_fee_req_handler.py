@@ -1,32 +1,30 @@
 from common.serializers.serialization import proof_nodes_serializer, \
-    state_roots_serializer  # , txn_root_serializer
-# TODO fix that once PR to plenum is merged (https://github.com/hyperledger/indy-plenum/pull/767/)
+    state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
-from sovtokenfees import FeesTransactions
+from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
 
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, MULTI_SIGNATURE
+    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA
 from plenum.common.exceptions import UnauthorizedClientRequest, \
-    InvalidClientRequest
+    InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from plenum.server.domain_req_handler import DomainRequestHandler
 from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import FeesStructureField
+from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC
+    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, UTXOAlreadySpentError, ExtraFundsError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
+    UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
-
 
 logger = getlogger()
 
@@ -36,7 +34,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     write_types = {SET_FEES, FEE_TXN}
     query_types = {GET_FEES, }
     _fees_validator = FeesStructureField()
-    MinSendersForFees = 4
+    MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
@@ -69,9 +67,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     @staticmethod
     def has_fees(request) -> bool:
-        return hasattr(request, FEES) and isinstance(request.fees, list) \
-               and len(request.fees) > 0 and isinstance(request.fees[0], list) \
-               and len(request.fees[0]) > 0
+        return hasattr(request, FEES) and request.fees is not None
 
     @staticmethod
     def get_change_for_fees(request) -> list:
@@ -86,12 +82,27 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def can_pay_fees(self, request):
         required_fees = self.get_txn_fees(request)
-        if required_fees:
-            if request.operation[TXN_TYPE] == XFER_PUBLIC:
-                # Fees in XFER_PUBLIC is part of operation[INPUTS]
-                self.deducted_fees_xfer[request.key] = self._get_deducted_fees_xfer(request, required_fees)
+
+        if request.operation[TXN_TYPE] == XFER_PUBLIC:
+            # Fees in XFER_PUBLIC is part of operation[INPUTS]
+            inputs = request.operation[INPUTS]
+            outputs = request.operation[OUTPUTS]
+            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
+            self.deducted_fees_xfer[request.key] = required_fees
+        elif required_fees:
+            if StaticFeesReqHandler.has_fees(request):
+                inputs = request.fees[0]
+                outputs = self.get_change_for_fees(request)
+                self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             else:
-                self._get_deducted_fees_non_xfer(request, required_fees)
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are required for this txn type')
+        else:
+            if StaticFeesReqHandler.has_fees(request):
+                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
+                                                    getattr(request, f.REQ_ID.nm, None),
+                                                    'Fees are not allowed for this txn type')
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -107,7 +118,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
                 fees = self.get_txn_fees(request)
-                sigs = {i[0]: s for i, s in zip(inputs, signatures)}
+                sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
                         TXN_TYPE: FEE_TXN,
@@ -140,19 +151,12 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             super().doStaticValidation(request)
 
-    def validate(self, req: Request):
-        operation = req.operation
+    def validate(self, request: Request):
+        operation = request.operation
         if operation[TXN_TYPE] == SET_FEES:
-            error = ''
-            senders = req.all_identifiers
-            if not all(DomainRequestHandler.get_role(
-                    self.domain_state, idr, TRUSTEE) for idr in senders):
-                error = 'only Trustees can send this transaction'
-            if error:
-                raise UnauthorizedClientRequest(req.identifier, req.reqId,
-                                                error)
+            validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForFees)
         else:
-            super().validate(req)
+            super().validate(request)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -202,63 +206,36 @@ class StaticFeesReqHandler(FeeReqHandler):
                     txn[FEES] = r[i]
                     i += 1
 
-    def _get_deducted_fees_xfer(self, request, required_fees):
-        try:
-            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                      request,
-                                                      is_committed=False)
 
-            sum_outputs = TokenReqHandler.sum_outputs(request)
-        except KeyError as ex:
-            raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
+    def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
+        """
+        Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
+
+        This function ASSUMES that validation of the fees for the request has already been done.
+
+        :param request:
+        :param required_fees:
+        :return:
+        """
+
+        try:
+            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
+        except UTXOError as ex:
+            raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
         except Exception as ex:
             error = 'Exception {} while processing inputs/outputs'.format(ex)
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
-            expected_amount = sum_outputs + required_fees
-            # Check for the happy and probably most common case first and cause early return
-            if sum_inputs == expected_amount:
-                deducted_fees = sum_inputs - sum_outputs
-                return deducted_fees
-            if sum_inputs < expected_amount:
-                error = 'Insufficient funds, sum of inputs is {} ' \
-                    'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
-                raise InsufficientFundsError(request.identifier, request.reqId, error)
-            if sum_inputs > expected_amount:
-                error = 'Extra funds, sum of inputs is {} ' \
-                    'but required is {} (sum of outputs: {}, ' \
-                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
-                raise ExtraFundsError(request.identifier, request.reqId, error)
+            change_amount = sum([a[AMOUNT] for a in outputs])
+            expected_amount = change_amount + required_fees
+            TokenReqHandler.validate_given_inputs_outputs(
+                sum_inputs,
+                change_amount,
+                expected_amount,
+                request,
+                'fees: {}'.format(required_fees)
+            )
 
-        if error:
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
-
-    def _get_deducted_fees_non_xfer(self, request, required_fees):
-        error = None
-        if not self.has_fees(request):
-            error = 'fees not present or improperly formed'
-        if not error:
-            try:
-                sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
-            except KeyError as ex:
-                raise UTXOAlreadySpentError(request.identifier, request.reqId, "{}".format(ex))
-            else:
-                change_amount = sum([a for _, a in self.get_change_for_fees(request)])
-                expected_amount = change_amount + required_fees
-                if sum_inputs == expected_amount:
-                    return
-                if sum_inputs < expected_amount:
-                    error = 'Insufficient fees, sum of inputs is {} and sum ' \
-                        'of change and fees is {}'.format(sum_inputs, change_amount + required_fees)
-                    raise InsufficientFundsError(request.identifier, request.reqId, error)
-                if sum_inputs > expected_amount:
-                    error = 'Extra funds, sum of inputs is {} ' \
-                            'but required is {} (change amount: {}, ' \
-                            'fees: {})'.format(sum_inputs, expected_amount, change_amount, required_fees)
-                    raise ExtraFundsError(request.identifier, request.reqId, error)
-
-        if error:
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
@@ -303,23 +280,40 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.state.set(self.fees_state_key, val)
             self.fees = existing_fees
         elif typ == FEE_TXN:
-            for addr, seq_no in txn['txn']['data'][INPUTS]:
-                TokenReqHandler.spend_input(state=self.token_state,
-                                            utxo_cache=self.utxo_cache,
-                                            address=addr, seq_no=seq_no,
-                                            is_committed=is_committed)
+            for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
+                TokenReqHandler.spend_input(
+                    state=self.token_state,
+                    utxo_cache=self.utxo_cache,
+                    address=utxo[ADDRESS],
+                    seq_no=utxo[SEQNO],
+                    is_committed=is_committed
+                )
             seq_no = get_seq_no(txn)
-            for addr, amount in txn['txn']['data'][OUTPUTS]:
-                TokenReqHandler.add_new_output(state=self.token_state,
-                                               utxo_cache=self.utxo_cache,
-                                               output=Output(
-                                                   addr,
-                                                   seq_no,
-                                                   amount),
-                                               is_committed=is_committed)
+            for output in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
+                TokenReqHandler.add_new_output(
+                    state=self.token_state,
+                    utxo_cache=self.utxo_cache,
+                    output=Output(
+                        output[ADDRESS],
+                        seq_no,
+                        output[AMOUNT]),
+                    is_committed=is_committed)
         else:
             logger.warning('Unknown type {} found while updating '
                            'state with txn {}'.format(typ, txn))
+
+    @staticmethod
+    def _handle_incorrect_funds(sum_inputs, sum_outputs, expected_amount, required_fees, request):
+        if sum_inputs < expected_amount:
+            error = 'Insufficient funds, sum of inputs is {} ' \
+                    'but required is {} (sum of outputs: {}, ' \
+                    'fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
+            raise InsufficientFundsError(request.identifier, request.reqId, error)
+        if sum_inputs > expected_amount:
+            error = 'Extra funds, sum of inputs is {} ' \
+                    'but required is: {} -- sum of outputs: {} ' \
+                    '-- fees: {})'.format(sum_inputs, expected_amount, sum_outputs, required_fees)
+            raise ExtraFundsError(request.identifier, request.reqId, error)
 
     @staticmethod
     def transform_txn_for_ledger(txn):

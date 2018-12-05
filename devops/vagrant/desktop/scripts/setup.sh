@@ -13,7 +13,7 @@ sudo apt-get update -y && apt-get install -y \
 
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 
-echo "deb https://repo.sovrin.org/sdk/deb xenial master" >> /etc/apt/sources.list
+echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
 echo ${CYAN}common stuff
 sudo apt-get update -y && apt-get install -y \
@@ -47,8 +47,8 @@ sudo apt-get update -y && apt-get install -y \
 echo ${CYAN}libindy
 sudo apt-get update -y && apt-get install -y \
         python3-nacl \
-        libindy-crypto>=0.4.1~46 \
-        libindy>=1.4.0~586
+        libindy-crypto=0.4.5 \
+        libindy=1.6.7
 
 echo ${CYAN}python
 sudo pip3 install -U \
@@ -57,16 +57,16 @@ sudo pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy>=1.4.0-dev-586 \
+    python3-indy==1.6.7 \
     mock
 
 echo ${CYAN}plenum
-echo "deb https://repo.sovrin.org/deb xenial master" >> /etc/apt/sources.list \
+echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
 sudo apt-get update && apt-get install -y \
          supervisor \
-         python3-indy-crypto=0.4.1 \
-         indy-plenum>=1.4.442 \
-         indy-node>=1.4.496 \
+         python3-indy-crypto=0.4.5 \
+         indy-plenum=1.6.53 \
+         indy-node=1.6.75 \
      && rm -rf /var/lib/apt/lists/*
 
 

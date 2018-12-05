@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.9.3
+* Changed FEES transaction to only allow a single change address.
+* Changed CI/CD to new stable branch.
+* CD added to the new stable branch with new stable release process
+* Source code is now public Sovrin repository
+* bugfixes
+
+## 0.9.2
+* Changed from using LevelDB to RocksDB
+* Changed transactions to use JSON objects rather than unlabeled arrays
+* Relies on indy-plenum and indy-crypto with BLS sigs fix
+* bugfixes
+
+## 0.9.1
+* refactor to unify validation between fees and payments
+* relies on stable versions of all artifacts
+* Number of trustees required for MINT transaction set to 3
+* UTXO cache optimization
+* additional testing
+* bugfixes
+
+## 0.9.0
+
+* Significant refactoring and updated tests
+* Stability improvements
+* Buqfixes
+
 ## 0.8.0
 
 * A docker image that provides an easy-install build environment

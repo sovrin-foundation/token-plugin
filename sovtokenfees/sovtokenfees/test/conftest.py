@@ -1,4 +1,4 @@
-from sovtoken.constants import XFER_PUBLIC
+from sovtoken.constants import XFER_PUBLIC, RESULT
 from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
@@ -7,9 +7,8 @@ from plenum.test.conftest import *
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
-from sovtoken.test.conftest import trustee_wallets, SF_address, \
-    seller_address, seller_token_wallet, SF_token_wallet, public_minting, \
-    tokens_distributed, steward_wallets
+from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
+    increased_trustees
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.test.helpers import form_helpers
 
@@ -71,3 +70,18 @@ def helpers(
 @pytest.fixture(autouse=True)
 def reset_fees(helpers):
     helpers.node.reset_fees()
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--test_helpers",
+        action="store_true",
+        dest="test_helpers",
+        default=False,
+        help="run helper tests"
+    )
+
+
+def pytest_configure(config):
+    if not config.option.test_helpers:
+        setattr(config.option, 'markexpr', 'not helper_test')

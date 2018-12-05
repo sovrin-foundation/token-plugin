@@ -13,36 +13,6 @@ from state.trie.pruning_trie import Trie
 from sovtoken.test.wallet import TokenWallet
 
 
-
-def public_mint_request(trustees, outputs):
-    signatures = {}
-    op = {
-        TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: outputs,
-    }
-    first_trustee = trustees[0]
-    request = first_trustee.sign_using_multi_sig(
-        op, identifier=first_trustee.defaultId)
-    for wallet in trustees[1:]:
-        signatures[wallet.defaultId] = wallet.do_multi_sig_on_req(
-            request, identifier=wallet.defaultId)
-    return request
-
-
-def send_public_mint(looper, trustees, outputs, sdk_pool_handle):
-    request = public_mint_request(trustees, outputs)
-    request = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict), ])
-    return sdk_get_and_check_replies(looper, request)
-
-
-def do_public_minting(looper, trustees, sdk_pool_handle, total_mint,
-                      sf_master_share, sf_address, seller_address):
-    seller_share = total_mint - sf_master_share
-    outputs = [[sf_address, sf_master_share], [seller_address, seller_share]]
-    _, reply = send_public_mint(looper, trustees, outputs, sdk_pool_handle)[0]
-    return reply['result']
-
-
 def xfer_request(inputs, outputs, extra_data=None):
     payload = {
         TXN_TYPE: XFER_PUBLIC,
@@ -70,7 +40,7 @@ def send_xfer(looper, inputs, outputs, sdk_pool_handle, extra_data=None):
 def check_output_val_on_all_nodes(nodes, address, amount):
     for node in nodes:
         handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
-        assert int(amount) in [out.value for out in
+        assert int(amount) in [out.amount for out in
                                handler.utxo_cache.get_unspent_outputs(
                                    address, is_committed=True)]
 

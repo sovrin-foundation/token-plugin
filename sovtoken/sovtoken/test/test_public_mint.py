@@ -1,222 +1,237 @@
 # It is assumed the initial minting will give some tokens to the Sovrin
 # Foundation and sovtoken seller platform. From then on, exchange will be
 # responsible for giving tokens to "users".
-import random
-
 import pytest
-from base58 import b58decode
 
-
+from base58 import b58encode_check
+from plenum.common.exceptions import (RequestNackedException,
+                                      RequestRejectedException,
+                                      PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
-from plenum.common.constants import STEWARD
-from plenum.common.exceptions import RequestNackedException, \
-    RequestRejectedException
-from sovtoken.messages.fields import PublicAddressField
-from plenum.test.conftest import get_data_for_role
-from sovtoken.test.helper import send_public_mint, \
-    do_public_minting, check_output_val_on_all_nodes
+from plenum.common.util import randomString
 from sovtoken.test.conftest import build_wallets_from_data
-from sovtoken.test.helper import user1_token_wallet
+from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
+
+
+TOKENAMT = int(1e8)
+BILLION = int(1e9)
 
 
 @pytest.fixture
-def addresses(helpers, user1_token_wallet):
-    return helpers.wallet.add_new_addresses(user1_token_wallet, 5)
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(5)
 
 
-def test_trustee_invalid_minting(nodeSetWithIntegratedTokenPlugin, looper, # noqa
-                                 trustee_wallets, SF_address,
-                                 seller_address, sdk_pool_handle):
+@pytest.fixture(scope="module")
+def wallets_non_existant_dids():
+    return build_wallets_from_data([
+        ('DID01', 'vdbK9YQGxNHviCOZ7RbOtUgIx9d29XwU'),
+        ('DID02', 'sWPSHOH12GEnwLOuQAJgCWBzFER8glUU'),
+        ('DID03', 'poIRynSnHJ2JSyBiah7AfXViGPfGcZ7Z'),
+        ('DID04', 'X2YlFw7ibYIfyB3A7pIBasy4gWpFNTC6'),
+    ])
+
+
+def test_trustee_invalid_minting(helpers, addresses):
     """
     Trustees trying to mint new tokens using invalid output (negative value),
     txn fails
     """
-    outputs = [[SF_address, -20], [seller_address, 100]]
-    with pytest.raises(RequestNackedException):
-        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+    [address1, address2, *_] = addresses
 
-    outputs = [[SF_address, "100"], [seller_address, 100]]
+    outputs = [{ADDRESS: address1, AMOUNT: -20}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+        helpers.general.do_mint(outputs)
 
-    outputs = [[SF_address, 0], [seller_address, 100]]
+    outputs = [{ADDRESS: address1, AMOUNT: "100"}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+        helpers.general.do_mint(outputs)
 
-
-def test_trustee_float_minting(nodeSetWithIntegratedTokenPlugin, looper,
-                               trustee_wallets, SF_address, seller_address,
-                               sdk_pool_handle):
-    """
-    Trustees trying to mint new tokens using invalid output (floating point value),
-    txn fails
-    """
-    outputs = [[SF_address, 20.5], [seller_address, 100]]
+    outputs = [{ADDRESS: address1, AMOUNT: 0}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        send_public_mint(looper, trustee_wallets, outputs, sdk_pool_handle)
+        helpers.general.do_mint(outputs)
+
+    outputs = [{ADDRESS: address1, AMOUNT: 20.5}, {ADDRESS: address2, AMOUNT: 100}]
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
+
+    outputs = [{ADDRESS: address1, AMOUNT: None}, {ADDRESS: address2, AMOUNT: 100}]
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
+
+    outputs = []
+    with pytest.raises(RequestNackedException, match="Outputs for a mint request can't be empty."):
+        helpers.general.do_mint(outputs)
 
 
 # What about trust anchors, TGB, do those fail as well?
-def test_non_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
-                             SF_address, seller_address, poolTxnData,
-                             sdk_pool_handle):
+def test_non_trustee_minting(helpers, steward_wallets, addresses):
     """
     Non trustees (stewards in this case) should not be able to mint new tokens
     """
-    total_mint = 100
-    sf_master_gets = 60
-    seller_gets = total_mint - sf_master_gets
-    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
-    steward_data = get_data_for_role(poolTxnData, STEWARD)
-    steward_wallets = build_wallets_from_data(steward_data)
+    [address1, address2, *_] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
+    request = helpers.request.mint(outputs)
+    request.signatures = {}
+    request = helpers.wallet.sign_request(request, steward_wallets)
     with pytest.raises(RequestRejectedException):
-        send_public_mint(looper, steward_wallets, outputs, sdk_pool_handle)
+        helpers.sdk.send_and_check_request_objects([request])
 
 
 # where are the trustee signatures coming from? How is the trustee wallet
 # created here?
 # who can set the number of trustees needed, where is that value configured?
 # Is there a mint limit?
-def test_less_than_min_trustee_minting(nodeSetWithIntegratedTokenPlugin, looper,
-                                       trustee_wallets, SF_address,
-                                       seller_address, sdk_pool_handle):
+def test_less_than_min_trustee_minting(helpers, addresses):
     """
     Less than the required number of trustees participate in minting,
     hence the txn fails
     """
-    total_mint = 100
-    sf_master_gets = 60
-    seller_gets = total_mint - sf_master_gets
-    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
+    [address1, address2, *_] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
+    request = helpers.request.mint(outputs)
+    # Remove one signature.
+    request.signatures.popitem()
     with pytest.raises(RequestRejectedException):
-        send_public_mint(looper, trustee_wallets[:3], outputs, sdk_pool_handle)
+        helpers.sdk.send_and_check_request_objects([request])
 
 
-def test_invalid_trustee_scenarios(nodeSetWithIntegratedTokenPlugin, looper,
-                                       trustee_wallets, steward_wallets, SF_address,
-                                       seller_address, sdk_pool_handle):
+def test_more_than_min_trustee(capsys, helpers, addresses, increased_trustees):
     """
-        Making sure we fail to mint in different invalid scenarios
+    Should be able to mint with more than the minimum number of trustees.
     """
-    total_mint = 100
-    sf_master_gets = 60
-    seller_gets = total_mint - sf_master_gets
-    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
+    [address1, *_] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: 100}]
+    request = helpers.request.mint(outputs)
+    request = helpers.wallet.sign_request(request, increased_trustees)
 
-    # Using STEWARDS, NOT TRUSTEES
+    result = helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.get_first_result(result)
+    seq_no = get_seq_no(result)
+
+    [address1_utxos, *_] = helpers.general.get_utxo_addresses(addresses)
+
+    assert [{ADDRESS: address1, SEQNO: seq_no, AMOUNT: 100}] == address1_utxos
+
+
+def test_stewards_with_trustees(helpers, addresses, steward_wallets):
+    [address1, address2, *_] = addresses
+
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
+    request = helpers.request.mint(outputs)
+    # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
+    request.signatures.popitem()
+    # Add a steward in place of the removed Trustee
+    request = helpers.wallet.sign_request(request, steward_wallets[0:1])
+
     with pytest.raises(RequestRejectedException):
-        send_public_mint(looper, steward_wallets, outputs, sdk_pool_handle)
+        helpers.sdk.send_and_check_request_objects([request])
 
-    # Adding STEWARDS to TRUSTEE list
-    wallets = list(trustee_wallets)
-    wallets.extend(steward_wallets)
-    with pytest.raises(RequestRejectedException):
-        send_public_mint(looper, wallets, outputs, sdk_pool_handle)
 
-    # Using DID not on the ledger
-    not_on_ledger_wallets = build_wallets_from_data([
-        ('DID01', 'vdbK9YQGxNHviCOZ7RbOtUgIx9d29XwU'),
-        ('DID02', 'sWPSHOH12GEnwLOuQAJgCWBzFER8glUU'),
-        ('DID03', 'poIRynSnHJ2JSyBiah7AfXViGPfGcZ7Z'),
-        ('DID04', 'X2YlFw7ibYIfyB3A7pIBasy4gWpFNTC6'),
-    ])
+def test_non_existant_did_with_trustees(
+    helpers,
+    addresses,
+    wallets_non_existant_dids
+):
+    [address1, address2, *_] = addresses
+    signing_wallets = wallets_non_existant_dids[0:1]
+
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
+    request = helpers.request.mint(outputs)
+    request = helpers.wallet.sign_request(request, signing_wallets)
+
     with pytest.raises(RequestNackedException):
-        send_public_mint(looper, not_on_ledger_wallets, outputs, sdk_pool_handle)
+        helpers.sdk.send_and_check_request_objects([request])
 
-    # Add non-ledger DID to TRUSTEE list
-    wallets = list(trustee_wallets)
-    wallets.append(not_on_ledger_wallets[0])
+
+def test_non_existant_dids(helpers, addresses, wallets_non_existant_dids):
+    [address1, address2, *_] = addresses
+
+    outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
+    request = helpers.request.mint(outputs)
+
+    request.signatures = {}
+    request = helpers.wallet.sign_request(request, wallets_non_existant_dids)
+
     with pytest.raises(RequestNackedException):
-        send_public_mint(looper, wallets, outputs, sdk_pool_handle)
-
-    # Random sets of 4 wallets. Since we only include 3 TRUSTEES, all random
-    # samples should fail to mint
-    complete_wallet_set = list()
-    complete_wallet_set.extend(steward_wallets)
-    complete_wallet_set.extend(not_on_ledger_wallets)
-    complete_wallet_set.extend(trustee_wallets[:3])
-
-    for _ in range(5):
-        wallets = random.sample(complete_wallet_set, 4)
-        wallet_data = "["
-        for wallet in wallets:
-            wallet_data += " {}-{}".format(wallet.name, str(wallet.idsToSigners[wallet.defaultId].seed))
-
-        wallet_data = "FUZZING TEST -- Please examine !! -- " + wallet_data
-        with pytest.raises((RequestRejectedException, RequestNackedException), message=wallet_data):
-            send_public_mint(looper, wallets, outputs, sdk_pool_handle)
+        helpers.sdk.send_and_check_request_objects([request])
 
 
-def test_repeat_trustee(nodeSetWithIntegratedTokenPlugin, looper,
-                                       trustee_wallets, SF_address,
-                                       seller_address, sdk_pool_handle):
+def test_repeat_trustee(helpers, addresses):
     """
         Should not be possible to use the same trustee more than once
     """
-    total_mint = 100
-    sf_master_gets = 60
-    seller_gets = total_mint - sf_master_gets
-    outputs = [[SF_address, sf_master_gets], [seller_address, seller_gets]]
-    repeating_trustee_wallets = [trustee_wallets[0], trustee_wallets[0], trustee_wallets[0], trustee_wallets[0]]
-    with pytest.raises(RequestRejectedException):
-        send_public_mint(looper, repeating_trustee_wallets, outputs, sdk_pool_handle)
+    [address1, address2, *_] = addresses
+    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
+    request = helpers.request.mint(outputs)
+    request.signatures.popitem()
+    (did, sig) = request.signatures.popitem()
+    request.signatures[did] = sig
 
-def test_trustee_valid_minting(nodeSetWithIntegratedTokenPlugin, looper,
-                               trustee_wallets, SF_address, seller_address,
-                               sdk_pool_handle):
+    with pytest.raises(RequestRejectedException):
+        helpers.sdk.send_and_check_request_objects([request])
+
+
+def test_invalid_address(helpers, addresses):
+    """
+    Minting fails when address is incorrect format.
+    """
+
+    def _update_char(s, index, func):
+        return s[:index] + func(s[index]) + s[index + 1:]
+
+    def _test_invalid_address(address):
+        outputs = [{ADDRESS: address, AMOUNT: 100}]
+
+        with pytest.raises(RequestNackedException):
+            helpers.general.do_mint(outputs)
+
+    valid_address = addresses[0]
+    invalid_address_length = b58encode_check(randomString(33).encode()).decode()
+    invalid_address_character = _update_char(valid_address, 2, lambda _: '!')
+    invalid_address_checksum = _update_char(
+        valid_address,
+        2,
+        lambda c: 'B' if c == 'A' else 'A'
+    )
+
+    _test_invalid_address(invalid_address_length)
+    _test_invalid_address(invalid_address_character)
+    _test_invalid_address(invalid_address_checksum)
+
+
+def test_trustee_valid_minting(helpers, addresses):
     """
     Trustees should mint new tokens increasing the balance of `SF_MASTER`
     and seller_address
     """
-    total_mint = 1000000000000000000
-    sf_master_gets = 600000000000000000
-    do_public_minting(looper, trustee_wallets, sdk_pool_handle, total_mint,
-                      sf_master_gets, SF_address, seller_address)
+    [address1, address2, *_] = addresses
+    total_mint = 10 * BILLION * TOKENAMT
+    sf_master_gets = 6 * BILLION * TOKENAMT
+    remaining = total_mint - sf_master_gets
+    outputs = [{ADDRESS: address1, AMOUNT: sf_master_gets}, {ADDRESS: address2, AMOUNT: remaining}]
+    result = helpers.general.do_mint(outputs)
+    mint_seq_no = get_seq_no(result)
 
-    assert len(b58decode(seller_address)) == PublicAddressField.length
-    assert len(b58decode(SF_address)) == PublicAddressField.length
+    [
+        address1_utxos,
+        address2_utxos
+    ] = helpers.general.get_utxo_addresses([address1, address2])
 
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, SF_address,
-                                  sf_master_gets)
-    check_output_val_on_all_nodes(nodeSetWithIntegratedTokenPlugin, seller_address,
-                                  total_mint - sf_master_gets)
-
-
-
-
-def test_two_mints_have_different_sequence_numbers(addresses, helpers):
-
-    first_mint_outputs = [[address, 100] for address in addresses]
-    first_mint_request = helpers.request.mint(first_mint_outputs)
-    first_mint_responses = helpers.sdk.send_and_check_request_objects([first_mint_request])
-    first_mint_result = helpers.sdk.get_first_result(first_mint_responses)
-    first_mint_seq_no = get_seq_no(first_mint_result)
-
-    second_mint_outputs = [[address, 100] for address in addresses]
-    second_mint_request = helpers.request.mint(second_mint_outputs)
-    second_mint_responses = helpers.sdk.send_and_check_request_objects([second_mint_request])
-    second_mint_result = helpers.sdk.get_first_result(second_mint_responses)
-    second_mint_seq_no = get_seq_no(second_mint_result)
-
-    assert second_mint_seq_no != first_mint_seq_no
+    assert address1_utxos == [{ADDRESS: address1, SEQNO: mint_seq_no, AMOUNT: sf_master_gets}]
+    assert address2_utxos == [{ADDRESS: address2, SEQNO: mint_seq_no, AMOUNT: remaining}]
 
 
 def test_two_mints_to_same_address(addresses, helpers):
 
+    outputs = [{ADDRESS: address, AMOUNT: 100} for address in addresses]
+    first_mint_result = helpers.general.do_mint(outputs)
+    outputs = [{ADDRESS: address, AMOUNT: 200} for address in addresses]
+    second_mint_result = helpers.general.do_mint(outputs)
+    first_mint_seq_no = get_seq_no(first_mint_result)
+    second_mint_seq_no = get_seq_no(second_mint_result)
 
     [address1, address2, address3, address4, address5] = addresses
-
-    first_mint_outputs = [[address, 100] for address in addresses]
-    first_mint_request = helpers.request.mint(first_mint_outputs)
-    first_mint_responses = helpers.sdk.send_and_check_request_objects([first_mint_request])
-    first_mint_result = helpers.sdk.get_first_result(first_mint_responses)
-    first_mint_seq_no = get_seq_no(first_mint_result)
-
-    second_mint_outputs = [[address, 200] for address in addresses]
-    second_mint_request = helpers.request.mint(second_mint_outputs)
-    second_mint_responses = helpers.sdk.send_and_check_request_objects([second_mint_request])
-    second_mint_result = helpers.sdk.get_first_result(second_mint_responses)
-    second_mint_seq_no = get_seq_no(second_mint_result)
 
     [
         address1_utxos,
@@ -226,25 +241,85 @@ def test_two_mints_to_same_address(addresses, helpers):
         address5_utxos
     ] = helpers.general.get_utxo_addresses(addresses)
 
+    assert first_mint_seq_no != second_mint_seq_no
+
     assert address1_utxos == [
-        [address1, first_mint_seq_no, 100],
-        [address1, second_mint_seq_no, 200],
+        {ADDRESS: address1, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address1, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address2_utxos == [
-        [address2, first_mint_seq_no, 100],
-        [address2, second_mint_seq_no, 200],
+        {ADDRESS: address2, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address2, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address3_utxos == [
-        [address3, first_mint_seq_no, 100],
-        [address3, second_mint_seq_no, 200],
+        {ADDRESS: address3, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address3, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address4_utxos == [
-        [address4, first_mint_seq_no, 100],
-        [address4, second_mint_seq_no, 200],
+        {ADDRESS: address4, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address4, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
     assert address5_utxos == [
-        [address5, first_mint_seq_no, 100],
-        [address5, second_mint_seq_no, 200],
+        {ADDRESS: address5, SEQNO: first_mint_seq_no, AMOUNT: 100},
+        {ADDRESS: address5, SEQNO: second_mint_seq_no, AMOUNT: 200},
     ]
 
 
+def test_mint_duplicate_address_single_mint(helpers, addresses):
+    """
+    Can't mint with duplicate address.
+    """
+
+    [address1, address2, *_] = addresses
+    outputs = [
+        {ADDRESS: address1, AMOUNT: 100},
+        {ADDRESS: address2, AMOUNT: 100},
+        {ADDRESS: address1, AMOUNT: 100}
+    ]
+
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
+
+
+def test_repeat_mint(helpers, addresses):
+    """
+    Can't use the same mint request twice.
+    """
+    address = addresses[0]
+    outputs = [{ADDRESS: address, AMOUNT: 100}]
+    request = helpers.request.mint(outputs)
+
+    helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.send_and_check_request_objects([request])
+
+    seq_no_1 = get_seq_no(helpers.sdk.get_first_result(result))
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+
+    assert utxos == [{ADDRESS: address, AMOUNT: 100, SEQNO: seq_no_1}]
+
+
+def test_different_mint_amounts(helpers):
+
+    i64 = 9223372036854775807
+
+    def assert_valid_minting(helpers, amount):
+        address = helpers.wallet.create_address()
+        outputs = [{ADDRESS: address, AMOUNT: amount}]
+        result = helpers.general.do_mint(outputs)
+        utxos = helpers.general.get_utxo_addresses([address])[0]
+
+        expected = {ADDRESS: address, SEQNO: get_seq_no(result), AMOUNT: amount}
+        matches = [utxo for utxo in utxos if utxo is expected]
+
+    # 1 sovatom
+    assert_valid_minting(helpers, 1)
+
+    # 10 billion tokens
+    assert_valid_minting(helpers, 10 * BILLION * TOKENAMT)
+
+    # i64 max sovatoms.
+    assert_valid_minting(helpers, i64)
+
+    # ujson has a limit at deserializing i64.
+    with pytest.raises(PoolLedgerTimeoutException):
+        assert_valid_minting(helpers, i64 + 1)
