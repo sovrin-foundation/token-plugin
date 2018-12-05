@@ -468,12 +468,12 @@ def not_equal_to_assert(n):
 
 
 def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
-                                              txnPoolNodeSet,
+                                              nodeSetWithIntegratedTokenPlugin,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee,
                                               fees_set, address_main, mint_tokens):
     
-    node_set = [n.nodeIbStasher for n in txnPoolNodeSet]
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):
         request = helpers.request.nym()
@@ -487,5 +487,8 @@ def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
 
         r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
-        for n in txnPoolNodeSet:
+        for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
+
+    for n in nodeSetWithIntegratedTokenPlugin:
+        n.start_catchup()
