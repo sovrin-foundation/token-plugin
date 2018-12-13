@@ -38,7 +38,7 @@ setup(
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
 
-    install_requires=['indy-plenum==1.6.54'],
+    install_requires=['indy-plenum==1.6.55'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
