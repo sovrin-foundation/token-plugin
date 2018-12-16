@@ -17,6 +17,8 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_re
     sdk_sign_and_send_prepared_request
 
 from plenum.test.stasher import delay_rules
+from plenum.test.test_node import ensureElectionsDone
+from plenum.test.view_change.helper import ensure_view_change
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
@@ -471,11 +473,59 @@ def not_equal_to_assert(n):
            n.getState(TOKEN_LEDGER_ID).committedHeadHash
 
 
+def equal_to_assert(n):
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID,
+                                                                                           isCommitted=True)
+
+    assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) == \
+           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+
+    assert n.getState(DOMAIN_LEDGER_ID).headHash == \
+           n.getState(DOMAIN_LEDGER_ID).committedHeadHash
+
+    assert n.getState(TOKEN_LEDGER_ID).headHash == \
+           n.getState(TOKEN_LEDGER_ID).committedHeadHash
+
 def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
                                               nodeSetWithIntegratedTokenPlugin,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee,
                                               fees_set, address_main, mint_tokens):
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+
+    with delay_rules(node_set, cDelay()):
+        request = helpers.request.nym()
+
+        request = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request,
+            address_main
+        )
+
+        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            n.start_catchup()
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
+
+        ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
+
+        sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+                                   sdk_wallet_trustee,
+                                   sdk_pool_handle)
+
+
+def test_num_uncommited_3pc_batches_with_fees_not_equal(looper, helpers,
+                                                        nodeSetWithIntegratedTokenPlugin,
+                                                        sdk_pool_handle,
+                                                        sdk_wallet_trustee,
+                                                        fees_set, address_main, mint_tokens):
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):
@@ -499,8 +549,12 @@ def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
 
-        ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
+        ensure_view_change(looper, nodeSetWithIntegratedTokenPlugin)
 
+        ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
+
+        # ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
+        #
         sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-                               sdk_wallet_trustee,
-                               sdk_pool_handle)
+                                   sdk_wallet_trustee,
+                                   sdk_pool_handle)
