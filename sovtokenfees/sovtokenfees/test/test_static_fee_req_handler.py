@@ -8,8 +8,11 @@ from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
 from plenum.common.util import randomString
+from plenum.common.startable import Mode
 from plenum.test.delayers import cDelay
-from plenum.test.helper import sdk_send_signed_requests
+from plenum.test.helper import sdk_send_signed_requests, assertExp
+from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
+from plenum.test.node_request.helper import sdk_ensure_pool_functional
 from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
     sdk_sign_and_send_prepared_request
 
@@ -47,7 +50,7 @@ def sdk_add_new_nym_without_waiting(looper, sdk_pool_handle, creators_wallet,
         prepare_nym_request(creators_wallet, seed,
                             alias, role, dest, verkey, skipverkey))
     return sdk_sign_and_send_prepared_request(looper, creators_wallet,
-                                       sdk_pool_handle, nym_request)
+                                              sdk_pool_handle, nym_request)
 
 
 @pytest.fixture
@@ -455,7 +458,8 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
 
 
 def not_equal_to_assert(n):
-    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != n.getLedgerRootHash(DOMAIN_LEDGER_ID,
+                                                                                           isCommitted=True)
 
     assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
            n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
@@ -472,7 +476,6 @@ def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
                                               sdk_pool_handle,
                                               sdk_wallet_trustee,
                                               fees_set, address_main, mint_tokens):
-    
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):
@@ -490,5 +493,14 @@ def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
 
-    for n in nodeSetWithIntegratedTokenPlugin:
-        n.start_catchup()
+        for n in nodeSetWithIntegratedTokenPlugin:
+            n.start_catchup()
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
+
+        ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
+
+        sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+                               sdk_wallet_trustee,
+                               sdk_pool_handle)
