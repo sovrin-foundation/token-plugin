@@ -486,11 +486,12 @@ def equal_to_assert(n):
     assert n.getState(TOKEN_LEDGER_ID).headHash == \
            n.getState(TOKEN_LEDGER_ID).committedHeadHash
 
-def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
-                                              nodeSetWithIntegratedTokenPlugin,
-                                              sdk_pool_handle,
-                                              sdk_wallet_trustee,
-                                              fees_set, address_main, mint_tokens):
+
+def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
+                                                       nodeSetWithIntegratedTokenPlugin,
+                                                       sdk_pool_handle,
+                                                       sdk_wallet_trustee,
+                                                       fees_set, address_main, mint_tokens):
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):
@@ -521,7 +522,7 @@ def test_num_uncommited_3pc_batches_with_fees(looper, helpers,
                                    sdk_pool_handle)
 
 
-def test_num_uncommited_3pc_batches_with_fees_not_equal(looper, helpers,
+def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
                                                         nodeSetWithIntegratedTokenPlugin,
                                                         sdk_pool_handle,
                                                         sdk_wallet_trustee,
