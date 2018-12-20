@@ -65,8 +65,8 @@ echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
 sudo apt-get update && apt-get install -y \
          supervisor \
          python3-indy-crypto=0.4.5 \
-         indy-plenum=1.6.55 \
-         indy-node=1.6.80 \
+         indy-plenum=1.6.57 \
+         indy-node=1.6.82 \
      && rm -rf /var/lib/apt/lists/*
 
 
