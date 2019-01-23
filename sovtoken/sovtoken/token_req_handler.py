@@ -300,5 +300,6 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod
-    def on_batch_rejected(utxo_cache):
+    def on_batch_rejected(utxo_cache, state, state_root):
+        state.revertToHead(state_root)
         utxo_cache.reject_batch()
