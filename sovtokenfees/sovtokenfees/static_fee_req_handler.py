@@ -180,12 +180,12 @@ class StaticFeesReqHandler(FeeReqHandler):
             state_root = self.token_state.headHash
             txn_root = self.token_ledger.uncommittedRootHash
             self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
-            TokenReqHandler.on_batch_created(self.utxo_cache, state_root, self.tracker, self.ledger)
+            TokenReqHandler.on_batch_created(self.utxo_cache, state_root, self.tracker, self.token_ledger, txn_root)
             self.fee_txns_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id):
         if self.fee_txns_in_current_batch > 0:
-            TokenReqHandler.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
+            TokenReqHandler.on_batch_rejected(self.utxo_cache, self.tracker, self.token_state, self.token_ledger)
             self.fee_txns_in_current_batch = 0
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,

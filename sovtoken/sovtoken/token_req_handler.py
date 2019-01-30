@@ -184,7 +184,7 @@ class TokenReqHandler(LedgerRequestHandler):
                             is_committed=is_committed)
 
     def onBatchCreated(self, state_root):
-        self.on_batch_created(self.utxo_cache, state_root, self.tracker, self.ledger)
+        self.on_batch_created(self.utxo_cache, state_root, self.tracker, self.ledger, self.ledger.uncommittedRootHash)
 
     def onBatchRejected(self):
         self.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
@@ -295,14 +295,17 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.commit_batch()
 
     @staticmethod
-    def on_batch_created(utxo_cache, state_root, tracker, ledger):
-        tracker.apply_batch(ledger.uncommittedRootHash, ledger.uncommitted_size)
+    def on_batch_created(utxo_cache, state_root, tracker, ledger, txn_root):
+        if ledger.uncommittedRootHash is None:
+            tracker.apply_batch(ledger.root_hash, ledger.uncommitted_size)
+        else:
+            tracker.apply_batch(txn_root, ledger.uncommitted_size)
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod
     def on_batch_rejected(utxo_cache, tracker, state, ledger):
         batch_to_reject = tracker.reject_batch()
         state.revertToHead(batch_to_reject[0])
-        ledger.discardTxns(ledger.size - batch_to_reject[1])
+        ledger.discardTxns(1)
 
         utxo_cache.reject_batch()

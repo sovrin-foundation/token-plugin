@@ -460,32 +460,18 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     assert ret_value[0] == prev_size + 1
 
 
-def not_equal_to_assert(n):
-    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False)!= n.getLedgerRootHash(DOMAIN_LEDGER_ID,
-                                                                                           isCommitted=True)
+def check_state(n, is_equal=False):
+    assert (n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)) == is_equal
 
-    assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
-           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
+    assert (n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) ==\
+           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)) == is_equal
 
-    assert n.getState(DOMAIN_LEDGER_ID).headHash != \
-           n.getState(DOMAIN_LEDGER_ID).committedHeadHash
+    assert (n.getState(DOMAIN_LEDGER_ID).headHash ==\
+           n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
 
-    assert n.getState(TOKEN_LEDGER_ID).headHash != \
-           n.getState(TOKEN_LEDGER_ID).committedHeadHash
+    assert (n.getState(TOKEN_LEDGER_ID).headHash ==\
+           n.getState(TOKEN_LEDGER_ID).committedHeadHash) == is_equal
 
-
-def equal_to_assert(n):
-    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID,
-                                                                                           isCommitted=True)
-
-    assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) == \
-           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)
-
-    assert n.getState(DOMAIN_LEDGER_ID).headHash == \
-           n.getState(DOMAIN_LEDGER_ID).committedHeadHash
-
-    assert n.getState(TOKEN_LEDGER_ID).headHash == \
-           n.getState(TOKEN_LEDGER_ID).committedHeadHash
 
 
 def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
@@ -505,18 +491,21 @@ def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
             address_main
         )
         for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+            looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
         r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
         for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
+            looper.run(eventually(check_state, n, False, retryWait=0.2, timeout=15))
 
         for n in nodeSetWithIntegratedTokenPlugin:
             n.start_catchup()
 
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 
