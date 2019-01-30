@@ -9,8 +9,9 @@ from plenum.common.exceptions import (InvalidClientRequest,
                                       UnauthorizedClientRequest)
 from plenum.common.util import randomString
 from plenum.common.startable import Mode
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 from plenum.test.delayers import cDelay
-from plenum.test.helper import sdk_send_signed_requests, assertExp
+from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test.node_request.helper import sdk_ensure_pool_functional
 from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
@@ -460,7 +461,7 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
 
 
 def not_equal_to_assert(n):
-    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) != n.getLedgerRootHash(DOMAIN_LEDGER_ID,
+    assert n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False)!= n.getLedgerRootHash(DOMAIN_LEDGER_ID,
                                                                                            isCommitted=True)
 
     assert n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) != \
@@ -503,41 +504,8 @@ def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
             request,
             address_main
         )
-
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
-
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
-
-        for n in nodeSetWithIntegratedTokenPlugin:
-            n.start_catchup()
-
-        for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
-
-        ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
-
-        sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-                                   sdk_wallet_trustee,
-                                   sdk_pool_handle)
-
-
-def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
-                                                        nodeSetWithIntegratedTokenPlugin,
-                                                        sdk_pool_handle,
-                                                        sdk_wallet_trustee,
-                                                        fees_set, address_main, mint_tokens):
-    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
-
-    with delay_rules(node_set, cDelay()):
-        request = helpers.request.nym()
-
-        request = add_fees_request_with_address(
-            helpers,
-            fees_set,
-            request,
-            address_main
-        )
 
         r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
@@ -550,12 +518,73 @@ def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
 
-        ensure_view_change(looper, nodeSetWithIntegratedTokenPlugin)
+    ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 
-        ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
-
-        # ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
-        #
-        sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+    sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
                                    sdk_wallet_trustee,
                                    sdk_pool_handle)
+
+
+def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
+                                                           nodeSetWithIntegratedTokenPlugin,
+                                                           sdk_pool_handle,
+                                                           sdk_wallet_trustee,
+                                                           fees_set, address_main, mint_tokens):
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+
+    with delay_rules(node_set, cDelay()):
+        request = helpers.request.nym()
+
+        request = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request,
+            address_main
+        )
+
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+
+        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
+
+        ensure_view_change(looper, nodeSetWithIntegratedTokenPlugin)
+
+        for n in nodeSetWithIntegratedTokenPlugin:
+            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+
+    ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
+
+    sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+                                   sdk_wallet_trustee,
+                                   sdk_pool_handle)
+
+
+def test_uncommited_tracker(looper, nodeSetWithIntegratedTokenPlugin, helpers, fees_set, sdk_pool_handle):
+
+    tracker = LedgerUncommittedTracker()
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+    token_node = nodeSetWithIntegratedTokenPlugin[0]
+
+    token_node.domainLedger.uncommittedTxns
+
+    with delay_rules(node_set, cDelay()):
+        request = helpers.request.nym()
+
+        request = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request,
+            address_main
+        )
+
+        sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])
+
+    tracker.apply_batch(token_node.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False),
+                        token_node.domainLedger.uncommitted_size)
+    token_node.executeBatch()
+    tracker.commit_batch()
+

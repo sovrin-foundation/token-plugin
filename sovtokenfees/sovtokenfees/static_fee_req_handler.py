@@ -25,7 +25,7 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
-
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 logger = getlogger()
 
 
@@ -46,6 +46,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
+        self.tracker = LedgerUncommittedTracker()
 
         # In-memory map of sovtokenfees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
@@ -179,12 +180,12 @@ class StaticFeesReqHandler(FeeReqHandler):
             state_root = self.token_state.headHash
             txn_root = self.token_ledger.uncommittedRootHash
             self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
-            TokenReqHandler.on_batch_created(self.utxo_cache, state_root)
+            TokenReqHandler.on_batch_created(self.utxo_cache, state_root, self.tracker, self.ledger)
             self.fee_txns_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id):
         if self.fee_txns_in_current_batch > 0:
-            TokenReqHandler.on_batch_rejected(self.utxo_cache)
+            TokenReqHandler.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
             self.fee_txns_in_current_batch = 0
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
