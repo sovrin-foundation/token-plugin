@@ -509,9 +509,9 @@ def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 
-    sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-                                   sdk_wallet_trustee,
-                                   sdk_pool_handle)
+    # sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+    #                                sdk_wallet_trustee,
+    #                                sdk_pool_handle)
 
 
 def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
@@ -547,9 +547,9 @@ def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
 
     ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
 
-    sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-                                   sdk_wallet_trustee,
-                                   sdk_pool_handle)
+    # sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
+    #                                sdk_wallet_trustee,
+    #                                sdk_pool_handle)
 
 
 def test_uncommited_tracker(looper, nodeSetWithIntegratedTokenPlugin, helpers, fees_set, sdk_pool_handle):
