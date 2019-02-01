@@ -461,24 +461,24 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
 
 
 def check_state(n, is_equal=False):
-    assert (n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=True)) == is_equal
+    assert (n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID,
+                                                                                            isCommitted=True)) == is_equal
 
-    assert (n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) ==\
-           n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)) == is_equal
+    assert (n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) == \
+            n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)) == is_equal
 
-    assert (n.getState(DOMAIN_LEDGER_ID).headHash ==\
-           n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
+    assert (n.getState(DOMAIN_LEDGER_ID).headHash == \
+            n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
 
-    assert (n.getState(TOKEN_LEDGER_ID).headHash ==\
-           n.getState(TOKEN_LEDGER_ID).committedHeadHash) == is_equal
+    assert (n.getState(TOKEN_LEDGER_ID).headHash == \
+            n.getState(TOKEN_LEDGER_ID).committedHeadHash) == is_equal
 
 
-
-def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
-                                                       nodeSetWithIntegratedTokenPlugin,
-                                                       sdk_pool_handle,
-                                                       sdk_wallet_trustee,
-                                                       fees_set, address_main, mint_tokens):
+def test_num_uncommitted_3pc_batches_with_fees_equal_to(looper, helpers,
+                                                        nodeSetWithIntegratedTokenPlugin,
+                                                        sdk_pool_handle,
+                                                        sdk_wallet_trustee,
+                                                        fees_set, address_main, mint_tokens):
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):
@@ -493,7 +493,7 @@ def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
+        sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])
 
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, False, retryWait=0.2, timeout=15))
@@ -509,9 +509,26 @@ def test_num_uncommited_3pc_batches_with_fees_equal_to(looper, helpers,
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 
-    # sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-    #                                sdk_wallet_trustee,
-    #                                sdk_pool_handle)
+
+def test_can_revert_batches_after_catch_up(looper, helpers,
+                                           nodeSetWithIntegratedTokenPlugin,
+                                           sdk_pool_handle,
+                                           sdk_wallet_trustee,
+                                           fees_set, address_main, mint_tokens):
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+
+    with delay_rules(node_set[0], cDelay()):
+        request_check_health = helpers.request.nym()
+        request_check_health = add_fees_request_with_address(
+            helpers,
+            fees_set,
+            request_check_health,
+            address_main
+        )
+        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_check_health.as_dict)])
+        sdk_get_and_check_replies(looper, r)
+        nodeSetWithIntegratedTokenPlugin[0].start_catchup()
+    ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 
 
 def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
@@ -531,49 +548,18 @@ def test_num_uncommited_3pc_batches_with_fees_not_equal_to(looper, helpers,
             address_main
         )
 
-
         for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+            looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
         r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
         for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(not_equal_to_assert, n, retryWait=0.2, timeout=15))
+            looper.run(eventually(check_state, n, False, retryWait=0.2, timeout=15))
 
         ensure_view_change(looper, nodeSetWithIntegratedTokenPlugin)
 
         for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(equal_to_assert, n, retryWait=0.2, timeout=15))
+            looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
     ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
-
-    # sdk_ensure_pool_functional(looper, nodeSetWithIntegratedTokenPlugin,
-    #                                sdk_wallet_trustee,
-    #                                sdk_pool_handle)
-
-
-def test_uncommited_tracker(looper, nodeSetWithIntegratedTokenPlugin, helpers, fees_set, sdk_pool_handle):
-
-    tracker = LedgerUncommittedTracker()
-    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
-    token_node = nodeSetWithIntegratedTokenPlugin[0]
-
-    token_node.domainLedger.uncommittedTxns
-
-    with delay_rules(node_set, cDelay()):
-        request = helpers.request.nym()
-
-        request = add_fees_request_with_address(
-            helpers,
-            fees_set,
-            request,
-            address_main
-        )
-
-        sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])
-
-    tracker.apply_batch(token_node.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False),
-                        token_node.domainLedger.uncommitted_size)
-    token_node.executeBatch()
-    tracker.commit_batch()
-
+    ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
