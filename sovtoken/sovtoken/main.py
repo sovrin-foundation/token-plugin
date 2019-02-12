@@ -1,4 +1,4 @@
-from plenum.common.constants import DOMAIN_LEDGER_ID
+from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks
 from sovtoken.client_authnr import TokenAuthNr
 from sovtoken.config import get_config
 from sovtoken.constants import TOKEN_LEDGER_ID
@@ -34,5 +34,6 @@ def integrate_plugin_in_node(node):
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
                                         node.states[DOMAIN_LEDGER_ID], node.bls_bft.bls_store)
     node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
+    # node.register_hook(NodeHooks.POST_BATCH_REJECTED, token_req_handler.onBatchRejected)
 
     return node

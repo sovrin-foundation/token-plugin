@@ -1,4 +1,4 @@
-from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE
+from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.types import f
 from sovtoken.constants import ADDRESS, AMOUNT
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
@@ -10,6 +10,8 @@ from plenum.common.util import get_utc_epoch
 from sovtokenfees.three_phase_commit_handling import ThreePhaseCommitHandler
 
 import pytest
+
+from plenum.test.helper import init_discarded
 
 
 @pytest.fixture()
@@ -64,13 +66,16 @@ def pp_from_nym_req(
         fee_amount=fee_amount,
         change_address=user_address
     )
-
-    node.applyReq(req, 10000)
     pp = PP.from_request(req, three_phase_handler)
-    yield three_phase_handler.add_to_pre_prepare(pp)
+    pre_state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
+    node.applyReq(req, 10000)
+    state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
+    pp_with_fees = three_phase_handler.add_to_pre_prepare(pp)
+    yield pp_with_fees
 
-    node.onBatchRejected(CONFIG_LEDGER_ID)
-    three_phase_handler.token_ledger.reset_uncommitted()
+    node.onBatchCreated(pp.ledgerId, state_root)
+    node.master_replica.trackBatches(pp, pre_state_root)
+    node.master_replica.revert_unordered_batches()
 
 
 def pp_token_ledger(pp):
@@ -150,7 +155,7 @@ class PP:
             # reqIdr
             ['B8fV7naUqLATYocqu7yZ8WM9BJDuS24bqbJNvBRsoGg3'],
             # discarded
-            "",
+            init_discarded(),
             # digest
             'ccb7388bc43a1e4669a23863c2b8c43efa183dde25909541b06c0f5196ac4f3b',
             # ledger id
@@ -204,7 +209,7 @@ class PP:
             replica.lastPrePrepareSeqNo + 1,
             get_utc_epoch(),
             [req.digest],
-            "",
+            init_discarded(),
             req.digest,
             CONFIG_LEDGER_ID,
             replica.stateRootHash(TOKEN_LEDGER_ID),

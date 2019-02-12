@@ -14,45 +14,7 @@ from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO
-
-
-def add_fees_request_with_address(helpers, fees_set, request, address):
-    utxos = helpers.general.get_utxo_addresses([address])[0]
-    fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
-    helpers.request.add_fees(
-        request,
-        utxos,
-        fee_amount,
-        change_address=address
-    )
-    return request
-
-
-@pytest.fixture()
-def address_main(helpers):
-    return helpers.wallet.create_address()
-
-
-@pytest.fixture()
-def mint_tokens(helpers, address_main):
-    return helpers.general.do_mint([
-        {ADDRESS: address_main, AMOUNT: 1000},
-    ])
-
-
-def pay_fees(helpers, fees_set, address_main):
-    request = helpers.request.nym()
-
-    request = add_fees_request_with_address(
-        helpers,
-        fees_set,
-        request,
-        address_main
-    )
-
-    responses = helpers.sdk.send_and_check_request_objects([request])
-    result = helpers.sdk.get_first_result(responses)
-    return result
+from sovtokenfees.test.helper import pay_fees, add_fees_request_with_address
 
 
 @pytest.fixture()
