@@ -34,6 +34,5 @@ def integrate_plugin_in_node(node):
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
                                         node.states[DOMAIN_LEDGER_ID], node.bls_bft.bls_store)
     node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
-    # node.register_hook(NodeHooks.POST_BATCH_REJECTED, token_req_handler.onBatchRejected)
 
     return node

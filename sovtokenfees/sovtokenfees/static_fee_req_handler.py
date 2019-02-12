@@ -215,7 +215,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                     i += 1
             self.fee_txns_in_current_batch = 0
         else:
-            self.token_tracker.un_committed.popleft()
+            self.token_tracker.commit_batch()
 
 
     def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):

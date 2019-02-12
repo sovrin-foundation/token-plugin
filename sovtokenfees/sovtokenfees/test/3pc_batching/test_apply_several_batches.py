@@ -66,5 +66,5 @@ def test_apply_several_batches(looper, helpers,
 
     sdk_get_and_check_replies(looper, r1)
     sdk_get_and_check_replies(looper, r2)
-    txns_count_after = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin)
+    txns_count_after = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin, TOKEN_LEDGER_ID)
     assert txns_count_after - txns_count_before == expected_txns_length

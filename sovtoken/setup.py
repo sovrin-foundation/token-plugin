@@ -19,7 +19,7 @@ metadata = {}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.6.7']
+tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.6.8']
 
 setup(
     name=metadata['__title__'],
@@ -39,7 +39,7 @@ setup(
     include_package_data=True,
 
 
-    install_requires=['indy-plenum>=1.6.53'],
+    install_requires=['indy-plenum>=1.6.679'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,

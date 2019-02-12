@@ -285,7 +285,7 @@ class TokenReqHandler(LedgerRequestHandler):
         r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
                                          txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
-        TokenReqHandler.on_batch_committed(tracker, state.committedHeadHash, ledger.size)
+        tracker.commit_batch()
         return r
 
     @staticmethod
@@ -314,7 +314,3 @@ class TokenReqHandler(LedgerRequestHandler):
         ledger.discardTxns(txn_count)
 
         utxo_cache.reject_batch()
-
-    @staticmethod
-    def on_batch_committed(tracker: LedgerUncommittedTracker, state_root, ledger_size):
-        tracker.commit_batch(state_root, ledger_size)

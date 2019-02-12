@@ -1,7 +1,15 @@
+import json
+
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import OUTPUTS, AMOUNT
 from sovtokenfees.constants import FEES
+
+from plenum.common.util import randomString
+
+from plenum.test.pool_transactions.helper import prepare_nym_request, sdk_sign_and_send_prepared_request
+
+from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_objects, sdk_send_signed_requests
 
 
 def check_state(n, is_equal=False):
@@ -69,3 +77,24 @@ def get_head_hash_for_pool(node_set, ledger_id):
     head_hashes = set([n.getState(ledger_id).headHash for n in node_set])
     assert len(head_hashes) == 1
     return head_hashes.pop()
+
+
+def sdk_send_new_nym(looper, sdk_pool_handle, creators_wallet,
+                     alias=None, role=None, seed=None,
+                     dest=None, verkey=None,skipverkey=False):
+    seed = seed or randomString(32)
+    alias = alias or randomString(5)
+    wh, _ = creators_wallet
+
+    # filling nym request and getting steward did
+    # if role == None, we are adding client
+    nym_request, new_did = looper.loop.run_until_complete(
+        prepare_nym_request(creators_wallet, seed,
+                            alias, role, dest, verkey, skipverkey))
+
+    # sending request using 'sdk_' functions
+    signed_reqs = sdk_sign_request_objects(looper, creators_wallet,
+                                           [sdk_json_to_request_object(
+                                               json.loads(nym_request))])
+    request_couple = sdk_send_signed_requests(sdk_pool_handle, signed_reqs)
+    return request_couple
