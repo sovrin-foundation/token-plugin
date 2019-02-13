@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
-    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc" \
+    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc master" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
         zlib1g-dev \
