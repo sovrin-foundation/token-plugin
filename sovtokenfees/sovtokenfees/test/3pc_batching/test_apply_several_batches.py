@@ -8,7 +8,7 @@ from plenum.test.delayers import cDelay
 from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, TOKEN_LEDGER_ID
 from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import get_amount_from_token_txn, check_uncommitted_txn, add_fees_request_with_address, \
-    get_committed_txns_count_for_pool
+    get_committed_txns_count_for_pool, nyms_with_fees
 
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
 
@@ -33,29 +33,14 @@ def test_apply_several_batches(looper, helpers,
                                sdk_pool_handle,
                                fees_set, address_main, mint_tokens):
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
-
-    request1 = helpers.request.nym()
-    request2 = helpers.request.nym()
-    fee_amount = fees_set[FEES][request1.operation[TXN_TYPE]]
     amount = get_amount_from_token_txn(mint_tokens)
     init_seq_no = 1
-
-    request1 = add_fees_request_with_address(
-        helpers,
-        fees_set,
-        request1,
-        address_main
-    )
-    utxos = [{ADDRESS: address_main,
-              AMOUNT: amount - fee_amount,
-              f.SEQ_NO.nm: init_seq_no + 1}]
-    request2 = add_fees_request_with_address(
-        helpers,
-        fees_set,
-        request2,
-        address_main,
-        utxos=utxos)
-
+    request1, request2 = nyms_with_fees(2,
+                                        helpers,
+                                        fees_set,
+                                        address_main,
+                                        amount,
+                                        init_seq_no=init_seq_no)
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin, TOKEN_LEDGER_ID)
     with delay_rules(node_set, cDelay()):

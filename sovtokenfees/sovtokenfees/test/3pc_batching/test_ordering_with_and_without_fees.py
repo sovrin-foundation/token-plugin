@@ -12,8 +12,6 @@ from sovtokenfees.test.helper import add_fees_request_with_address, get_committe
 
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
 
-from plenum.test.pool_transactions.helper import sdk_add_new_nym
-
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 from plenum.test import waits
@@ -32,7 +30,6 @@ def tconf(tconf):
     tconf.Max3PCBatchSize = old_max_size
 
 
-@pytest.mark.skip(reason="ST-504")
 def test_ordering_with_fees_and_without_fees(looper, helpers,
                                              nodeSetWithIntegratedTokenPlugin,
                                              sdk_pool_handle,
@@ -79,8 +76,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Unset fees for pool
         """
-        r_unset_fees = helpers.general.set_fees_without_waiting({})
-        looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
+        helpers.node.reset_fees()
         """
         Sending 1 NYM txn without fees
         """
@@ -100,12 +96,10 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
     Reset delays and check, that all txns was ordered successfully
     """
     sdk_get_and_check_replies(looper, r_with_1)
-    sdk_get_and_check_replies(looper, r_unset_fees)
     sdk_get_and_check_replies(looper, r_without)
     sdk_get_and_check_replies(looper, r_set_fees)
     sdk_get_and_check_replies(looper, r_with_2)
 
-    looper.runFor(waits.expectedCommittedTime(len(node_set)))
     committed_tokens_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     committed_domain_after = get_committed_txns_count_for_pool(node_set, DOMAIN_LEDGER_ID)
     assert committed_domain_after - committed_domain_before == expected_domain_txns_count

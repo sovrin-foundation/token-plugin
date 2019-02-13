@@ -1,8 +1,8 @@
 import json
 
-from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE
+from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import OUTPUTS, AMOUNT
+from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS
 from sovtokenfees.constants import FEES
 
 from plenum.common.util import randomString
@@ -10,6 +10,8 @@ from plenum.common.util import randomString
 from plenum.test.pool_transactions.helper import prepare_nym_request, sdk_sign_and_send_prepared_request
 
 from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_objects, sdk_send_signed_requests
+
+from plenum.common.types import f
 
 
 def check_state(n, is_equal=False):
@@ -98,3 +100,28 @@ def sdk_send_new_nym(looper, sdk_pool_handle, creators_wallet,
                                                json.loads(nym_request))])
     request_couple = sdk_send_signed_requests(sdk_pool_handle, signed_reqs)
     return request_couple
+
+
+def nyms_with_fees(req_count,
+                   helpers,
+                   fees_set,
+                   address_main,
+                   all_amount,
+                   init_seq_no):
+    amount = all_amount
+    seq_no = init_seq_no
+    fee_amount = fees_set[FEES][NYM]
+    reqs = []
+    for i in range(req_count):
+        req = helpers.request.nym()
+        utxos = [{ADDRESS: address_main,
+                  AMOUNT: amount,
+                  f.SEQ_NO.nm: seq_no}]
+        reqs.append(add_fees_request_with_address(helpers,
+                                                  fees_set,
+                                                  req,
+                                                  address_main,
+                                                  utxos=utxos))
+        seq_no += 1
+        amount -= fee_amount
+    return reqs
