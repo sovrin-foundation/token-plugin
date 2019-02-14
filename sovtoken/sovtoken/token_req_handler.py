@@ -6,7 +6,6 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
 from sovtoken.messages.validation import static_req_validation
 
-
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
@@ -22,8 +21,12 @@ from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
-
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 from state.trie.pruning_trie import rlp_decode
+
+from state.pruning_state import PruningState
+
+from plenum.common.ledger import Ledger
 
 
 class TokenReqHandler(LedgerRequestHandler):
@@ -32,12 +35,12 @@ class TokenReqHandler(LedgerRequestHandler):
 
     MinSendersForPublicMint = 3
 
-    def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
+    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-
+        self.tracker = LedgerUncommittedTracker(state.committedHeadHash, ledger.size)
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
@@ -185,14 +188,15 @@ class TokenReqHandler(LedgerRequestHandler):
                             is_committed=is_committed)
 
     def onBatchCreated(self, state_root):
-        self.on_batch_created(self.utxo_cache, state_root)
+        self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
 
     def onBatchRejected(self):
-        self.on_batch_rejected(self.utxo_cache)
+        self.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
-                               txnCount, stateRoot, txnRoot, pptime, self.ts_store)
+                               txnCount, stateRoot, txnRoot, pptime, self.tracker,
+                               self.ts_store)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -277,10 +281,11 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
-                   ppTime, ts_store=None):
+                   ppTime, tracker, ts_store=None):
         r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
                                          txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
+        tracker.commit_batch()
         return r
 
     @staticmethod
@@ -296,9 +301,16 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.commit_batch()
 
     @staticmethod
-    def on_batch_created(utxo_cache, state_root):
+    def on_batch_created(utxo_cache, tracker: LedgerUncommittedTracker, ledger: Ledger, state_root):
+        tracker.apply_batch(state_root, ledger.uncommitted_size)
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod
-    def on_batch_rejected(utxo_cache):
+    def on_batch_rejected(utxo_cache, tracker: LedgerUncommittedTracker, state: PruningState, ledger: Ledger):
+        uncommitted_hash, txn_count = tracker.reject_batch()
+        if txn_count == 0:
+            return
+        state.revertToHead(uncommitted_hash)
+        ledger.discardTxns(txn_count)
+
         utxo_cache.reject_batch()

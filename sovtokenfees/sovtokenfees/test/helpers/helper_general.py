@@ -19,3 +19,8 @@ class HelperGeneral(token_helper_general.HelperGeneral):
         """ Builds and sends a set_fees request """
         request = self._request.set_fees(fees)
         return self._send_get_first_result(request)
+
+    def set_fees_without_waiting(self, fees):
+        """ Builds, sends and don't waits for a set_fees request """
+        request = self._request.set_fees(fees)
+        return self._send_without_waiting(request)

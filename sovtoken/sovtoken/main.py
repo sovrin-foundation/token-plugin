@@ -1,4 +1,4 @@
-from plenum.common.constants import DOMAIN_LEDGER_ID
+from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks
 from sovtoken.client_authnr import TokenAuthNr
 from sovtoken.config import get_config
 from sovtoken.constants import TOKEN_LEDGER_ID

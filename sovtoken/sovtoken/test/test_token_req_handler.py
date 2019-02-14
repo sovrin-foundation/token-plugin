@@ -29,7 +29,8 @@ def token_handler_a(helpers):
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
-    h.onBatchRejected()
+    # TODO: this is a function fixture. Do we need this revert there?
+    # h.onBatchRejected()
 
 
 @pytest.fixture
@@ -38,7 +39,8 @@ def token_handler_b(txnPoolNodeSet):
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
-    h.onBatchRejected()
+    # TODO: this is a function fixture. Do we need this revert there?
+    # h.onBatchRejected()
 
 
 @pytest.fixture(scope="module")
