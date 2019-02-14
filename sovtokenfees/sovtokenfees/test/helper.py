@@ -81,6 +81,12 @@ def get_head_hash_for_pool(node_set, ledger_id):
     return head_hashes.pop()
 
 
+def get_committed_hash_for_pool(node_set, ledger_id):
+    head_hashes = set([n.getState(ledger_id).committedHeadHash for n in node_set])
+    assert len(head_hashes) == 1
+    return head_hashes.pop()
+
+
 def sdk_send_new_nym(looper, sdk_pool_handle, creators_wallet,
                      alias=None, role=None, seed=None,
                      dest=None, verkey=None,skipverkey=False):

@@ -3,7 +3,8 @@ import json
 from plenum.test.stasher import delay_rules
 
 from plenum.test.delayers import cDelay
-from sovtokenfees.test.helper import check_state, add_fees_request_with_address
+from sovtokenfees.test.helper import check_state, add_fees_request_with_address, \
+    get_committed_hash_for_pool
 
 from stp_core.loop.eventually import eventually
 
@@ -16,6 +17,8 @@ from plenum.test.test_node import ensureElectionsDone
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 from plenum.common.startable import Mode
+
+from plenum.common.constants import DOMAIN_LEDGER_ID
 
 
 def test_revert_works_for_fees_after_view_change(looper, helpers,
@@ -39,6 +42,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
+        committed_hash_before = get_committed_hash_for_pool(nodeSetWithIntegratedTokenPlugin, DOMAIN_LEDGER_ID)
         r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])[0]
 
         for n in nodeSetWithIntegratedTokenPlugin:
@@ -49,8 +53,8 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
 
-        for n in nodeSetWithIntegratedTokenPlugin:
-            looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
+        ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
+        committed_hash_after = get_committed_hash_for_pool(nodeSetWithIntegratedTokenPlugin, DOMAIN_LEDGER_ID)
+        assert committed_hash_before == committed_hash_after
 
-    ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
-    ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
+        ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)

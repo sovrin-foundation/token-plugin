@@ -76,7 +76,8 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Unset fees for pool
         """
-        helpers.node.reset_fees()
+        r_unset_fees = helpers.general.set_fees_without_waiting({k: 0 for (k, v) in fees.items()})
+        looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         """
         Sending 1 NYM txn without fees
         """
@@ -96,6 +97,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
     Reset delays and check, that all txns was ordered successfully
     """
     sdk_get_and_check_replies(looper, r_with_1)
+    sdk_get_and_check_replies(looper, r_unset_fees)
     sdk_get_and_check_replies(looper, r_without)
     sdk_get_and_check_replies(looper, r_set_fees)
     sdk_get_and_check_replies(looper, r_with_2)
