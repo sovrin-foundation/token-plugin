@@ -60,7 +60,7 @@ def token_handler_b(txnPoolNodeSet):
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
-    h.onBatchRejected()
+    # h.onBatchRejected()
 
 
 @pytest.fixture
@@ -73,7 +73,8 @@ def reset_token_handler(fee_handler):
     old_head = fee_handler.state.committedHead
     yield
     fee_handler.state.revertToHead(old_head)
-    fee_handler.onBatchRejected()
+    # TODO: this is a function fixture. Do we need this revert there?
+    # fee_handler.onBatchRejected()
 
 
 def test_non_existent_input_xfer(helpers):

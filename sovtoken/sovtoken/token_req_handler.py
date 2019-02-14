@@ -190,7 +190,7 @@ class TokenReqHandler(LedgerRequestHandler):
     def onBatchCreated(self, state_root):
         self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
 
-    def onBatchRejected(self, ledger_id):
+    def onBatchRejected(self):
         self.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
