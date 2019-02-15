@@ -12,9 +12,9 @@ from plenum.common.types import f
 
 from plenum.test.delayers import cDelay
 
-from plenum.test.helper import sdk_send_signed_requests, assertExp
+from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
 
-from plenum.test.stasher import delay_rules
+from plenum.test.stasher import delay_rules, delay_rules_without_processing
 
 from stp_core.loop.eventually import eventually
 
@@ -44,16 +44,16 @@ def test_multiple_batches_for_one_node(looper, helpers,
 
     amount = get_amount_from_token_txn(mint_tokens)
     init_seq_no = 1
-    request1, request2 = nyms_with_fees(2,
-                                        helpers,
-                                        fees_set,
-                                        address_main,
-                                        amount,
-                                        init_seq_no=init_seq_no)
+    request1, request2, request3 = nyms_with_fees(3,
+                                                   helpers,
+                                                   fees_set,
+                                                   address_main,
+                                                   amount,
+                                                   init_seq_no=init_seq_no)
 
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
-    with delay_rules(affected_node.nodeIbStasher, cDelay()):
+    with delay_rules_without_processing(affected_node.nodeIbStasher, cDelay()):
         r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request1.as_dict)])
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request2.as_dict)])
@@ -62,4 +62,8 @@ def test_multiple_batches_for_one_node(looper, helpers,
         looper.run(eventually(lambda: assertExp(affected_node.mode == Mode.participating)))
     txns_count_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     assert txns_count_after - txns_count_before == expected_txns_length
+    ensure_all_nodes_have_same_data(looper, node_set)
+
+    r3 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request3.as_dict)])
+    sdk_get_and_check_replies(looper, r3)
     ensure_all_nodes_have_same_data(looper, node_set)

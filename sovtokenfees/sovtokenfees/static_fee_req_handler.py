@@ -189,10 +189,12 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.token_tracker.apply_batch(self.token_state.headHash,
                                            self.token_ledger.uncommitted_size)
 
-
     def post_batch_rejected(self, ledger_id):
-        TokenReqHandler.on_batch_rejected(self.utxo_cache, self.token_tracker, self.token_state, self.token_ledger)
+        count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache, self.token_tracker, self.token_state, self.token_ledger)
+        if count_reverted > 0:
+            self.uncommitted_state_roots_for_batches.pop()
         self.fee_txns_in_current_batch = 0
+        logger.debug("Reverted {} txns with fees".format(count_reverted))
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
