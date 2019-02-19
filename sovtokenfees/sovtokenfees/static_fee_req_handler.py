@@ -27,7 +27,6 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 logger = getlogger()
 
 
