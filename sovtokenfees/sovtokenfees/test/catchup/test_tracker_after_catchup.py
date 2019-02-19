@@ -3,7 +3,7 @@ import json
 from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.test.helper import get_amount_from_token_txn, nyms_with_fees
 
-from plenum.test.stasher import delay_rules_without_processing
+from plenum.test.stasher import delay_rules
 
 from plenum.test.delayers import cDelay
 
@@ -37,7 +37,7 @@ def test_last_committed_after_catchup(looper, helpers,
     reverted_last_committed = get_last_committed_from_tracker(reverted_node)
     not_reverted_last_committed = get_last_committed_from_tracker(node_set[-1])
     assert reverted_last_committed == not_reverted_last_committed
-    with delay_rules_without_processing(reverted_node.nodeIbStasher, cDelay()):
+    with delay_rules(reverted_node.nodeIbStasher, cDelay()):
         """
         Send NYM with FEES and wait for reply. 
         """

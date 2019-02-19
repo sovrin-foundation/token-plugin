@@ -1,20 +1,15 @@
 import json
 
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT, TOKEN_LEDGER_ID
-from sovtokenfees.constants import FEES
-
-from plenum.common.constants import TXN_TYPE
-from sovtokenfees.test.helper import get_amount_from_token_txn, add_fees_request_with_address, \
+from sovtoken.constants import TOKEN_LEDGER_ID
+from sovtokenfees.test.helper import get_amount_from_token_txn, \
     get_committed_txns_count_for_pool, nyms_with_fees
-
-from plenum.common.types import f
 
 from plenum.test.delayers import cDelay
 
 from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
 
-from plenum.test.stasher import delay_rules, delay_rules_without_processing
+from plenum.test.stasher import delay_rules
 
 from stp_core.loop.eventually import eventually
 
@@ -53,7 +48,7 @@ def test_multiple_batches_for_one_node(looper, helpers,
 
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
-    with delay_rules_without_processing(affected_node.nodeIbStasher, cDelay()):
+    with delay_rules(affected_node.nodeIbStasher, cDelay()):
         r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request1.as_dict)])
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request2.as_dict)])

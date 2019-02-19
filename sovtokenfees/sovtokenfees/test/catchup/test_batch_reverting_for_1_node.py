@@ -1,6 +1,6 @@
 import json
 
-from plenum.test.stasher import delay_rules, delay_rules_without_processing
+from plenum.test.stasher import delay_rules
 
 from plenum.test.delayers import cDelay
 from sovtoken import TOKEN_LEDGER_ID
@@ -32,7 +32,7 @@ def test_revert_works_for_fees_before_catch_up_on_one_node(looper, helpers,
                                           amount,
                                           init_seq_no=init_seq_no)
     c_ledger_root_before = get_committed_txn_root_for_pool([reverted_node], TOKEN_LEDGER_ID)
-    with delay_rules_without_processing(reverted_node.nodeIbStasher, cDelay()):
+    with delay_rules(reverted_node.nodeIbStasher, cDelay()):
         """
         Send NYM with FEES and wait for reply. All of nodes, except reverted_node will order them 
         """
