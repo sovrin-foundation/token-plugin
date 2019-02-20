@@ -5,10 +5,8 @@ from plenum.test.stasher import delay_rules
 
 from plenum.test.delayers import cDelay
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import ADDRESS, AMOUNT
-from sovtokenfees.constants import FEES
-from sovtokenfees.test.helper import add_fees_request_with_address, get_committed_txns_count_for_pool, sdk_send_new_nym, \
-    get_amount_from_token_txn
+from sovtokenfees.test.helper import get_committed_txns_count_for_pool, sdk_send_new_nym, \
+    get_amount_from_token_txn, nyms_with_fees
 
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
 
@@ -17,8 +15,6 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test import waits
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, TXN_TYPE
-
-from plenum.common.types import f
 
 
 @pytest.fixture(scope="module")
@@ -48,26 +44,14 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
     expected_domain_txns_count = 3
     expected_token_txns_count = 2
     with delay_rules(node_stashers, cDelay()):
-        request_1 = helpers.request.nym()
-        request_2 = helpers.request.nym()
-        request_1 = add_fees_request_with_address(
-            helpers,
-            fees_set,
-            request_1,
-            address_main
-        )
-        fee_amount = fees_set[FEES][request_1.operation[TXN_TYPE]]
         amount = get_amount_from_token_txn(mint_tokens)
         init_seq_no = 1
-        utxos = [{ADDRESS: address_main,
-                  AMOUNT: amount - fee_amount,
-                  f.SEQ_NO.nm: init_seq_no + 1}]
-        request_2 = add_fees_request_with_address(
-            helpers,
-            fees_set,
-            request_2,
-            address_main,
-            utxos=utxos)
+        request_1, request_2 = nyms_with_fees(2,
+                                            helpers,
+                                            fees_set,
+                                            address_main,
+                                            amount,
+                                            init_seq_no=init_seq_no)
         """
         Sending 1 NYM txn with fees
         """
