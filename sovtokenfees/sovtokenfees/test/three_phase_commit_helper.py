@@ -1,4 +1,4 @@
-from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE, DOMAIN_LEDGER_ID
+from plenum.common.constants import CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID
 from plenum.common.types import f
 from sovtoken.constants import ADDRESS, AMOUNT
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
@@ -11,7 +11,7 @@ from sovtokenfees.three_phase_commit_handling import ThreePhaseCommitHandler
 
 import pytest
 
-from plenum.test.helper import init_discarded
+from plenum.test.helper import init_discarded, create_pre_prepare_params, generate_state_root
 
 
 @pytest.fixture()
@@ -32,8 +32,7 @@ def three_phase_handler(node, static_req_handler):
 
 @pytest.fixture()
 def pp_valid(monkeypatch, three_phase_handler):
-    pp = PP.create_pre_prepare()
-    return PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
+    return PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
 
 
 @pytest.fixture(scope="module")
@@ -47,35 +46,6 @@ def user_address(helpers):
 @pytest.fixture(scope="module")
 def user_utxos(helpers, user_address):
     return helpers.general.get_utxo_addresses([user_address])[0]
-
-
-@pytest.fixture
-def pp_from_nym_req(
-    helpers,
-    user_address,
-    user_utxos,
-    fees_set,
-    three_phase_handler,
-    node,
-):
-    req = helpers.request.nym()
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
-    req = helpers.request.add_fees(
-        req,
-        user_utxos,
-        fee_amount=fee_amount,
-        change_address=user_address
-    )
-    pp = PP.from_request(req, three_phase_handler)
-    pre_state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
-    node.applyReq(req, 10000)
-    state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
-    pp_with_fees = three_phase_handler.add_to_pre_prepare(pp)
-    yield pp_with_fees
-
-    node.onBatchCreated(pp.ledgerId, state_root)
-    node.master_replica.trackBatches(pp, pre_state_root)
-    node.master_replica.revert_unordered_batches()
 
 
 def pp_token_ledger(pp):
@@ -142,38 +112,21 @@ class PP:
     }
 
     @staticmethod
-    def create_pre_prepare():
-        pre_prepare_args = [
-            # instIds
-            0,
-            # viewNo
-            0,
-            # ppSeqNo
-            2,
-            # ppTime
-            get_utc_epoch(),
-            # reqIdr
-            ['B8fV7naUqLATYocqu7yZ8WM9BJDuS24bqbJNvBRsoGg3'],
-            # discarded
-            init_discarded(),
-            # digest
-            'ccb7388bc43a1e4669a23863c2b8c43efa183dde25909541b06c0f5196ac4f3b',
-            # ledger id
-            CONFIG_LEDGER_ID,
-            # state root
-            '5BU5Rc3sRtTJB6tVprGiTSqiRaa9o6ei11MjH4Vu16ms',
-            # txn root
-            'EdxDR8GUeMXGMGtQ6u7pmrUgKfc2XdunZE79Z9REEHg6',
-            # sub_seq_no
-            0,
-            # final
-            True
-        ]
-
-        return PrePrepare(*pre_prepare_args)
+    def fake_pp(ledger_id=DOMAIN_LEDGER_ID):
+        params = create_pre_prepare_params(state_root=generate_state_root(),
+                                           ledger_id=ledger_id)
+        return PrePrepare(*params)
 
     @staticmethod
-    def valid_pre_prepare(pp, monkeypatch, three_phase_handler):
+    def fake_pp_without_fees(three_phase_handler, ledger_id=DOMAIN_LEDGER_ID):
+        pp = PP.fake_pp(ledger_id=ledger_id)
+        pp_with_fees = three_phase_handler.add_to_pre_prepare(pp)
+        return pp_with_fees
+
+    @staticmethod
+    def fake_pp_with_fees(monkeypatch, three_phase_handler):
+        pp = PP.fake_pp()
+
         def mock_get_state_root(ledger_id):
             if ledger_id == TOKEN_LEDGER_ID:
                 return PP.plugin_data[FEES][f.STATE_ROOT.nm]
@@ -199,7 +152,6 @@ class PP:
 
         return three_phase_handler.add_to_pre_prepare(pp)
 
-
     @staticmethod
     def from_request(req, three_phase_handler):
         replica = three_phase_handler.master_replica
@@ -211,7 +163,7 @@ class PP:
             [req.digest],
             init_discarded(),
             req.digest,
-            CONFIG_LEDGER_ID,
+            DOMAIN_LEDGER_ID,
             replica.stateRootHash(TOKEN_LEDGER_ID),
             replica.txnRootHash(TOKEN_LEDGER_ID),
             0,
@@ -253,7 +205,8 @@ class Ord:
             pp.ppTime,
             pp.ledgerId,
             pp.stateRootHash,
-            pp.txnRootHash
+            pp.txnRootHash,
+            pp.auditTxnRootHash
         ]
 
         return Ordered(*ord_args)

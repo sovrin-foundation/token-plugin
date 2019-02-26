@@ -15,11 +15,8 @@ from plenum.common.types import f
 
 
 def check_state(n, is_equal=False):
-    assert (n.getLedgerRootHash(DOMAIN_LEDGER_ID, isCommitted=False) == n.getLedgerRootHash(DOMAIN_LEDGER_ID,
-                                                                                            isCommitted=True)) == is_equal
-
-    assert (n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=False) ==
-            n.getLedgerRootHash(TOKEN_LEDGER_ID, isCommitted=True)) == is_equal
+    assert (n.getLedger(DOMAIN_LEDGER_ID).tree.root_hash == n.getLedger(DOMAIN_LEDGER_ID).uncommitted_root_hash) == is_equal
+    assert (n.getLedger(TOKEN_LEDGER_ID).tree.root_hash == n.getLedger(TOKEN_LEDGER_ID).uncommitted_root_hash) == is_equal
 
     assert (n.getState(DOMAIN_LEDGER_ID).headHash ==
             n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
@@ -88,20 +85,20 @@ def get_committed_hash_for_pool(node_set, ledger_id):
 
 
 def get_committed_txn_root_for_pool(node_set, ledger_id):
-    hashes = set([n.getLedgerRootHash(ledger_id, isCommitted=True) for n in node_set])
+    hashes = set([n.getLedger(ledger_id).tree.root_hash for n in node_set])
     assert len(hashes) == 1
     return hashes.pop()
 
 
 def get_uncommitted_txn_root_for_pool(node_set, ledger_id):
-    hashes = set([n.getLedgerRootHash(ledger_id, isCommitted=False) for n in node_set])
+    hashes = set([n.getLedger(ledger_id).uncommitted_root_hash for n in node_set])
     assert len(hashes) == 1
     return hashes.pop()
 
 
 def sdk_send_new_nym(looper, sdk_pool_handle, creators_wallet,
                      alias=None, role=None, seed=None,
-                     dest=None, verkey=None,skipverkey=False):
+                     dest=None, verkey=None, skipverkey=False):
     seed = seed or randomString(32)
     alias = alias or randomString(5)
     wh, _ = creators_wallet

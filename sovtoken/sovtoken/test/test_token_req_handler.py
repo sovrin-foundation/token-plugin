@@ -306,7 +306,7 @@ def test_token_req_handler_onBatchCreated_success(
     token_handler_a.utxo_cache.add_output(output)
     state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     # run onBatchCreated
-    token_handler_a.onBatchCreated(state_root)
+    token_handler_a.onBatchCreated(state_root, CONS_TIME)
     # Verify onBatchCreated worked properly
     key = token_handler_a.utxo_cache._create_key(output)
     assert token_handler_a.utxo_cache.un_committed[0][0] == state_root
@@ -340,7 +340,7 @@ def test_token_req_handler_commit_success(
     new_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     new_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     # add batch
-    token_handler_b.onBatchCreated(base58.b58decode(new_state_root.encode()))
+    token_handler_b.onBatchCreated(base58.b58decode(new_state_root.encode()), CONS_TIME)
     # commit batch
     assert token_handler_b.utxo_cache.get_unspent_outputs(address1, True) == [Output(address1, 1, 40)]
     assert token_handler_b.utxo_cache.get_unspent_outputs(address2, True) == [Output(address2, 1, 60)]
