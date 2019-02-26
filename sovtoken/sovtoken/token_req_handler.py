@@ -187,7 +187,7 @@ class TokenReqHandler(LedgerRequestHandler):
         self.add_new_output(self.state, self.utxo_cache, output,
                             is_committed=is_committed)
 
-    def onBatchCreated(self, state_root):
+    def onBatchCreated(self, state_root, txn_time):
         self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
 
     def onBatchRejected(self):

@@ -73,7 +73,7 @@ def pp_from_nym_req(
     pp_with_fees = three_phase_handler.add_to_pre_prepare(pp)
     yield pp_with_fees
 
-    node.onBatchCreated(pp.ledgerId, state_root)
+    node.onBatchCreated(pp.ledgerId, state_root, 10000)
     node.master_replica.trackBatches(pp, pre_state_root)
     node.master_replica.revert_unordered_batches()
 
