@@ -1,5 +1,6 @@
 from plenum.common.constants import CONFIG_LEDGER_ID, TXN_TYPE, DOMAIN_LEDGER_ID
 from plenum.common.types import f
+from plenum.server.batch_handlers.three_pc_batch import ThreePcBatch
 from sovtoken.constants import ADDRESS, AMOUNT
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
 from sovtoken import TOKEN_LEDGER_ID
@@ -51,12 +52,12 @@ def user_utxos(helpers, user_address):
 
 @pytest.fixture
 def pp_from_nym_req(
-    helpers,
-    user_address,
-    user_utxos,
-    fees_set,
-    three_phase_handler,
-    node,
+        helpers,
+        user_address,
+        user_utxos,
+        fees_set,
+        three_phase_handler,
+        node,
 ):
     req = helpers.request.nym()
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
@@ -70,10 +71,15 @@ def pp_from_nym_req(
     pre_state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
     node.applyReq(req, 10000)
     state_root = node.master_replica.stateRootHash(pp.ledgerId, to_str=False)
+    txn_root = node.master_replica.txnRootHash(pp.ledgerId, to_str=False)
     pp_with_fees = three_phase_handler.add_to_pre_prepare(pp)
     yield pp_with_fees
 
-    node.onBatchCreated(pp.ledgerId, state_root, 10000)
+    three_pc_bacth = ThreePcBatch.from_pre_prepare(pre_prepare=pp,
+                                                   valid_txn_count=1,
+                                                   txn_root=txn_root,
+                                                   state_root=state_root)
+    node.onBatchCreated(three_pc_bacth)
     node.master_replica.trackBatches(pp, pre_state_root)
     node.master_replica.revert_unordered_batches()
 
@@ -198,7 +204,6 @@ class PP:
                             txn_root_deserialized)
 
         return three_phase_handler.add_to_pre_prepare(pp)
-
 
     @staticmethod
     def from_request(req, three_phase_handler):
