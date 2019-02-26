@@ -32,8 +32,7 @@ def three_phase_handler(node, static_req_handler):
 
 @pytest.fixture()
 def pp_valid(monkeypatch, three_phase_handler):
-    pp = PP.create_pre_prepare()
-    return PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
+    return PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
 
 
 @pytest.fixture(scope="module")

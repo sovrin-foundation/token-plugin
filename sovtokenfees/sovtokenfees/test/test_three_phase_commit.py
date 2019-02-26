@@ -4,20 +4,18 @@ from sovtokenfees.test.three_phase_commit_helper import *
 class TestPrePrepare:
 
     def test_no_changes_on_token_ledger(self, three_phase_handler):
-        pp = PP.create_pre_prepare()
+        pp = PP.fake_pp()
         pp = PP.replace_fields(pp, {f.LEDGER_ID.nm: TOKEN_LEDGER_ID})
         pp_appended = three_phase_handler.add_to_pre_prepare(pp)
         assert pp == pp_appended
 
     def test_no_changes_if_no_fee_transactions(self, three_phase_handler):
-        pp = PP.create_pre_prepare()
+        pp = PP.fake_pp()
         pp_appended = three_phase_handler.add_to_pre_prepare(pp)
         assert pp == pp_appended
 
-    def test_valid_prepare(self, monkeypatch, three_phase_handler):
-        pp = PP.create_pre_prepare()
-        pp_appended = PP.valid_pre_prepare(pp, monkeypatch, three_phase_handler)
-        assert pp_appended == PP.replace_fields(pp, {f.PLUGIN_FIELDS.nm: PP.plugin_data})
+    def test_valid_prepare(self, pp_valid):
+        assert pp_valid == PP.replace_fields(pp_valid, {f.PLUGIN_FIELDS.nm: PP.plugin_data})
 
 
 class TestReceivedPrePrepare(BadHashes):
@@ -27,7 +25,7 @@ class TestReceivedPrePrepare(BadHashes):
         assert not three_phase_handler.check_recvd_pre_prepare(pp_token_ledger(pp_valid))
 
     def test_no_action_if_no_fee_transactions(self, three_phase_handler):
-        pp = PP.create_pre_prepare()
+        pp = PP.fake_pp_without_fees(three_phase_handler)
         # No fee txns, otherwise would raise exception for no fee data.
         assert not three_phase_handler.check_recvd_pre_prepare(pp)
 
@@ -148,9 +146,8 @@ class TestReceivedPrePrepareWithTxn(BadHashes):
         assert not three_phase_handler.check_recvd_pre_prepare(
             PP.fake_pp_without_fees(three_phase_handler))
 
-    def test_exception_no_plugin_fields_field(self, three_phase_handler, monkeypatch):
-        pp = PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
-        pp_without_plugin_fields = pp_remove_plugin_fields(pp)
+    def test_exception_no_plugin_fields_field(self, three_phase_handler, pp_valid):
+        pp_without_plugin_fields = pp_remove_plugin_fields(pp_valid)
         with pytest.raises(Exception) as exp:
             three_phase_handler.check_recvd_pre_prepare(pp_without_plugin_fields)
         assert exp.match(f.PLUGIN_FIELDS.nm)
@@ -163,33 +160,29 @@ class TestReceivedPrePrepareWithTxn(BadHashes):
             three_phase_handler.check_recvd_pre_prepare(pp_without_fees_field)
         assert exp.match(FEES)
 
-    def test_pre_prepare_mismatch_fees_count(self, three_phase_handler, monkeypatch):
-        pp = PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
-        pp_mismatched_fees = PP.replace_fees_fields(pp, {FEE_TXNS_IN_BATCH: 5})
+    def test_pre_prepare_mismatch_fees_count(self, three_phase_handler, pp_valid):
+        pp_mismatched_fees = PP.replace_fees_fields(pp_valid, {FEE_TXNS_IN_BATCH: 5})
         with pytest.raises(Exception) as exp:
             three_phase_handler.check_recvd_pre_prepare(pp_mismatched_fees)
         # Exception contains the actual number of txns and the mismatched number
         assert exp.match(FEE_TXNS_IN_BATCH)
-        correct_num_fee_txns = getattr(pp, f.PLUGIN_FIELDS.nm)[FEES][FEE_TXNS_IN_BATCH]
+        correct_num_fee_txns = getattr(pp_valid, f.PLUGIN_FIELDS.nm)[FEES][FEE_TXNS_IN_BATCH]
         assert exp.match(str(correct_num_fee_txns))
         assert exp.match(str(5))
 
-    def test_exception_bad_state_hash(self, three_phase_handler, monkeypatch):
-        pp = PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
-        pp_invalid_state_hash = pp_replace_state_hash(pp, self._bad_hash_serialized())
+    def test_exception_bad_state_hash(self, three_phase_handler, pp_valid):
+        pp_invalid_state_hash = pp_replace_state_hash(pp_valid, self._bad_hash_serialized())
         with pytest.raises(Exception) as exp:
             three_phase_handler.check_recvd_pre_prepare(pp_invalid_state_hash)
         assert exp.match(f.STATE_ROOT.nm)
         assert exp.match(str(self._bad_hash_unserialized()))
 
-    def test_exception_bad_transaction_hash(self, three_phase_handler, monkeypatch):
-        pp = PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
-        pp_invalid_txn_hash = PP.replace_fees_fields(pp, {f.TXN_ROOT.nm: self._bad_hash_serialized()})
+    def test_exception_bad_transaction_hash(self, three_phase_handler, pp_valid):
+        pp_invalid_txn_hash = PP.replace_fees_fields(pp_valid, {f.TXN_ROOT.nm: self._bad_hash_serialized()})
         with pytest.raises(Exception) as exp:
             three_phase_handler.check_recvd_pre_prepare(pp_invalid_txn_hash)
         assert exp.match(f.TXN_ROOT.nm)
         assert exp.match(str(self._bad_hash_unserialized()))
 
-    def test_valid_pre_prepare(self, three_phase_handler, monkeypatch):
-        pp = PP.fake_pp_with_fees(monkeypatch, three_phase_handler)
-        assert not three_phase_handler.check_recvd_pre_prepare(pp)
+    def test_valid_pre_prepare(self, three_phase_handler, pp_valid):
+        assert not three_phase_handler.check_recvd_pre_prepare(pp_valid)
