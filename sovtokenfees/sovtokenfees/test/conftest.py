@@ -1,4 +1,5 @@
-from sovtoken.constants import XFER_PUBLIC, RESULT
+import pytest
+from sovtoken.constants import XFER_PUBLIC, RESULT, ADDRESS, AMOUNT
 from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
@@ -70,6 +71,18 @@ def helpers(
 @pytest.fixture(autouse=True)
 def reset_fees(helpers):
     helpers.node.reset_fees()
+
+
+@pytest.fixture()
+def address_main(helpers):
+    return helpers.wallet.create_address()
+
+
+@pytest.fixture()
+def mint_tokens(helpers, address_main):
+    return helpers.general.do_mint([
+        {ADDRESS: address_main, AMOUNT: 1000},
+    ])
 
 
 def pytest_addoption(parser):

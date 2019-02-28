@@ -16,6 +16,8 @@ from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
 TOKENAMT = int(1e8)
 BILLION = int(1e9)
 
+whitelist = ['Error Value is too big while converting message']
+
 
 @pytest.fixture
 def addresses(helpers):

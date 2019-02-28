@@ -73,3 +73,7 @@ class HelperGeneral():
         """ Sort utxos by the seq_no. """
         utxos.sort(key=lambda utxo: utxo[SEQNO])
         return utxos
+
+    def _send_without_waiting(self, request_object):
+        responses = self._sdk.send_request_objects([request_object])
+        return responses
