@@ -1,7 +1,7 @@
 #!groovy
 
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@master', retriever: modernSCM(
-    github(credentialsId: 'sovrin-ci', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
+    github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
 
 logger = sovLibrary.Logger.new(this)
@@ -116,28 +116,19 @@ pipelineWrapper({
 
 
                 stage('Upload debs to repos') {
-                  
+
                     String debName
 
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
                         debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
 
                         logger.info("Uploading debian package '$debName' to sovrin repo")
-                        sovrinRepo.uploadDeb {
-                            repoDistr = 'xenial-rc'
+                        sovrinRepo.upload {
+                            repoDistr = 'xenial'
+                            component = 'rc'
                             packagePath = debName
                         }
 
-	                //if (env.BRANCH_NAME == 'stable') {
-                        //    logger.info("Uploading debian package '$debName' to sovrin repo")
-                        //    sshagent(credentials: ['SovrinRepoSSHKey']) {
-                        //        sovrinRepo.uploadDeb {
-                        //            repoDistr = 'deb'
-                        //            packagePath = debName
-                        //            component = 'rc'
-                        //        }
-                        //    }
-                        //}
                     }
 
                     notifier.email {
