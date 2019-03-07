@@ -55,6 +55,7 @@ pipelineWrapper({
                         delegate.packageName = packageName
                         packageSrcVersion = srcVersion
                         repoDistr = 'xenial-rc'
+                        component = 'rc'
                     }
 
                     if (lastRevision) {
