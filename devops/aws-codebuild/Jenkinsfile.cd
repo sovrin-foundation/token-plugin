@@ -54,7 +54,7 @@ pipelineWrapper({
                     lastRevision = sovrinRepo.getLastRevision {
                         delegate.packageName = packageName
                         packageSrcVersion = srcVersion
-                        repoDistr = 'xenial-rc'
+                        repoDistr = 'xenial'
                         component = 'rc'
                     }
 
