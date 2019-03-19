@@ -1,4 +1,5 @@
-from plenum.common.constants import DOMAIN_LEDGER_ID
+import functools
+from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks
 from sovtoken.client_authnr import TokenAuthNr
 from sovtoken.config import get_config
 from sovtoken.constants import TOKEN_LEDGER_ID
@@ -8,6 +9,13 @@ from sovtoken.token_req_handler import TokenReqHandler
 
 
 def integrate_plugin_in_node(node):
+
+    def postTxnAddedToLedgerClbk(node, *args, **kwargs):
+        node.postTxnFromCatchupAddedToLedger(*args, **kwargs)
+        tracker = token_req_handler.tracker
+        tracker.set_last_committed(state.committedHeadHash,
+                                   ledger.size)
+
     node.config = get_config(node.config)
 
     token_authnr = TokenAuthNr(node.states[DOMAIN_LEDGER_ID])
@@ -26,7 +34,7 @@ def integrate_plugin_in_node(node):
         node.ledger_ids.append(TOKEN_LEDGER_ID)
 
     node.ledgerManager.addLedger(TOKEN_LEDGER_ID, ledger,
-                                 postTxnAddedToLedgerClbk=node.postTxnFromCatchupAddedToLedger)
+                                 postTxnAddedToLedgerClbk=functools.partial(postTxnAddedToLedgerClbk, node))
     node.on_new_ledger_added(TOKEN_LEDGER_ID)
     node.register_state(TOKEN_LEDGER_ID, state)
     node.clientAuthNr.register_authenticator(token_authnr)

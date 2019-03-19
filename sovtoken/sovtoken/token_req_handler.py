@@ -35,12 +35,12 @@ class TokenReqHandler(LedgerRequestHandler):
 
     MinSendersForPublicMint = 3
 
-    def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
+    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-        self.tracker = LedgerUncommittedTracker()
+        self.tracker = LedgerUncommittedTracker(state.committedHeadHash, ledger.size)
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
@@ -187,15 +187,16 @@ class TokenReqHandler(LedgerRequestHandler):
         self.add_new_output(self.state, self.utxo_cache, output,
                             is_committed=is_committed)
 
-    def onBatchCreated(self, state_root):
-        self.on_batch_created(self.utxo_cache, self.tracker, self.state, self.ledger, state_root)
+    def onBatchCreated(self, state_root, txn_time):
+        self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
 
     def onBatchRejected(self):
         self.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
-                               txnCount, stateRoot, txnRoot, pptime, self.ts_store)
+                               txnCount, stateRoot, txnRoot, pptime, self.tracker,
+                               self.ts_store)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -280,10 +281,11 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
-                   ppTime, ts_store=None):
+                   ppTime, tracker, ts_store=None):
         r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
                                          txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
+        tracker.commit_batch()
         return r
 
     @staticmethod
@@ -299,16 +301,17 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.commit_batch()
 
     @staticmethod
-    def on_batch_created(utxo_cache, tracker: LedgerUncommittedTracker, state: PruningState, ledger: Ledger, state_root):
-        if tracker.last_committed is None:
-            tracker.last_committed = (state.committedHeadHash, ledger.size)
+    def on_batch_created(utxo_cache, tracker: LedgerUncommittedTracker, ledger: Ledger, state_root):
         tracker.apply_batch(state_root, ledger.uncommitted_size)
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod
     def on_batch_rejected(utxo_cache, tracker: LedgerUncommittedTracker, state: PruningState, ledger: Ledger):
         uncommitted_hash, txn_count = tracker.reject_batch()
+        if txn_count == 0:
+            return 0
         state.revertToHead(uncommitted_hash)
         ledger.discardTxns(txn_count)
 
         utxo_cache.reject_batch()
+        return txn_count

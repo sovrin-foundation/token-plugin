@@ -4,6 +4,8 @@ from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
 
+from plenum.server.node import Node
+
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
@@ -19,13 +21,12 @@ from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
+    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 logger = getlogger()
 
 
@@ -39,14 +40,14 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store):
+                 domain_state, bls_store, token_tracker):
         super().__init__(ledger, state)
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-        self.tracker = LedgerUncommittedTracker()
+        self.token_tracker = token_tracker
 
         # In-memory map of sovtokenfees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
@@ -180,14 +181,19 @@ class StaticFeesReqHandler(FeeReqHandler):
             state_root = self.token_state.headHash
             txn_root = self.token_ledger.uncommittedRootHash
             self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
-            TokenReqHandler.on_batch_created(self.utxo_cache, self.tracker, self.token_state, self.token_ledger, state_root)
+            TokenReqHandler.on_batch_created(self.utxo_cache, self.token_tracker, self.token_ledger, state_root)
             # ToDo: Needed investigation about affection of removing setting this var into 0
-            # self.fee_txns_in_current_batch = 0
+            self.fee_txns_in_current_batch = 0
+        else:
+            self.token_tracker.apply_batch(self.token_state.headHash,
+                                           self.token_ledger.uncommitted_size)
 
     def post_batch_rejected(self, ledger_id):
-        if self.fee_txns_in_current_batch > 0:
-            TokenReqHandler.on_batch_rejected(self.utxo_cache, self.tracker, self.token_state, self.token_ledger)
-            self.fee_txns_in_current_batch = 0
+        count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache, self.token_tracker, self.token_state, self.token_ledger)
+        if count_reverted > 0:
+            self.uncommitted_state_roots_for_batches.pop()
+        self.fee_txns_in_current_batch = 0
+        logger.debug("Reverted {} txns with fees".format(count_reverted))
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
@@ -201,12 +207,16 @@ class StaticFeesReqHandler(FeeReqHandler):
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
                                            state_root, txn_root_serializer.serialize(txn_root),
-                                           pp_time)
+                                           pp_time,
+                                           self.token_tracker)
             i = 0
             for txn in committed_txns:
                 if get_seq_no(txn) in committed_seq_nos_with_fees:
                     txn[FEES] = r[i]
                     i += 1
+            self.fee_txns_in_current_batch = 0
+        else:
+            self.token_tracker.commit_batch()
 
 
     def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):

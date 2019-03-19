@@ -12,8 +12,7 @@ from sovtoken.main import \
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.main import \
     integrate_plugin_in_node as integrate_fees_plugin_in_node
-from sovtokenfees.test.test_fees_non_xfer_txn import (address_main,
-                                                      mint_tokens, pay_fees)
+from sovtokenfees.test.helper import pay_fees
 
 TestRunningTimeLimitSec = 250
 
@@ -56,7 +55,7 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
         remaining -= 2
 
     for _ in range(5):
-        pay_fees(helpers, fees_set, address_main, mint_tokens)
+        pay_fees(helpers, fees_set, address_main)
 
     config_helper = PNodeConfigHelper(last_node.name, tconf, chroot=tdir)
     restarted_node = TestNode(last_node.name,
