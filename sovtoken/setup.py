@@ -39,7 +39,7 @@ setup(
     include_package_data=True,
 
 
-    install_requires=['indy-plenum-dev>=1.6.696'],
+    install_requires=['indy-node-dev>=1.6.858'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
