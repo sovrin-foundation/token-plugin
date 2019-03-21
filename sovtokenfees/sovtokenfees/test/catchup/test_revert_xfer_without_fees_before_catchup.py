@@ -2,7 +2,7 @@ from sovtoken.constants import ADDRESS, SEQNO, AMOUNT, XFER_PUBLIC
 
 from plenum.common.txn_util import get_seq_no
 
-from plenum.test.stasher import delay_rules
+from plenum.test.stasher import delay_rules, delay_rules_without_processing
 
 from plenum.test.delayers import pDelay, cDelay
 
@@ -31,7 +31,7 @@ def test_revert_xfer_with_fees_before_catchup(looper, helpers,
     inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
     outputs = [{ADDRESS: address_receiver, AMOUNT: 1000 - fees[XFER_PUBLIC]}]
     request = helpers.request.transfer(inputs, outputs)
-    with delay_rules(node_stashers, cDelay(), pDelay()):
+    with delay_rules_without_processing(node_stashers, cDelay(), pDelay()):
         helpers.sdk.send_request_objects([request])
         looper.runFor(waits.expectedPrePrepareTime(len(nodes)))
         for n in nodes:
