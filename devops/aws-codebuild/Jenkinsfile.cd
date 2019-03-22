@@ -8,11 +8,21 @@ logger = sovLibrary.Logger.new(this)
 notifier = sovLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
+gitHubUserCredId = env.GITHUB_BOT_USER ?: 'sovbot-github'
+sovrinPackagingRepo = env.SOVRIN_PACKAGING_REPO ?: 'https://github.com/sovrin-foundation/sovrin-packaging'
+sovrinPackagingBranch = env.SOVRIN_PACKAGING_BRANCH ?: 'master'
+
+def downloadPackagingUtils() {
+    git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
+    sh "pip3 install -U plumbum deb-pkg-tools"
+}
+
 pipelineWrapper({
 
     //put code build containers inside a vpc under our dev account
     env.USE_VPC_CONFIG = true
-    env.SOVRIN_REPO_HOST = '192.168.11.115'
+    //this IP is outdated, should use the one from env
+//    env.SOVRIN_REPO_HOST = '192.168.11.115'
 
     nodeWrapper {
         def osname = 'xenial'
@@ -50,23 +60,23 @@ pipelineWrapper({
                     logger.info("Current source version: $srcVersion")
                 }
 
-                stage('Get last revision') {
-                    lastRevision = sovrinRepo.getLastRevision {
-                        delegate.packageName = packageName
-                        packageSrcVersion = srcVersion
-                        repoDistr = 'xenial'
-                        component = 'rc'
-                    }
+//                stage('Get last revision') {
+//                    lastRevision = evernymRepo.getLastRevision {
+//                        delegate.packageName = packageName
+//                        packageSrcVersion = srcVersion
+//                        repoDistr = 'agency-dev'
+//                    }
+//
+//                    if (lastRevision) {
+//                        logger.info("Found last revision number: $lastRevision")
+//                    } else {
+//                        logger.info("No previous revision was found")
+//                    }
+//                }
 
-                    if (lastRevision) {
-                        logger.info("Found last revision number: $lastRevision")
-                    } else {
-                        logger.info("No previous revision was found")
-                    }
-                }
 
                 stage('Set release parameters') {
-                    def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "${lastRevision ? lastRevision[0] + 1: 1}.$BUILD_NUMBER"
+                    def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "$BUILD_NUMBER"
 
                     debPVersion = utils.packageVersion('deb', srcVersion, releaseVersion)
                     logger.info("Package version for sovrin repo: $debPVersion")
@@ -121,13 +131,16 @@ pipelineWrapper({
                     String debName
 
                     dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
+                        dir("sovrin-packaging") {
+                            downloadPackagingUtils()
+                        }
+
                         debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
 
                         logger.info("Uploading debian package '$debName' to sovrin repo")
-                        sovrinRepo.upload {
-                            repoDistr = 'xenial'
-                            component = 'rc'
-                            packagePath = debName
+                        sh "mkdir debs &&  mv $debName ./debs/"
+                        withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                            sh "./sovrin-packaging/upload_debs.py ./debs $env.SOVRIN_CORE_REPO_NAME $env.BRANCH_NAME --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
                         }
 
                     }
