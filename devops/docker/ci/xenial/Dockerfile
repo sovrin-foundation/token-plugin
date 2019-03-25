@@ -1,4 +1,4 @@
-FROM evernym/python3:0.1.0-xenial
+FROM sovrin/python3:0.1.0-xenial
 # TODO LABEL maintainer="Name <email-address>"
 
 ARG u_id=1000

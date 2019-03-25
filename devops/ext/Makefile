@@ -90,12 +90,12 @@ package: _check_fpm_args $(PRE_PACKAGE_GOALS)
 
 image_rust_base_version:
 	$(call check_defined,RUST_DOCKER_VERSION)
-	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'evernym/base',$(RUST_DOCKERFILE_PATH)))
+	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'sovrin/base',$(RUST_DOCKERFILE_PATH)))
 	echo $(BASE_DOCKER_VERSION)
 
 image_python3_base_version:
 	$(call check_defined,PYTHON3_DOCKER_VERSION)
-	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'evernym/base',$(PYTHON3_DOCKERFILE_PATH)))
+	$(eval BASE_DOCKER_VERSION=$(call docker_from_version,'sovrin/base',$(PYTHON3_DOCKERFILE_PATH)))
 	echo $(BASE_DOCKER_VERSION)
 
 # TODO refactor that once compose provides support for images

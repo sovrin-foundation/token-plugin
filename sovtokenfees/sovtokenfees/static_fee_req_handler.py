@@ -63,9 +63,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.deducted_fees = {}
         # Since inputs are spent in XFER. FIND A BETTER SOLUTION
         self.deducted_fees_xfer = {}
-        # Tracks txn and state root for each batch with at least 1 transaction
-        # paying sovtokenfees
-        self.uncommitted_state_roots_for_batches = []
 
     @staticmethod
     def has_fees(request) -> bool:
@@ -180,18 +177,16 @@ class StaticFeesReqHandler(FeeReqHandler):
         if self.fee_txns_in_current_batch > 0:
             state_root = self.token_state.headHash
             txn_root = self.token_ledger.uncommittedRootHash
-            self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
             TokenReqHandler.on_batch_created(self.utxo_cache, self.token_tracker, self.token_ledger, state_root)
             # ToDo: Needed investigation about affection of removing setting this var into 0
             self.fee_txns_in_current_batch = 0
         else:
             self.token_tracker.apply_batch(self.token_state.headHash,
+                                           self.token_ledger.uncommitted_root_hash,
                                            self.token_ledger.uncommitted_size)
 
     def post_batch_rejected(self, ledger_id):
         count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache, self.token_tracker, self.token_state, self.token_ledger)
-        if count_reverted > 0:
-            self.uncommitted_state_roots_for_batches.pop()
         self.fee_txns_in_current_batch = 0
         logger.debug("Reverted {} txns with fees".format(count_reverted))
 
@@ -202,13 +197,12 @@ class StaticFeesReqHandler(FeeReqHandler):
                                        and get_type(t) != XFER_PUBLIC
                                        ]
         if len(committed_seq_nos_with_fees) > 0:
-            txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
+            state_root, txn_root, _ = self.token_tracker.commit_batch()
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
                                            state_root, txn_root_serializer.serialize(txn_root),
-                                           pp_time,
-                                           self.token_tracker)
+                                           pp_time)
             i = 0
             for txn in committed_txns:
                 if get_seq_no(txn) in committed_seq_nos_with_fees:
