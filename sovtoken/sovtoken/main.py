@@ -14,6 +14,7 @@ def integrate_plugin_in_node(node):
         node.postTxnFromCatchupAddedToLedger(*args, **kwargs)
         tracker = token_req_handler.tracker
         tracker.set_last_committed(state.committedHeadHash,
+                                   ledger.uncommitted_root_hash,
                                    ledger.size)
 
     node.config = get_config(node.config)
