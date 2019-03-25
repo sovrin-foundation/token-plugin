@@ -1,3 +1,4 @@
+import pytest
 from sovtoken.constants import ADDRESS, SEQNO, AMOUNT, XFER_PUBLIC
 
 from plenum.common.txn_util import get_seq_no
@@ -21,6 +22,7 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.common.constants import NYM
 
 
+@pytest.mark.skip(reason="ST-534")
 def test_revert_xfer_and_other_txn_before_catchup(looper, helpers,
                                                   nodeSetWithIntegratedTokenPlugin,
                                                   sdk_pool_handle,
