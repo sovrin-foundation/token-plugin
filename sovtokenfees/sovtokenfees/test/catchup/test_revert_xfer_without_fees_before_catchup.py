@@ -1,3 +1,4 @@
+import pytest
 from sovtoken.constants import ADDRESS, SEQNO, AMOUNT, XFER_PUBLIC
 
 from plenum.common.txn_util import get_seq_no
@@ -17,7 +18,8 @@ from plenum.common.startable import Mode
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 
-def test_revert_xfer_with_fees_before_catchup(looper, helpers,
+@pytest.mark.skip(reason="ST-534")
+def test_revert_xfer_without_fees_before_catchup(looper, helpers,
                                               nodeSetWithIntegratedTokenPlugin,
                                               sdk_pool_handle,
                                               fees,
@@ -27,7 +29,6 @@ def test_revert_xfer_with_fees_before_catchup(looper, helpers,
     helpers.general.do_set_fees(fees)
     [address_giver, address_receiver] = xfer_addresses
     seq_no = get_seq_no(xfer_mint_tokens)
-    utxos = [{ADDRESS: address_giver, AMOUNT: 1000, SEQNO: seq_no}]
     inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
     outputs = [{ADDRESS: address_receiver, AMOUNT: 1000 - fees[XFER_PUBLIC]}]
     request = helpers.request.transfer(inputs, outputs)
