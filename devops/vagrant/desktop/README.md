@@ -1,5 +1,5 @@
 # Vagrant Ubuntu Desktop with Pycharm
-Intended for developers on Sovrin Plugins https://github.com/evernym/plugin (link subject to change)
+Intended for developers on Sovrin Plugins https://github.com/sovrin-plugin/token-plugin (link subject to change)
 
 ## Requirements
 
@@ -34,7 +34,7 @@ https://www.taniarascia.com/what-are-vagrant-and-virtualbox-and-how-do-i-use-the
     * adjust display settings to something like 1400x1050
     * set time zone.  
     
-5. use git to get code (eg from https://github.com/evernym/plugin or whatever)
+5. use git to get code (eg from https://github.com/sovrin-foundation/token-plugin or whatever)
 
 ## Notes
 If Pycharm found and unpacked, it will be found in /home/vagrant/pycharm. To run Pycharm open a terminal and
