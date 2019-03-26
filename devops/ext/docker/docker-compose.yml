@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.${BASE_DOCKER_VERSION}
       context: base/$OSNAME
     # TODO ${VAR:-} raises error in docker-compose < 1.21.0
-    image: evernym/base:${BASE_DOCKER_VERSION}-${OSNAME}
+    image: sovrin/base:${BASE_DOCKER_VERSION}-${OSNAME}
 
   rust:
     build:
@@ -15,7 +15,7 @@ services:
       context: rust/$OSNAME
       args:
           - RUST_VERSION
-    image: evernym/rust:${RUST_DOCKER_VERSION}-${OSNAME}
+    image: sovrin/rust:${RUST_DOCKER_VERSION}-${OSNAME}
 
   python3:
     build:
@@ -23,4 +23,4 @@ services:
       context: python3/$OSNAME
       args:
           - PYTHON3_VERSION
-    image: evernym/python3:${PYTHON3_DOCKER_VERSION}-${OSNAME}
+    image: sovrin/python3:${PYTHON3_DOCKER_VERSION}-${OSNAME}

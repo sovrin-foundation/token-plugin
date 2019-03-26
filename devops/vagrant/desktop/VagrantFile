@@ -4,7 +4,7 @@
 development_box        = "bstoots/xubuntu-16.04-desktop-amd64"
 development_cpus       = "2"
 development_memory     = "4096"
-development_host_name  = "development.sandbox.evernym.lab"
+development_host_name  = "development.sandbox.sovrin.lab"
 
 Vagrant.configure("2") do |config|
 
