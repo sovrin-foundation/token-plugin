@@ -36,7 +36,7 @@ def integrate_plugin_in_node(node):
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
                                             node.bls_bft.bls_store,
-                                            token_req_handler.tracker)
+                                            token_req_handler.tracker, node)
     node.clientAuthNr.register_authenticator(fees_authnr)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
