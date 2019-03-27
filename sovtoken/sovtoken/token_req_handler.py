@@ -308,7 +308,8 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def on_batch_rejected(utxo_cache, tracker: LedgerUncommittedTracker, state: PruningState, ledger: Ledger):
         uncommitted_hash, uncommitted_txn_root, txn_count = tracker.reject_batch()
-        if txn_count == 0:
+        if txn_count == 0 or ledger.uncommitted_root_hash == uncommitted_txn_root or \
+            state.headHash == uncommitted_hash:
             return 0
         state.revertToHead(uncommitted_hash)
         ledger.discardTxns(txn_count)
