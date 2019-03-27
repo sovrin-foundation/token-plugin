@@ -38,9 +38,8 @@ setup(
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
 
-
-
     install_requires=['indy-node-dev>=1.6.877'],
+
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
