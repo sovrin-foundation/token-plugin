@@ -40,7 +40,7 @@ setup(
 
 
 
-    install_requires=['indy-node>=1.6.875'],
+    install_requires=['indy-node-dev>=1.6.877'],
     setup_requires=['pytest-runner'],
     extras_require={
         'test': tests_require,
