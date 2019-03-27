@@ -3,7 +3,7 @@ from sovtoken.constants import ADDRESS, AMOUNT
 
 from plenum.common.txn_util import get_seq_no
 from plenum.test import waits
-from plenum.test.stasher import delay_rules
+from plenum.test.stasher import delay_rules, delay_rules_without_processing
 from plenum.test.delayers import cDelay
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
@@ -24,6 +24,7 @@ def mint_tokens(helpers, addresses):
     return helpers.general.do_mint(outputs)
 
 
+@pytest.mark.skip(reason="ST-537")
 def test_revert_works_for_fees_after_view_change(looper, helpers,
                                                  nodeSetWithIntegratedTokenPlugin,
                                                  sdk_pool_handle,
@@ -38,7 +39,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
                                                              current_amount)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
 
-    with delay_rules(reverted_node.nodeIbStasher, cDelay()):
+    with delay_rules_without_processing(reverted_node.nodeIbStasher, cDelay()):
         len_batches_before = len(reverted_node.master_replica.batches)
         current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
         current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
@@ -61,6 +62,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
     ensure_all_nodes_have_same_data(looper, node_set)
 
 
+@pytest.mark.skip(reason="ST-537")
 def test_revert_for_all_after_view_change(looper, helpers,
                                           nodeSetWithIntegratedTokenPlugin,
                                           sdk_pool_handle,

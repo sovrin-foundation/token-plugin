@@ -1,3 +1,4 @@
+import pytest
 from sovtokenfees.test.helper import ensure_all_nodes_have_same_data, get_amount_from_token_txn, \
     send_and_check_transfer, check_state
 from plenum.common.txn_util import get_seq_no
@@ -9,6 +10,7 @@ from plenum.test.helper import assertExp
 from plenum.common.startable import Mode
 
 
+@pytest.mark.skip(reason="ST-537")
 def test_revert_xfer_before_catchup(looper, helpers,
                                     nodeSetWithIntegratedTokenPlugin,
                                     fees_set, fees,
