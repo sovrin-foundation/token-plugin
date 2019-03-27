@@ -1,17 +1,22 @@
 import json
 
+from sovtoken.utxo_cache import UTXOAmounts
+
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS
+from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
 from sovtokenfees.constants import FEES
 
 from plenum.common.util import randomString
+from plenum.test.node_catchup.helper import waitNodeDataEquality
 
 from plenum.test.pool_transactions.helper import prepare_nym_request, sdk_sign_and_send_prepared_request
 
-from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_objects, sdk_send_signed_requests
+from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_objects, sdk_send_signed_requests, \
+    sdk_get_and_check_replies, assertExp
 
 from plenum.common.types import f
+from stp_core.loop.eventually import eventually
 
 
 def check_state(n, is_equal=False):
@@ -125,7 +130,7 @@ def nyms_with_fees(req_count,
                    init_seq_no):
     amount = all_amount
     seq_no = init_seq_no
-    fee_amount = fees_set[FEES][NYM]
+    fee_amount = fees_set[FEES].get(NYM, 0)
     reqs = []
     for i in range(req_count):
         req = helpers.request.nym()
@@ -140,3 +145,77 @@ def nyms_with_fees(req_count,
         seq_no += 1
         amount -= fee_amount
     return reqs
+
+
+def send_and_check_nym_with_fees(helpers, fees, seq_no, looper, addresses, current_amount,
+                                 check_reply=True, nym_with_fees=None):
+    if not nym_with_fees:
+        nym_with_fees = nyms_with_fees(1,
+                                       helpers,
+                                       fees,
+                                       addresses[0],
+                                       current_amount,
+                                       init_seq_no=seq_no)[0]
+    resp = helpers.sdk.send_request_objects([nym_with_fees])
+
+    if check_reply:
+        sdk_get_and_check_replies(looper, resp)
+
+    current_amount -= fees[FEES].get(NYM, 0)
+    seq_no += 1
+    return current_amount, seq_no, resp
+
+
+def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
+                            seq_no, check_reply=True, transfer_summ=20):
+    [address_giver, address_receiver] = addresses
+    if transfer_summ == current_amount:
+        outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ - fees.get(XFER_PUBLIC, 0)}]
+        new_amount = transfer_summ - fees.get(XFER_PUBLIC, 0)
+    else:
+        outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ},
+                   {ADDRESS: address_giver, AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC, 0)}]
+        new_amount = current_amount - (fees.get(XFER_PUBLIC, 0) + transfer_summ)
+
+    utxos = [{ADDRESS: address_giver, AMOUNT: current_amount, SEQNO: seq_no}]
+    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    transfer_req = helpers.request.transfer(inputs, outputs)
+    transfer_req = helpers.request.add_fees(
+        transfer_req,
+        utxos,
+        fees.get(XFER_PUBLIC, 0),
+        change_address=address_giver
+    )
+
+    resp = helpers.sdk.send_request_objects([transfer_req])
+    if check_reply:
+        sdk_get_and_check_replies(looper, resp)
+
+    seq_no += 1
+    return new_amount, seq_no, resp
+
+
+def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,
+                                    exclude_from_check=None):
+    waitNodeDataEquality(looper, node_set[0], *node_set[1:],
+                         customTimeout=custom_timeout,
+                         exclude_from_check=exclude_from_check)
+
+    def chk_utxo_cache(node, nodes):
+        cache = {}
+        utxo_data = {}
+        for n in nodes:
+            cache[n.name] = {}
+            utxo_data[n.name] = {}
+            cache_storage = n.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache._store
+            for key, value in cache_storage.iterator(include_value=True):
+                cache[n.name][key] = value
+                utxo_data[n.name] = UTXOAmounts.get_amounts(key, n.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache,
+                                                            is_committed=True).as_str()
+        assert all(cache[node.name] == cache[n.name] for n in nodes)
+        assert all(utxo_data[node.name] == utxo_data[n.name] for n in nodes)
+        print(cache)
+        print(utxo_data)
+
+    looper.run(eventually(chk_utxo_cache, node_set[0], node_set))
+
