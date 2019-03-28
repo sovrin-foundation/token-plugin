@@ -26,7 +26,6 @@ from state.trie.pruning_trie import rlp_decode
 
 from state.pruning_state import PruningState
 
-from plenum.common.ledger import Ledger
 
 
 class TokenReqHandler(LedgerRequestHandler):
@@ -43,6 +42,9 @@ class TokenReqHandler(LedgerRequestHandler):
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
+        self.tracker = LedgerUncommittedTracker(self.state.committedHeadHash,
+                                                self.ledger.uncommitted_root_hash,
+                                                self.ledger.size)
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
