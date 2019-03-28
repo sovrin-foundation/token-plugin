@@ -34,8 +34,8 @@ def token_handler_a(helpers):
 
 
 @pytest.fixture
-def token_handler_b(txnPoolNodeSet):
-    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+def token_handler_b(nodeSet):
+    h = nodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
@@ -298,13 +298,13 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
 def test_token_req_handler_onBatchCreated_success(
     addresses,
     token_handler_a,
-    txnPoolNodeSet
+    nodeSet
 ):
     address = addresses[0]
     output = Output(address, 10, 100)
     # add output to UTXO Cache
     token_handler_a.utxo_cache.add_output(output)
-    state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     # run onBatchCreated
     token_handler_a.onBatchCreated(state_root, CONS_TIME)
     # Verify onBatchCreated worked properly
@@ -326,7 +326,7 @@ def test_token_req_handler_commit_success(
     helpers,
     addresses,
     token_handler_b,
-    txnPoolNodeSet
+    nodeSet
 ):
     [address1, address2] = addresses
     inputs = [{"address": address1, "seqNo": 1}]
@@ -334,11 +334,11 @@ def test_token_req_handler_commit_success(
     request = helpers.request.transfer(inputs, outputs)
 
     # apply transaction
-    state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    txn_root = nodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     token_handler_b.apply(request, CONS_TIME)
-    new_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    new_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    new_state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    new_txn_root = nodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     # add batch
     token_handler_b.onBatchCreated(base58.b58decode(new_state_root.encode()), CONS_TIME)
     # commit batch

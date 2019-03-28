@@ -10,9 +10,10 @@ from sovtoken.util import \
     register_token_wallet_with_client, update_token_wallet_with_result
 from sovtoken.constants import RESULT
 from sovtoken.test.wallet import TokenWallet
-from plenum.test.conftest import *
+from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers
+from indy_node.test.conftest import *
 
 total_mint = 100
 seller_gets = 40
@@ -80,8 +81,8 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSet):
-    return txnPoolNodeSet
+def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, nodeSet):
+    return nodeSet
 
 
 @pytest.fixture(scope='module') # noqa
