@@ -19,7 +19,6 @@ from plenum.common.startable import Mode
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 
-@pytest.mark.skip(reason="ST-534")
 def test_revert_xfer_with_fees_before_catchup(looper, helpers,
                                               nodeSetWithIntegratedTokenPlugin,
                                               sdk_pool_handle,
