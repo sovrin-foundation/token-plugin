@@ -174,6 +174,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         return result
 
     def post_batch_created(self, ledger_id, state_root):
+        # it mean, that all tracker thins was done in onBatchCreated phase for TokenReqHandler
+        if ledger_id == TOKEN_LEDGER_ID:
+            return
         if self.fee_txns_in_current_batch > 0:
             state_root = self.token_state.headHash
             txn_root = self.token_ledger.uncommittedRootHash
@@ -186,12 +189,26 @@ class StaticFeesReqHandler(FeeReqHandler):
                                            self.token_ledger.uncommitted_size)
 
     def post_batch_rejected(self, ledger_id):
-        count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache, self.token_tracker, self.token_state, self.token_ledger)
-        self.fee_txns_in_current_batch = 0
+        if ledger_id == TOKEN_LEDGER_ID:
+            # TODO: Need to improve this logic for case, when we got a XFER txn with fees
+            # All of other txn with fees it's a 2 steps, "apply txn" and "apply fees"
+            # But for XFER txn with fees we do only "apply fees with transfer too"
+            self.token_tracker.reject_batch()
+            return
+        uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
+        if txn_count == 0 or self.token_ledger.uncommitted_root_hash == uncommitted_txn_root or \
+                self.token_state.headHash == uncommitted_hash:
+            return 0
+        self.token_state.revertToHead(uncommitted_hash)
+        self.token_ledger.discardTxns(txn_count)
+        count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache)
         logger.debug("Reverted {} txns with fees".format(count_reverted))
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
+        # All changes will be tracked on TokenReqHandler side
+        if ledger_id == TOKEN_LEDGER_ID:
+            return
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
                                        and get_type(t) != XFER_PUBLIC
