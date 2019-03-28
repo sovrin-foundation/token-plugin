@@ -41,11 +41,11 @@ class StaticFeesReqHandler(FeeReqHandler):
                  domain_state, bls_store, token_tracker, node):
 
         super().__init__(ledger, state,
-                         node.upgrader,
-                         node.poolManager,
-                         node.idrCache,
-                         node.poolCfg,
-                         node.write_req_validator)
+                         idrCache=node.idrCache,
+                         upgrader=node.upgrader,
+                         poolManager=node.poolManager,
+                         poolCfg=node.poolCfg,
+                         write_req_validator=node.write_req_validator)
 
         self.token_ledger = token_ledger
         self.token_state = token_state
