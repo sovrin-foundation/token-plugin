@@ -40,7 +40,6 @@ class TokenReqHandler(LedgerRequestHandler):
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-        self.tracker = LedgerUncommittedTracker(state.committedHeadHash, ledger.uncommitted_root_hash, ledger.size)
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }

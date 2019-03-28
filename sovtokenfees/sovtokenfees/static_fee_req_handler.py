@@ -6,6 +6,8 @@ from stp_core.common.log import getlogger
 
 from plenum.server.node import Node
 
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
+
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
@@ -40,14 +42,13 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store, token_tracker):
+                 domain_state, bls_store):
         super().__init__(ledger, state)
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-        self.token_tracker = token_tracker
 
         # In-memory map of sovtokenfees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
@@ -63,6 +64,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.deducted_fees = {}
         # Since inputs are spent in XFER. FIND A BETTER SOLUTION
         self.deducted_fees_xfer = {}
+        self.token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
+                                                      token_ledger.uncommitted_root_hash,
+                                                      token_ledger.size)
 
     @staticmethod
     def has_fees(request) -> bool:
@@ -187,13 +191,12 @@ class StaticFeesReqHandler(FeeReqHandler):
             self.fee_txns_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id):
+        uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
         if ledger_id == TOKEN_LEDGER_ID:
             # TODO: Need to improve this logic for case, when we got a XFER txn with fees
             # All of other txn with fees it's a 2 steps, "apply txn" and "apply fees"
             # But for XFER txn with fees we do only "apply fees with transfer too"
-            self.token_tracker.reject_batch()
             return
-        uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
         if txn_count == 0 or self.token_ledger.uncommitted_root_hash == uncommitted_txn_root or \
                 self.token_state.headHash == uncommitted_hash:
             return 0
@@ -205,19 +208,18 @@ class StaticFeesReqHandler(FeeReqHandler):
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
         # All changes will be tracked on TokenReqHandler side
+        token_state_root, token_txn_root, _ = self.token_tracker.commit_batch()
         if ledger_id == TOKEN_LEDGER_ID:
-            self.token_tracker.commit_batch()
             return
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
                                        and get_type(t) != XFER_PUBLIC
                                        ]
         if len(committed_seq_nos_with_fees) > 0:
-            state_root, txn_root, _ = self.token_tracker.commit_batch()
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
-                                           state_root, txn_root_serializer.serialize(txn_root),
+                                           token_state_root, txn_root_serializer.serialize(token_txn_root),
                                            pp_time)
             i = 0
             for txn in committed_txns:
@@ -225,8 +227,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                     txn[FEES] = r[i]
                     i += 1
             self.fee_txns_in_current_batch = 0
-        else:
-            self.token_tracker.commit_batch()
 
 
     def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
