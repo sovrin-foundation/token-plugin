@@ -176,6 +176,8 @@ class TestStaticValidation:
 
         payload = {TXN_TYPE: '300'}
         request = helpers.request._create_request(payload)
+        request = helpers.wallet.sign_request_trustees(request, 1)
+
         fee_handler.doStaticValidation(request)
 
 

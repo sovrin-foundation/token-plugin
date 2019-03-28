@@ -1,3 +1,5 @@
+from sovtokenfees.constants import SET_FEES
+
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
 
@@ -9,15 +11,30 @@ def integrate_plugin_in_node(node):
         ThreePhaseCommitHandler
     from sovtoken import TOKEN_LEDGER_ID
     from sovtoken.client_authnr import TokenAuthNr
+    from indy_common.authorize.auth_constraints import ConstraintsSerializer
+    from common.serializers.serialization import domain_state_serializer
+    from indy_common.authorize.auth_map import auth_map
+    from indy_common.authorize.auth_actions import AuthActionAdd
+    from indy_common.authorize.auth_map import trust_anchor_or_steward_or_trustee_constraint
+
+    set_fees_for_ledger = AuthActionAdd(txn_type=SET_FEES,
+                                        field='*',
+                                        value='*')
+    auth_map.update({set_fees_for_ledger.get_action_id(): trust_anchor_or_steward_or_trustee_constraint})
+
+    serializer = ConstraintsSerializer(domain_state_serializer)
+    node.add_auth_rules_to_config_state(state=node.getState(CONFIG_LEDGER_ID),
+                                        auth_map=auth_map,
+                                        serializer=serializer)
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
-        raise ImportError('sovtoken plugin should be loaded, ' # noqa
-                                  'authenticator not found')
+        raise ImportError('sovtoken plugin should be loaded, '  # noqa
+                          'authenticator not found')
     token_req_handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
     if not token_req_handler:
-        raise ImportError('sovtoken plugin should be loaded, request ' # noqa
-                                  'handler not found')
+        raise ImportError('sovtoken plugin should be loaded, request '  # noqa
+                          'handler not found')
 
     # `handle_xfer_public_txn` in `TokenReqHandler` checks if the sum of inputs match
     # exactly the sum of outputs. Since the check to match inputs and outputs is done
