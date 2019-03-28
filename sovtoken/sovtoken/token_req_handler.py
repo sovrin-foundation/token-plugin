@@ -188,13 +188,12 @@ class TokenReqHandler(LedgerRequestHandler):
                             is_committed=is_committed)
 
     def onBatchCreated(self, state_root, txn_time):
-        self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
+        self.on_batch_created(self.utxo_cache, state_root)
 
     def onBatchRejected(self):
         self.on_batch_rejected(self.utxo_cache)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
-        uncommitted_state, uncommitted_txn_root, _ = self.tracker.commit_batch()
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
                                txnCount, stateRoot, txnRoot, pptime,
                                self.ts_store)
@@ -301,8 +300,7 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.commit_batch()
 
     @staticmethod
-    def on_batch_created(utxo_cache, tracker: LedgerUncommittedTracker, ledger: Ledger, state_root):
-        tracker.apply_batch(state_root, ledger.uncommitted_root_hash, ledger.uncommitted_size)
+    def on_batch_created(utxo_cache, state_root):
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod

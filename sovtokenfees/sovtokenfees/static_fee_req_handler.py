@@ -175,18 +175,16 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def post_batch_created(self, ledger_id, state_root):
         # it mean, that all tracker thins was done in onBatchCreated phase for TokenReqHandler
+        self.token_tracker.apply_batch(self.token_state.headHash,
+                                       self.token_ledger.uncommitted_root_hash,
+                                       self.token_ledger.uncommitted_size)
         if ledger_id == TOKEN_LEDGER_ID:
             return
         if self.fee_txns_in_current_batch > 0:
             state_root = self.token_state.headHash
-            txn_root = self.token_ledger.uncommittedRootHash
-            TokenReqHandler.on_batch_created(self.utxo_cache, self.token_tracker, self.token_ledger, state_root)
+            TokenReqHandler.on_batch_created(self.utxo_cache, state_root)
             # ToDo: Needed investigation about affection of removing setting this var into 0
             self.fee_txns_in_current_batch = 0
-        else:
-            self.token_tracker.apply_batch(self.token_state.headHash,
-                                           self.token_ledger.uncommitted_root_hash,
-                                           self.token_ledger.uncommitted_size)
 
     def post_batch_rejected(self, ledger_id):
         if ledger_id == TOKEN_LEDGER_ID:
@@ -208,6 +206,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                              state_root, txn_root):
         # All changes will be tracked on TokenReqHandler side
         if ledger_id == TOKEN_LEDGER_ID:
+            self.token_tracker.commit_batch()
             return
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
