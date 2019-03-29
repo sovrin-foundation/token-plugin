@@ -1,5 +1,6 @@
 import json
 
+import pytest
 from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.test.helper import get_amount_from_token_txn, nyms_with_fees
 
@@ -19,6 +20,7 @@ def get_last_committed_from_tracker(node):
     return tracker.last_committed
 
 
+@pytest.mark.skip(reason="tracker now in StaticFeeReqHandler")
 def test_last_committed_after_catchup(looper, helpers,
                                       nodeSetWithIntegratedTokenPlugin,
                                       sdk_pool_handle,

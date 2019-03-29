@@ -1,3 +1,4 @@
+import functools
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
 
@@ -9,6 +10,12 @@ def integrate_plugin_in_node(node):
         ThreePhaseCommitHandler
     from sovtoken import TOKEN_LEDGER_ID
     from sovtoken.client_authnr import TokenAuthNr
+
+    def postCatchupCompleteClb(origin_clb):
+        if origin_clb:
+            origin_clb()
+        fees_req_handler.postCatchupCompleteClbk()
+
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
@@ -35,8 +42,10 @@ def integrate_plugin_in_node(node):
                                             token_state,
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
-                                            node.bls_bft.bls_store,
-                                            token_req_handler.tracker, node)
+                                            node.bls_bft.bls_store, node)
+    origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
+    node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
+        functools.partial(postCatchupCompleteClb, origin_token_clb)
     node.clientAuthNr.register_authenticator(fees_authnr)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
