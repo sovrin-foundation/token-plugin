@@ -52,7 +52,7 @@ pipelineWrapper({
 
                         // This is a dirty workaround to make awsCBHelper work in parallel
                         if ( proj != "sovtoken" ) {
-                            sleep(5, "SECONDS")
+                            sleep(time : 5, unit : "SECONDS")
                         }
 
                         awsCBHelper.build() {
