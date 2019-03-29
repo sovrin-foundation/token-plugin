@@ -21,12 +21,9 @@ from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 from state.trie.pruning_trie import rlp_decode
 
 from state.pruning_state import PruningState
-
-from plenum.common.ledger import Ledger
 
 
 class TokenReqHandler(LedgerRequestHandler):

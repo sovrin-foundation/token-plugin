@@ -344,3 +344,8 @@ class StaticFeesReqHandler(FeeReqHandler):
         ledger
         """
         return txn
+
+    def postCatchupCompleteClbk(self):
+        self.token_tracker.set_last_committed(self.token_state.committedHeadHash,
+                                              self.token_ledger.uncommitted_root_hash,
+                                              self.token_ledger.size)
