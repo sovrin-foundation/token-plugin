@@ -50,6 +50,11 @@ pipelineWrapper({
                             logger.info("CI docker image tag: $ciImageTag")
                         }
 
+                        // This is a dirty workaround to make awsCBHelper work in parallel
+                        if ( proj != "sovtoken" ) {
+                            sleep(time : 5, unit : "SECONDS")
+                        }
+
                         awsCBHelper.build() {
                             projectTag = prTag
 

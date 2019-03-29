@@ -10,7 +10,6 @@ from plenum.test.helper import assertExp
 from plenum.common.startable import Mode
 
 
-@pytest.mark.skip(reason="ST-537")
 def test_revert_xfer_and_other_txn_before_catchup(looper, helpers,
                                                   nodeSetWithIntegratedTokenPlugin,
                                                   fees_set, fees,

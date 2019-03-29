@@ -57,7 +57,8 @@ def add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, 
     waitNodeDataEquality(looper, new_node, *node_set[:-1])
 
 
-@pytest.mark.skip(reason="ST-537")
+
+@pytest.mark.skip(reason="ST-537 issue with adding new node")
 def test_first_catchup_for_a_new_node(looper, helpers,
                                       nodeSetWithIntegratedTokenPlugin,
                                       sdk_pool_handle,
