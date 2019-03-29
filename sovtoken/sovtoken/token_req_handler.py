@@ -21,12 +21,9 @@ from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 from state.trie.pruning_trie import rlp_decode
 
 from state.pruning_state import PruningState
-
-from plenum.common.ledger import Ledger
 
 
 class TokenReqHandler(LedgerRequestHandler):
@@ -40,7 +37,6 @@ class TokenReqHandler(LedgerRequestHandler):
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-        self.tracker = LedgerUncommittedTracker(state.committedHeadHash, ledger.uncommitted_root_hash, ledger.size)
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
@@ -188,13 +184,12 @@ class TokenReqHandler(LedgerRequestHandler):
                             is_committed=is_committed)
 
     def onBatchCreated(self, state_root, txn_time):
-        self.on_batch_created(self.utxo_cache, self.tracker, self.ledger, state_root)
+        self.on_batch_created(self.utxo_cache, state_root)
 
     def onBatchRejected(self):
-        self.on_batch_rejected(self.utxo_cache, self.tracker, self.state, self.ledger)
+        self.on_batch_rejected(self.utxo_cache)
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
-        uncommitted_state, uncommitted_txn_root, _ = self.tracker.commit_batch()
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
                                txnCount, stateRoot, txnRoot, pptime,
                                self.ts_store)
@@ -301,18 +296,9 @@ class TokenReqHandler(LedgerRequestHandler):
         utxo_cache.commit_batch()
 
     @staticmethod
-    def on_batch_created(utxo_cache, tracker: LedgerUncommittedTracker, ledger: Ledger, state_root):
-        tracker.apply_batch(state_root, ledger.uncommitted_root_hash, ledger.uncommitted_size)
+    def on_batch_created(utxo_cache, state_root):
         utxo_cache.create_batch_from_current(state_root)
 
     @staticmethod
-    def on_batch_rejected(utxo_cache, tracker: LedgerUncommittedTracker, state: PruningState, ledger: Ledger):
-        uncommitted_hash, uncommitted_txn_root, txn_count = tracker.reject_batch()
-        if txn_count == 0 or ledger.uncommitted_root_hash == uncommitted_txn_root or \
-            state.headHash == uncommitted_hash:
-            return 0
-        state.revertToHead(uncommitted_hash)
-        ledger.discardTxns(txn_count)
-
+    def on_batch_rejected(utxo_cache):
         utxo_cache.reject_batch()
-        return txn_count

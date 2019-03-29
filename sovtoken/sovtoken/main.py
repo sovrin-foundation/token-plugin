@@ -10,13 +10,6 @@ from sovtoken.token_req_handler import TokenReqHandler
 
 def integrate_plugin_in_node(node):
 
-    def postTxnAddedToLedgerClbk(node, *args, **kwargs):
-        node.postTxnFromCatchupAddedToLedger(*args, **kwargs)
-        tracker = token_req_handler.tracker
-        tracker.set_last_committed(state.committedHeadHash,
-                                   ledger.uncommitted_root_hash,
-                                   ledger.size)
-
     node.config = get_config(node.config)
 
     token_authnr = TokenAuthNr(node.states[DOMAIN_LEDGER_ID])
@@ -35,7 +28,7 @@ def integrate_plugin_in_node(node):
         node.ledger_ids.append(TOKEN_LEDGER_ID)
 
     node.ledgerManager.addLedger(TOKEN_LEDGER_ID, ledger,
-                                 postTxnAddedToLedgerClbk=functools.partial(postTxnAddedToLedgerClbk, node))
+                                 postTxnAddedToLedgerClbk=node.postTxnFromCatchupAddedToLedger)
     node.on_new_ledger_added(TOKEN_LEDGER_ID)
     node.register_state(TOKEN_LEDGER_ID, state)
     node.clientAuthNr.register_authenticator(token_authnr)
