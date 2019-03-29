@@ -42,7 +42,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store, token_tracker):
+                 domain_state, bls_store):
         super().__init__(ledger, state)
         self.token_ledger = token_ledger
         self.token_state = token_state
@@ -64,7 +64,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.deducted_fees = {}
         # Since inputs are spent in XFER. FIND A BETTER SOLUTION
         self.deducted_fees_xfer = {}
-        self.token_tracker = token_tracker
+        self.token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
+                                                      token_ledger.uncommitted_root_hash,
+                                                      token_ledger.size)
 
     @staticmethod
     def has_fees(request) -> bool:
