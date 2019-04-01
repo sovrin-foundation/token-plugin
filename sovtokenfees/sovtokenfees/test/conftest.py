@@ -59,7 +59,7 @@ def helpers(
     trustee_wallets,
     steward_wallets,
     sdk_wallet_client,
-    sdk_wallet_steward
+    sdk_wallet_trustee
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -68,7 +68,7 @@ def helpers(
         trustee_wallets,
         steward_wallets,
         sdk_wallet_client,
-        sdk_wallet_steward
+        sdk_wallet_trustee
     )
 
 

@@ -1,4 +1,7 @@
 import functools
+
+from sovtokenfees.constants import SET_FEES
+
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
 
@@ -57,9 +60,9 @@ def integrate_plugin_in_node(node):
                                             token_state,
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
-
-                                            node.bls_bft.bls_store)
+                                            node.bls_bft.bls_store, node)
     origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
+
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)
     node.clientAuthNr.register_authenticator(fees_authnr)

@@ -114,7 +114,7 @@ class HelperRequest():
             '2'   => Steward,
             '101' => Trust Anchor,
         """
-        sdk_wallet_did = self._find_wallet_did(sdk_wallet)
+        sdk_wallet_did = self.find_wallet_did(sdk_wallet)
 
         if not dest:
             (dest, new_verkey) = self._wallet.create_did(
@@ -143,17 +143,17 @@ class HelperRequest():
             schema_data,
             sdk_wallet=None
     ):
-        sdk_wallet_did = self._find_wallet_did(sdk_wallet)
+        sdk_wallet_did = self.find_wallet_did(sdk_wallet)
         schema_request_future = build_schema_request(sdk_wallet_did, schema_data)
         schema_request = self._looper.loop.run_until_complete(schema_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(schema_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
         return request
 
-    def _find_wallet_did(self, sdk_wallet):
+    def find_wallet_did(self, sdk_wallet):
         sdk_wallet = sdk_wallet or self._steward_wallet
-        _, sdk_wallet_did = sdk_wallet
-        return sdk_wallet_did
+        handle, sdk_wallet_did = sdk_wallet
+        return sdk_wallet_did, handle
 
     def payment_signatures(self, inputs, outputs):
         """ Generate a list of payment signatures from inptus and outputs. """

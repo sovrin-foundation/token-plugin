@@ -1,4 +1,5 @@
 import pytest
+from plenum.test.helper import sdk_sign_request_from_dict
 
 from ledger.util import F
 from plenum.client.wallet import Wallet
@@ -155,7 +156,7 @@ def helpers(
 
 
 @pytest.fixture()
-def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
+def increased_trustees(looper, helpers, trustee_wallets, sdk_wallet_trustee):
     wallets = [helpers.wallet.create_client_wallet() for _ in range(3)]
 
     def _nym_request_from_client_wallet(wallet):
@@ -164,27 +165,33 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
         return helpers.request.nym(
             dest=identifier,
             verkey=signer.verkey,
-            role=TRUSTEE_STRING
+            role=TRUSTEE_STRING,
         )
 
-    requests = map(_nym_request_from_client_wallet, wallets)
+    requests = list(map(_nym_request_from_client_wallet, wallets))
 
     responses = helpers.sdk.send_and_check_request_objects(requests)
 
     yield trustee_wallets + wallets
 
-    def _update_nym_standard_user(response):
+    def _update_nym_standard_user(response, wallet):
         data = get_payload_data(response[RESULT])
         request = helpers.request.nym(
             dest=data[TARGET_NYM],
             verkey=data[VERKEY],
-            role=''
+            role='',
+            sdk_wallet=wallet
         )
         return request
 
-    requests = [
-        _update_nym_standard_user(response)
-        for _, response in responses
-    ]
+    # requests = [
+    #     _update_nym_standard_user(response)
+    #     for _, response in responses
+    # ]
+    requests = []
+    for response, wallet in zip(responses, wallets):
+        did, handle = helpers.wallet.find_wallet_did(wallet)
+        requests.append(_update_nym_standard_user(response, (handle, did)))
+        # signed_request.append(helpers.wallet.sign_request(request, wallet.handle))
 
     helpers.sdk.send_and_check_request_objects(requests)
