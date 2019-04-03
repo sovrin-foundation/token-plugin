@@ -152,8 +152,8 @@ class HelperRequest():
 
     def find_wallet_did(self, sdk_wallet):
         sdk_wallet = sdk_wallet or self._steward_wallet
-        handle, sdk_wallet_did = sdk_wallet
-        return sdk_wallet_did, handle
+        _, sdk_wallet_did = sdk_wallet
+        return sdk_wallet_did
 
     def payment_signatures(self, inputs, outputs):
         """ Generate a list of payment signatures from inptus and outputs. """
