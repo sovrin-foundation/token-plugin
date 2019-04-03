@@ -168,7 +168,7 @@ def increased_trustees(looper, helpers, trustee_wallets, sdk_wallet_trustee):
             role=TRUSTEE_STRING,
         )
 
-    requests = list(map(_nym_request_from_client_wallet, wallets))
+    requests = map(_nym_request_from_client_wallet, wallets)
 
     responses = helpers.sdk.send_and_check_request_objects(requests)
 
