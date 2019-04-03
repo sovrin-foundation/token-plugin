@@ -166,6 +166,7 @@ def increased_trustees(looper, helpers, trustee_wallets, sdk_wallet_trustee):
             dest=identifier,
             verkey=signer.verkey,
             role=TRUSTEE_STRING,
+            sdk_wallet=sdk_wallet_trustee
         )
 
     requests = map(_nym_request_from_client_wallet, wallets)
@@ -173,25 +174,3 @@ def increased_trustees(looper, helpers, trustee_wallets, sdk_wallet_trustee):
     responses = helpers.sdk.send_and_check_request_objects(requests)
 
     yield trustee_wallets + wallets
-
-    def _update_nym_standard_user(response, wallet):
-        data = get_payload_data(response[RESULT])
-        request = helpers.request.nym(
-            dest=data[TARGET_NYM],
-            verkey=data[VERKEY],
-            role='',
-            sdk_wallet=wallet
-        )
-        return request
-
-    # requests = [
-    #     _update_nym_standard_user(response)
-    #     for _, response in responses
-    # ]
-    requests = []
-    for response, wallet in zip(responses, wallets):
-        did, handle = helpers.wallet.find_wallet_did(wallet)
-        requests.append(_update_nym_standard_user(response, (handle, did)))
-        # signed_request.append(helpers.wallet.sign_request(request, wallet.handle))
-
-    helpers.sdk.send_and_check_request_objects(requests)
