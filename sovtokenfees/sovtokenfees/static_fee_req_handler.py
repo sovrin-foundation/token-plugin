@@ -89,8 +89,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_txn_fees(self, request) -> int:
         return self.fees.get(request.operation[TXN_TYPE], 0)
 
-    def can_pay_fees(self, request):
-        required_fees = self.get_txn_fees(request)
+    def can_pay_fees(self, request, required_fees):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
@@ -98,20 +97,10 @@ class StaticFeesReqHandler(FeeReqHandler):
             outputs = request.operation[OUTPUTS]
             self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
-        elif required_fees:
-            if StaticFeesReqHandler.has_fees(request):
-                inputs = request.fees[0]
-                outputs = self.get_change_for_fees(request)
-                self._validate_fees_can_pay(request, inputs, outputs, required_fees)
-            else:
-                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                    getattr(request, f.REQ_ID.nm, None),
-                                                    'Fees are required for this txn type')
         else:
-            if StaticFeesReqHandler.has_fees(request):
-                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                    getattr(request, f.REQ_ID.nm, None),
-                                                    'Fees are not allowed for this txn type')
+            inputs = request.fees[0]
+            outputs = self.get_change_for_fees(request)
+            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
