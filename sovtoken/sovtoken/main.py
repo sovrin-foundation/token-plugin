@@ -36,5 +36,7 @@ def integrate_plugin_in_node(node):
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
                                         node.states[DOMAIN_LEDGER_ID], node.bls_bft.bls_store)
     node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
-
+    node.db_manager.register_new_database(lid=TOKEN_LEDGER_ID,
+                                          ledger=ledger,
+                                          state=state)
     return node
