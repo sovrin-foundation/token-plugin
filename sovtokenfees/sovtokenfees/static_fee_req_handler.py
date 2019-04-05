@@ -3,9 +3,7 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
-
 from plenum.server.node import Node
-
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 
 txn_root_serializer = Base58Serializer()
@@ -29,6 +27,8 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
+
+txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
 
@@ -42,8 +42,15 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store):
-        super().__init__(ledger, state)
+                 domain_state, bls_store, node):
+
+        super().__init__(ledger, state,
+                         idrCache=node.idrCache,
+                         upgrader=node.upgrader,
+                         poolManager=node.poolManager,
+                         poolCfg=node.poolCfg,
+                         write_req_validator=node.write_req_validator)
+
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
@@ -217,7 +224,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                     i += 1
             self.fee_txns_in_current_batch = 0
 
-
     def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
         """
         Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
@@ -246,7 +252,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                 request,
                 'fees: {}'.format(required_fees)
             )
-
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}

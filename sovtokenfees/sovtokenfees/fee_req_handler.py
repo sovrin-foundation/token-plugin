@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from plenum.server.config_req_handler import ConfigReqHandler
+from indy_node.server.config_req_handler import ConfigReqHandler
 
 
 class FeeReqHandler(ConfigReqHandler):
