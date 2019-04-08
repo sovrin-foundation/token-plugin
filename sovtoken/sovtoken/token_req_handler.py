@@ -239,6 +239,9 @@ class TokenReqHandler(LedgerRequestHandler):
         result.update(request.operation)
         return result
 
+    def on_node_stopping(self):
+        self.utxo_cache.close()
+
     def _sum_inputs(self, req: Request, is_committed=False) -> int:
         return self.sum_inputs(self.utxo_cache, req,
                                is_committed=is_committed)
