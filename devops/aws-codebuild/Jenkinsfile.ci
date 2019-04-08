@@ -1,15 +1,20 @@
 #!groovy
 
-def evLibrary = library(identifier: 'evernym-aws-codebuild@v0.4.0-aws-codebuild', retriever: modernSCM(
-    github(credentialsId: 'evernym-github-machine-user', repoOwner: 'evernym', repository: 'jenkins-shared')
-)).com.evernym.pipeline
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@master', retriever: modernSCM(
+    github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
+)).com.sovrin.pipeline
 
-logger = evLibrary.Logger.new(this)
-notifier = evLibrary.Notifier.new(this)
+logger = sovLibrary.Logger.new(this)
+notifier = sovLibrary.Notifier.new(this)
 logger.setGlobalLevel('TRACE')
 
+def nodeLabels = [
+        codeBuild: env.LIBSOVTOKEN_CODEBUILD_NODE_LABEL ?: 'codebuild',
+        macos: env.LIBSOVTOKEN_MACOS_NODE_LABEL ?: 'macos',
+]
+
 pipelineWrapper({
-    nodeWrapper {
+    nodeWrapper(nodeLabels.codeBuild) {
 
         List osnames = ['xenial']
         List projects = ['sovtoken', 'sovtokenfees']
@@ -22,10 +27,10 @@ pipelineWrapper({
             checkout scm
         }
 
-        def utils = evLibrary.Utils.new(this)
-        def buildCtx = evLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+        def utils = sovLibrary.Utils.new(this)
+        def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
-        def awsCBHelper = evLibrary.AwsCodeBuildHelper.new(this, buildCtx)
+        def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
         stage('Upload source to S3') {
             awsCBHelper.uploadSourceToS3()
@@ -33,54 +38,62 @@ pipelineWrapper({
 
         Map builds = projects.collectEntries { proj ->
             osnames.collectEntries { osname ->
-                ["$osname:$proj": {
-                    def ciImageTag
-                    def prTag = "ci-$osname-$proj"
+                ["$osname:$proj": [
+                    "nodeLabel": "$nodeLabels.codeBuild",
+                    "build": {
+                        def ciImageTag
+                        def prTag = "ci-$osname-$proj"
 
-                    stage("$osname:$proj: Resolve image tag") {
-                        def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-                        ciImageTag = "$_imgVersion-$osname-$proj-ci"
-                        logger.info("CI docker image tag: $ciImageTag")
-                    }
+                        stage("$osname:$proj: Resolve image tag") {
+                            def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
+                            ciImageTag = "$_imgVersion-$osname-$proj-ci"
+                            logger.info("CI docker image tag: $ciImageTag")
+                        }
 
-                    awsCBHelper.build() {
-                        projectTag = prTag
+                        // This is a dirty workaround to make awsCBHelper work in parallel
+                        if ( proj != "sovtoken" ) {
+                            sleep(time : 5, unit : "SECONDS")
+                        }
 
-                        // build spec for env image
-                        envBuildSrc = ['devops', "${proj}/${proj}/__metadata__.py"] // TODO make more accurate
-                        envBuildCmds = [
-                            'export PROJECT_DIR=$PWD',
-                            'make -C devops image_ci'
-                        ]
-                        envBuildEnvv = [
-                            [name: 'OSNAME', value: osname],
-                            [name: 'SRC_DIR_NAME', value: proj],
-                            [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
-                            [name: 'DOCKER_TAG', value: ciImageTag],
-                        ]
+                        awsCBHelper.build() {
+                            projectTag = prTag
 
-                        // env and build spec
-                        imageTag = ciImageTag
-                        buildspec = 'devops/aws-codebuild/buildspec.yml'
-                        envv = [
-                            [name: 'OSNAME', value: osname],
-                            [name: 'MAKE_GOALS', value: goals.join(' ')],
-                            [name: 'SRC_DIR_NAME', value: proj],
-                            [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
-                        ]
+                            // build spec for env image
+                            envBuildSrc = ['devops', "${proj}/${proj}/__metadata__.py"] // TODO make more accurate
+                            envBuildCmds = [
+                                'export PROJECT_DIR=$PWD',
+                                'make -C devops image_ci'
+                            ]
+                            envBuildEnvv = [
+                                [name: 'OSNAME', value: osname],
+                                [name: 'SRC_DIR_NAME', value: proj],
+                                [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
+                                [name: 'DOCKER_TAG', value: ciImageTag],
+                            ]
 
-                        onArtifacts = {
-                            this.stage("$osname:$proj: Archive artifacts") {
-                                utils.archiveArtifacts("logs/*.out*") {
-                                    truncate = true
-                                    allowEmptyArchive = true
+                            // env and build spec
+                            imageTag = ciImageTag
+                            buildspec = 'devops/aws-codebuild/buildspec.yml'
+                            envv = [
+                                [name: 'OSNAME', value: osname],
+                                [name: 'MAKE_GOALS', value: goals.join(' ')],
+                                [name: 'SRC_DIR_NAME', value: proj],
+                                [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
+                            ]
+
+                            onArtifacts = {
+                                this.stage("$osname:$proj: Archive artifacts") {
+                                    utils.archiveArtifacts("logs/*.out*") {
+                                        truncate = true
+                                        allowEmptyArchive = true
+                                    }
+
+                                    this.junit "logs/test.${proj}.xml"
                                 }
-
-                                this.junit "logs/test.${proj}.xml"
                             }
                         }
                     }
-                }]
+                ]]
             }
         }
 

@@ -1,3 +1,4 @@
+import pytest
 from sovtoken.constants import ADDRESS, SEQNO, AMOUNT, XFER_PUBLIC
 
 from plenum.common.txn_util import get_seq_no

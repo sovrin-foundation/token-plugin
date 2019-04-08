@@ -21,7 +21,8 @@ VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
 def utxo_cache(parametrised_storage) -> UTXOCache:
     cache = UTXOCache(parametrised_storage)
     yield cache
-    cache.reject_batch()
+    if cache.un_committed:
+        cache.reject_batch()
 
 
 def gen_outputs(num):

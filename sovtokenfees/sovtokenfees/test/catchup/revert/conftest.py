@@ -18,7 +18,7 @@ def xfer_mint_tokens(helpers, xfer_addresses):
 
 @pytest.fixture(scope="module", params=[True, False])
 def fees(request):
-    default_fees = {NYM: 4}
+    default_fees = {NYM: 4, XFER_PUBLIC: 0}
     if request.param:
         default_fees[XFER_PUBLIC] = 8
 
