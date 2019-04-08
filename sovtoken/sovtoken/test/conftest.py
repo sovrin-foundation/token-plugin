@@ -164,7 +164,8 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
         return helpers.request.nym(
             dest=identifier,
             verkey=signer.verkey,
-            role=TRUSTEE_STRING
+            role=TRUSTEE_STRING,
+            sdk_wallet=sdk_wallet_trustee
         )
 
     requests = map(_nym_request_from_client_wallet, wallets)
@@ -177,8 +178,8 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
         data = get_payload_data(response[RESULT])
         request = helpers.request.nym(
             dest=data[TARGET_NYM],
-            verkey=data[VERKEY],
-            role=''
+            role='',
+            sdk_wallet=sdk_wallet_trustee
         )
         return request
 
