@@ -1,4 +1,4 @@
-| Name             | GitHub       | email                             | Satus   |
+| Name             | GitHub       | email                             | Status  |
 |------------------|--------------|-----------------------------------|---------|
 | Cam Parra        | cam-parra    | caeparra@gmail.com                | ACTIVE  |
 | Alex Shcherbakov | ashcherbakov | alexander.shcherbakov@evernym.com | ACTIVE  |
