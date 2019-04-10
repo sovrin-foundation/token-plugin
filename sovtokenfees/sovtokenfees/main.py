@@ -53,7 +53,7 @@ def integrate_plugin_in_node(node):
     origin_token_post_added_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk
 
     def filter_fees(ledger_id: int, txn: Any):
-        origin_token_post_added_clb(ledger_id, txn, get_type(txn) != FeesTransactions.FEES)
+        origin_token_post_added_clb(ledger_id, txn, get_type(txn) != FeesTransactions.FEES.value)
 
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk = filter_fees
     node.clientAuthNr.register_authenticator(fees_authnr)
