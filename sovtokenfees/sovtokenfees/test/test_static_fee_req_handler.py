@@ -176,6 +176,8 @@ class TestStaticValidation:
 
         payload = {TXN_TYPE: '300'}
         request = helpers.request._create_request(payload)
+        request = helpers.wallet.sign_request_trustees(request, 1)
+
         fee_handler.doStaticValidation(request)
 
 
@@ -457,3 +459,9 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     prev_size = fee_handler.ledger.uncommitted_size
     ret_value = fee_handler.apply(request, 10)
     assert ret_value[0] == prev_size + 1
+
+
+def test_does_not_domain_request_handler(helpers, fee_handler):
+
+    assert helpers.node.get_config_req_handler().write_types != \
+           helpers.node.get_fee_req_handler().write_types

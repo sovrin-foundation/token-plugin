@@ -33,9 +33,8 @@ logger = getlogger()
 
 
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
-    write_types = {SET_FEES, FEE_TXN}
-    query_types = {GET_FEES, }
+    write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
+    query_types = FeeReqHandler.query_types.union({GET_FEES, })
     _fees_validator = FeesStructureField()
     MinSendersForFees = 3
     fees_state_key = b'fees'
@@ -144,7 +143,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 txn = reqToTxn(txn)
                 self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
-                self.updateState(txns)
+                super().updateState(txns)
                 self.fee_txns_in_current_batch += 1
                 self.deducted_fees[fees_key] = fees
                 return txn
