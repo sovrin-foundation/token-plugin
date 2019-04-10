@@ -12,6 +12,8 @@ from indy_common.constants import NYM
 
 from plenum.common.types import f
 
+from plenum.common.exceptions import UnauthorizedClientRequest
+
 
 @pytest.fixture()
 def req_with_fees(helpers,
@@ -65,27 +67,27 @@ def test_fail_on_req_with_fees_but_fees_not_required(fees_authorizer,
                                                      req_with_fees,
                                                      fees_constraint):
     fees_constraint.metadata = {}
-    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                auth_constraint=fees_constraint)
-    assert not authorized and msg == "Fees are not required for this txn type"
+    with pytest.raises(UnauthorizedClientRequest, match="Fees are not required for this txn type"):
+        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                    auth_constraint=fees_constraint)
 
 
 def test_fail_on_req_with_fees_but_fees_have_zero_amount(fees_authorizer,
                                                          req_with_fees,
                                                          fees_constraint):
     fees_constraint.metadata = {FEES_FIELD_NAME: 0}
-    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                auth_constraint=fees_constraint)
-    assert not authorized and msg == "Fees are not required for this txn type"
+    with pytest.raises(UnauthorizedClientRequest, match="Fees are not required for this txn type"):
+        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                    auth_constraint=fees_constraint)
 
 
 def test_fail_on_req_without_fees_but_required(fees_authorizer,
                                                req_with_fees,
                                                fees_constraint):
     delattr(req_with_fees, 'fees')
-    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                auth_constraint=fees_constraint)
-    assert not authorized and msg == "Fees are required for this txn type"
+    with pytest.raises(UnauthorizedClientRequest, match="Fees are required for this txn type"):
+        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                    auth_constraint=fees_constraint)
 
 
 def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
@@ -94,9 +96,9 @@ def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
     def raise_some_exp():
         raise KeyError("bla bla bla")
     fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: raise_some_exp()
-    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                auth_constraint=fees_constraint)
-    assert not authorized and msg == "Cannot pay fees"
+    with pytest.raises(UnauthorizedClientRequest, match="Cannot pay fees"):
+        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                    auth_constraint=fees_constraint)
 
 
 def test_success_authorization(fees_authorizer,

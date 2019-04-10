@@ -6,9 +6,10 @@ from indy_common.authorize.auth_actions import AbstractAuthAction
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from stp_core.common.log import getlogger
 
+from plenum.common.exceptions import UnauthorizedClientRequest
+
 
 logger = getlogger()
-
 
 FEES_FIELD_NAME = 'fees'
 
@@ -38,9 +39,20 @@ class FeesAuthorizer(AbstractAuthorizer):
         constraint_fees = self._get_fees_from_constraint(auth_constraint)
         is_fees_required = True if constraint_fees else False
         if is_fees_required and not self.fees_req_handler.has_fees(request):
-            return False, "Fees are required for this txn type"
+            logger.warning("Validation error: Fees are required for this txn type")
+            raise UnauthorizedClientRequest(request.identifier,
+                                            request.reqId,
+                                            "Fees are required for this txn type")
         if not is_fees_required and self.fees_req_handler.has_fees(request):
-            return False, "Fees are not required for this txn type"
+            logger.warning("Validation error: Fees are not required for this txn type")
+            raise UnauthorizedClientRequest(request.identifier,
+                                            request.reqId,
+                                            "Fees are not required for this txn type")
+        if not is_fees_required and not self.fees_req_handler.has_fees(request):
+            return True, ""
         if not self._can_pay_fees(request, constraint_fees):
-            return False, "Cannot pay fees"
+            logger.warning("Validation error: Cannot pay fees")
+            raise UnauthorizedClientRequest(request.identifier,
+                                            request.reqId,
+                                            "Cannot pay fees")
         return True, ""
