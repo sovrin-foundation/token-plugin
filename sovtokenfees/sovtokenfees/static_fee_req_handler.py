@@ -143,7 +143,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 txn = reqToTxn(txn)
                 self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
                 _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
-                super().updateState(txns)
+                self.updateState(txns)
                 self.fee_txns_in_current_batch += 1
                 self.deducted_fees[fees_key] = fees
                 return txn
@@ -173,6 +173,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
+        super().updateState(txns, isCommitted=True)
 
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
