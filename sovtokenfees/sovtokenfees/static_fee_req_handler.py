@@ -90,6 +90,19 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_txn_fees(self, request) -> int:
         return self.fees.get(request.operation[TXN_TYPE], 0)
 
+    def calculate_fees_from_req(self, request):
+        inputs = request.fees[0]
+        outputs = self.get_change_for_fees(request)
+        try:
+            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
+        except Exception as e:
+            logger.error("Unexpected exception while sum_inputs calculating: {}".format(e))
+            return 0
+
+        sum_outputs = sum([a[AMOUNT] for a in outputs])
+        return sum_inputs - sum_outputs
+
+
     def can_pay_fees(self, request, required_fees):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
@@ -116,7 +129,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
-                fees = self.get_txn_fees(request)
+                fees = self.calculate_fees_from_req(request)
                 sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
