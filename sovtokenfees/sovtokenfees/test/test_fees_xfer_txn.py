@@ -126,7 +126,7 @@ def test_invalid_xfer_with_valid_fees(
     Fees aren't paid when the payment address doesn't contain enough tokens for
     the transfer.
     """
-    helpers.general.do_set_fees(fees)
+    helpers.node.set_fees_directly(fees)
     [address_giver, address_receiver] = addresses
     seq_no = get_seq_no(mint_tokens)
 
@@ -151,7 +151,7 @@ def test_xfer_with_additional_fees_attached(
 ):
     """ Transfer request with fees and with fees attached on the fees field. """
 
-    helpers.general.do_set_fees(fees)
+    helpers.node.set_fees_directly(fees)
     [address_giver, address_receiver] = addresses
     seq_no = get_seq_no(mint_tokens)
 

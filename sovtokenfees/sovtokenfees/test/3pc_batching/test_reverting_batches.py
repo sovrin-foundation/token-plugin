@@ -2,7 +2,7 @@ import json
 
 from plenum.test.delayers import cDelay
 
-from plenum.test.stasher import delay_rules
+from plenum.test.stasher import delay_rules, delay_rules_without_processing
 from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.test.helper import add_fees_request_with_address, get_head_hash_for_pool, \
     get_uncommitted_txns_count_for_pool
@@ -21,14 +21,15 @@ def test_revert_batches_with_fees_unset_fees_without_fee(looper, helpers,
                                                          sdk_pool_handle,
                                                          sdk_wallet_trustee,
                                                          sdk_wallet_steward,
-                                                         fees_set, address_main, mint_tokens):
+                                                         fees_set, address_main, mint_tokens,
+                                                         fees):
     node_set = nodeSetWithIntegratedTokenPlugin
     reverted_node = node_set[-1]
 
     head_hash_before = get_head_hash_for_pool([reverted_node], TOKEN_LEDGER_ID)
     uncommitted_size_before = get_uncommitted_txns_count_for_pool([reverted_node], TOKEN_LEDGER_ID)
 
-    with delay_rules(reverted_node.nodeIbStasher, cDelay()):
+    with delay_rules_without_processing(reverted_node.nodeIbStasher, cDelay()):
         request_check_health = helpers.request.nym()
         request_check_health = add_fees_request_with_address(
             helpers,
@@ -48,7 +49,7 @@ def test_revert_batches_with_fees_unset_fees_without_fee(looper, helpers,
         """
         Unset fees, for sending txn without fees
         """
-        helpers.node.reset_fees()
+        helpers.node.set_fees_directly({k: 0 for (k, v) in fees.items()})
         sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
         """
         We sent a NYM txn without fees and expects, 

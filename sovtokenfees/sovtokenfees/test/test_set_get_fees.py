@@ -14,12 +14,14 @@ from state.trie.pruning_trie import Trie, rlp_encode
 from storage.kv_in_memory import KeyValueStorageInMemory
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_get_fees_when_no_fees_set(helpers):
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
     helpers.node.assert_set_fees_in_memory({})
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_set_fees_invalid_numeric(helpers):
     """
     Test set fees with invalid numeric amount.
@@ -43,18 +45,19 @@ def test_set_fees_invalid_numeric(helpers):
     _test_invalid_fees(None)
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_fees_can_be_zero(helpers):
     """
     Fees can be set to zero.
     """
     fees = {NYM: 1}
-    helpers.general.do_set_fees(fees)
+    helpers.node.set_fees_directly(fees)
 
     with pytest.raises(RequestRejectedException):
         result = helpers.general.do_nym()
 
     fees = {NYM: 0}
-    helpers.general.do_set_fees(fees)
+    helpers.node.set_fees_directly(fees)
 
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert fees == ledger_fees
@@ -63,6 +66,7 @@ def test_fees_can_be_zero(helpers):
     helpers.general.do_nym()
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_trustee_set_fees_for_invalid_txns(helpers):
     """
     Fees are not allowed for MINT_PUBLIC
@@ -77,6 +81,7 @@ def test_trustee_set_fees_for_invalid_txns(helpers):
     assert ledger_fees == {}
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_non_trustee_set_fees(helpers):
     """
     Only trustees can change the sovtokenfees
@@ -94,6 +99,7 @@ def test_non_trustee_set_fees(helpers):
     assert ledger_fees == {}
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_set_fees_not_enough_trustees(helpers):
     """
     Setting fees requires at least three trustees
@@ -113,6 +119,7 @@ def test_set_fees_not_enough_trustees(helpers):
     assert ledger_fees == {}
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_set_fees_with_stewards(helpers):
     """
     Setting fees fails with stewards.
@@ -136,6 +143,7 @@ def test_set_fees_with_stewards(helpers):
     helpers.node.assert_set_fees_in_memory({})
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_trustee_set_valid_fees(helpers, fees_set, fees):
     """
     Set a valid sovtokenfees
@@ -143,6 +151,7 @@ def test_trustee_set_valid_fees(helpers, fees_set, fees):
     helpers.node.assert_set_fees_in_memory(fees)
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_get_fees(helpers, fees_set, fees):
     """
     Get the sovtokenfees from the ledger
@@ -151,6 +160,7 @@ def test_get_fees(helpers, fees_set, fees):
     assert ledger_fees == fees
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_change_fees(helpers, fees_set, fees):
     """
     Change the sovtokenfees on the ledger and check that sovtokenfees has
@@ -164,6 +174,7 @@ def test_change_fees(helpers, fees_set, fees):
     helpers.node.assert_set_fees_in_memory(updated_fees)
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_get_fees_with_proof(helpers, fees_set, fees):
     """
     Get the sovtokenfees from the ledger
@@ -180,6 +191,7 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
         StaticFeesReqHandler.fees_state_key, fees, proof_nodes)
 
 
+@pytest.mark.skip(reason="Will be deprecated")
 def test_mint_after_set_fees(helpers, fees_set):
     # Try another minting after setting fees
     address = helpers.wallet.create_address()

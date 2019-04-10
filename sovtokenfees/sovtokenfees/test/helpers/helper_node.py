@@ -1,6 +1,11 @@
 import sovtoken.test.helpers.helper_node as sovtoken_helper_node
 from plenum.common.constants import CONFIG_LEDGER_ID
 
+from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, EDIT_PREFIX
+
+from indy_common.authorize.auth_cons_strategies import AbstractAuthStrategy
+from sovtokenfees.fees_authorizer import FEES_FIELD_NAME
+
 
 class HelperNode(sovtoken_helper_node.HelperNode):
     """
@@ -32,6 +37,20 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         """ Reset the fees on each node. """
         for node in self._nodes:
             self._reset_fees(node)
+
+    def _fill_auth_map(self, txn_type, fee):
+        for node in self._nodes:
+            validator = node.write_req_validator
+            for rule_id, constraint in validator.auth_map.items():
+                add_rule_id = compile_action_id(txn_type, '*', '*', '*', prefix=ADD_PREFIX)
+                edit_rule_id = compile_action_id(txn_type, '*', '*', '*', prefix=EDIT_PREFIX)
+                if AbstractAuthStrategy.is_accepted_action_id(add_rule_id, rule_id) or \
+                    AbstractAuthStrategy.is_accepted_action_id(edit_rule_id, rule_id):
+                    constraint.set_metadata({FEES_FIELD_NAME: fee})
+
+    def set_fees_directly(self, fees):
+        for txn_type, fee in fees.items():
+            self._fill_auth_map(txn_type, fee)
 
     def fee_handler_can_pay_fees(self, request):
         """ Check the request can pay fees using a StaticFeeRequestHandler. """

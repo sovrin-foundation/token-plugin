@@ -60,8 +60,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Unset fees for pool
         """
-        r_unset_fees = helpers.general.set_fees_without_waiting({k: 0 for (k, v) in fees.items()})
-        looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
+        helpers.node.set_fees_directly({k: 0 for (k, v) in fees.items()})
         """
         Sending 1 NYM txn without fees
         """
@@ -70,8 +69,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Set fees for pool
         """
-        r_set_fees = helpers.general.set_fees_without_waiting(fees)
-        looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
+        helpers.node.set_fees_directly(fees)
         """
         Send another NYM txn with fees
         """
@@ -81,9 +79,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
     Reset delays and check, that all txns was ordered successfully
     """
     sdk_get_and_check_replies(looper, r_with_1)
-    sdk_get_and_check_replies(looper, r_unset_fees)
     sdk_get_and_check_replies(looper, r_without)
-    sdk_get_and_check_replies(looper, r_set_fees)
     sdk_get_and_check_replies(looper, r_with_2)
 
     committed_tokens_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)

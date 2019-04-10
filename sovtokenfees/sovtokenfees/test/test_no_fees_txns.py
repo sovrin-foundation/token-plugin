@@ -13,6 +13,6 @@ TXN_FEES = {
 
 
 def test_txn_with_no_fees_specified(helpers):
-    helpers.general.do_set_fees(TXN_FEES)
+    helpers.node.set_fees_directly(TXN_FEES)
     request = helpers.request.nym()
     helpers.sdk.send_and_check_request_objects([request])

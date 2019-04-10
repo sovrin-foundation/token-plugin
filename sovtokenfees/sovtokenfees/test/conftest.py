@@ -47,8 +47,8 @@ def fees(request):
 
 @pytest.fixture()
 def fees_set(helpers, fees):
-    result = helpers.general.do_set_fees(fees)
-    return get_payload_data(result)
+    helpers.node.set_fees_directly(fees)
+    return {'fees': fees}
 
 
 @pytest.fixture(scope="module")
