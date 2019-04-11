@@ -78,7 +78,6 @@ def test_first_catchup_for_a_new_node(looper, helpers,
     disconnect_node_and_ensure_disconnected(looper,
                                             node_set,
                                             reverted_node)
-    reverted_node.ledger_to_req_handler[1001].utxo_cache._store.close()
     looper.removeProdable(name=reverted_node.name)
 
     from_a_to_b = [addresses[0], addresses[1]]

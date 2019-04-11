@@ -85,6 +85,10 @@ class UTXOCache(OptimisticKVStore):
 
         return output_val
 
+    def close(self):
+        if self._store:
+            self._store.close()
+
     @staticmethod
     def _create_key(output: Output) -> str:
         return '{}'.format(output.address)

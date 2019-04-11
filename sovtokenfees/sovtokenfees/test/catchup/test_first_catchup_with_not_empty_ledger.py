@@ -45,7 +45,6 @@ def test_first_catchup_with_not_empty_ledger(looper, helpers,
     disconnect_node_and_ensure_disconnected(looper,
                                             node_set,
                                             reverted_node)
-    reverted_node.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache._store.close()
     looper.removeProdable(name=reverted_node.name)
 
     from_a_to_b = [addresses[0], addresses[1]]

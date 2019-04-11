@@ -66,6 +66,8 @@ def integrate_plugin_in_node(node):
     node.register_hook(NodeHooks.POST_BATCH_REJECTED, fees_req_handler.post_batch_rejected)
     node.register_hook(NodeHooks.POST_BATCH_COMMITTED,
                        fees_req_handler.post_batch_committed)
+    node.register_hook(NodeHooks.POST_NODE_STOPPED,
+                       token_req_handler.on_node_stopping)
 
     three_pc_handler = ThreePhaseCommitHandler(node.master_replica,
                                                token_ledger, token_state,
