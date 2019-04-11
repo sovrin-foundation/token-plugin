@@ -1,6 +1,6 @@
 #!groovy
 
-def sovLibrary = library(identifier: 'sovrin-aws-codebuild@master', retriever: modernSCM(
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.0', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
 
@@ -32,15 +32,32 @@ pipelineWrapper({
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
-        stage('Upload source to S3') {
-            awsCBHelper.uploadSourceToS3()
+        Map builds = [
+            "s3-upload": {  // performs on the current jenkins node
+                stage('Upload source to S3') {
+                    awsCBHelper.uploadSourceToS3()
+                }
+             },
+            "ecr-create": [
+                nodeLabel: "${nodeLabels.codeBuild}",
+                build: {
+                    stage('Prepare AWS ECR repo') {
+                        awsCBHelper.createECRRepo()
+                    }
+                }
+            ]
+        ]
+
+        stage("Prepare common env") {
+            builds.failFast = false
+            utils.parallel builds
         }
 
-        Map builds = projects.collectEntries { proj ->
+        builds = projects.collectEntries { proj ->
             osnames.collectEntries { osname ->
                 ["$osname:$proj": [
-                    "nodeLabel": "$nodeLabels.codeBuild",
-                    "build": {
+                    nodeLabel: "${nodeLabels.codeBuild}",
+                    build: {
                         def ciImageTag
                         def prTag = "ci-$osname-$proj"
 
@@ -48,11 +65,6 @@ pipelineWrapper({
                             def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
                             ciImageTag = "$_imgVersion-$osname-$proj-ci"
                             logger.info("CI docker image tag: $ciImageTag")
-                        }
-
-                        // This is a dirty workaround to make awsCBHelper work in parallel
-                        if ( proj != "sovtoken" ) {
-                            sleep(time : 5, unit : "SECONDS")
                         }
 
                         awsCBHelper.build() {
