@@ -1,6 +1,9 @@
 import functools
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
+from plenum.common.txn_util import get_type
+from sovtokenfees.transactions import FeesTransactions
+from typing import Any
 
 
 def integrate_plugin_in_node(node):
@@ -46,6 +49,13 @@ def integrate_plugin_in_node(node):
     origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)
+
+    origin_token_post_added_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk
+
+    def filter_fees(ledger_id: int, txn: Any):
+        origin_token_post_added_clb(ledger_id, txn, get_type(txn) != FeesTransactions.FEES.value)
+
+    node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk = filter_fees
     node.clientAuthNr.register_authenticator(fees_authnr)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)

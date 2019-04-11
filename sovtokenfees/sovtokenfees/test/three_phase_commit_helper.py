@@ -206,7 +206,8 @@ class Ord:
             pp.ledgerId,
             pp.stateRootHash,
             pp.txnRootHash,
-            pp.auditTxnRootHash
+            pp.auditTxnRootHash,
+            ["Alpha", "Beta"]
         ]
 
         return Ordered(*ord_args)

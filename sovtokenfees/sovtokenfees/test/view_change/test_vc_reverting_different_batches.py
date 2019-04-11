@@ -1,10 +1,13 @@
+from typing import Optional
+
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT
 
+from plenum.common.messages.node_messages import Commit, PrePrepare, Prepare
 from plenum.common.txn_util import get_seq_no
 from plenum.test import waits
 from plenum.test.stasher import delay_rules, delay_rules_without_processing
-from plenum.test.delayers import cDelay, pDelay
+from plenum.test.delayers import cDelay, pDelay, DEFAULT_DELAY
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 from stp_core.loop.eventually import eventually
@@ -24,6 +27,27 @@ def mint_tokens(helpers, addresses):
     return helpers.general.do_mint(outputs)
 
 
+# TODO: remove this after plenum pr #1156 gets merged and import from plenum
+def delay_3pc(view_no: int = 0,
+              after: Optional[int] = None,
+              before: Optional[int] = None,
+              msgs=(PrePrepare, Prepare, Commit)):
+    def _delayer(msg_frm):
+        msg, frm = msg_frm
+        if not isinstance(msg, msgs):
+            return
+        if msg.viewNo != view_no:
+            return
+        if after is not None and msg.ppSeqNo <= after:
+            return
+        if before is not None and msg.ppSeqNo >= before:
+            return
+        return DEFAULT_DELAY
+
+    _delayer.__name__ = "delay_3pc({}, {}, {}, {})".format(view_no, after, before, msgs)
+    return _delayer
+
+
 def test_revert_works_for_fees_after_view_change(looper, helpers,
                                                  nodeSetWithIntegratedTokenPlugin,
                                                  sdk_pool_handle,
@@ -38,7 +62,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
                                                              current_amount)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
 
-    with delay_rules_without_processing(reverted_node.nodeIbStasher, cDelay()):
+    with delay_rules_without_processing(reverted_node.nodeIbStasher, delay_3pc(view_no=0, msgs=Commit)):
         len_batches_before = len(reverted_node.master_replica.batches)
         current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
         current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
