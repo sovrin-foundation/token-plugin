@@ -102,3 +102,19 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     if not config.option.test_helpers:
         setattr(config.option, 'markexpr', 'not helper_test')
+
+
+@pytest.fixture()
+def xfer_addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
+
+
+@pytest.fixture()
+def xfer_mint_tokens(helpers, xfer_addresses):
+    outputs = [{ADDRESS: xfer_addresses[0], AMOUNT: 1000}]
+    return helpers.general.do_mint(outputs)
+
+
+@pytest.fixture()
+def xfer_addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)

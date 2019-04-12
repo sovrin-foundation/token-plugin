@@ -207,7 +207,7 @@ class Ord:
             pp.stateRootHash,
             pp.txnRootHash,
             pp.auditTxnRootHash,
-            []
+            ["Alpha", "Beta"]
         ]
 
         return Ordered(*ord_args)

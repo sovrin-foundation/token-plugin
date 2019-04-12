@@ -35,8 +35,6 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
     last_node = nodeSetWithIntegratedTokenPlugin[-1]
     last_node.stop()
     looper.removeProdable(last_node)
-    token_req_handler = last_node.get_req_handler(TOKEN_LEDGER_ID)
-    token_req_handler.utxo_cache._store.close()
 
     nodeSetWithIntegratedTokenPlugin = nodeSetWithIntegratedTokenPlugin[:-1]
 
