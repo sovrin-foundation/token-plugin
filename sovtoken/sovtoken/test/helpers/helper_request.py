@@ -121,8 +121,7 @@ class HelperRequest():
                 seed=seed,
                 sdk_wallet=sdk_wallet
             )
-
-        verkey = verkey or new_verkey
+            verkey = new_verkey
 
         nym_request_future = build_nym_request(
             sdk_wallet_did,

@@ -45,7 +45,7 @@ def integrate_plugin_in_node(node):
                                             token_state,
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
-                                            node.bls_bft.bls_store)
+                                            node.bls_bft.bls_store, node)
     origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)
@@ -57,6 +57,8 @@ def integrate_plugin_in_node(node):
 
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk = filter_fees
     node.clientAuthNr.register_authenticator(fees_authnr)
+    node_config_req_handler = node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
+    node.unregister_req_handler(node_config_req_handler, CONFIG_LEDGER_ID)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
     node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
@@ -66,6 +68,8 @@ def integrate_plugin_in_node(node):
     node.register_hook(NodeHooks.POST_BATCH_REJECTED, fees_req_handler.post_batch_rejected)
     node.register_hook(NodeHooks.POST_BATCH_COMMITTED,
                        fees_req_handler.post_batch_committed)
+    node.register_hook(NodeHooks.POST_NODE_STOPPED,
+                       token_req_handler.on_node_stopping)
 
     three_pc_handler = ThreePhaseCommitHandler(node.master_replica,
                                                token_ledger, token_state,
