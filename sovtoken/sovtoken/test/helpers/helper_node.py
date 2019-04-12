@@ -35,3 +35,5 @@ class HelperNode():
     def get_config_req_handler(self):
         return self._nodes[0].get_req_handler(ledger_id=CONFIG_LEDGER_ID)
 
+    def get_fee_req_handler(self):
+        return self._nodes[0].get_req_handler(ledger_id=CONFIG_LEDGER_ID)

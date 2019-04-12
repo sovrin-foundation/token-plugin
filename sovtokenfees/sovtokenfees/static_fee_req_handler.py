@@ -173,7 +173,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
-        super().updateState(txns, isCommitted=True)
+        super().updateState(txns, isCommitted=isCommitted)
 
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
@@ -325,9 +325,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                         seq_no,
                         output[AMOUNT]),
                     is_committed=is_committed)
-        else:
-            logger.warning('Unknown type {} found while updating '
-                           'state with txn {}'.format(typ, txn))
 
     @staticmethod
     def _handle_incorrect_funds(sum_inputs, sum_outputs, expected_amount, required_fees, request):

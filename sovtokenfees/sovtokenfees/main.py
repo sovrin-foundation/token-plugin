@@ -57,6 +57,8 @@ def integrate_plugin_in_node(node):
 
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk = filter_fees
     node.clientAuthNr.register_authenticator(fees_authnr)
+    node_config_req_handler = node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
+    node.unregister_req_handler(node_config_req_handler, CONFIG_LEDGER_ID)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
     node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
