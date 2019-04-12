@@ -38,14 +38,14 @@ def check_uncommitted_txn(node, expected_length, ledger_id):
     assert len(node.getLedger(ledger_id).uncommittedTxns) == expected_length
 
 
-def add_fees_request_with_address(helpers, fees_set, request, address, utxos=None):
+def add_fees_request_with_address(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
     utxos = utxos if utxos else helpers.general.get_utxo_addresses([address])[0]
     fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
     helpers.request.add_fees(
         request,
         utxos,
-        fee_amount,
-        change_address=address
+        fee_amount - adjust_fees,
+        change_address=change_address if change_address else address
     )
     return request
 
