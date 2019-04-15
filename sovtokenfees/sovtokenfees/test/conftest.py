@@ -1,18 +1,31 @@
 import pytest
-from sovtoken.constants import XFER_PUBLIC, RESULT, ADDRESS, AMOUNT
+from sovtoken.constants import (
+    XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO
+)
 from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
 from plenum.test.conftest import *
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
+from plenum.common.txn_util import get_seq_no
+from plenum.common.constants import NYM
+from plenum.test.helper import sdk_get_and_check_replies
+
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
 from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
     increased_trustees
 from sovtoken.test.helper import user1_token_wallet
+from sovtokenfees.constants import FEES
+from sovtokenfees.test.helper import (
+    get_amount_from_token_txn, nyms_with_fees,
+    send_and_check_nym_with_fees, send_and_check_transfer
+)
 from sovtokenfees.test.helpers import form_helpers
 
+
+# TODO ST-525 reorder imports
 
 @pytest.fixture(scope="module")
 def do_post_node_creation():
@@ -111,6 +124,53 @@ def xfer_mint_tokens(helpers, xfer_addresses):
     return helpers.general.do_mint(outputs)
 
 
-@pytest.fixture()
-def xfer_addresses(helpers):
-    return helpers.wallet.create_new_addresses(2)
+@pytest.fixture
+def curr_seq_no(xfer_mint_tokens):
+    return get_seq_no(xfer_mint_tokens)
+
+
+@pytest.fixture
+def curr_amount(xfer_mint_tokens):
+    return get_amount_from_token_txn(xfer_mint_tokens)
+
+
+@pytest.fixture
+def curr_utxo(curr_seq_no, curr_amount):
+    return {
+        'amount': curr_amount,
+        'seq_no': curr_seq_no
+    }
+
+
+@pytest.fixture
+def send_and_check_nym_with_fees_curr_utxo(looper, helpers, fees_set, xfer_addresses, curr_utxo):
+
+    def wrapped(addresses=None, check_reply=True, nym_with_fees=None):
+        addresses = xfer_addresses if addresses is None else addresses
+
+        curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_nym_with_fees(
+            helpers, fees_set, curr_utxo['seq_no'],
+            looper, addresses, curr_utxo['amount'],
+            check_reply=check_reply, nym_with_fees=nym_with_fees
+        )
+
+        return curr_utxo, resp
+
+    return wrapped
+
+
+@pytest.fixture
+def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, curr_utxo):
+
+    def wrapped(addresses=None, check_reply=True, transfer_summ=20):
+        addresses = xfer_addresses if addresses is None else addresses
+
+        curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_transfer(
+            helpers, addresses, fees, looper,
+            curr_utxo['amount'], curr_utxo['seq_no'],
+            check_reply=check_reply, transfer_summ=transfer_summ
+        )
+
+        return curr_utxo, resp
+
+    return wrapped
