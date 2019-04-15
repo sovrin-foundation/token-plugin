@@ -47,7 +47,7 @@ class FeesAuthNr(CoreAuthNr):
         except (AttributeError, KeyError):
             return
 
-        digest = msg.digest
+        digest = msg.payload_digest
         return TokenAuthNr.verify_signtures_on_payments(fees[0], fees[1], fees[2],
                                                         AddressSigVerifier, digest)
 
