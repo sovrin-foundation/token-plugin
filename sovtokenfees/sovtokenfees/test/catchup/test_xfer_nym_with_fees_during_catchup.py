@@ -12,7 +12,7 @@ from plenum.test.pool_transactions.helper import \
 from indy_common.constants import NYM
 from indy_node.test.helper import start_stopped_node
 
-from sovtokenfees.test.helper import check_state, get_amount_from_token_txn, send_and_check_transfer, \
+from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_transfer, \
     send_and_check_nym_with_fees, ensure_all_nodes_have_same_data
 
 # no fees for XFER_PUBLIC
