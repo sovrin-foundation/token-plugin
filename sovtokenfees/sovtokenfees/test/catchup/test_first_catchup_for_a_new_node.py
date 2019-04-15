@@ -24,10 +24,10 @@ def mint_tokens(helpers, addresses):
     return helpers.general.do_mint(outputs)
 
 
-def add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, seq_no, fees_set,
-                 sdk_pool_handle, tdir, tconf, allPluginsPath, address, do_post_node_creation):
-    new_did, verkey = helpers.wallet.create_did(sdk_wallet=sdk_wallet_steward)
-    req = helpers.request.nym(sdk_wallet=sdk_wallet_steward,
+def add_new_node(helpers, looper, node_set, sdk_wallet, current_amount, seq_no, fees_set,
+                 sdk_pool_handle, tdir, tconf, allPluginsPath, address, do_post_node_creation, node_class):
+    new_did, verkey = helpers.wallet.create_did(sdk_wallet=sdk_wallet)
+    req = helpers.request.nym(sdk_wallet=sdk_wallet,
                               alias="new_steward",
                               role=STEWARD_STRING,
                               dest=new_did,
@@ -42,7 +42,7 @@ def add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, 
                                           utxos=utxos)
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount, nym_with_fees=req)
-    new_steward_wallet_handle = sdk_wallet_steward[0], new_did
+    new_steward_wallet_handle = sdk_wallet[0], new_did
     new_node = sdk_add_new_node(
         looper,
         sdk_pool_handle,
@@ -51,7 +51,8 @@ def add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, 
         tdir,
         tconf,
         allPluginsPath=allPluginsPath,
-        do_post_node_creation=do_post_node_creation)
+        do_post_node_creation=do_post_node_creation,
+        nodeClass=node_class)
     node_set.append(new_node)
     looper.run(checkNodesConnected(node_set))
     waitNodeDataEquality(looper, new_node, *node_set[:-1])
@@ -61,11 +62,12 @@ def add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, 
 def test_first_catchup_for_a_new_node(looper, helpers,
                                       nodeSetWithIntegratedTokenPlugin,
                                       sdk_pool_handle,
-                                      sdk_wallet_steward,
+                                      sdk_wallet_trustee,
                                       fees_set,
                                       mint_tokens, addresses, fees,
                                       tconf,
-                                      tdir, allPluginsPath, do_post_node_creation):
+                                      tdir, allPluginsPath, do_post_node_creation,
+                                      testNodeClass):
     node_set = nodeSetWithIntegratedTokenPlugin
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = 1
@@ -75,9 +77,10 @@ def test_first_catchup_for_a_new_node(looper, helpers,
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount)
 
+    reverted_node.cleanupOnStopping = False
     disconnect_node_and_ensure_disconnected(looper,
                                             node_set,
-                                            reverted_node)
+                                            reverted_node.name)
     looper.removeProdable(name=reverted_node.name)
 
     from_a_to_b = [addresses[0], addresses[1]]
@@ -93,8 +96,8 @@ def test_first_catchup_for_a_new_node(looper, helpers,
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_c_to_d, fees, looper,
                                                         current_amount, seq_no, transfer_summ=current_amount)
 
-    add_new_node(helpers, looper, node_set, sdk_wallet_steward, current_amount, seq_no, fees_set,
-                 sdk_pool_handle, tdir, tconf, allPluginsPath, addresses[3], do_post_node_creation)
+    add_new_node(helpers, looper, node_set, sdk_wallet_trustee, current_amount, seq_no, fees_set,
+                 sdk_pool_handle, tdir, tconf, allPluginsPath, addresses[3], do_post_node_creation, node_class=testNodeClass)
 
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_d_to_a, fees, looper,
                                                         current_amount, seq_no, transfer_summ=current_amount)

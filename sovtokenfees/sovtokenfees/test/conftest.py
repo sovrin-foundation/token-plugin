@@ -6,9 +6,11 @@ from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
-from plenum.test.conftest import *
+from indy_node.test.conftest import *
+from indy_common.constants import NYM
+
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
-from plenum.common.txn_util import get_seq_no
+from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.constants import NYM
 from plenum.test.helper import sdk_get_and_check_replies
 
@@ -40,8 +42,8 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSet):
-    return txnPoolNodeSet
+def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, nodeSet):
+    return nodeSet
 
 
 @pytest.fixture(scope="module")
