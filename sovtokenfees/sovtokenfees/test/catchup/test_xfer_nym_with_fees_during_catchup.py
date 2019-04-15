@@ -8,10 +8,17 @@ from plenum.test.delayers import cr_delay
 from plenum.test.test_node import checkNodesConnected
 from plenum.test.pool_transactions.helper import \
     disconnect_node_and_ensure_disconnected
-from plenum.test.view_change.helper import start_stopped_node
+
+from indy_common.constants import NYM
+from indy_node.test.helper import start_stopped_node
 
 from sovtokenfees.test.helper import check_state, get_amount_from_token_txn, send_and_check_transfer, \
     send_and_check_nym_with_fees, ensure_all_nodes_have_same_data
+
+# no fees for XFER_PUBLIC
+TXN_FEES = {
+    NYM: 4
+}
 
 
 def send_txns(helpers, fees_set, fees, looper, xfer_addresses, current_amount, seq_no):
@@ -34,11 +41,12 @@ def test_revert_xfer_and_other_txn_before_catchup(
     rest_nodes = nodes[:-1]
 
     # Stop NodeX
+    lagging_node.cleanupOnStopping = False
     disconnect_node_and_ensure_disconnected(looper,
                                             nodes,
-                                            lagging_node,
+                                            lagging_node.name,
                                             stopNode=True)
-    looper.removeProdable(lagging_node)
+    looper.removeProdable(name=lagging_node.name)
 
     # Send 1 XFER txn (no fees) and make sure it’s written
     # Send 1 NYM+FEEs txn and make sure it’s written
