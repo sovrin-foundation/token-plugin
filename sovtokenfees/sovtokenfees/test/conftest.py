@@ -1,24 +1,25 @@
 import pytest
-from sovtoken.constants import (
-    XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO
-)
-from sovtoken.main import integrate_plugin_in_node as enable_token
-from sovtokenfees.main import integrate_plugin_in_node as enable_fees
-
-# fixtures, do not remove
-from indy_node.test.conftest import *
-from indy_common.constants import NYM
 
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.constants import NYM
 from plenum.test.helper import sdk_get_and_check_replies
 
-from sovtokenfees import CLIENT_REQUEST_FIELDS
+# fixtures, do not remove
+from indy_node.test.conftest import *
+from indy_common.constants import NYM
 
+from sovtoken.constants import (
+    XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO
+)
+from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
     increased_trustees
 from sovtoken.test.helper import user1_token_wallet
+
+
+from sovtokenfees.main import integrate_plugin_in_node as enable_fees
+from sovtokenfees import CLIENT_REQUEST_FIELDS
 from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import (
     get_amount_from_token_txn, nyms_with_fees,
