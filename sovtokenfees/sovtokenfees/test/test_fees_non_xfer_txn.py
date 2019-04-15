@@ -420,7 +420,7 @@ def test_fees_utxo_reuse(
     fee_sigs = helpers.request.fees_signatures(
         inputs,
         outputs,
-        req.digest
+        req.payload_digest
     )
     fees = [inputs, outputs, fee_sigs]
     setattr(req, FEES, fees)
