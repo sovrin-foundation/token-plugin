@@ -1,7 +1,10 @@
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
 
-# no fees for XFER_PUBLIC
-TXN_FEES = {}
+from sovtoken.constants import XFER_PUBLIC
+
+
+def fees():
+    return {XFER_PUBLIC: 0}  # no fees
 
 
 def test_xfer_during_view_change(

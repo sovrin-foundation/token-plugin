@@ -36,6 +36,7 @@ def scenario_txns_during_view_change(
         curr_utxo['amount'] += 1
         with pytest.raises(RequestRejectedException, match='Insufficient funds'):
             send_txns()
+        curr_utxo['amount'] -= 1
         ensure_all_nodes_have_same_data(looper, rest_nodes)
 
         # Initiate view change

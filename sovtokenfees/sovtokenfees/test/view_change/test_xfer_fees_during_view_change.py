@@ -1,22 +1,22 @@
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
 
-from indy_common.constants import NYM
+from sovtoken.constants import XFER_PUBLIC
 
 
 def fees():
-    return {NYM: 0}  # no fees
+    return {XFER_PUBLIC: 8}  # fees set
 
 
-def test_nym_during_view_change(
+def test_xfer_fees_during_view_change(
         looper,
         nodeSetWithIntegratedTokenPlugin,
         fees_set,
         curr_utxo,
-        send_and_check_nym_with_fees_curr_utxo
+        send_and_check_transfer_curr_utxo
 ):
     scenario_txns_during_view_change(
         looper,
         nodeSetWithIntegratedTokenPlugin,
-        send_and_check_nym_with_fees_curr_utxo,
+        send_and_check_transfer_curr_utxo,
         curr_utxo
     )

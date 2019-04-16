@@ -8,10 +8,10 @@ from sovtokenfees.test.view_change.helper import scenario_txns_during_view_chang
 
 
 def fees():
-    return {NYM: 0, XFER_PUBLIC: 8},   # no fees for NYM
+    return {NYM: 0, XFER_PUBLIC: 0}  # no fees
 
 
-def test_xfer_nym_during_view_change(
+def test_xfer_fees_nym_during_view_change(
         looper,
         nodeSetWithIntegratedTokenPlugin,
         fees_set,

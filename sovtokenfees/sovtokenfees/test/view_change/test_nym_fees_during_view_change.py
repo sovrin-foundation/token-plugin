@@ -4,10 +4,10 @@ from indy_common.constants import NYM
 
 
 def fees():
-    return {NYM: 0}  # no fees
+    return {NYM: 4}  # fees set
 
 
-def test_nym_during_view_change(
+def test_nym_fees_during_view_change(
         looper,
         nodeSetWithIntegratedTokenPlugin,
         fees_set,
