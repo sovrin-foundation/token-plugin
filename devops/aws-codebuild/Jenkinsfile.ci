@@ -100,7 +100,7 @@ pipelineWrapper({
                                         allowEmptyArchive = true
                                     }
 
-                                    this.junit "logs/test.${proj}.xml"
+                                    // this.junit "logs/test.${proj}.xml"
                                 }
                             }
                         }
