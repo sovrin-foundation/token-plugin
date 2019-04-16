@@ -1,7 +1,3 @@
-import pytest
-
-from plenum.common.exceptions import RequestRejectedException
-
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
 
 

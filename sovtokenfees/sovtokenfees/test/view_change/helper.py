@@ -20,7 +20,7 @@ def scenario_txns_during_view_change(
     lagging_node = nodes[-1]
     rest_nodes = nodes[:-1]
 
-    # Send XFER transaction
+    # Send transactions
     send_txns()
     ensure_all_nodes_have_same_data(looper, nodes)
 
@@ -46,4 +46,8 @@ def scenario_txns_during_view_change(
     # Reset delays
     # Make sure that all nodes have equal state
     # (expecting that lagging_node caught up missed ones)
+    ensure_all_nodes_have_same_data(looper, nodes)
+
+    # make sure the poll is functional
+    send_txns()
     ensure_all_nodes_have_same_data(looper, nodes)
