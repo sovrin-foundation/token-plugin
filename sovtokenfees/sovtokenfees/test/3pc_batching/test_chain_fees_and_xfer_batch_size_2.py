@@ -44,8 +44,7 @@ def fees():
 
 def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                           nodeSetWithIntegratedTokenPlugin,
-                                          sdk_pool_handle,
-                                          fees_set, address_main, mint_tokens, addresses,
+                                          fees_set, mint_tokens, addresses,
                                           fees):
     """
     Set FEES for NYM transaction
