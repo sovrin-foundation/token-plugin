@@ -52,6 +52,11 @@ class HelperGeneral():
         request = self._request.transfer(inputs, outputs, identifier=identifier)
         return self._send_get_first_result(request)
 
+    def transfer_without_waiting(self, inputs, outputs, identifier=None):
+        """ Build and send a transfer request. """
+        request = self._request.transfer(inputs, outputs, identifier=identifier)
+        return self._send_without_waiting(request)
+
     def do_get_utxo(self, address):
         """ Build and send a get_utxo request. """
         request = self._request.get_utxo(address)
