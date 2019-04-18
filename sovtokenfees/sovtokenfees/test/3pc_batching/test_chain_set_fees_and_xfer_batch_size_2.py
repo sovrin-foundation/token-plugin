@@ -1,7 +1,7 @@
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO, XFER_PUBLIC
+from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO, XFER_PUBLIC, TOKEN_LEDGER_ID
 
-from indy_common.constants import NYM
+from indy_common.constants import NYM, CONFIG_LEDGER_ID
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 
@@ -36,7 +36,6 @@ def addresses(helpers):
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
-    # outputs2 = [{ADDRESS: addresses[1], AMOUNT: 1000}]
     helpers.general.do_mint(outputs, no_wait=True)
     return helpers.general.do_mint(outputs)
 
@@ -44,8 +43,7 @@ def mint_tokens(helpers, addresses):
 def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
                                               nodeSetWithIntegratedTokenPlugin,
                                               sdk_pool_handle, sdk_wallet_trustee,
-                                              mint_tokens, addresses, poolConfigWTFF,
-                                              fees):
+                                              mint_tokens, addresses, poolConfigWTFF):
     """
     Set FEES for XFER for 2
 
@@ -68,9 +66,10 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
 
     # Set fees and some config txn
     fees_xfer_2 = {XFER_PUBLIC: 2}
-    helpers.general.set_fees_without_waiting(fees_xfer_2)
+    fees_2_rsp = helpers.general.set_fees_without_waiting(fees_xfer_2)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
+    sdk_get_and_check_replies(looper, fees_2_rsp)
 
     # XFER with fees 2 from A to B
     _, _, a_b_transfer_2 = send_and_check_transfer(helpers,
@@ -83,9 +82,10 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
                                                    check_reply=False)
     # Set fees for XFER to 3
     fees_xfer_3 = {XFER_PUBLIC: 3}
-    helpers.general.set_fees_without_waiting(fees_xfer_3)
+    fees_3_rsp = helpers.general.set_fees_without_waiting(fees_xfer_3)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
+    sdk_get_and_check_replies(looper, fees_3_rsp)
 
     # Send XFER with fees from A to B
     a_amount, seq_no, a_b_transfer_3 = send_and_check_transfer(helpers,
@@ -96,6 +96,10 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
                                                                seq_no,
                                                                transfer_summ=transfer_summ,
                                                                check_reply=False)
+    for n in nodeSetWithIntegratedTokenPlugin:
+        fee_rq = n.ledger_to_req_handler[CONFIG_LEDGER_ID]
+        assert fee_rq.fees == fees_xfer_3
+
 
     with pytest.raises(RequestRejectedException):
         sdk_get_and_check_replies(looper, a_b_transfer_2)

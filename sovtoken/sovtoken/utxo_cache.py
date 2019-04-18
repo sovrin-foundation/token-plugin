@@ -170,7 +170,7 @@ class UTXOAmounts:
                     break
 
         if seq_nos:
-            err_msg = "seq_nos {} are not found is list of seq_nos_amounts for address -- current list: {}".format(
+            err_msg = "seq_nos {} are not found in list of seq_nos_amounts for address -- current list: {}".format(
                 seq_nos,
                 self.data)
             raise UTXONotFound(err_msg)

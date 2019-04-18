@@ -21,7 +21,7 @@ def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
     old_time = tconf.Max3PCBatchWait
     tconf.Max3PCBatchSize = TXN_IN_BATCH
-    tconf.Max3PCBatchWait = 15
+    tconf.Max3PCBatchWait = 150
     yield tconf
 
     tconf.Max3PCBatchSize = old_max_size
@@ -36,6 +36,7 @@ def addresses(helpers):
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
+    helpers.general.do_mint(outputs, no_wait=True)
     return helpers.general.do_mint(outputs)
 
 
@@ -44,13 +45,13 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
                                              sdk_pool_handle, sdk_wallet_trustee,
                                              mint_tokens, addresses, poolConfigWTFF):
     """
-    Set FEES for NYM for 2
+    Set FEES for NYM with cost 2
 
     Send any transaction to config ledger.
 
     Send NYM with fees 2 from A
 
-    Set FEES for NYM for 3
+    Set FEES for NYM with cost 3
 
     Send any transaction to config ledger.
 
@@ -64,9 +65,10 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
 
     # Set fees and some config txn
     fees_nym_2 = {NYM: 2}
-    helpers.general.set_fees_without_waiting(fees_nym_2)
+    fees_2_resp = helpers.general.set_fees_without_waiting(fees_nym_2)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
+    sdk_get_and_check_replies(looper, fees_2_resp)
 
     # NYM with fees 2 from A
     _, _, b_2_nym = send_and_check_nym_with_fees(helpers,
@@ -78,9 +80,10 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
                                                  check_reply=False)
     # Set fees for NYM to 3
     fees_nym_3 = {NYM: 3}
-    helpers.general.set_fees_without_waiting(fees_nym_3)
+    fees_3_resp = helpers.general.set_fees_without_waiting(fees_nym_3)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
+    sdk_get_and_check_replies(looper, fees_3_resp)
 
     # Send NYM with fees 3
     current_amount, seq_no, b_3_nym = send_and_check_nym_with_fees(helpers,
@@ -95,7 +98,7 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
         sdk_get_and_check_replies(looper, b_2_nym)
     sdk_get_and_check_replies(looper, b_3_nym)
     a_get = helpers.general.do_get_utxo(A)
-    assert a_get[OUTPUTS][0][AMOUNT] == current_amount
-    assert a_get[OUTPUTS][0][SEQNO] == seq_no
+    assert a_get[OUTPUTS][1][AMOUNT] == current_amount
+    assert a_get[OUTPUTS][1][SEQNO] == seq_no
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)

@@ -5,7 +5,7 @@ from indy_common.constants import NYM
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 
-from plenum.common.txn_util import get_seq_no
+from plenum.common.txn_util import get_seq_no, get_payload_data
 
 from plenum.common.exceptions import RequestRejectedException
 
@@ -19,7 +19,7 @@ def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
     old_time = tconf.Max3PCBatchWait
     tconf.Max3PCBatchSize = TXN_IN_BATCH
-    tconf.Max3PCBatchWait = 15
+    tconf.Max3PCBatchWait = 150
     yield tconf
 
     tconf.Max3PCBatchSize = old_max_size
@@ -34,6 +34,7 @@ def addresses(helpers):
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
+    helpers.general.do_mint(outputs, no_wait=True)
     return helpers.general.do_mint(outputs)
 
 
@@ -42,10 +43,18 @@ def fees():
     return {NYM: 4}
 
 
+@pytest.fixture()
+def fees_set(helpers, fees):
+    fees2 = {NYM: 2}
+    fees4 = fees
+    helpers.general.set_fees_without_waiting(fees2)
+    helpers.general.set_fees_without_waiting(fees4)
+    return {'fees': fees4}
+
+
 def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                           nodeSetWithIntegratedTokenPlugin,
-                                          fees_set, mint_tokens, addresses,
-                                          fees):
+                                          fees_set, mint_tokens, addresses, fees):
     """
     Set FEES for NYM transaction
 
@@ -101,10 +110,10 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                                transfer_summ,
                                                                check_reply=False)
     sdk_get_and_check_replies(looper, a_b_transfer)
-    with pytest.raises(RequestRejectedException, match="are not found is list of"):
+    with pytest.raises(RequestRejectedException, match="are not found in list of"):
         sdk_get_and_check_replies(looper, a_nym)
     a_b_get = helpers.general.do_get_utxo(A)
-    assert a_b_get[OUTPUTS][0][AMOUNT] == a_amount
+    assert a_b_get[OUTPUTS][1][AMOUNT] == a_amount
 
     sdk_get_and_check_replies(looper, b_c_transfer)
     b_c_get = helpers.general.do_get_utxo(B)
