@@ -15,13 +15,13 @@ from indy_node.test.pool_config.helper import sdk_pool_config_sent
 
 TXN_IN_BATCH = 2
 
-
+#
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
     old_time = tconf.Max3PCBatchWait
     tconf.Max3PCBatchSize = TXN_IN_BATCH
-    tconf.Max3PCBatchWait = 15
+    tconf.Max3PCBatchWait = 150
     yield tconf
 
     tconf.Max3PCBatchSize = old_max_size
@@ -36,6 +36,8 @@ def addresses(helpers):
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
+    # outputs2 = [{ADDRESS: addresses[1], AMOUNT: 1000}]
+    helpers.general.do_mint(outputs, no_wait=True)
     return helpers.general.do_mint(outputs)
 
 
@@ -59,9 +61,6 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
 
     Check that first XFER is not written and second XFER is.
     """
-    for n in nodeSetWithIntegratedTokenPlugin:
-        n.config.Max3PCBatchSize = 2
-        n.config.Max3PCBatchWait = 100
     A, B = addresses
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = get_seq_no(mint_tokens)
@@ -102,8 +101,8 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
         sdk_get_and_check_replies(looper, a_b_transfer_2)
     sdk_get_and_check_replies(looper, a_b_transfer_3)
     a_get = helpers.general.do_get_utxo(A)
-    assert a_get[OUTPUTS][0][AMOUNT] == a_amount
-    assert a_get[OUTPUTS][0][SEQNO] == seq_no
+    assert a_get[OUTPUTS][1][AMOUNT] == a_amount
+    assert a_get[OUTPUTS][1][SEQNO] == seq_no
 
     b_get = helpers.general.do_get_utxo(B)
     assert b_get[OUTPUTS][0][AMOUNT] == transfer_summ
