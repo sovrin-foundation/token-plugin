@@ -28,8 +28,6 @@ from sovtokenfees.test.helper import (
 from sovtokenfees.test.helpers import form_helpers
 
 
-# TODO ST-525 reorder imports
-
 @pytest.fixture(scope="module")
 def do_post_node_creation():
     # Integrate plugin into each node.
