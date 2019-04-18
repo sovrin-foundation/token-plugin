@@ -3,9 +3,7 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
-
 from plenum.server.node import Node
-
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 
 txn_root_serializer = Base58Serializer()
@@ -29,21 +27,29 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
+
+txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
 
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
-    write_types = {SET_FEES, FEE_TXN}
-    query_types = {GET_FEES, }
+    write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
+    query_types = FeeReqHandler.query_types.union({GET_FEES, })
     _fees_validator = FeesStructureField()
     MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store):
-        super().__init__(ledger, state)
+                 domain_state, bls_store, node):
+
+        super().__init__(ledger, state,
+                         idrCache=node.idrCache,
+                         upgrader=node.upgrader,
+                         poolManager=node.poolManager,
+                         poolCfg=node.poolCfg,
+                         write_req_validator=node.write_req_validator)
+
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
@@ -167,6 +173,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
+        super().updateState(txns, isCommitted=isCommitted)
 
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
@@ -203,7 +210,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.token_state.revertToHead(uncommitted_hash)
         self.token_ledger.discardTxns(txn_count)
         count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache)
-        logger.debug("Reverted {} txns with fees".format(count_reverted))
+        logger.info("Reverted {} txns with fees".format(count_reverted))
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
@@ -227,7 +234,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                     txn[FEES] = r[i]
                     i += 1
             self.fee_txns_in_current_batch = 0
-
 
     def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
         """
@@ -257,7 +263,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                 request,
                 'fees: {}'.format(required_fees)
             )
-
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
@@ -320,9 +325,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                         seq_no,
                         output[AMOUNT]),
                     is_committed=is_committed)
-        else:
-            logger.warning('Unknown type {} found while updating '
-                           'state with txn {}'.format(typ, txn))
 
     @staticmethod
     def _handle_incorrect_funds(sum_inputs, sum_outputs, expected_amount, required_fees, request):

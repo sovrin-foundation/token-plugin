@@ -7,11 +7,11 @@ from plenum.test.pool_transactions.helper import disconnect_node_and_ensure_disc
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_transfer, \
     send_and_check_nym_with_fees
 
-from plenum.test.view_change.helper import ensure_view_change, start_stopped_node
-
 from plenum.test.test_node import ensureElectionsDone, checkNodesConnected
 
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data, waitNodeDataEquality
+
+from indy_node.test.helper import start_stopped_node
 
 
 @pytest.fixture()
@@ -42,10 +42,10 @@ def test_first_catchup_with_not_empty_ledger(looper, helpers,
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount)
 
+    reverted_node.cleanupOnStopping = False
     disconnect_node_and_ensure_disconnected(looper,
                                             node_set,
-                                            reverted_node)
-    reverted_node.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache._store.close()
+                                            reverted_node.name)
     looper.removeProdable(name=reverted_node.name)
 
     from_a_to_b = [addresses[0], addresses[1]]

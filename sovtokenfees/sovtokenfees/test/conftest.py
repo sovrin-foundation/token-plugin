@@ -4,8 +4,12 @@ from sovtoken.main import integrate_plugin_in_node as enable_token
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 
 # fixtures, do not remove
-from plenum.test.conftest import *
+from indy_node.test.conftest import *
+from indy_common.constants import NYM
+
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
+from plenum.common.txn_util import get_payload_data
+
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 
 from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
@@ -27,8 +31,8 @@ def do_post_node_creation():
 
 
 @pytest.fixture(scope="module")
-def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, txnPoolNodeSet):
-    return txnPoolNodeSet
+def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, nodeSet):
+    return nodeSet
 
 
 @pytest.fixture(scope="module")
@@ -98,3 +102,19 @@ def pytest_addoption(parser):
 def pytest_configure(config):
     if not config.option.test_helpers:
         setattr(config.option, 'markexpr', 'not helper_test')
+
+
+@pytest.fixture()
+def xfer_addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
+
+
+@pytest.fixture()
+def xfer_mint_tokens(helpers, xfer_addresses):
+    outputs = [{ADDRESS: xfer_addresses[0], AMOUNT: 1000}]
+    return helpers.general.do_mint(outputs)
+
+
+@pytest.fixture()
+def xfer_addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
