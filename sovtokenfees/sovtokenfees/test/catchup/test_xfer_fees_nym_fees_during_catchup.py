@@ -20,7 +20,7 @@ def fees(request):
     return request.param
 
 
-def test_revert_xfer_and_other_txn_before_catchup(
+def test_xfer_fees_nym_fees_during_catchup(
         looper, tconf, tdir, allPluginsPath,
         do_post_node_creation,
         nodeSetWithIntegratedTokenPlugin,

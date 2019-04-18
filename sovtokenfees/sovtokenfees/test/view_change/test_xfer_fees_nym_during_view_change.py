@@ -32,4 +32,4 @@ def test_xfer_fees_nym_during_view_change(
         send_and_check_transfer_curr_utxo()
         send_and_check_nym_with_fees_curr_utxo()
 
-    scenario_txns_during_view_change(looper, nodeSetWithIntegratedTokenPlugin, send_txns, curr_utxo)
+    scenario_txns_during_view_change(looper, nodeSetWithIntegratedTokenPlugin, curr_utxo, send_txns)

@@ -61,4 +61,4 @@ def scenario_txns_during_catchup(
 
     # Send transactions
     send_txns()
-    ensure_all_nodes_have_same_data(rest_nodes)
+    ensure_all_nodes_have_same_data(looper, rest_nodes)

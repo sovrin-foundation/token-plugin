@@ -1,7 +1,6 @@
 import pytest
 
 from plenum.common.exceptions import RequestRejectedException
-from plenum.common.txn_util import get_seq_no
 
 from plenum.test.stasher import delay_rules
 from plenum.test.delayers import pDelay, cDelay
@@ -14,11 +13,18 @@ from sovtokenfees.test.helper import ensure_all_nodes_have_same_data
 def scenario_txns_during_view_change(
         looper,
         nodes,
+        curr_utxo,
         send_txns,
-        curr_utxo
+        send_txns_invalid=None
 ):
     lagging_node = nodes[-1]
     rest_nodes = nodes[:-1]
+
+    def send_txns_invalid_default():
+        curr_utxo['amount'] += 1
+        with pytest.raises(RequestRejectedException, match='Insufficient funds'):
+            send_txns()
+        curr_utxo['amount'] -= 1
 
     # Send transactions
     send_txns()
@@ -33,10 +39,7 @@ def scenario_txns_during_view_change(
         ensure_all_nodes_have_same_data(looper, rest_nodes)
 
         # Send invalid transactions
-        curr_utxo['amount'] += 1
-        with pytest.raises(RequestRejectedException, match='Insufficient funds'):
-            send_txns()
-        curr_utxo['amount'] -= 1
+        (send_txns_invalid or send_txns_invalid_default)()
         ensure_all_nodes_have_same_data(looper, rest_nodes)
 
         # Initiate view change
