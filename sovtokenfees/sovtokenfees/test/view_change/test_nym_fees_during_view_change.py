@@ -1,10 +1,19 @@
+import pytest
+
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
 
 from indy_common.constants import NYM
 
 
-def fees():
-    return {NYM: 4}  # fees set
+@pytest.fixture(
+    scope='module',
+    params=[
+        {NYM: 4},  # with fees
+        {NYM: 0},  # no fees
+    ], ids=lambda x: 'fees' if x[NYM] else 'nofees'
+)
+def fees(request):
+    return request.param
 
 
 def test_nym_fees_during_view_change(
