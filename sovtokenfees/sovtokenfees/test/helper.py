@@ -134,25 +134,28 @@ def nyms_with_fees(req_count,
     reqs = []
     for i in range(req_count):
         req = helpers.request.nym()
-        utxos = [{ADDRESS: address_main,
-                  AMOUNT: amount,
-                  f.SEQ_NO.nm: seq_no}]
-        reqs.append(add_fees_request_with_address(helpers,
-                                                  fees_set,
-                                                  req,
-                                                  address_main,
-                                                  utxos=utxos))
-        seq_no += 1
-        amount -= fee_amount
+        if fee_amount:
+            utxos = [{ADDRESS: address_main,
+                      AMOUNT: amount,
+                      f.SEQ_NO.nm: seq_no}]
+            req = add_fees_request_with_address(
+                helpers,
+                fees_set,
+                req,
+                address_main,
+                utxos=utxos
+            )
+            seq_no += 1
+            amount -= fee_amount
+        reqs.append(req)
     return reqs
 
-
-def send_and_check_nym_with_fees(helpers, fees, seq_no, looper, addresses, current_amount,
+def send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses, current_amount,
                                  check_reply=True, nym_with_fees=None):
     if not nym_with_fees:
         nym_with_fees = nyms_with_fees(1,
                                        helpers,
-                                       fees,
+                                       fees_set,
                                        addresses[0],
                                        current_amount,
                                        init_seq_no=seq_no)[0]
@@ -161,8 +164,8 @@ def send_and_check_nym_with_fees(helpers, fees, seq_no, looper, addresses, curre
     if check_reply:
         sdk_get_and_check_replies(looper, resp)
 
-    current_amount -= fees[FEES].get(NYM, 0)
-    seq_no += 1
+    current_amount -= fees_set[FEES].get(NYM, 0)
+    seq_no += 1 if fees_set[FEES].get(NYM, 0) else 0
     return current_amount, seq_no, resp
 
 
@@ -218,4 +221,3 @@ def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,
         print(utxo_data)
 
     looper.run(eventually(chk_utxo_cache, node_set[0], node_set))
-
