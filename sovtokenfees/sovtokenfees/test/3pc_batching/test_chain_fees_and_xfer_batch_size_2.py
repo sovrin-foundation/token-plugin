@@ -11,6 +11,8 @@ from plenum.common.exceptions import RequestRejectedException
 
 from plenum.test.helper import sdk_get_and_check_replies
 
+from plenum.test import waits
+
 TXN_IN_BATCH = 2
 
 
@@ -90,7 +92,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                seq_no - 1,
                                                looper,
                                                [A],
-                                               a_amount,
+                                               a_amount + transfer_summ,
                                                check_reply=False)
     # From B to C transfer
     b_amount, seq_no, b_c_transfer = send_and_check_transfer(helpers,
@@ -101,6 +103,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                              seq_no,
                                                              transfer_summ=transfer_summ,
                                                              check_reply=False)
+    looper.runFor(waits.expectedPrePrepareTime(len(nodeSetWithIntegratedTokenPlugin)))
     # NYM with fees from C
     c_nym_amount, seq_no, c_nym = send_and_check_nym_with_fees(helpers,
                                                                fees_set,
