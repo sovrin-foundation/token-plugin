@@ -74,6 +74,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
     """
     a_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = get_seq_no(mint_tokens)
+    initial_seq_no = seq_no
     A, B, C = addresses
 
     transfer_summ = 20
@@ -89,7 +90,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
     # NYM with fees from A and utxo as for previous case
     _, _, a_nym = send_and_check_nym_with_fees(helpers,
                                                fees_set,
-                                               seq_no - 1,
+                                               initial_seq_no,
                                                looper,
                                                [A],
                                                a_amount + transfer_summ,
@@ -103,7 +104,11 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                              seq_no,
                                                              transfer_summ=transfer_summ,
                                                              check_reply=False)
-    looper.runFor(waits.expectedPrePrepareTime(len(nodeSetWithIntegratedTokenPlugin)))
+    sdk_get_and_check_replies(looper, a_b_transfer)
+    sdk_get_and_check_replies(looper, b_c_transfer)
+    b_c_get = helpers.general.do_get_utxo(B)
+    assert len(b_c_get[OUTPUTS]) == 0
+
     # NYM with fees from C
     c_nym_amount, seq_no, c_nym = send_and_check_nym_with_fees(helpers,
                                                                fees_set,
@@ -112,15 +117,10 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                                [C],
                                                                transfer_summ,
                                                                check_reply=False)
-    sdk_get_and_check_replies(looper, a_b_transfer)
     with pytest.raises(RequestRejectedException, match="are not found in list of"):
         sdk_get_and_check_replies(looper, a_nym)
     a_b_get = helpers.general.do_get_utxo(A)
     assert a_b_get[OUTPUTS][1][AMOUNT] == a_amount
-
-    sdk_get_and_check_replies(looper, b_c_transfer)
-    b_c_get = helpers.general.do_get_utxo(B)
-    assert len(b_c_get[OUTPUTS]) == 0
 
     sdk_get_and_check_replies(looper, c_nym)
     c_nym_get = helpers.general.do_get_utxo(C)
