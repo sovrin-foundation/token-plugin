@@ -1,6 +1,6 @@
 #!groovy
 
-def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.0', retriever: modernSCM(
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
 
@@ -100,7 +100,7 @@ pipelineWrapper({
                                         allowEmptyArchive = true
                                     }
 
-                                    this.junit "logs/test.${proj}.xml"
+                                    // this.junit "logs/test.${proj}.xml"
                                 }
                             }
                         }
