@@ -49,7 +49,7 @@ def check_batch_ordered(old, nodes):
 def test_revert_fees_with_xfer(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
                                fees_set, helpers, looper, xfer_addresses):
     """
-        Check that XFER transaction will be written after view change when PREPARE quorum for it is reached
+        Check that XFER and SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
     """
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
@@ -93,7 +93,7 @@ def test_revert_fees_with_xfer(nodeSetWithIntegratedTokenPlugin, xfer_mint_token
 def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
                                fees_set, helpers, looper, xfer_addresses):
     """
-        Check that NYM with FEES transaction will be written after view change when PREPARE quorum for it is reached
+        Check that NYM with FEES and SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
     """
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
