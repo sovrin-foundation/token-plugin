@@ -48,6 +48,9 @@ def check_batch_ordered(old, nodes):
 
 def test_revert_fees_with_xfer(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
                                fees_set, helpers, looper, xfer_addresses):
+    """
+        Check that XFER transaction will be written after view change when PREPARE quorum for it is reached
+    """
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
@@ -87,8 +90,11 @@ def test_revert_fees_with_xfer(nodeSetWithIntegratedTokenPlugin, xfer_mint_token
     assert utxos[OUTPUTS][0][SEQNO] == seq_no+1
 
 
-def test_revert_fees_with_nym(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
+def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
                                fees_set, helpers, looper, xfer_addresses):
+    """
+        Check that NYM with FEES transaction will be written after view change when PREPARE quorum for it is reached
+    """
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
@@ -121,6 +127,9 @@ def test_revert_fees_with_nym(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens
 
 def test_view_change_with_set_fees(tconf, nodeSetWithIntegratedTokenPlugin,
                                     fees_set, helpers, looper):
+    """
+        Check that SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
+    """
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
