@@ -22,7 +22,7 @@ def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
     old_time = tconf.Max3PCBatchWait
     tconf.Max3PCBatchSize = 2
-    tconf.Max3PCBatchWait = 5
+    tconf.Max3PCBatchWait = 1000
     yield tconf
 
     tconf.Max3PCBatchSize = old_max_size
