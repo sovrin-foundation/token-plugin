@@ -29,9 +29,11 @@ class HelperGeneral():
         utxos = [response[RESULT][OUTPUTS] for _request, response in responses]
         return utxos
 
-    def do_mint(self, outputs):
+    def do_mint(self, outputs, no_wait=False):
         """ Build and send a mint request. """
         request = self._request.mint(outputs)
+        if no_wait:
+            return self._send_without_waiting(request)
         return self._send_get_first_result(request)
 
     def do_nym(

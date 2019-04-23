@@ -1,6 +1,8 @@
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT
 
+from indy_node.test.pool_config.conftest import poolConfigWTFF
+
 
 @pytest.fixture()
 def xfer_addresses(helpers):
