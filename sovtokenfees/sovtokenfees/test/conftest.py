@@ -111,6 +111,12 @@ def fees_set(helpers, fees):
     result = helpers.general.do_set_fees(fees)
     return get_payload_data(result)
 
+@pytest.fixture()
+def fees_set_with_batch(helpers, fees):
+    helpers.general.set_fees_without_waiting(fees)
+    result = helpers.general.do_set_fees(fees)
+    return get_payload_data(result)
+
 
 @pytest.fixture(scope="module")
 def helpers(
