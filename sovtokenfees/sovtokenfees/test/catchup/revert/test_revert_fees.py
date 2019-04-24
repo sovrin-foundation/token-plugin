@@ -11,7 +11,7 @@ from plenum.common.startable import Mode
 from plenum.common.txn_util import get_seq_no
 from plenum.test.delayers import cDelay
 from plenum.test.helper import assertExp
-from plenum.test.stasher import delay_rules
+from plenum.test.stasher import delay_rules, delay_rules_without_processing
 from plenum.test.test_node import ensureElectionsDone
 from plenum.test.view_change.helper import ensure_view_change
 from stp_core.loop.eventually import eventually
@@ -111,3 +111,31 @@ def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegrated
     assert utxos[OUTPUTS][0][ADDRESS] == xfer_addresses[0]
     assert utxos[OUTPUTS][0][AMOUNT] == 998
     assert utxos[OUTPUTS][0][SEQNO] == seq_no + 1
+
+
+@pytest.skip(msg="Skipped because of incorrect revert of SET_FEES")
+def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens, helpers, looper,
+                                         xfer_addresses):
+    """
+        Send SET_FEES and init view change. Check that it is reverted and transaction passes with old fees
+    """
+
+    helpers.general.do_set_fees({NYM: 3})
+    nodes = nodeSetWithIntegratedTokenPlugin
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+    seq_no = get_seq_no(xfer_mint_tokens)
+    _old_pp_seq_no = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+
+    with delay_rules_without_processing(node_set, cDelay()):
+        helpers.general.set_fees_without_waiting({NYM: 5})
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_pp_seq_no, nodeSetWithIntegratedTokenPlugin)))
+        ensure_view_change(looper, nodes)
+
+    ensureElectionsDone(looper=looper, nodes=nodes)
+    ensure_all_nodes_have_same_data(looper, nodes)
+    for n in nodes:
+        looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
+    for n in nodes:
+        looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
+
+    send_and_check_nym_with_fees(helpers, {FEES: {NYM: 3}}, seq_no, looper, xfer_addresses, 1000)
