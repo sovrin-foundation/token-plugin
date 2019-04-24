@@ -113,7 +113,7 @@ def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegrated
     assert utxos[OUTPUTS][0][SEQNO] == seq_no + 1
 
 
-@pytest.skip(msg="Skipped because of incorrect revert of SET_FEES")
+@pytest.mark.skip(reason="Skipped because of incorrect revert of SET_FEES")
 def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens, helpers, looper,
                                          xfer_addresses):
     """
