@@ -1,22 +1,21 @@
 import json
+from enum import Enum, unique
 
-from sovtoken.utxo_cache import UTXOAmounts
+from stp_core.loop.eventually import eventually
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
-from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
-from sovtokenfees.constants import FEES
-
 from plenum.common.util import randomString
+from plenum.common.types import f
 from plenum.test.node_catchup.helper import waitNodeDataEquality
-
 from plenum.test.pool_transactions.helper import prepare_nym_request, sdk_sign_and_send_prepared_request
-
 from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_objects, sdk_send_signed_requests, \
     sdk_get_and_check_replies, assertExp
 
-from plenum.common.types import f
-from stp_core.loop.eventually import eventually
+from sovtoken import TOKEN_LEDGER_ID
+from sovtoken.utxo_cache import UTXOAmounts
+from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
+
+from sovtokenfees.constants import FEES
 
 
 def check_state(n, is_equal=False):
@@ -31,7 +30,7 @@ def check_state(n, is_equal=False):
 
 
 def get_amount_from_token_txn(token_txn):
-    return token_txn['txn'][DATA][OUTPUTS][0][AMOUNT]
+    return token_txn[f.TXN.nm][DATA][OUTPUTS][0][AMOUNT]
 
 
 def check_uncommitted_txn(node, expected_length, ledger_id):
@@ -150,6 +149,7 @@ def nyms_with_fees(req_count,
         reqs.append(req)
     return reqs
 
+
 def send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses, current_amount,
                                  check_reply=True, nym_with_fees=None):
     if not nym_with_fees:
@@ -196,6 +196,95 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
 
     seq_no += 1
     return new_amount, seq_no, resp
+
+
+@unique
+class InputsStrategy(Enum):
+    all_utxos = 1           # use all utxos from each input address
+    first_utxo_only = 2     # use only single (first) from each input address
+                            # (TODO just to have some other one for now)
+
+
+def prepare_inputs(
+    helpers, addresses, strategy=InputsStrategy.all_utxos
+):
+    addresses = [helpers.wallet.address_map[addr] for addr in addresses]
+
+    inputs = []
+    if strategy == InputsStrategy.all_utxos:
+        for addr in addresses:
+            if not addr.all_seq_nos:
+                raise ValueError("no seq_nos for {}".format(addr.address))
+            for seq_no in addr.all_seq_nos:
+                inputs.append({ADDRESS: addr.address, SEQNO: seq_no})
+    elif strategy == InputsStrategy.first_utxo_only:
+        for addr in addresses:
+            if not addr.all_seq_nos:
+                raise ValueError("no seq_nos for {}".format(addr.address))
+            inputs.append({ADDRESS: addr.address, SEQNO: addr.all_seq_nos[0]})
+    else:
+        raise ValueError("Unknown input strategy {}".format(strategy))
+
+    return inputs
+
+
+@unique
+class OutputsStrategy(Enum):
+    equal = 1   # divide (total_input - fee) among all
+                # output addresses in (almost) equal parts
+    transfer_equal = 2  # divide transfer among (outputs - inputs)
+                        # output addresses in (almost) equal parts
+                        # (total_input - transfer - fee) goes to first input address
+
+
+def prepare_outputs(
+    helpers, fees, inputs, addresses,
+    strategy=OutputsStrategy.transfer_equal, transfer_amount=20
+):
+    total_input_amount = sum(
+        (helpers.wallet.address_map[i[ADDRESS]].amount(i[SEQNO]) for i in inputs)
+    )
+
+    def divide_equal(output_addresses, amount):
+        output_amount = amount // len(output_addresses)
+        assert output_amount > 0
+        _outputs = [{ADDRESS: addr, AMOUNT: output_amount} for addr in output_addresses]
+        _outputs[-1][AMOUNT] += amount % len(output_addresses)
+        return _outputs
+
+    # apply fee
+    total_output_amount = total_input_amount - fees.get(XFER_PUBLIC, 0)
+
+    outputs = []
+    if strategy == OutputsStrategy.equal:
+        outputs += divide_equal(addresses, total_output_amount)
+    elif strategy == OutputsStrategy.transfer_equal:
+        diff = total_output_amount - transfer_amount
+
+        # we have enough input amount
+        assert diff >= 0
+        # no intersection between inputs and addresses that receive transfer
+        assert not (set([i[ADDRESS] for i in inputs]) & set(addresses))
+
+        # transfer is divided among outputs
+        outputs += divide_equal(addresses, transfer_amount)
+        # diff goes to first input address
+        if diff:
+            outputs.append({ADDRESS: inputs[0][ADDRESS], AMOUNT: diff})
+    else:
+        raise ValueError("Unknown output strategy {}".format(strategy))
+
+    return outputs
+
+
+def send_and_check_xfer(looper, helpers, inputs, outputs):
+    resp = helpers.sdk.get_first_result(
+        helpers.sdk.send_and_check_request_objects([
+            helpers.request.transfer(inputs, outputs)
+        ])
+    )
+    helpers.wallet.handle_xfer(resp)
+    return resp
 
 
 def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,
