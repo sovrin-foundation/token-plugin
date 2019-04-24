@@ -170,8 +170,9 @@ class UTXOAmounts:
                     break
 
         if seq_nos:
-            err_msg = "seq_nos {} are not found is list of seq_nos_amounts for address -- current list: {}".format(
+            err_msg = "seq_nos {} are not found in list of seq_nos_amounts for address {} -- current list: {}".format(
                 seq_nos,
+                self.address,
                 self.data)
             raise UTXONotFound(err_msg)
 
@@ -187,8 +188,10 @@ class UTXOAmounts:
                 seq_no = int(self.data[i])
                 amount = int(self.data[i + 1])
             except ValueError:
-                raise UTXOError("Invalid data -- not integers -- seq_no:{} amount:{}".format(self.data[i],
-                                                                                             self.data[i + 1]))
+                raise UTXOError(
+                    "Invalid data -- not integers -- seq_no:{} amount:{}, address:{}"
+                    .format(self.data[i], self.data[i + 1], self.address)
+                )
             rtn.append(Output(self.address, seq_no, amount))
 
 
