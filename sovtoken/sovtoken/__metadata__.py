@@ -4,7 +4,7 @@ sovtoken package metadata
 
 # TODO: Update the field values below where needed
 __title__ = 'sovtoken'
-__version_info__ = (0, 9, 6)
+__version_info__ = (0, 9, 10)
 __version__ = '.'.join(map(str, __version_info__))
 __description__ = 'Token Plugin For Indy Plenum'
 __long_description__ = ''
