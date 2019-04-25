@@ -29,9 +29,11 @@ class HelperGeneral():
         utxos = [response[RESULT][OUTPUTS] for _request, response in responses]
         return utxos
 
-    def do_mint(self, outputs):
+    def do_mint(self, outputs, no_wait=False):
         """ Build and send a mint request. """
         request = self._request.mint(outputs)
+        if no_wait:
+            return self._send_without_waiting(request)
         return self._send_get_first_result(request)
 
     def do_nym(
@@ -51,6 +53,11 @@ class HelperGeneral():
         """ Build and send a transfer request. """
         request = self._request.transfer(inputs, outputs, identifier=identifier)
         return self._send_get_first_result(request)
+
+    def transfer_without_waiting(self, inputs, outputs, identifier=None):
+        """ Build and send a transfer request. """
+        request = self._request.transfer(inputs, outputs, identifier=identifier)
+        return self._send_without_waiting(request)
 
     def do_get_utxo(self, address):
         """ Build and send a get_utxo request. """
@@ -73,3 +80,7 @@ class HelperGeneral():
         """ Sort utxos by the seq_no. """
         utxos.sort(key=lambda utxo: utxo[SEQNO])
         return utxos
+
+    def _send_without_waiting(self, request_object):
+        responses = self._sdk.send_request_objects([request_object])
+        return responses

@@ -13,7 +13,7 @@ from plenum.common.txn_util import (append_txn_metadata, get_from,
                                     get_payload_data, get_req_id, reqToTxn)
 from sovtoken.constants import (ADDRESS, GET_UTXO, INPUTS, MINT_PUBLIC,
                                 OUTPUTS, TOKEN_LEDGER_ID)
-from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError
+from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError, TokenValueError
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
@@ -29,16 +29,18 @@ def token_handler_a(helpers):
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
-    h.onBatchRejected()
+    # TODO: this is a function fixture. Do we need this revert there?
+    # h.onBatchRejected()
 
 
 @pytest.fixture
-def token_handler_b(txnPoolNodeSet):
-    h = txnPoolNodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
+def token_handler_b(nodeSet):
+    h = nodeSet[1].ledger_to_req_handler[TOKEN_LEDGER_ID]
     old_head = h.state.committedHead
     yield h
     h.state.revertToHead(old_head)
-    h.onBatchRejected()
+    # TODO: this is a function fixture. Do we need this revert there?
+    # h.onBatchRejected()
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +49,13 @@ def addresses(helpers):
     outputs = [{"address": addresses[0], "amount": 40}, {"address": addresses[1], "amount": 60}]
     helpers.general.do_mint(outputs)
     return addresses
+
+
+def test_token_req_handler_commit_batch_different_state_root(
+        token_handler_a
+):
+    with pytest.raises(TokenValueError):
+        token_handler_a._commit_to_utxo_cache(token_handler_a.utxo_cache, 1)
 
 
 def test_token_req_handler_doStaticValidation_MINT_PUBLIC_success(
@@ -289,15 +298,15 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
 def test_token_req_handler_onBatchCreated_success(
     addresses,
     token_handler_a,
-    txnPoolNodeSet
+    nodeSet
 ):
     address = addresses[0]
     output = Output(address, 10, 100)
     # add output to UTXO Cache
     token_handler_a.utxo_cache.add_output(output)
-    state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
     # run onBatchCreated
-    token_handler_a.onBatchCreated(state_root)
+    token_handler_a.onBatchCreated(state_root, CONS_TIME)
     # Verify onBatchCreated worked properly
     key = token_handler_a.utxo_cache._create_key(output)
     assert token_handler_a.utxo_cache.un_committed[0][0] == state_root
@@ -317,7 +326,7 @@ def test_token_req_handler_commit_success(
     helpers,
     addresses,
     token_handler_b,
-    txnPoolNodeSet
+    nodeSet
 ):
     [address1, address2] = addresses
     inputs = [{"address": address1, "seqNo": 1}]
@@ -325,13 +334,13 @@ def test_token_req_handler_commit_success(
     request = helpers.request.transfer(inputs, outputs)
 
     # apply transaction
-    state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    txn_root = nodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     token_handler_b.apply(request, CONS_TIME)
-    new_state_root = txnPoolNodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
-    new_txn_root = txnPoolNodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
+    new_state_root = nodeSet[1].master_replica.stateRootHash(TOKEN_LEDGER_ID)
+    new_txn_root = nodeSet[1].master_replica.txnRootHash(TOKEN_LEDGER_ID)
     # add batch
-    token_handler_b.onBatchCreated(base58.b58decode(new_state_root.encode()))
+    token_handler_b.onBatchCreated(base58.b58decode(new_state_root.encode()), CONS_TIME)
     # commit batch
     assert token_handler_b.utxo_cache.get_unspent_outputs(address1, True) == [Output(address1, 1, 40)]
     assert token_handler_b.utxo_cache.get_unspent_outputs(address2, True) == [Output(address2, 1, 60)]

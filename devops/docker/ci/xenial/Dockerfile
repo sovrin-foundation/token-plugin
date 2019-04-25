@@ -1,4 +1,4 @@
-FROM evernym/python3:0.1.0-xenial
+FROM sovrin/python3:0.1.0-xenial
 # TODO LABEL maintainer="Name <email-address>"
 
 ARG u_id=1000
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
-    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc" \
+    && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc master" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
         zlib1g-dev \

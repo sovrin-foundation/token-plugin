@@ -3,6 +3,8 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.base58_serializer import Base58Serializer
 from sovtoken.util import validate_multi_sig_txn
 from stp_core.common.log import getlogger
+from plenum.server.node import Node
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 
 txn_root_serializer = Base58Serializer()
 
@@ -19,28 +21,35 @@ from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
-    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO
+    XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
+txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
 
 class StaticFeesReqHandler(FeeReqHandler):
-    valid_txn_types = {SET_FEES, GET_FEES, FEE_TXN}
-    write_types = {SET_FEES, FEE_TXN}
-    query_types = {GET_FEES, }
+    write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
+    query_types = FeeReqHandler.query_types.union({GET_FEES, })
     _fees_validator = FeesStructureField()
     MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store):
-        super().__init__(ledger, state)
+                 domain_state, bls_store, node):
+
+        super().__init__(ledger, state,
+                         idrCache=node.idrCache,
+                         upgrader=node.upgrader,
+                         poolManager=node.poolManager,
+                         poolCfg=node.poolCfg,
+                         write_req_validator=node.write_req_validator)
+
         self.token_ledger = token_ledger
         self.token_state = token_state
         self.utxo_cache = utxo_cache
@@ -61,9 +70,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.deducted_fees = {}
         # Since inputs are spent in XFER. FIND A BETTER SOLUTION
         self.deducted_fees_xfer = {}
-        # Tracks txn and state root for each batch with at least 1 transaction
-        # paying sovtokenfees
-        self.uncommitted_state_roots_for_batches = []
+        self.token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
+                                                      token_ledger.uncommitted_root_hash,
+                                                      token_ledger.size)
 
     @staticmethod
     def has_fees(request) -> bool:
@@ -85,11 +94,15 @@ class StaticFeesReqHandler(FeeReqHandler):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
-            self._get_deducted_fees_xfer(request, required_fees)
+            inputs = request.operation[INPUTS]
+            outputs = request.operation[OUTPUTS]
+            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
         elif required_fees:
             if StaticFeesReqHandler.has_fees(request):
-                self._validate_fees_can_pay(request, required_fees)
+                inputs = request.fees[0]
+                outputs = self.get_change_for_fees(request)
+                self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             else:
                 raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                                     getattr(request, f.REQ_ID.nm, None),
@@ -160,6 +173,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
             self._update_state_with_single_txn(txn, is_committed=isCommitted)
+        super().updateState(txns, isCommitted=isCommitted)
 
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
@@ -171,56 +185,57 @@ class StaticFeesReqHandler(FeeReqHandler):
         return result
 
     def post_batch_created(self, ledger_id, state_root):
+        # it mean, that all tracker thins was done in onBatchCreated phase for TokenReqHandler
+        self.token_tracker.apply_batch(self.token_state.headHash,
+                                       self.token_ledger.uncommitted_root_hash,
+                                       self.token_ledger.uncommitted_size)
+        if ledger_id == TOKEN_LEDGER_ID:
+            return
         if self.fee_txns_in_current_batch > 0:
             state_root = self.token_state.headHash
-            txn_root = self.token_ledger.uncommittedRootHash
-            self.uncommitted_state_roots_for_batches.append((txn_root, state_root))
             TokenReqHandler.on_batch_created(self.utxo_cache, state_root)
+            # ToDo: Needed investigation about affection of removing setting this var into 0
             self.fee_txns_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id):
-        if self.fee_txns_in_current_batch > 0:
-            TokenReqHandler.on_batch_rejected(self.utxo_cache)
-            self.fee_txns_in_current_batch = 0
+        uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
+        if ledger_id == TOKEN_LEDGER_ID:
+            # TODO: Need to improve this logic for case, when we got a XFER txn with fees
+            # All of other txn with fees it's a 2 steps, "apply txn" and "apply fees"
+            # But for XFER txn with fees we do only "apply fees with transfer too"
+            return
+        if txn_count == 0 or self.token_ledger.uncommitted_root_hash == uncommitted_txn_root or \
+                self.token_state.headHash == uncommitted_hash:
+            return 0
+        self.token_state.revertToHead(uncommitted_hash)
+        self.token_ledger.discardTxns(txn_count)
+        count_reverted = TokenReqHandler.on_batch_rejected(self.utxo_cache)
+        logger.info("Reverted {} txns with fees".format(count_reverted))
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
+        # All changes will be tracked on TokenReqHandler side
+        token_state_root, token_txn_root, _ = self.token_tracker.commit_batch()
+        if ledger_id == TOKEN_LEDGER_ID:
+            return
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
                                        and get_type(t) != XFER_PUBLIC
                                        ]
         if len(committed_seq_nos_with_fees) > 0:
-            txn_root, state_root = self.uncommitted_state_roots_for_batches.pop(0)
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,
                                            self.token_state,
                                            len(committed_seq_nos_with_fees),
-                                           state_root, txn_root_serializer.serialize(txn_root),
+                                           token_state_root, txn_root_serializer.serialize(token_txn_root),
                                            pp_time)
             i = 0
             for txn in committed_txns:
                 if get_seq_no(txn) in committed_seq_nos_with_fees:
                     txn[FEES] = r[i]
                     i += 1
+            self.fee_txns_in_current_batch = 0
 
-    def _get_deducted_fees_xfer(self, request, required_fees):
-        try:
-            sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
-                                                    request,
-                                                    is_committed=False)
-
-            sum_outputs = TokenReqHandler.sum_outputs(request)
-        except InvalidClientMessageException as ex:
-            raise ex
-        except Exception as ex:
-                error = 'Exception {} while processing inputs/outputs'.format(ex)
-                raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
-        else:
-            expected_amount = sum_outputs + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, sum_outputs,
-                                                          expected_amount, request,
-                                                          'fees: {}'.format(required_fees))
-
-    def _validate_fees_can_pay(self, request, required_fees):
+    def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
         """
         Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
 
@@ -232,16 +247,22 @@ class StaticFeesReqHandler(FeeReqHandler):
         """
 
         try:
-            sum_inputs = self.utxo_cache.sum_inputs(request.fees[0], is_committed=False)
+            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
         except UTXOError as ex:
             raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
+        except Exception as ex:
+            error = 'Exception {} while processing inputs/outputs'.format(ex)
+            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
         else:
-            change_amount = sum([a[AMOUNT] for a in self.get_change_for_fees(request)])
+            change_amount = sum([a[AMOUNT] for a in outputs])
             expected_amount = change_amount + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(sum_inputs, change_amount,
-                                                          expected_amount, request,
-                                                          'fees: {}'.format(required_fees))
-
+            TokenReqHandler.validate_given_inputs_outputs(
+                sum_inputs,
+                change_amount,
+                expected_amount,
+                request,
+                'fees: {}'.format(required_fees)
+            )
 
     def _get_fees(self, is_committed=False, with_proof=False):
         fees = {}
@@ -304,9 +325,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                         seq_no,
                         output[AMOUNT]),
                     is_committed=is_committed)
-        else:
-            logger.warning('Unknown type {} found while updating '
-                           'state with txn {}'.format(typ, txn))
 
     @staticmethod
     def _handle_incorrect_funds(sum_inputs, sum_outputs, expected_amount, required_fees, request):
@@ -328,3 +346,8 @@ class StaticFeesReqHandler(FeeReqHandler):
         ledger
         """
         return txn
+
+    def postCatchupCompleteClbk(self):
+        self.token_tracker.set_last_committed(self.token_state.committedHeadHash,
+                                              self.token_ledger.uncommitted_root_hash,
+                                              self.token_ledger.size)

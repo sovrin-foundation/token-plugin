@@ -6,7 +6,6 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
 from sovtoken.messages.validation import static_req_validation
 
-
 from plenum.server.ledger_req_handler import LedgerRequestHandler
 
 from plenum.common.constants import TXN_TYPE, TRUSTEE, STATE_PROOF, ROOT_HASH, \
@@ -21,9 +20,10 @@ from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
 from sovtoken.util import SortedItems, validate_multi_sig_txn
 from sovtoken.utxo_cache import UTXOCache
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError
-
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
 from state.trie.pruning_trie import rlp_decode
+
+from state.pruning_state import PruningState
 
 
 class TokenReqHandler(LedgerRequestHandler):
@@ -32,12 +32,11 @@ class TokenReqHandler(LedgerRequestHandler):
 
     MinSendersForPublicMint = 3
 
-    def __init__(self, ledger, state, utxo_cache: UTXOCache, domain_state, bls_store):
+    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache, domain_state, bls_store):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
-
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
@@ -184,7 +183,7 @@ class TokenReqHandler(LedgerRequestHandler):
         self.add_new_output(self.state, self.utxo_cache, output,
                             is_committed=is_committed)
 
-    def onBatchCreated(self, state_root):
+    def onBatchCreated(self, state_root, txn_time):
         self.on_batch_created(self.utxo_cache, state_root)
 
     def onBatchRejected(self):
@@ -192,7 +191,8 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def commit(self, txnCount, stateRoot, txnRoot, pptime) -> List:
         return self.__commit__(self.utxo_cache, self.ledger, self.state,
-                               txnCount, stateRoot, txnRoot, pptime, self.ts_store)
+                               txnCount, stateRoot, txnRoot, pptime,
+                               self.ts_store)
 
     def get_query_response(self, request: Request):
         return self.query_handlers[request.operation[TXN_TYPE]](request)
@@ -233,6 +233,9 @@ class TokenReqHandler(LedgerRequestHandler):
 
         result.update(request.operation)
         return result
+
+    def on_node_stopping(self):
+        self.utxo_cache.close()
 
     def _sum_inputs(self, req: Request, is_committed=False) -> int:
         return self.sum_inputs(self.utxo_cache, req,
@@ -287,7 +290,12 @@ class TokenReqHandler(LedgerRequestHandler):
     def _commit_to_utxo_cache(utxo_cache, state_root):
         state_root = base58.b58decode(state_root.encode()) if isinstance(
             state_root, str) else state_root
-        assert utxo_cache.first_batch_idr == state_root
+        if utxo_cache.first_batch_idr != state_root:
+            raise TokenValueError(
+                'state_root', state_root,
+                ("equal to utxo_cache.first_batch_idr hash {}"
+                 .format(utxo_cache.first_batch_idr))
+            )
         utxo_cache.commit_batch()
 
     @staticmethod

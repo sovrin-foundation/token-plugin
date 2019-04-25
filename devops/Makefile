@@ -52,12 +52,13 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # remove that once sovtoken starts using indy-plenum from stable:
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
-FPM_P_DEPENDS := indy-plenum(=1.6.58)
+
+FPM_P_DEPENDS := indy-node(>=1.7.0~dev893)
 FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
 endif
 
 # docker related variables
-DOCKER_NAME ?= evernym/plugin
+DOCKER_NAME ?= sovrin/plugin
 DOCKER_TAG ?=
 CI_DOCKERFILE_PATH = docker/ci/$(OSNAME)/Dockerfile
 
@@ -78,7 +79,7 @@ src_version:
 	echo $(call metadata_value,__version__)
 
 image_ci_base_version:
-	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'evernym/python3',$(CI_DOCKERFILE_PATH)))
+	$(eval PYTHON3_DOCKER_VERSION=$(call docker_from_version,'sovrin/python3',$(CI_DOCKERFILE_PATH)))
 	echo $(PYTHON3_DOCKER_VERSION)
 
 image_ci_version:

@@ -16,6 +16,8 @@ from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
 TOKENAMT = int(1e8)
 BILLION = int(1e9)
 
+whitelist = ['Error Value is too big while converting message']
+
 
 @pytest.fixture
 def addresses(helpers):
@@ -52,6 +54,10 @@ def test_trustee_invalid_minting(helpers, addresses):
         helpers.general.do_mint(outputs)
 
     outputs = [{ADDRESS: address1, AMOUNT: 20.5}, {ADDRESS: address2, AMOUNT: 100}]
+    with pytest.raises(RequestNackedException):
+        helpers.general.do_mint(outputs)
+
+    outputs = [{ADDRESS: address1, AMOUNT: None}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
         helpers.general.do_mint(outputs)
 

@@ -4,7 +4,6 @@ from plenum.common.config_helper import PNodeConfigHelper
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_seq_no
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
-from plenum.test.test_node import TestNode
 from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.main import \
@@ -12,8 +11,11 @@ from sovtoken.main import \
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.main import \
     integrate_plugin_in_node as integrate_fees_plugin_in_node
-from sovtokenfees.test.test_fees_non_xfer_txn import (address_main,
-                                                      mint_tokens, pay_fees)
+from sovtokenfees.test.helper import pay_fees
+
+from indy_node.test.helper import TestNode
+
+from indy_common.config_helper import NodeConfigHelper
 
 TestRunningTimeLimitSec = 250
 
@@ -34,10 +36,9 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
     seq_no = get_seq_no(mint_tokens)
     remaining = 1000
     last_node = nodeSetWithIntegratedTokenPlugin[-1]
+    last_node.cleanupOnStopping = False
     last_node.stop()
     looper.removeProdable(last_node)
-    token_req_handler = last_node.get_req_handler(TOKEN_LEDGER_ID)
-    token_req_handler.utxo_cache._store.close()
 
     nodeSetWithIntegratedTokenPlugin = nodeSetWithIntegratedTokenPlugin[:-1]
 
@@ -56,9 +57,9 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
         remaining -= 2
 
     for _ in range(5):
-        pay_fees(helpers, fees_set, address_main, mint_tokens)
+        pay_fees(helpers, fees_set, address_main)
 
-    config_helper = PNodeConfigHelper(last_node.name, tconf, chroot=tdir)
+    config_helper = NodeConfigHelper(last_node.name, tconf, chroot=tdir)
     restarted_node = TestNode(last_node.name,
                               config_helper=config_helper,
                               config=tconf, ha=last_node.nodestack.ha,

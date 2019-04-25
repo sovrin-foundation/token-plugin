@@ -40,7 +40,7 @@ RUN apt-get update -y && apt-get install -y \
     # libindy 
         python3-nacl \
         libindy-crypto=0.4.5 \
-        libindy=1.6.7 \
+        libindy=1.6.7
         #//python3-indy-crypto
 
 RUN pip3 install -U \
@@ -57,8 +57,8 @@ RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 100
 WORKDIR /home/indy
 
 # indy-node along with supervisor
-ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.82}
-ARG indy_plenum_ver=1.6.57
+ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.6.833}
+ARG indy_plenum_ver=1.6.696
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \

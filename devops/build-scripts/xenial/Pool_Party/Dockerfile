@@ -4,7 +4,7 @@
 ##
 ##  find the missing deb pkgs in google drive 
 ##  token-team/builds/dev
-##  
+##
 ##  place required deb pkgs in the same folder as this
 ##  dockerfile then run the following commands
 ##
@@ -12,11 +12,11 @@
 ##
 ##  docker run -itd -p 9701-9708:9701-9708 indy_pool
 ##
-##  Running the command 'docker ps' will show the 
+##  Running the command 'docker ps' will show the
 ##  container id
 ##
 ##  If you want to connect to the shell of the container
-##  you can use the following exec command replacing the 
+##  you can use the following exec command replacing the
 ##  <container_id> with the id of the running container
 ##
 ##  docker exec -it <container_id> /bin/bash
@@ -56,9 +56,8 @@ ARG python3_indy_crypto_ver=0.4.5
 ARG indy_crypto_ver=0.4.5
 ARG indy_plenum_ver=1.6.57
 
- 
-ARG sovtoken_pkg_name=sovtoken_0.9.4_amd64.deb
-ARG sovtokenfees_pkg_name=sovtokenfees_0.9.4_amd64.deb
+ARG sovtoken_pkg_name=sovtoken_0.9.6_amd64.deb
+ARG sovtokenfees_pkg_name=sovtokenfees_0.9.6_amd64.deb
 
 COPY ${sovtoken_pkg_name} /root
 COPY ${sovtokenfees_pkg_name} /root
