@@ -40,7 +40,7 @@ RUN apt-get update -y && apt-get install -y \
     # libindy 
         python3-nacl \
         libindy-crypto=0.4.5 \
-        libindy=1.6.7
+        libindy=1.8.2
         #//python3-indy-crypto
 
 RUN pip3 install -U \
@@ -49,7 +49,7 @@ RUN pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.6.7 \
+    python3-indy==1.8.2 \
     mock
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u 1000 indy; usermod -aG sudo indy

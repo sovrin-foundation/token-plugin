@@ -48,7 +48,7 @@ echo ${CYAN}libindy
 sudo apt-get update -y && apt-get install -y \
         python3-nacl \
         libindy-crypto=0.4.5 \
-        libindy=1.6.7
+        libindy=1.8.2
 
 echo ${CYAN}python
 sudo pip3 install -U \
