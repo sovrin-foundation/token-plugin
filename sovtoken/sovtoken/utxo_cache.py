@@ -16,7 +16,7 @@ class UTXOCache(OptimisticKVStore):
         1. Given an output, check whether it is spent. Return the amout it holds when not spent.
         2. Given an address, return all valid UTXOs.
 
-    The key value looks like this 
+    The key value looks like this
         `<key is address> -> <value is a list of unspent seq nos and amounts>`
 
     If address `a1` has 3 UTXOs with seq no 4, 6, 19 and amount 1, 31, 100 respectively,

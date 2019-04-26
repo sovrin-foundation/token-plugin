@@ -22,7 +22,7 @@ class Address:
     def __init__(self, seed=None):
         self.signer = SimpleSigner(seed=seed)
         self.address = base58.b58encode_check(self.signer.naclSigner.verraw).decode()
-        self.outputs = [{}, {}]  # Unspent and Spent
+        self.outputs = [OrderedDict(), OrderedDict()]  # Unspent and Spent
 
     # TODO ST-525 test
     def amount(self, seq_no):

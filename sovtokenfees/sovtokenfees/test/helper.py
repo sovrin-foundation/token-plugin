@@ -18,6 +18,25 @@ from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
 from sovtokenfees.constants import FEES
 
 
+@unique
+class InputsStrategy(Enum):
+    all_utxos = 1           # use all utxos from each input address
+    first_utxo_only = 2     # use only single (first) from each input address
+                            # (TODO just to have some other one for now)
+
+
+@unique
+class OutputsStrategy(Enum):
+    transfer_equal = 1  # divide transfer among (outputs - inputs)
+                        # output addresses in (almost) equal parts
+                        # (total_input - transfer - fee) goes to first input address
+    transfer_all_equal = 2
+                # divide (total_input - fee) among all
+                # output addresses in (almost) equal parts
+                # ( comparing to 'transfer_equal' seems valuable
+                #   only for cases when we move all amount to other addresses )
+
+
 def check_state(n, is_equal=False):
     assert (n.getLedger(DOMAIN_LEDGER_ID).tree.root_hash == n.getLedger(DOMAIN_LEDGER_ID).uncommitted_root_hash) == is_equal
     assert (n.getLedger(TOKEN_LEDGER_ID).tree.root_hash == n.getLedger(TOKEN_LEDGER_ID).uncommitted_root_hash) == is_equal
@@ -198,16 +217,11 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
     return new_amount, seq_no, resp
 
 
-@unique
-class InputsStrategy(Enum):
-    all_utxos = 1           # use all utxos from each input address
-    first_utxo_only = 2     # use only single (first) from each input address
-                            # (TODO just to have some other one for now)
-
-
 def prepare_inputs(
     helpers, addresses, strategy=InputsStrategy.all_utxos
 ):
+    assert strategy in InputsStrategy, "Unknown input strategy {}".format(strategy)
+
     addresses = [helpers.wallet.address_map[addr] for addr in addresses]
 
     inputs = []
@@ -217,64 +231,62 @@ def prepare_inputs(
                 raise ValueError("no seq_nos for {}".format(addr.address))
             for seq_no in addr.all_seq_nos:
                 inputs.append({ADDRESS: addr.address, SEQNO: seq_no})
-    elif strategy == InputsStrategy.first_utxo_only:
+    else:  # InputsStrategy.first_utxo_only
         for addr in addresses:
             if not addr.all_seq_nos:
                 raise ValueError("no seq_nos for {}".format(addr.address))
             inputs.append({ADDRESS: addr.address, SEQNO: addr.all_seq_nos[0]})
-    else:
-        raise ValueError("Unknown input strategy {}".format(strategy))
 
     return inputs
 
 
-@unique
-class OutputsStrategy(Enum):
-    equal = 1   # divide (total_input - fee) among all
-                # output addresses in (almost) equal parts
-    transfer_equal = 2  # divide transfer among (outputs - inputs)
-                        # output addresses in (almost) equal parts
-                        # (total_input - transfer - fee) goes to first input address
-
-
 def prepare_outputs(
-    helpers, fees, inputs, addresses,
+    helpers, fee, inputs, addresses,
     strategy=OutputsStrategy.transfer_equal, transfer_amount=20
 ):
+    def divide_equal(output_addresses, amount):
+        output_amount = amount // len(output_addresses)
+        assert output_amount > 0
+        res = {addr: output_amount for addr in output_addresses}
+        res[output_addresses[-1]] += amount % len(output_addresses)
+        return res
+
+    assert strategy in OutputsStrategy, "Unknown output strategy {}".format(strategy)
+
     total_input_amount = sum(
         (helpers.wallet.address_map[i[ADDRESS]].amount(i[SEQNO]) for i in inputs)
     )
 
-    def divide_equal(output_addresses, amount):
-        output_amount = amount // len(output_addresses)
-        assert output_amount > 0
-        _outputs = [{ADDRESS: addr, AMOUNT: output_amount} for addr in output_addresses]
-        _outputs[-1][AMOUNT] += amount % len(output_addresses)
-        return _outputs
-
     # apply fee
-    total_output_amount = total_input_amount - fees.get(XFER_PUBLIC, 0)
+    # TODO why XFER_PUBLIC always
+    total_output_amount = total_input_amount - fee
 
-    outputs = []
-    if strategy == OutputsStrategy.equal:
-        outputs += divide_equal(addresses, total_output_amount)
-    elif strategy == OutputsStrategy.transfer_equal:
-        diff = total_output_amount - transfer_amount
+    if strategy == OutputsStrategy.transfer_all_equal:
+        transfer_amount = total_output_amount
+        strategy = OutputsStrategy.transfer_equal
 
-        # we have enough input amount
-        assert diff >= 0
-        # no intersection between inputs and addresses that receive transfer
-        assert not (set([i[ADDRESS] for i in inputs]) & set(addresses))
+    # OutputsStrategy.transfer_equal
 
-        # transfer is divided among outputs
-        outputs += divide_equal(addresses, transfer_amount)
-        # diff goes to first input address
-        if diff:
-            outputs.append({ADDRESS: inputs[0][ADDRESS], AMOUNT: diff})
-    else:
-        raise ValueError("Unknown output strategy {}".format(strategy))
+    assert transfer_amount > 0  # TODO is =0 also a valid case
 
-    return outputs
+    change = total_output_amount - transfer_amount
+    # we have enough input amount
+    assert change >= 0
+
+    # transfer is divided among outputs
+    outputs = divide_equal(addresses, transfer_amount)
+
+    # change goes to any input presented in outputs or first input address
+    if change:
+        io_addrs = list(set([i[ADDRESS] for i in inputs]) & set(addresses))
+        change_addr = io_addrs[0] if io_addrs else inputs[0][ADDRESS]
+
+        if change_addr not in outputs:
+            outputs[change_addr] = 0
+
+        outputs[change_addr] += change
+
+    return [{ADDRESS: addr, AMOUNT: amount} for addr, amount in outputs.items()]
 
 
 def send_and_check_xfer(looper, helpers, inputs, outputs):

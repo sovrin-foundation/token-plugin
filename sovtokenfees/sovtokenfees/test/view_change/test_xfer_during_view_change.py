@@ -7,12 +7,9 @@ from sovtokenfees.test.helper import InputsStrategy, OutputsStrategy
 
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change_new
 
-ADDRESSES_NUM = 2
+ADDRESSES_NUM = 4
 MINT_STRATEGY = MintStrategy.multiple_equal
-MINT_AMOUNT = 10000
-INPUTS_STRATEGY = InputsStrategy.first_utxo_only
-OUTPUTS_STRATEGY = OutputsStrategy.transfer_equal
-TRANSFER_AMOUNT = 100
+MINT_UTXOS_NUM = 3
 
 
 @pytest.fixture(
@@ -26,9 +23,8 @@ def fees(request):
     return request.param
 
 
-@pytest.fixture
-def io_addresses(addresses, outputs_strategy):
-    return (addresses[:1], addresses[1:])
+def io_addresses(request, addresses):
+    return (lambda: (addresses[:2], addresses[2:]))
 
 
 def test_xfer_during_view_change(
@@ -44,6 +40,6 @@ def test_xfer_during_view_change(
         looper,
         helpers,
         nodeSetWithIntegratedTokenPlugin,
-        io_addresses,
+        io_addresses(),
         send_and_check_xfer
     )

@@ -67,6 +67,11 @@ def mint_strategy(request):
 
 
 @pytest.fixture
+def mint_utxos_num(request):
+    return getValueFromModule(request, "MINT_UTXOS_NUM", 3)
+
+
+@pytest.fixture
 def mint_amount(request):
     return getValueFromModule(request, "MINT_AMOUNT", 1000)
 
@@ -110,6 +115,7 @@ def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, nodeSet):
 def fees_set(helpers, fees):
     result = helpers.general.do_set_fees(fees)
     return get_payload_data(result)
+
 
 @pytest.fixture()
 def fees_set_with_batch(helpers, fees):
@@ -177,7 +183,7 @@ def addresses(helpers, addresses_num):
 
 
 @pytest.fixture
-def mint_amounts(request, addresses, mint_strategy, mint_amount):
+def mint_amount_spec(request, addresses, mint_strategy, mint_amount):
     amounts = {addr: 0 for addr in addresses}
 
     if mint_strategy == MintStrategy.single_first:
@@ -191,25 +197,52 @@ def mint_amounts(request, addresses, mint_strategy, mint_amount):
 
 
 @pytest.fixture
-def mint_multiple_tokens(helpers, addresses, mint_amounts):
-    outputs = [
-        {ADDRESS: addr, AMOUNT: mint_amounts[addr]} for addr in addresses
-        if mint_amounts[addr]
-    ]
-    res = helpers.general.do_mint(outputs)
+def mint_utxos_num_spec(request, addresses, mint_utxos_num):
+    return {addr: mint_utxos_num for addr in addresses}
+
+
+@pytest.fixture
+def mint_multiple_tokens(helpers, addresses, mint_utxos_num_spec, mint_amount_spec):
+    res = []
+    count = 1
+
+    while True:
+        _mints = [
+            addr for addr in addresses
+            if ((mint_utxos_num_spec[addr] > count) and mint_amount_spec[addr])
+        ]
+        if _mints:
+            count += 1
+            outputs = [
+                {ADDRESS: addr, AMOUNT: mint_amount_spec[addr]} for addr in _mints
+            ]
+            res.append(helpers.general.do_mint(outputs))
+        else:
+            break
+
     for addr in addresses:
         helpers.wallet.handle_get_utxo_response(
             helpers.general.do_get_utxo(addr))
+
     return res
 
 
 @pytest.fixture
-def io_addresses(addresses, outputs_strategy):
-    return (
-        (addresses[:2], addresses[2:])
-        if outputs_strategy == OutputsStrategy.transfer_equal else
-        (addresses[:2], addresses)
-    )
+def io_addresses(addresses):
+
+    def wrapped():
+        addresses = [helpers.wallet.address_map[addr] for addr in addresses]
+
+        with_utxos = [addr for addr in addresses if addr.total_amount]
+        no_utxos = [addr for addr in addresses if not addr.total_amount]
+        assert with_utxos
+
+        # try to make them near equal
+        border = len(addresses) // 2 or 1
+
+        return (with_utxos[:border], with_utxos[border:] + no_utxos)
+
+    return wrapped
 
 
 @pytest.fixture
@@ -217,7 +250,7 @@ def prepare_inputs(helpers, inputs_strategy, io_addresses):
     _inputs_strategy = inputs_strategy
 
     def wrapped(addresses=None, inputs_strategy=None):
-        addresses = io_addresses[0] if addresses is None else addresses
+        addresses = io_addresses()[0] if addresses is None else addresses
         inputs_strategy = (
             _inputs_strategy if inputs_strategy is None else inputs_strategy
         )
@@ -228,19 +261,19 @@ def prepare_inputs(helpers, inputs_strategy, io_addresses):
 
 
 @pytest.fixture
-def prepare_outputs(helpers, fees, outputs_strategy, transfer_amount, io_addresses, prepare_inputs):
+def prepare_outputs(helpers, outputs_strategy, transfer_amount, io_addresses, prepare_inputs):
     _outputs_strategy = outputs_strategy
 
-    def wrapped(inputs=None, addresses=None, outputs_strategy=None):
+    def wrapped(fee, inputs=None, addresses=None, outputs_strategy=None):
 
         inputs = prepare_inputs() if inputs is None else inputs
-        addresses = io_addresses[1] if addresses is None else addresses
+        addresses = io_addresses()[1] if addresses is None else addresses
         outputs_strategy = (
             _outputs_strategy if outputs_strategy is None else outputs_strategy
         )
 
         return prepare_outputs_h(
-            helpers, fees, inputs, addresses,
+            helpers, fee, inputs, addresses,
             strategy=outputs_strategy, transfer_amount=transfer_amount
         )
 
@@ -249,12 +282,13 @@ def prepare_outputs(helpers, fees, outputs_strategy, transfer_amount, io_address
 
 @pytest.fixture
 def send_and_check_xfer(
-    looper, helpers, prepare_inputs, prepare_outputs,
+    looper, helpers, prepare_inputs, prepare_outputs, fees,
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs() if inputs is None else inputs
-        outputs = prepare_outputs(inputs) if outputs is None else outputs
-        return send_and_check_xfer_h(looper, helpers, inputs, outputs)
+        outputs = prepare_outputs(fees.get(XFER_PUBLIC, 0), inputs) if outputs is None else outputs
+        res = send_and_check_xfer_h(looper, helpers, inputs, outputs)
+        return res
 
     return wrapped
 
