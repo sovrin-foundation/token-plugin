@@ -31,7 +31,8 @@ from sovtokenfees.test.helper import (
     InputsStrategy, OutputsStrategy,
     prepare_inputs as prepare_inputs_h,
     prepare_outputs as prepare_outputs_h,
-    send_and_check_xfer as send_and_check_xfer_h
+    send_and_check_xfer as send_and_check_xfer_h,
+    send_and_check_nym as send_and_check_nym_h
 )
 from sovtokenfees.test.helpers import form_helpers
 
@@ -228,17 +229,16 @@ def mint_multiple_tokens(helpers, addresses, mint_utxos_num_spec, mint_amount_sp
 
 
 @pytest.fixture
-def io_addresses(addresses):
+def io_addresses(helpers, addresses):
+    _addresses = [helpers.wallet.address_map[addr] for addr in addresses]
 
     def wrapped():
-        addresses = [helpers.wallet.address_map[addr] for addr in addresses]
-
-        with_utxos = [addr for addr in addresses if addr.total_amount]
-        no_utxos = [addr for addr in addresses if not addr.total_amount]
+        with_utxos = [addr for addr in _addresses if addr.total_amount]
+        no_utxos = [addr for addr in _addresses if not addr.total_amount]
         assert with_utxos
 
         # try to make them near equal
-        border = len(addresses) // 2 or 1
+        border = len(_addresses) // 2 or 1
 
         return (with_utxos[:border], with_utxos[border:] + no_utxos)
 
@@ -288,6 +288,19 @@ def send_and_check_xfer(
         inputs = prepare_inputs() if inputs is None else inputs
         outputs = prepare_outputs(fees.get(XFER_PUBLIC, 0), inputs) if outputs is None else outputs
         res = send_and_check_xfer_h(looper, helpers, inputs, outputs)
+        return res
+
+    return wrapped
+
+
+@pytest.fixture
+def send_and_check_nym(
+    looper, helpers, prepare_inputs, prepare_outputs, fees,
+):
+    def wrapped(inputs=None, outputs=None):
+        inputs = prepare_inputs() if inputs is None else inputs
+        outputs = prepare_outputs(fees.get(NYM, 0), inputs) if outputs is None else outputs
+        res = send_and_check_nym_h(looper, helpers, inputs, outputs)
         return res
 
     return wrapped

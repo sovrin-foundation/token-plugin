@@ -41,20 +41,30 @@ def transfer_amount():
 
 class IOAddresses:
     def __init__(self, i_addrs, o_addrs):
-        self.i_addrs = i_addrs
-        self.o_addrs = o_addrs
+        self._iaddrs = i_addrs
+        self._oaddrs = o_addrs
 
     def rotate(self):
-        self.i_addrs, self.o_addrs = self.o_addrs, self.i_addrs
+        self._iaddrs, self._oaddrs = self._oaddrs, self._iaddrs
+
+    @property
+    def iaddrs(self):
+        return self._iaddrs
+
+    @property
+    def oaddrs(self):
+        return self._oaddrs
 
     def __call__(self):
-        return (self.i_addrs, self.o_addrs)
+        return (self._iaddrs, self._oaddrs)
 
 
 @pytest.fixture(
     params=[
         ([0], [0]),
         ([0], [1]),
+        ([0], [1, 2]),
+        ([0, 1], [2]),
         ([0, 1], [2, 3]),
         ([0, 1, 2], [1, 2, 3]),
     ], ids=lambda x: (

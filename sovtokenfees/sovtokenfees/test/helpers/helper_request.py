@@ -88,12 +88,20 @@ class HelperRequest(token_helper_request.HelperRequest):
         inputs = self._prepare_inputs(inputs)
         outputs = self._prepare_outputs(outputs)
 
+        return self.inject_fees_specific(request, inputs, outputs)
+
+
+    def inject_fees_specific(self, request, inputs, outputs):
+        """
+        Sign the fees and add them to a request.
+        """
         fees_signatures = self.fees_signatures(inputs, outputs, request.payload_digest)
 
         fees = [inputs, outputs, fees_signatures]
         setattr(request, FEES, fees)
 
         return request
+
 
     def find_utxos_can_pay(self, utxos, amount):
         """

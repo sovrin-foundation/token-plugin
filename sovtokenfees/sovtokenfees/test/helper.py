@@ -299,6 +299,18 @@ def send_and_check_xfer(looper, helpers, inputs, outputs):
     return resp
 
 
+def send_and_check_nym(looper, helpers, inputs, outputs):
+    resp = helpers.sdk.get_first_result(
+        helpers.sdk.send_and_check_request_objects([
+            helpers.request.inject_fees_specific(
+                helpers.request.nym(), inputs, outputs
+            )
+        ])
+    )
+    helpers.wallet.handle_txn_with_fees(resp)
+    return resp
+
+
 def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,
                                     exclude_from_check=None):
     waitNodeDataEquality(looper, node_set[0], *node_set[1:],
