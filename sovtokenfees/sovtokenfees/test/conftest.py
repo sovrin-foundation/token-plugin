@@ -205,7 +205,7 @@ def mint_utxos_num_spec(request, addresses, mint_utxos_num):
 @pytest.fixture
 def mint_multiple_tokens(helpers, addresses, mint_utxos_num_spec, mint_amount_spec):
     res = []
-    count = 1
+    count = 0
 
     while True:
         _mints = [
@@ -309,22 +309,22 @@ def send_and_check_nym(
 # TODO old fixtures for backward compartibility
 @pytest.fixture
 def xfer_addresses(addresses):
-    return addresses
+    return addresses[:2]
 
 
 @pytest.fixture
 def xfer_mint_tokens(mint_multiple_tokens):
-    return mint_multiple_tokens
+    return mint_multiple_tokens[0]
 
 
 @pytest.fixture
-def curr_seq_no(mint_multiple_tokens):
-    return get_seq_no(mint_multiple_tokens)
+def curr_seq_no(xfer_mint_tokens):
+    return get_seq_no(xfer_mint_tokens)
 
 
 @pytest.fixture
-def curr_amount(mint_multiple_tokens):
-    return get_amount_from_token_txn(mint_multiple_tokens)
+def curr_amount(xfer_mint_tokens):
+    return get_amount_from_token_txn(xfer_mint_tokens)
 
 
 @pytest.fixture
@@ -336,8 +336,8 @@ def curr_utxo(curr_seq_no, curr_amount):
 
 
 @pytest.fixture
-def send_and_check_nym_with_fees_curr_utxo(looper, helpers, fees_set, addresses, curr_utxo):
-    _addresses = addresses
+def send_and_check_nym_with_fees_curr_utxo(looper, helpers, fees_set, xfer_addresses, curr_utxo):
+    _addresses = xfer_addresses
 
     def wrapped(addresses=None, check_reply=True, nym_with_fees=None):
         addresses = _addresses if addresses is None else addresses
@@ -354,8 +354,8 @@ def send_and_check_nym_with_fees_curr_utxo(looper, helpers, fees_set, addresses,
 
 
 @pytest.fixture
-def send_and_check_transfer_curr_utxo(looper, helpers, fees, addresses, curr_utxo):
-    _addresses = addresses
+def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, curr_utxo):
+    _addresses = xfer_addresses
 
     def wrapped(addresses=None, check_reply=True, transfer_summ=20):
         addresses = _addresses if addresses is None else addresses
