@@ -13,8 +13,7 @@ def test_revert_fees_reset(looper, helpers, txnPoolNodeSet,
 
     # nodes[0].
     [address_giver, address_receiver] = xfer_addresses
-    seq_no = get_seq_no(xfer_mint_tokens)
-    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    inputs = helpers.general.get_utxo_addresses([address_giver])[0]
     outputs = [{ADDRESS: address_receiver, AMOUNT: 1000}]
     request = helpers.request.transfer(inputs, outputs)
 

@@ -1,5 +1,6 @@
 import json
 
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtoken.utxo_cache import UTXOAmounts
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
@@ -38,15 +39,29 @@ def check_uncommitted_txn(node, expected_length, ledger_id):
     assert len(node.getLedger(ledger_id).uncommittedTxns) == expected_length
 
 
-def add_fees_request_with_address(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
-    utxos = utxos if utxos else helpers.general.get_utxo_addresses([address])[0]
+def add_fees_request_with_address_inner(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
+    utxos = utxos if utxos else helpers.inner.general.get_utxo_addresses([address])[0]
     fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
-    helpers.request.add_fees(
+    helpers.inner.request.add_fees(
         request,
         utxos,
         fee_amount - adjust_fees,
-        change_address=change_address if change_address else address
+        change_address=change_address if change_address else address,
     )
+    return request
+
+
+def add_fees_request_with_address(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
+    utxos_found = utxos if utxos else helpers.general.get_utxo_addresses([address])[0]
+    fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
+    request_with_fees = helpers.request.add_fees(
+        request,
+        utxos_found,
+        fee_amount - adjust_fees,
+        change_address=change_address if change_address else address
+    )[0]
+    request_with_fees = json.loads(request_with_fees)
+    setattr(request, FEES, request_with_fees[FEES])
     return request
 
 
@@ -54,6 +69,21 @@ def pay_fees(helpers, fees_set, address_main):
     request = helpers.request.nym()
 
     request = add_fees_request_with_address(
+        helpers,
+        fees_set,
+        request,
+        address_main
+    )
+
+    responses = helpers.sdk.send_and_check_request_objects([request])
+    result = helpers.sdk.get_first_result(responses)
+    return result
+
+
+def pay_fees_inner(helpers, fees_set, address_main):
+    request = helpers.request.nym()
+
+    request = add_fees_request_with_address_inner(
         helpers,
         fees_set,
         request,
@@ -135,9 +165,8 @@ def nyms_with_fees(req_count,
     for i in range(req_count):
         req = helpers.request.nym()
         if fee_amount:
-            utxos = [{ADDRESS: address_main,
-                      AMOUNT: amount,
-                      f.SEQ_NO.nm: seq_no}]
+            utxos = [{"source": utxo_from_addr_and_seq_no(address_main, seq_no),
+                      AMOUNT: amount}]
             req = add_fees_request_with_address(
                 helpers,
                 fees_set,
@@ -180,15 +209,8 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
                    {ADDRESS: address_giver, AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC, 0)}]
         new_amount = current_amount - (fees.get(XFER_PUBLIC, 0) + transfer_summ)
 
-    utxos = [{ADDRESS: address_giver, AMOUNT: current_amount, SEQNO: seq_no}]
-    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    inputs = [{"source": utxo_from_addr_and_seq_no(address_giver, seq_no)}]
     transfer_req = helpers.request.transfer(inputs, outputs)
-    transfer_req = helpers.request.add_fees(
-        transfer_req,
-        utxos,
-        fees.get(XFER_PUBLIC, 0),
-        change_address=address_giver
-    )
 
     resp = helpers.sdk.send_request_objects([transfer_req])
     if check_reply:

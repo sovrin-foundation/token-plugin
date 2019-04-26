@@ -1,18 +1,14 @@
-import pytest
-
-from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY
 from plenum.common.txn_util import get_seq_no
-from plenum.common.util import randomString
 from sovtoken.main import integrate_plugin_in_node
 from sovtoken.util import \
-    register_token_wallet_with_client, update_token_wallet_with_result
+    update_token_wallet_with_result
 from sovtoken.constants import RESULT
 from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
-from sovtoken.test.helpers import form_helpers
+from sovtoken.test.helpers import form_helpers, libloader
 from indy_node.test.conftest import *
 
 total_mint = 100
@@ -97,8 +93,8 @@ def public_minting(
     address_seller = seller_token_wallet.addresses[seller_address]
 
     outputs = [
-        {"address": address_sf.address, "amount": total_mint - seller_gets},
-        {"address": address_seller.address, "amount": seller_gets}
+        {"address": "pay:sov:" + address_sf.address, "amount": total_mint - seller_gets},
+        {"address": "pay:sov:" + address_seller.address, "amount": seller_gets}
     ]
 
     return helpers.general.do_mint(outputs)
@@ -133,6 +129,11 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
     return seq_no
 
 
+@pytest.fixture(scope="module")
+def libsovtoken():
+    libloader.load_libsovtoken()
+
+
 @pytest.fixture(scope='module')
 def helpers(
     nodeSetWithIntegratedTokenPlugin,
@@ -142,6 +143,7 @@ def helpers(
     steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward,
+    libsovtoken
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -156,7 +158,7 @@ def helpers(
 
 @pytest.fixture()
 def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
-    wallets = [helpers.wallet.create_client_wallet() for _ in range(3)]
+    wallets = [helpers.inner.wallet.create_client_wallet() for _ in range(3)]
 
     def _nym_request_from_client_wallet(wallet):
         identifier = wallet.defaultId

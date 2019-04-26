@@ -1,19 +1,15 @@
 import json
 
 import pytest
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
-from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
-                                     TXN_TYPE, TRUSTEE_STRING)
+from plenum.common.constants import NYM, TXN_TYPE
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
+from plenum.common.request import Request
+from plenum.common.txn_util import get_seq_no
 from plenum.common.util import randomString
-from plenum.common.startable import Mode
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
-from plenum.test.delayers import cDelay
-from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
-from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
-from plenum.test.node_request.helper import sdk_ensure_pool_functional
 from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
     sdk_sign_and_send_prepared_request
 
@@ -92,7 +88,10 @@ def test_non_existent_input_xfer(helpers):
         address2
     ] = helpers.wallet.create_new_addresses(2)
 
-    inputs = [{ADDRESS: address1, SEQNO: 1}]
+    inputs = [{
+        "source": utxo_from_addr_and_seq_no(address1, 1),
+        AMOUNT: 291
+    }]
     outputs = [{ADDRESS: address2, AMOUNT: 290}]
 
     request = helpers.request.transfer(inputs, outputs)
@@ -109,13 +108,16 @@ def test_non_existent_input_non_xfer(helpers):
     helpers.general.do_set_fees(VALID_FEES)
 
     utxos = [{
-        ADDRESS: helpers.wallet.create_address(),
-        SEQNO: 1,
-        AMOUNT: 10
+        "source": utxo_from_addr_and_seq_no(helpers.wallet.create_address(), 1),
+        AMOUNT: 291
     }]
 
     request = helpers.request.nym()
-    request = helpers.request.add_fees(request, utxos, 10)
+    request = helpers.request.add_fees(request, utxos, 10)[0]
+    request = json.loads(request)
+    fees = request[FEES]
+    request = helpers.sdk.sdk_json_to_request_object(request)
+    setattr(request, FEES, fees)
 
     with pytest.raises(InvalidFundsError):
         helpers.node.fee_handler_can_pay_fees(request)
@@ -274,6 +276,10 @@ class TestCanPayFees():
         return helpers.wallet.create_new_addresses(3)
 
     @pytest.fixture(scope="module")
+    def addresses_manual(self, helpers):
+        return helpers.inner.wallet.create_new_addresses(3)
+
+    @pytest.fixture(scope="module")
     def mint(self, helpers, addresses):
         mint_outputs = [
             {ADDRESS: addresses[0], AMOUNT: 100},
@@ -281,6 +287,33 @@ class TestCanPayFees():
         ]
 
         return helpers.general.do_mint(mint_outputs)
+
+    @pytest.fixture()
+    def mint_manual(self, helpers, addresses_manual):
+        mint_outputs = [
+            {ADDRESS: "pay:sov:" + addresses_manual[0], AMOUNT: 100},
+            {ADDRESS: "pay:sov:" + addresses_manual[1], AMOUNT: 50},
+        ]
+
+        return helpers.general.do_mint(mint_outputs)
+
+    @pytest.fixture
+    def inputs_outputs_manual(self, helpers, addresses_manual, mint_manual):
+        [
+            address1,
+            address2,
+            address3,
+        ] = addresses_manual
+
+        inputs = [
+            {ADDRESS: address1, SEQNO: get_seq_no(mint_manual)},
+            {ADDRESS: address2, SEQNO: get_seq_no(mint_manual)}
+        ]
+        outputs = [
+            {ADDRESS: address3, AMOUNT: 150},
+        ]
+
+        return (inputs, outputs)
 
     @pytest.fixture
     def inputs_outputs(self, helpers, addresses):
@@ -290,10 +323,8 @@ class TestCanPayFees():
             address3,
         ] = addresses
 
-        inputs = [
-            {ADDRESS: address1, SEQNO: 1},
-            {ADDRESS: address2, SEQNO: 1}
-        ]
+        inputs = helpers.general.get_utxo_addresses([address1, address2])
+        inputs = [utxo for utxos in inputs for utxo in utxos]
         outputs = [
             {ADDRESS: address3, AMOUNT: 150},
         ]
@@ -325,7 +356,11 @@ class TestCanPayFees():
             request,
             inputs,
             outputs
-        )
+        )[0]
+        request = json.loads(request)
+        fees = request[FEES]
+        request = Request(**request)
+        setattr(request, FEES, fees)
 
         return request
 
@@ -377,14 +412,14 @@ class TestCanPayFees():
             helpers,
             fee_handler,
             request_xfer_fees,
-            inputs_outputs,
+            inputs_outputs_manual,
             fees_set
     ):
         """
         Transfer request with extra set of fees, and fees are set.
         """
-        inputs, outputs = inputs_outputs
-        request = helpers.request.add_fees_specific(
+        inputs, outputs = inputs_outputs_manual
+        request = helpers.inner.request.add_fees_specific(
             request_xfer_fees,
             inputs,
             outputs
@@ -408,14 +443,14 @@ class TestCanPayFees():
             helpers,
             fee_handler,
             fees_set,
-            inputs_outputs
+            inputs_outputs_manual
     ):
         """
         Nym request with invalid fees and fees are set.
         """
-        inputs, outputs = inputs_outputs
+        inputs, outputs = inputs_outputs_manual
         request = helpers.request.nym()
-        request = helpers.request.add_fees_specific(
+        request = helpers.inner.request.add_fees_specific(
             request,
             inputs,
             outputs

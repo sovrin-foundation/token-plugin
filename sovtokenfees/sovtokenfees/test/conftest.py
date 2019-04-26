@@ -1,9 +1,10 @@
-import pytest
+from sovtoken.test.conftest import build_wallets_from_data
 
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from plenum.common.txn_util import get_seq_no, get_payload_data
-from plenum.common.constants import NYM
-from plenum.test.helper import sdk_get_and_check_replies
+from plenum.common.constants import NYM, STEWARD, TARGET_NYM, TRUSTEE_STRING
+from sovtoken.test.helpers import libloader
+
 
 # fixtures, do not remove
 from indy_node.test.conftest import *
@@ -13,19 +14,17 @@ from sovtoken.constants import (
     XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO
 )
 from sovtoken.main import integrate_plugin_in_node as enable_token
-from sovtoken.test.conftest import trustee_wallets, steward_wallets, \
-    increased_trustees
-from sovtoken.test.helper import user1_token_wallet
 
 
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 from sovtokenfees import CLIENT_REQUEST_FIELDS
-from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import (
-    get_amount_from_token_txn, nyms_with_fees,
+    get_amount_from_token_txn,
     send_and_check_nym_with_fees, send_and_check_transfer
 )
 from sovtokenfees.test.helpers import form_helpers
+
+from plenum.test.conftest import get_data_for_role
 
 
 @pytest.fixture(scope="module")
@@ -68,6 +67,11 @@ def fees_set_with_batch(helpers, fees):
 
 
 @pytest.fixture(scope="module")
+def libsovtoken():
+    libloader.load_libsovtoken()
+
+
+@pytest.fixture(scope="module")
 def helpers(
     nodeSetWithIntegratedTokenPlugin,
     looper,
@@ -75,7 +79,8 @@ def helpers(
     trustee_wallets,
     steward_wallets,
     sdk_wallet_client,
-    sdk_wallet_steward
+    sdk_wallet_steward,
+    libsovtoken
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -94,14 +99,38 @@ def reset_fees(helpers):
 
 
 @pytest.fixture()
-def address_main(helpers):
+def address_main(helpers, libsovtoken):
     return helpers.wallet.create_address()
+
+
+@pytest.fixture()
+def address_main_inner(helpers, libsovtoken):
+    return helpers.inner.wallet.create_address()
+
+
+
+@pytest.fixture(scope="module")
+def trustee_wallets(trustee_data, looper, sdk_pool_data):
+    return build_wallets_from_data(trustee_data)
+
+
+@pytest.fixture(scope="module")
+def steward_wallets(poolTxnData):
+    steward_data = get_data_for_role(poolTxnData, STEWARD)
+    return build_wallets_from_data(steward_data)
 
 
 @pytest.fixture()
 def mint_tokens(helpers, address_main):
     return helpers.general.do_mint([
         {ADDRESS: address_main, AMOUNT: 1000},
+    ])
+
+
+@pytest.fixture()
+def mint_tokens_inner(helpers, address_main_inner):
+    return helpers.inner.general.do_mint([
+        {ADDRESS: address_main_inner, AMOUNT: 1000},
     ])
 
 
@@ -121,7 +150,7 @@ def pytest_configure(config):
 
 
 @pytest.fixture()
-def xfer_addresses(helpers):
+def xfer_addresses(helpers, libsovtoken):
     return helpers.wallet.create_new_addresses(2)
 
 
@@ -175,9 +204,51 @@ def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, cur
         curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_transfer(
             helpers, addresses, fees, looper,
             curr_utxo['amount'], curr_utxo['seq_no'],
-            check_reply=check_reply, transfer_summ=transfer_summ
+            check_reply=check_reply, transfer_summ=transfer_summ - fees[XFER_PUBLIC]
         )
 
         return curr_utxo, resp
 
     return wrapped
+
+
+@pytest.fixture()
+def xfer_addresses(helpers, libsovtoken):
+    return helpers.wallet.create_new_addresses(2)
+
+
+@pytest.fixture()
+def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
+    wallets = [helpers.inner.wallet.create_client_wallet() for _ in range(3)]
+
+    def _nym_request_from_client_wallet(wallet):
+        identifier = wallet.defaultId
+        signer = wallet.idsToSigners[identifier]
+        return helpers.request.nym(
+            dest=identifier,
+            verkey=signer.verkey,
+            role=TRUSTEE_STRING,
+            sdk_wallet=sdk_wallet_trustee
+        )
+
+    requests = map(_nym_request_from_client_wallet, wallets)
+
+    responses = helpers.sdk.send_and_check_request_objects(requests)
+
+    yield trustee_wallets + wallets
+
+    def _update_nym_standard_user(response):
+        data = get_payload_data(response[RESULT])
+        request = helpers.request.nym(
+            dest=data[TARGET_NYM],
+            role='',
+            sdk_wallet=sdk_wallet_trustee
+        )
+        return request
+
+    requests = [
+        _update_nym_standard_user(response)
+        for _, response in responses
+    ]
+
+    helpers.sdk.send_and_check_request_objects(requests)

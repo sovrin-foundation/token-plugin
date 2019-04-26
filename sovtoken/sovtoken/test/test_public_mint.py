@@ -10,8 +10,7 @@ from plenum.common.exceptions import (RequestNackedException,
 from plenum.common.txn_util import get_seq_no
 from plenum.common.util import randomString
 from sovtoken.test.conftest import build_wallets_from_data
-from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
-
+from sovtoken.constants import ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
 
 TOKENAMT = int(1e8)
 BILLION = int(1e9)
@@ -43,27 +42,27 @@ def test_trustee_invalid_minting(helpers, addresses):
 
     outputs = [{ADDRESS: address1, AMOUNT: -20}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
     outputs = [{ADDRESS: address1, AMOUNT: "100"}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
     outputs = [{ADDRESS: address1, AMOUNT: 0}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
     outputs = [{ADDRESS: address1, AMOUNT: 20.5}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
     outputs = [{ADDRESS: address1, AMOUNT: None}, {ADDRESS: address2, AMOUNT: 100}]
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
     outputs = []
     with pytest.raises(RequestNackedException, match="Outputs for a mint request can't be empty."):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
 
 # What about trust anchors, TGB, do those fail as well?
@@ -113,7 +112,8 @@ def test_more_than_min_trustee(capsys, helpers, addresses, increased_trustees):
 
     [address1_utxos, *_] = helpers.general.get_utxo_addresses(addresses)
 
-    assert [{ADDRESS: address1, SEQNO: seq_no, AMOUNT: 100}] == address1_utxos
+    assert address1_utxos[0][PAYMENT_ADDRESS] == address1
+    assert address1_utxos[0][AMOUNT] == 100
 
 
 def test_stewards_with_trustees(helpers, addresses, steward_wallets):
@@ -186,7 +186,7 @@ def test_invalid_address(helpers, addresses):
         outputs = [{ADDRESS: address, AMOUNT: 100}]
 
         with pytest.raises(RequestNackedException):
-            helpers.general.do_mint(outputs)
+            helpers.inner.general.do_mint(outputs)
 
     valid_address = addresses[0]
     invalid_address_length = b58encode_check(randomString(33).encode()).decode()
@@ -220,8 +220,10 @@ def test_trustee_valid_minting(helpers, addresses):
         address2_utxos
     ] = helpers.general.get_utxo_addresses([address1, address2])
 
-    assert address1_utxos == [{ADDRESS: address1, SEQNO: mint_seq_no, AMOUNT: sf_master_gets}]
-    assert address2_utxos == [{ADDRESS: address2, SEQNO: mint_seq_no, AMOUNT: remaining}]
+    assert address1_utxos[0][PAYMENT_ADDRESS] == address1
+    assert address1_utxos[0][AMOUNT] == sf_master_gets
+    assert address2_utxos[0][PAYMENT_ADDRESS] == address2
+    assert address2_utxos[0][AMOUNT] == remaining
 
 
 def test_two_mints_to_same_address(addresses, helpers):
@@ -245,26 +247,26 @@ def test_two_mints_to_same_address(addresses, helpers):
 
     assert first_mint_seq_no != second_mint_seq_no
 
-    assert address1_utxos == [
-        {ADDRESS: address1, SEQNO: first_mint_seq_no, AMOUNT: 100},
-        {ADDRESS: address1, SEQNO: second_mint_seq_no, AMOUNT: 200},
-    ]
-    assert address2_utxos == [
-        {ADDRESS: address2, SEQNO: first_mint_seq_no, AMOUNT: 100},
-        {ADDRESS: address2, SEQNO: second_mint_seq_no, AMOUNT: 200},
-    ]
-    assert address3_utxos == [
-        {ADDRESS: address3, SEQNO: first_mint_seq_no, AMOUNT: 100},
-        {ADDRESS: address3, SEQNO: second_mint_seq_no, AMOUNT: 200},
-    ]
-    assert address4_utxos == [
-        {ADDRESS: address4, SEQNO: first_mint_seq_no, AMOUNT: 100},
-        {ADDRESS: address4, SEQNO: second_mint_seq_no, AMOUNT: 200},
-    ]
-    assert address5_utxos == [
-        {ADDRESS: address5, SEQNO: first_mint_seq_no, AMOUNT: 100},
-        {ADDRESS: address5, SEQNO: second_mint_seq_no, AMOUNT: 200},
-    ]
+    assert address1_utxos[0][PAYMENT_ADDRESS] == address1
+    assert address1_utxos[0][AMOUNT] == 100
+    assert address1_utxos[1][PAYMENT_ADDRESS] == address1
+    assert address1_utxos[1][AMOUNT] == 200
+    assert address2_utxos[0][PAYMENT_ADDRESS] == address2
+    assert address2_utxos[0][AMOUNT] == 100
+    assert address2_utxos[1][PAYMENT_ADDRESS] == address2
+    assert address2_utxos[1][AMOUNT] == 200
+    assert address3_utxos[0][PAYMENT_ADDRESS] == address3
+    assert address3_utxos[0][AMOUNT] == 100
+    assert address3_utxos[1][PAYMENT_ADDRESS] == address3
+    assert address3_utxos[1][AMOUNT] == 200
+    assert address4_utxos[0][PAYMENT_ADDRESS] == address4
+    assert address4_utxos[0][AMOUNT] == 100
+    assert address4_utxos[1][PAYMENT_ADDRESS] == address4
+    assert address4_utxos[1][AMOUNT] == 200
+    assert address5_utxos[0][PAYMENT_ADDRESS] == address5
+    assert address5_utxos[0][AMOUNT] == 100
+    assert address5_utxos[1][PAYMENT_ADDRESS] == address5
+    assert address5_utxos[1][AMOUNT] == 200
 
 
 def test_mint_duplicate_address_single_mint(helpers, addresses):
@@ -280,7 +282,7 @@ def test_mint_duplicate_address_single_mint(helpers, addresses):
     ]
 
     with pytest.raises(RequestNackedException):
-        helpers.general.do_mint(outputs)
+        helpers.inner.general.do_mint(outputs)
 
 
 def test_repeat_mint(helpers, addresses):
@@ -297,7 +299,8 @@ def test_repeat_mint(helpers, addresses):
     seq_no_1 = get_seq_no(helpers.sdk.get_first_result(result))
     utxos = helpers.general.get_utxo_addresses([address])[0]
 
-    assert utxos == [{ADDRESS: address, AMOUNT: 100, SEQNO: seq_no_1}]
+    assert utxos[0][PAYMENT_ADDRESS] == address
+    assert utxos[0][AMOUNT] == 100
 
 
 def test_different_mint_amounts(helpers):

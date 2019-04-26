@@ -1,8 +1,12 @@
 import pytest
 
 from types import SimpleNamespace
+
+import sovtoken
+from sovtoken.test.helpers import HelperInnerWallet
 from sovtoken.test.helpers.helper_sdk import HelperSdk
 from sovtoken.test.helpers.helper_wallet import HelperWallet
+from sovtokenfees.test.helpers.helper_request_inner import HelperInnerRequest
 
 from .helper_request import HelperRequest
 from .helper_general import HelperGeneral
@@ -26,11 +30,25 @@ def form_helpers(
         trustee_wallets,
         steward_wallets
     )
+
+    helper_inner_wallet = HelperInnerWallet(
+        looper,
+        sdk_wallet_client,
+        trustee_wallets,
+        steward_wallets
+    )
     helper_node = HelperNode(txn_pool_node_set)
     helper_sdk = HelperSdk(
         looper,
         pool_handle,
         txn_pool_node_set,
+        sdk_wallet_steward
+    )
+    helper_requests_inner = HelperInnerRequest(
+        helper_inner_wallet,
+        helper_sdk,
+        looper,
+        sdk_wallet_client,
         sdk_wallet_steward
     )
     helper_requests = HelperRequest(
@@ -40,7 +58,15 @@ def form_helpers(
         sdk_wallet_client,
         sdk_wallet_steward
     )
-    helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests)
+
+    helper_general = type("HelperGeneral", (
+        HelperGeneral,
+        sovtoken.test.helpers.helper_general.HelperGeneral,
+    ), {})(helper_sdk, helper_wallet, helper_requests)
+    helper_general_inner = type("HelperInnerGeneral", (
+        HelperGeneral,
+        sovtoken.test.helpers.helper_inner_general.HelperInnerGeneral,
+    ), {})(helper_sdk, helper_inner_wallet, helper_requests_inner)
 
     helpers = {
         'request': helper_requests,
@@ -48,6 +74,11 @@ def form_helpers(
         'wallet': helper_wallet,
         'general': helper_general,
         'node': helper_node,
+        'inner': SimpleNamespace(**{
+            'wallet': helper_inner_wallet,
+            'request': helper_requests_inner,
+            'general': helper_general_inner
+        })
     }
 
     return SimpleNamespace(**helpers)

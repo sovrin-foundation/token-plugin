@@ -5,7 +5,7 @@ from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException)
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC
+from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC, PAYMENT_ADDRESS
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
@@ -185,9 +185,6 @@ def test_mint_after_set_fees(helpers, fees_set):
     address = helpers.wallet.create_address()
     outputs = [{ADDRESS: address, AMOUNT: 60}]
     mint_req = helpers.general.do_mint(outputs)
-    utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
-    assert utxos == [{
-        ADDRESS: address,
-        SEQNO: get_seq_no(mint_req),
-        AMOUNT: 60
-    }]
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+    assert utxos[0][PAYMENT_ADDRESS] == address
+    assert utxos[0][AMOUNT] == 60

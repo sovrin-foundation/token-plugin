@@ -1,5 +1,5 @@
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT, TOKEN_LEDGER_ID
+from sovtoken.constants import ADDRESS, AMOUNT, TOKEN_LEDGER_ID, XFER_PUBLIC
 
 from plenum.test.pool_transactions.helper import disconnect_node_and_ensure_disconnected, sdk_add_new_steward_and_node, \
     sdk_add_new_nym, prepare_nym_request, sdk_add_new_node
@@ -55,11 +55,14 @@ def test_first_catchup_with_not_empty_ledger(looper, helpers,
 
     # current_amount, seq_no, _ = add_nym_with_fees(helpers, fees_set, seq_no, looper, addresses, current_amount)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_a_to_b, fees, looper,
-                                                        current_amount, seq_no, transfer_summ=current_amount)
+                                                        current_amount, seq_no,
+                                                        transfer_summ=current_amount)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_b_to_c, fees, looper,
-                                                        current_amount, seq_no, transfer_summ=current_amount)
+                                                        current_amount, seq_no,
+                                                        transfer_summ=current_amount)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_c_to_d, fees, looper,
-                                                        current_amount, seq_no, transfer_summ=current_amount)
+                                                        current_amount, seq_no,
+                                                        transfer_summ=current_amount)
 
     # add node_to_disconnect to pool
     node_to_disconnect = start_stopped_node(reverted_node, looper, tconf,
