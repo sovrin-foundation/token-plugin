@@ -233,8 +233,8 @@ def io_addresses(helpers, addresses):
     _addresses = [helpers.wallet.address_map[addr] for addr in addresses]
 
     def wrapped():
-        with_utxos = [addr for addr in _addresses if addr.total_amount]
-        no_utxos = [addr for addr in _addresses if not addr.total_amount]
+        with_utxos = [addr.address for addr in _addresses if addr.total_amount]
+        no_utxos = [addr.address for addr in _addresses if not addr.total_amount]
         assert with_utxos
 
         # try to make them near equal

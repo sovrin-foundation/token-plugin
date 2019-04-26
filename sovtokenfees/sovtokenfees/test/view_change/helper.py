@@ -34,7 +34,7 @@ def scenario_txns_during_view_change(
     with delay_rules(
         lagging_node.nodeIbStasher, pDelay(), cDelay()
     ):
-        # Send another transactions
+        # Send more transactions
         send_txns()
         ensure_all_nodes_have_same_data(looper, rest_nodes)
 
@@ -89,7 +89,7 @@ def scenario_txns_during_view_change_new(
     with delay_rules(
         lagging_node.nodeIbStasher, pDelay(), cDelay()
     ):
-        # Send another transactions
+        # Send more transactions
         send_txns()
         ensure_all_nodes_have_same_data(looper, rest_nodes)
 

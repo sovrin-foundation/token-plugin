@@ -23,11 +23,6 @@ def fees(request):
     return request.param
 
 
-@pytest.fixture
-def io_addresses(request, addresses):
-    return (lambda: (addresses[:2], addresses[2:]))
-
-
 def test_xfer_during_view_change(
         looper,
         helpers,
