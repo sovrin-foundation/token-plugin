@@ -53,7 +53,7 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
 
-FPM_P_DEPENDS := indy-node(>=1.7.0~dev893)
+FPM_P_DEPENDS := indy-node(>=1.7.0~dev911)
 FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
 endif
 
