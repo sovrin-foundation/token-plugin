@@ -74,7 +74,7 @@ class HelperRequest():
         """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
 
-        mint_request_future = build_mint_req(self._client_wallet_handle, None, json.dumps(outputs_ready), None)
+        mint_request_future = build_mint_req(self._client_wallet_handle, self._wallet._trustee_wallets[0].defaultId, json.dumps(outputs_ready), None)
         mint_request = self._looper.loop.run_until_complete(mint_request_future)[0]
         mint_request = self._sdk.sdk_json_to_request_object(json.loads(mint_request))
         self._wallet.sign_request_trustees(mint_request, number_signers=3)
