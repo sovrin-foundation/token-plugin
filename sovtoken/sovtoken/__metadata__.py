@@ -4,14 +4,14 @@ sovtoken package metadata
 
 # TODO: Update the field values below where needed
 __title__ = 'sovtoken'
-__version_info__ = (0, 9, 9)
+__version_info__ = (0, 9, 10)
 __version__ = '.'.join(map(str, __version_info__))
 __description__ = 'Token Plugin For Indy Plenum'
 __long_description__ = ''
-__url__ = 'https://github.com/evernym/plugin/tree/master/sovtoken'
-__author__ = "Evernym"
+__url__ = 'https://github.com/sovrin-foundation/token-plugin/tree/master/sovtoken'
+__author__ = "Sovrin"
 __author_email__ = ''
-__maintainer__ = "Evernym"
+__maintainer__ = "Sovrin"
 __license__ = "Apache 2.0"
 
 __all__ = [

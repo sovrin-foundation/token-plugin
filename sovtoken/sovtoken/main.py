@@ -1,4 +1,5 @@
-from plenum.common.constants import DOMAIN_LEDGER_ID
+import functools
+from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks
 from sovtoken.client_authnr import TokenAuthNr
 from sovtoken.config import get_config
 from sovtoken.constants import TOKEN_LEDGER_ID
@@ -8,6 +9,7 @@ from sovtoken.token_req_handler import TokenReqHandler
 
 
 def integrate_plugin_in_node(node):
+
     node.config = get_config(node.config)
 
     token_authnr = TokenAuthNr(node.states[DOMAIN_LEDGER_ID])
@@ -34,5 +36,7 @@ def integrate_plugin_in_node(node):
     token_req_handler = TokenReqHandler(ledger, state, utxo_cache,
                                         node.states[DOMAIN_LEDGER_ID], node.bls_bft.bls_store)
     node.register_req_handler(token_req_handler, TOKEN_LEDGER_ID)
-
+    node.db_manager.register_new_database(lid=TOKEN_LEDGER_ID,
+                                          ledger=ledger,
+                                          state=state)
     return node

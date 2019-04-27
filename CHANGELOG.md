@@ -33,8 +33,8 @@
 * A CI/CD pipeline
     * that requires passing tests for merging
     * that requires signed commits
-* Added sovtoken [transaction and response documentation](https://github.com/evernym/plugin/tree/master/sovtoken/doc/Interface)
-* Added sovtokenfees [transaction and response documentation](https://github.com/evernym/plugin/tree/master/sovtokenfees/doc/Interface)
+* Added sovtoken [transaction and response documentation](https://github.com/sovrin-foundation/token-plugin/tree/master/sovtoken/doc/Interface)
+* Added sovtokenfees [transaction and response documentation](https://github.com/sovrin-foundation/token-plugin/tree/master/sovtokenfees/doc/Interface)
 * Bugfixes
 
 

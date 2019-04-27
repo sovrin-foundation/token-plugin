@@ -25,6 +25,7 @@ class FeeData:
         self.reqId = VALID_REQID
         self.identifier = VALID_IDENTIFIER
         self.signatures = SIGNATURES
+        self.payload_digest = None
 
     @property
     def digest(self):
@@ -40,8 +41,8 @@ def pruning_state():
 # ------------------------------------------------------------------------------------
 # gets nodes properly setup, required for some of the test
 @pytest.fixture
-def node(txnPoolNodeSet):
-    a, b, c, d = txnPoolNodeSet
+def node(nodeSet):
+    a, b, c, d = nodeSet
     nodes = [a, b, c, d]
     return nodes
 
@@ -159,6 +160,7 @@ def test_verify_signature_success():
     outputs = [{ADDRESS: '2gWVuNmy8rdJrDHzQ9PDDpHkfcypyUZRsSHaqA9q1K3Gti3YXw', AMOUNT: 9}]
     signatures = ['5cEsNP3tfVLG5hdKfW5dCNVyM6gtoUAgGDsTUsikfNw6ZEJXme4v6KxZPP6wvniwg6FZbeTMtkcQ5TY4uf3ihWsG']
     setattr(msg, "fees", [inputs, outputs, signatures])
+    msg.payload_digest = msg.digest
 
     fees_authenticator.verify_signature(msg)
 

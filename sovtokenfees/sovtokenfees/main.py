@@ -1,5 +1,9 @@
+import functools
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
     NodeHooks, ReplicaHooks
+from plenum.common.txn_util import get_type
+from sovtokenfees.transactions import FeesTransactions
+from typing import Any
 
 
 def integrate_plugin_in_node(node):
@@ -9,6 +13,12 @@ def integrate_plugin_in_node(node):
         ThreePhaseCommitHandler
     from sovtoken import TOKEN_LEDGER_ID
     from sovtoken.client_authnr import TokenAuthNr
+
+    def postCatchupCompleteClb(origin_clb):
+        if origin_clb:
+            origin_clb()
+        fees_req_handler.postCatchupCompleteClbk()
+
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
@@ -35,8 +45,20 @@ def integrate_plugin_in_node(node):
                                             token_state,
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
-                                            node.bls_bft.bls_store)
+                                            node.bls_bft.bls_store, node)
+    origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
+    node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
+        functools.partial(postCatchupCompleteClb, origin_token_clb)
+
+    origin_token_post_added_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk
+
+    def filter_fees(ledger_id: int, txn: Any):
+        origin_token_post_added_clb(ledger_id, txn, get_type(txn) != FeesTransactions.FEES.value)
+
+    node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postTxnAddedToLedgerClbk = filter_fees
     node.clientAuthNr.register_authenticator(fees_authnr)
+    node_config_req_handler = node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
+    node.unregister_req_handler(node_config_req_handler, CONFIG_LEDGER_ID)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
     node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
@@ -46,6 +68,8 @@ def integrate_plugin_in_node(node):
     node.register_hook(NodeHooks.POST_BATCH_REJECTED, fees_req_handler.post_batch_rejected)
     node.register_hook(NodeHooks.POST_BATCH_COMMITTED,
                        fees_req_handler.post_batch_committed)
+    node.register_hook(NodeHooks.POST_NODE_STOPPED,
+                       token_req_handler.on_node_stopping)
 
     three_pc_handler = ThreePhaseCommitHandler(node.master_replica,
                                                token_ledger, token_state,

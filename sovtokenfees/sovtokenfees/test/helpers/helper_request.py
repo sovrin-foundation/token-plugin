@@ -87,7 +87,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         inputs = self._prepare_inputs(inputs)
         outputs = self._prepare_outputs(outputs)
 
-        fees_signatures = self.fees_signatures(inputs, outputs, request.digest)
+        fees_signatures = self.fees_signatures(inputs, outputs, request.payload_digest)
 
         fees = [inputs, outputs, fees_signatures]
         setattr(request, FEES, fees)

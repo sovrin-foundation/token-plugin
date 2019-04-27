@@ -1,15 +1,15 @@
 """
 sovtokenfees package metadata
 """
-__author__ = "Evernym"
+__author__ = "Sovrin"
 __author_email__ = ''
 __description__ = 'Token Fees Plugin For Indy Plenum'
 __license__ = "Apache 2.0"
 __long_description__ = ''
-__maintainer__ = 'Evernym'
+__maintainer__ = 'Sovrin'
 __title__ = 'sovtokenfees'
-__url__ = 'https://github.com/evernym/plugin/tree/master/sovtokenfees'
-__version_info__ = (0, 9, 9)
+__url__ = 'https://github.com/sovrin-foundation/token-plugin/tree/master/sovtokenfees'
+__version_info__ = (0, 9, 10)
 __version__ = '.'.join(map(str, __version_info__))
 
 __all__ = ['__title__',

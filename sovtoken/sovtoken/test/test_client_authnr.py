@@ -16,8 +16,8 @@ from sovtoken.test.helper import xfer_request
 
 
 @pytest.fixture
-def node(txnPoolNodeSet):
-    a, b, c, d = txnPoolNodeSet
+def node(nodeSet):
+    a, b, c, d = nodeSet
     nodes = [a, b, c, d]
     return nodes
 
