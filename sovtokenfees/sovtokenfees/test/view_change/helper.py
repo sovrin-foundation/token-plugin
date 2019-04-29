@@ -70,7 +70,7 @@ def scenario_txns_during_view_change_new(
 
     def send_txns_invalid_default():
         # TODO non-public API is used
-        addr = helpers.wallet.address_map[io_addresses[0][0]]
+        addr = helpers.wallet.address_map[io_addresses()[0][0]]
         seq_no = list(addr.outputs[0])[0]
         assert addr.outputs[0][seq_no] > 0
 

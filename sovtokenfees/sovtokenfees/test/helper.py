@@ -269,14 +269,17 @@ def prepare_outputs(
 
     # OutputsStrategy.transfer_equal
 
-    assert transfer_amount > 0  # TODO is =0 also a valid case
+    assert transfer_amount >= 0
 
     change = total_output_amount - transfer_amount
     # we have enough input amount
     assert change >= 0
 
     # transfer is divided among outputs
-    outputs = divide_equal(addresses, transfer_amount)
+    if transfer_amount:
+        outputs = divide_equal(addresses, transfer_amount)
+    else:
+        outputs = {}
 
     # change goes to any input presented in outputs or first input address
     if change:

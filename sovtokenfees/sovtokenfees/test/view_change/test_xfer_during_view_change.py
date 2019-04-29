@@ -35,6 +35,6 @@ def test_xfer_during_view_change(
         looper,
         helpers,
         nodeSetWithIntegratedTokenPlugin,
-        io_addresses(),
+        io_addresses,
         send_and_check_xfer
     )
