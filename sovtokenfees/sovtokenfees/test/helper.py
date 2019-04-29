@@ -1,9 +1,11 @@
+import pytest
 import json
 from enum import Enum, unique
 
 from stp_core.loop.eventually import eventually
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
+from plenum.common.exceptions import RequestNackedException
 from plenum.common.util import randomString
 from plenum.common.types import f
 from plenum.test.node_catchup.helper import waitNodeDataEquality
@@ -15,7 +17,7 @@ from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.utxo_cache import UTXOAmounts
 from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
 
-from sovtokenfees.constants import FEES
+from sovtokenfees.constants import FEES, MAX_FEE_OUTPUTS
 
 
 @unique
@@ -300,15 +302,27 @@ def send_and_check_xfer(looper, helpers, inputs, outputs):
 
 
 def send_and_check_nym(looper, helpers, inputs, outputs):
-    resp = helpers.sdk.get_first_result(
-        helpers.sdk.send_and_check_request_objects([
-            helpers.request.inject_fees_specific(
-                helpers.request.nym(), inputs, outputs
-            )
-        ])
-    )
-    helpers.wallet.handle_txn_with_fees(resp)
-    return resp
+
+    def _send():
+        return helpers.sdk.get_first_result(
+            helpers.sdk.send_and_check_request_objects([
+                helpers.request.inject_fees_specific(
+                    helpers.request.nym(), inputs, outputs
+                )
+            ])
+        )
+
+    if len(outputs) > MAX_FEE_OUTPUTS:
+        with pytest.raises(
+            RequestNackedException,
+            match=(r".*length should be at most {}.*"
+                   .format(MAX_FEE_OUTPUTS))
+        ):
+            _send()
+    else:
+        resp = _send()
+        helpers.wallet.handle_txn_with_fees(resp)
+        return resp
 
 
 def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,

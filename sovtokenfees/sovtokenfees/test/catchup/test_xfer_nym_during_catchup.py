@@ -7,6 +7,10 @@ from sovtoken.constants import XFER_PUBLIC
 from sovtokenfees.test.catchup.helper import scenario_txns_during_catchup
 
 
+ADDRESSES_NUM = 2
+MINT_UTXOS_NUM = 1
+
+
 @pytest.fixture(
     scope='module',
     params=[

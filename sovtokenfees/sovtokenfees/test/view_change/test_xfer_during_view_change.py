@@ -3,7 +3,6 @@ import pytest
 from sovtoken.constants import XFER_PUBLIC
 
 from sovtokenfees.test.conftest import MintStrategy
-from sovtokenfees.test.helper import InputsStrategy, OutputsStrategy
 
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change_new
 

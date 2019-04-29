@@ -1,11 +1,6 @@
 import pytest
 
-from plenum.common.exceptions import RequestNackedException
-
 from indy_common.constants import NYM
-
-from sovtokenfees.constants import MAX_FEE_OUTPUTS
-from sovtokenfees.test.helper import OutputsStrategy
 
 
 @pytest.fixture(
@@ -26,23 +21,6 @@ def test_nym_with_multiple_io(
     outputs_strategy,
     send_and_check_nym,
 ):
-    def send():
-        if (
-            len(io_addresses.oaddrs) > MAX_FEE_OUTPUTS or
-            (   # some change goes to some input
-                outputs_strategy != OutputsStrategy.transfer_all_equal and
-                io_addresses.oaddrs != io_addresses.iaddrs
-            )
-        ):
-            with pytest.raises(
-                RequestNackedException,
-                match=(r".*length should be at most {}.*"
-                       .format(MAX_FEE_OUTPUTS))
-            ):
-                send_and_check_nym()
-        else:
-            send_and_check_nym()
-
-    send()
+    send_and_check_nym()
     io_addresses.rotate()
-    send()
+    send_and_check_nym()
