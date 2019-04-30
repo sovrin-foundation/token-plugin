@@ -26,3 +26,15 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
         request_with_fees_future = add_request_fees(self._client_wallet_handle, None, json.dumps(request.as_dict),
                                                     json.dumps(inputs), json.dumps(outputs), None)
         return self._looper.loop.run_until_complete(request_with_fees_future)
+
+    def inject_fees_specific(self, request, inputs, outputs):
+        """
+        Sign the fees and add them to a request.
+        """
+        fees_signatures = self.fees_signatures(inputs, outputs, request.payload_digest)
+
+        fees = [inputs, outputs, fees_signatures]
+        setattr(request, FEES, fees)
+
+        return request
+

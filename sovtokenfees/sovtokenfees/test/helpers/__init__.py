@@ -5,9 +5,11 @@ from types import SimpleNamespace
 import sovtoken
 from sovtoken.test.helpers import HelperInnerWallet
 from sovtoken.test.helpers.helper_sdk import HelperSdk
+
 from sovtoken.test.helpers.helper_wallet import HelperWallet
 from sovtokenfees.test.helpers.helper_request_inner import HelperInnerRequest
 
+from .helper_wallet import HelperWallet
 from .helper_request import HelperRequest
 from .helper_general import HelperGeneral
 from .helper_node import HelperNode

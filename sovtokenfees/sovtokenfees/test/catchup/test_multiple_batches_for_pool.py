@@ -5,7 +5,7 @@ from sovtoken.constants import ADDRESS, AMOUNT, TOKEN_LEDGER_ID
 from sovtokenfees.constants import FEES
 
 from plenum.common.constants import TXN_TYPE
-from sovtokenfees.test.helper import get_amount_from_token_txn, add_fees_request_with_address, \
+from sovtokenfees.test.helper import get_amount_from_token_txn, \
     get_committed_txns_count_for_pool, nyms_with_fees
 
 from plenum.common.types import f
