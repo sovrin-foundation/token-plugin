@@ -16,7 +16,7 @@ class UTXOCache(OptimisticKVStore):
         1. Given an output, check whether it is spent. Return the amout it holds when not spent.
         2. Given an address, return all valid UTXOs.
 
-    The key value looks like this 
+    The key value looks like this
         `<key is address> -> <value is a list of unspent seq nos and amounts>`
 
     If address `a1` has 3 UTXOs with seq no 4, 6, 19 and amount 1, 31, 100 respectively,
@@ -170,8 +170,9 @@ class UTXOAmounts:
                     break
 
         if seq_nos:
-            err_msg = "seq_nos {} are not found in list of seq_nos_amounts for address -- current list: {}".format(
+            err_msg = "seq_nos {} are not found in list of seq_nos_amounts for address {} -- current list: {}".format(
                 seq_nos,
+                self.address,
                 self.data)
             raise UTXONotFound(err_msg)
 
@@ -187,8 +188,10 @@ class UTXOAmounts:
                 seq_no = int(self.data[i])
                 amount = int(self.data[i + 1])
             except ValueError:
-                raise UTXOError("Invalid data -- not integers -- seq_no:{} amount:{}".format(self.data[i],
-                                                                                             self.data[i + 1]))
+                raise UTXOError(
+                    "Invalid data -- not integers -- seq_no:{} amount:{}, address:{}"
+                    .format(self.data[i], self.data[i + 1], self.address)
+                )
             rtn.append(Output(self.address, seq_no, amount))
 
 

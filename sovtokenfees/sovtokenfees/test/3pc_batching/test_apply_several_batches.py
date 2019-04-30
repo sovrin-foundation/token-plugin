@@ -7,7 +7,7 @@ from plenum.test.stasher import delay_rules
 from plenum.test.delayers import cDelay
 from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, TOKEN_LEDGER_ID
 from sovtokenfees.constants import FEES
-from sovtokenfees.test.helper import get_amount_from_token_txn, check_uncommitted_txn, add_fees_request_with_address, \
+from sovtokenfees.test.helper import get_amount_from_token_txn, check_uncommitted_txn, \
     get_committed_txns_count_for_pool, nyms_with_fees
 
 from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
