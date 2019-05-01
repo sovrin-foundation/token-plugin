@@ -31,7 +31,7 @@ def test_set_fees_invalid_numeric(helpers):
         }
 
         with pytest.raises(RequestNackedException):
-            helpers.general.do_set_fees(fees)
+            helpers.inner.general.do_set_fees(fees)
 
         ledger_fees = helpers.general.do_get_fees()[FEES]
         assert ledger_fees == {}

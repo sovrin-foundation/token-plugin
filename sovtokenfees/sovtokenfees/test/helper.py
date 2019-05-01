@@ -247,7 +247,7 @@ def prepare_inputs(
 ):
     assert strategy in InputsStrategy, "Unknown input strategy {}".format(strategy)
 
-    addresses = [helpers.wallet.address_map[addr] for addr in addresses]
+    addresses = [helpers.wallet.address_map[addr.replace("pay:sov:", "")] for addr in addresses]
 
     inputs = []
     if strategy == InputsStrategy.all_utxos:
@@ -255,12 +255,12 @@ def prepare_inputs(
             if not addr.all_seq_nos:
                 raise ValueError("no seq_nos for {}".format(addr.address))
             for seq_no in addr.all_seq_nos:
-                inputs.append({ADDRESS: addr.address, SEQNO: seq_no})
+                inputs.append({"source": utxo_from_addr_and_seq_no(addr.address, seq_no), ADDRESS: addr.address, SEQNO: seq_no})
     else:  # InputsStrategy.first_utxo_only
         for addr in addresses:
             if not addr.all_seq_nos:
                 raise ValueError("no seq_nos for {}".format(addr.address))
-            inputs.append({ADDRESS: addr.address, SEQNO: addr.all_seq_nos[0]})
+            inputs.append({"source": utxo_from_addr_and_seq_no(addr.address, addr.all_seq_nos[0]), ADDRESS: addr.address, SEQNO: addr.all_seq_nos[0]})
 
     return inputs
 
@@ -279,7 +279,7 @@ def prepare_outputs(
     assert strategy in OutputsStrategy, "Unknown output strategy {}".format(strategy)
 
     total_input_amount = sum(
-        (helpers.wallet.address_map[i[ADDRESS]].amount(i[SEQNO]) for i in inputs)
+        (helpers.wallet.address_map[i[ADDRESS].replace("pay:sov:", "")].amount(i[SEQNO]) for i in inputs)
     )
 
     # apply fee
@@ -331,10 +331,10 @@ def send_and_check_nym(looper, helpers, inputs, outputs):
 
     def _send():
         return helpers.sdk.get_first_result(
-            helpers.sdk.send_and_check_request_objects([
-                helpers.request.inject_fees_specific(
+            helpers.sdk.sdk_send_and_check([
+                helpers.request.add_fees_specific(
                     helpers.request.nym(), inputs, outputs
-                )
+                )[0]
             ])
         )
 

@@ -2,6 +2,8 @@ import json
 
 from indy import did
 from indy.payment import create_payment_address
+from sovtoken.test.wallet import Address
+
 from plenum.common.util import randomString
 from plenum.common.txn_util import get_payload_data, get_seq_no
 
@@ -33,6 +35,9 @@ class HelperWallet():
         """ Create a new address and add it to the address_map """
         address = create_payment_address(self._client_wallet[0], "sov", "{}")
         address = self._looper.loop.run_until_complete(address)
+        addr = Address()
+        addr.address = address
+        self.address_map[address.replace("pay:sov:", "")] = addr
         return address
 
     def create_new_addresses(self, n):

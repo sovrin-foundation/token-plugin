@@ -223,7 +223,6 @@ def xfer_addresses(helpers, libsovtoken):
 def addresses(helpers, addresses_num):
     return helpers.wallet.create_new_addresses(addresses_num)
 
-
 @pytest.fixture
 def mint_amount_spec(request, addresses, mint_strategy, mint_amount):
     amounts = {addr: 0 for addr in addresses}
@@ -271,7 +270,7 @@ def mint_multiple_tokens(helpers, addresses, mint_utxos_num_spec, mint_amount_sp
 
 @pytest.fixture
 def io_addresses(helpers, addresses):
-    _addresses = [helpers.wallet.address_map[addr] for addr in addresses]
+    _addresses = [helpers.wallet.address_map[addr.replace("pay:sov:", "")] for addr in addresses]
 
     def wrapped():
         with_utxos = [addr.address for addr in _addresses if addr.total_amount]
@@ -410,11 +409,6 @@ def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, cur
         return curr_utxo, resp
 
     return wrapped
-
-
-@pytest.fixture()
-def xfer_addresses(helpers, libsovtoken):
-    return helpers.wallet.create_new_addresses(2)
 
 
 @pytest.fixture()

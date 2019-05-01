@@ -10,6 +10,11 @@ def addresses(helpers):
     return helpers.wallet.create_new_addresses(2)
 
 
+@pytest.fixture
+def addresses_inner(helpers):
+    return helpers.inner.wallet.create_new_addresses(2)
+
+
 @pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]

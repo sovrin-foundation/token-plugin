@@ -376,12 +376,13 @@ def test_token_req_handler_get_query_response_success(
     results = token_handler_a.get_query_response(request)
 
     state_proof = results.pop(STATE_PROOF)
+    address1 = address1.replace("pay:sov:", "")
     assert state_proof
     assert results == {
-        ADDRESS: address1.replace("pay:sov:", ""),
+        ADDRESS: address1,
         TXN_TYPE: GET_UTXO,
-        OUTPUTS: [Output(address=address1.replace("pay:sov:", ""), seq_no=1, value=40)],
-        IDENTIFIER: VALID_IDENTIFIER,
+        OUTPUTS: [Output(address=address1, seq_no=1, value=40)],
+        IDENTIFIER: base58.b58encode(base58.b58decode_check(address1)).decode(),
         TXN_PAYLOAD_METADATA_REQ_ID: request.reqId
     }
 
@@ -418,7 +419,7 @@ def test_token_req_handler_get_all_utxo_success(
         OUTPUTS: [
             Output(address=address1.replace("pay:sov:", ""), seq_no=1, value=40)
         ],
-        IDENTIFIER: VALID_IDENTIFIER,
+        IDENTIFIER: base58.b58encode(base58.b58decode_check(address1.replace("pay:sov:", ""))).decode(),
         TXN_PAYLOAD_METADATA_REQ_ID: request.reqId
     }
 
