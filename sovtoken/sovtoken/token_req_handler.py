@@ -1,6 +1,8 @@
 from typing import List, Optional
 
 import base58
+from indy_common.authorize.auth_actions import AuthActionAdd
+
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
 from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
@@ -32,7 +34,14 @@ class TokenReqHandler(LedgerRequestHandler):
 
     MinSendersForPublicMint = 3
 
-    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache, domain_state, bls_store):
+    def __init__(self,
+                 ledger,
+                 state: PruningState,
+                 utxo_cache: UTXOCache,
+                 domain_state,
+                 bls_store,
+                 # write_req_validator
+                 ):
         super().__init__(ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
@@ -40,6 +49,7 @@ class TokenReqHandler(LedgerRequestHandler):
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
+        # self.write_req_validator = write_req_validator
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
@@ -112,6 +122,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def validate(self, request: Request):
         req_type = request.operation[TXN_TYPE]
+        # self.write_req_validator.validate(request, [AuthActionAdd(txn_type=req_type, field="*", value="*")])
         if req_type == MINT_PUBLIC:
             return validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForPublicMint)
 
