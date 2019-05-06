@@ -5,6 +5,10 @@ from sovtokenfees.test.view_change.helper import scenario_txns_during_view_chang
 from sovtoken.constants import XFER_PUBLIC
 
 
+ADDRESSES_NUM = 2
+MINT_UTXOS_NUM = 1
+
+
 @pytest.fixture(
     scope='module',
     params=[

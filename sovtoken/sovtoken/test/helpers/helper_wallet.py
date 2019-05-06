@@ -1,8 +1,12 @@
 import json
 
 from indy import did
+
 from plenum.client.wallet import Wallet
 from plenum.common.util import randomString
+from plenum.common.txn_util import get_type, get_payload_data, get_seq_no
+
+from sovtoken.constants import INPUTS, OUTPUTS
 from sovtoken.test.wallet import Address
 
 
@@ -103,3 +107,36 @@ class HelperWallet():
 
     def _prepare_outputs(self, outputs):
         return [{"address": address, "amount": amount} for address, amount in outputs]
+
+    def handle_get_utxo_response(self, response):
+        self._update_outputs(response[OUTPUTS])
+
+    def handle_xfer(self, response):
+        data = get_payload_data(response)
+        seq_no = get_seq_no(response)
+        self._update_inputs(data[INPUTS])
+        self._update_outputs(data[OUTPUTS], seq_no)
+
+    def _update_inputs(self, inputs):
+        for inp in inputs:
+            addr = inp["address"]
+            seq_no = inp["seqNo"]
+            if addr in self.address_map:
+                self.address_map[addr].spent(seq_no)
+
+    def _update_outputs(self, outputs, txn_seq_no=None):
+        for output in outputs:
+            try:
+                addr = output["address"]
+                val = output["amount"]
+                try:
+                    seq_no = output["seqNo"]
+                except KeyError as ex:
+                    if txn_seq_no and isinstance(txn_seq_no, int):
+                        seq_no = txn_seq_no
+                    else:
+                        raise ex
+            except Exception:
+                raise ValueError('Cannot handle output {}'.format(output))
+            if addr in self.address_map:
+                self.address_map[addr].add_utxo(seq_no, val)

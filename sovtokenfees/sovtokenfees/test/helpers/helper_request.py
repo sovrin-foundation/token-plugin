@@ -8,6 +8,7 @@ from stp_core.common.log import getlogger
 
 logger = getlogger()
 
+
 class HelperRequest(token_helper_request.HelperRequest):
     """
     Extends the sovtoken HelperRequest with fee related requests.
@@ -68,12 +69,12 @@ class HelperRequest(token_helper_request.HelperRequest):
             change_mod = change % len(change_address)
             outputs = []
             for address in change_address:
-                outputs.append({ADDRESS: address, AMOUNT: change_part+change_mod})
-                change_mod = 0 # Only add remainder once
+                outputs.append({ADDRESS: address, AMOUNT: change_part + change_mod})
+                change_mod = 0  # Only add remainder once
         else:
             outputs = []
 
-        logger.info("*"*20)
+        logger.info("*" * 20)
         logger.info(str(outputs))
 
         request = self.add_fees_specific(request, inputs, outputs)
@@ -87,12 +88,20 @@ class HelperRequest(token_helper_request.HelperRequest):
         inputs = self._prepare_inputs(inputs)
         outputs = self._prepare_outputs(outputs)
 
+        return self.inject_fees_specific(request, inputs, outputs)
+
+
+    def inject_fees_specific(self, request, inputs, outputs):
+        """
+        Sign the fees and add them to a request.
+        """
         fees_signatures = self.fees_signatures(inputs, outputs, request.payload_digest)
 
         fees = [inputs, outputs, fees_signatures]
         setattr(request, FEES, fees)
 
         return request
+
 
     def find_utxos_can_pay(self, utxos, amount):
         """

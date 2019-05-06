@@ -1,8 +1,14 @@
 import pytest
 
-from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
-
 from sovtoken.constants import XFER_PUBLIC
+
+from sovtokenfees.test.conftest import MintStrategy
+
+from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change_new
+
+ADDRESSES_NUM = 4
+MINT_STRATEGY = MintStrategy.multiple_equal
+MINT_UTXOS_NUM = 3
 
 
 @pytest.fixture(
@@ -18,14 +24,17 @@ def fees(request):
 
 def test_xfer_during_view_change(
         looper,
+        helpers,
         nodeSetWithIntegratedTokenPlugin,
         fees_set,
-        curr_utxo,
-        send_and_check_transfer_curr_utxo
+        mint_multiple_tokens,
+        send_and_check_xfer,
+        io_addresses
 ):
-    scenario_txns_during_view_change(
+    scenario_txns_during_view_change_new(
         looper,
+        helpers,
         nodeSetWithIntegratedTokenPlugin,
-        curr_utxo,
-        send_and_check_transfer_curr_utxo
+        io_addresses,
+        send_and_check_xfer
     )
