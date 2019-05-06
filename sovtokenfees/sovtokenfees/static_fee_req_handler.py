@@ -1,7 +1,6 @@
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
-from sovtoken.util import validate_multi_sig_txn
 
 from indy_common.authorize.auth_actions import AuthActionEdit
 from stp_core.common.log import getlogger

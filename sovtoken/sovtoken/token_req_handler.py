@@ -19,7 +19,7 @@ from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
     OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
 from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
-from sovtoken.util import SortedItems, validate_multi_sig_txn
+from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
 from state.trie.pruning_trie import rlp_decode
@@ -120,7 +120,11 @@ class TokenReqHandler(LedgerRequestHandler):
                                                                     value="*")])
 
         elif req_type == XFER_PUBLIC:
-            return self.handle_xfer_public_txn(request)
+            self.handle_xfer_public_txn(request)
+            return self.write_req_validator.validate(request,
+                                                     [AuthActionAdd(txn_type=XFER_PUBLIC,
+                                                                    field="*",
+                                                                    value="*")])
 
         raise InvalidClientMessageException(request.identifier,
                                             getattr(request, 'reqId', None),

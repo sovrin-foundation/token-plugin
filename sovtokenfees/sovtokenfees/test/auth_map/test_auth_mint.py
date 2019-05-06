@@ -1,30 +1,47 @@
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC
-
+from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
-
 from indy_common.authorize.auth_actions import ADD_PREFIX
-
 from indy_common.authorize.auth_constraints import AuthConstraint
-from plenum.common.constants import STEWARD
+from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map, add_mint
+from plenum.common.constants import STEWARD, TXN_TYPE
+from plenum.common.exceptions import RequestRejectedException
 
 
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
     return helpers.general.do_mint(outputs)
 
-@pytest.fixture()
-def addresses(helpers):
-    return helpers.wallet.create_new_addresses(2)
+
+def steward_do_mint(helpers, outputs):
+    """ Sends and check a mint txn """
+    outputs_ready = helpers.request._prepare_outputs(outputs)
+
+    payload = {
+        TXN_TYPE: MINT_PUBLIC,
+        OUTPUTS: outputs_ready,
+    }
+    identifier = helpers.wallet._steward_wallets[0].defaultId
+
+    request = helpers.request._create_request(payload,
+                                              identifier=identifier)
+    request = helpers.wallet.sign_request_stewards(request,
+                                                   number_signers=1)
+    return helpers.general._send_get_first_result(request)
 
 
-def test_xfer_set_with_additional_fees(helpers,
-                                       addresses,
-                                       looper,
-                                       sdk_wallet_trustee,
-                                       sdk_pool_handle):
+def test_auth_mint(helpers,
+                   addresses,
+                   looper,
+                   sdk_wallet_trustee,
+                   sdk_pool_handle):
     """
-    Transfer request with extra set of fees, and fees are set.
+    1. Send a MINT_PUBLIC txn from 3 TRUSTEE
+    2. Change the auth rule for adding MINT_PUBLIC to 1 STEWARD signature
+    3. Send a transfer from 3 TRUSTEE, check that auth validation failed.
+    4. Send and check that a MINT_PUBLIC request with STEWARD signature pass.
+    5. Change the auth rule to a default value.
+    6. Send and check a MINT_PUBLIC txn from 3 TRUSTEE.
     """
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
     helpers.general.do_mint(outputs)
@@ -40,4 +57,18 @@ def test_xfer_set_with_additional_fees(helpers,
                                                                    need_to_be_owner=False).as_dict)
 
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
+    with pytest.raises(RequestRejectedException, match="Not enough STEWARD signatures"):
+        helpers.general.do_mint(outputs)
+
+    steward_do_mint(helpers, outputs)
+
+    sdk_send_and_check_auth_rule_request(looper,
+                                         sdk_wallet_trustee,
+                                         sdk_pool_handle,
+                                         auth_action=ADD_PREFIX,
+                                         auth_type=MINT_PUBLIC,
+                                         field='*',
+                                         new_value='*',
+                                         constraint=sovtokenfees_auth_map[add_mint.get_action_id()].as_dict)
+
     helpers.general.do_mint(outputs)

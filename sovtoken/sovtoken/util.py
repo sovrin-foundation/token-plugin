@@ -52,26 +52,3 @@ class SortedItems:
         while self._heap:
             ordered.append(heappop(self._heap))
         return ordered
-
-
-def validate_multi_sig_txn(request, required_role, domain_state, threshold: int):
-    # Takes a request, a provided role and expects to find at least a threshold number
-    # senders roles with provided role. Can raise an exception
-    senders = request.all_identifiers
-    error = ''
-    if len(senders) >= threshold:
-        authorized_sender_count = 0
-        for idr in senders:
-            if DomainRequestHandler.get_role(domain_state, idr, required_role):
-                authorized_sender_count += 1
-                if authorized_sender_count == threshold:
-                    return
-        error = 'only {} can send this transaction'. \
-            format(Roles(required_role).name)
-    else:
-        error = 'Request needs at least {} signers but only {} found'. \
-            format(threshold, len(senders))
-
-    if error:
-        raise UnauthorizedClientRequest(senders, getattr(request, f.REQ_ID.nm, None), error)
-

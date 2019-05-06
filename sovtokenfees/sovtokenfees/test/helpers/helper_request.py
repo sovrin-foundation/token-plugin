@@ -29,7 +29,8 @@ class HelperRequest(token_helper_request.HelperRequest):
             FEES: fees,
         }
 
-        request = self._create_request(payload)
+        request = self._create_request(payload,
+                                       identifier=self._wallet._trustee_wallets[0].defaultId)
         request = self._wallet.sign_request_trustees(request, number_signers=3)
         return request
 
