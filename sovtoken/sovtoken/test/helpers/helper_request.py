@@ -65,7 +65,7 @@ class HelperRequest():
         inputs_ready = json.dumps(self._prepare_inputs(inputs))
 
         payment_request_future = build_payment_req(
-            self._client_wallet_handle, "LibindyDid111111111111", inputs_ready, outputs_ready, None)
+            self._client_wallet_handle, None, inputs_ready, outputs_ready, None)
         payment_request = self._looper.loop.run_until_complete(payment_request_future)[0]
 
         return self._sdk.sdk_json_to_request_object(json.loads(payment_request))
