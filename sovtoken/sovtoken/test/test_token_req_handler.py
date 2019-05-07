@@ -501,8 +501,7 @@ class TestValidateMintPublic():
             self.handler.validate(mint_request)
 
     def test_valid_request(self, helpers, mint_request):
-        valid = self.handler.validate(mint_request)
-        assert valid is None
+        assert self.handler.validate(mint_request)
 
     @pytest.mark.skip
     def test_quorum_trustees(self, helpers, mint_request, trustee_wallets):
@@ -511,8 +510,7 @@ class TestValidateMintPublic():
             mint_request,
             trustee_wallets
         )
-        valid = self.handler.validate(mint_request)
-        assert valid is None
+        assert self.handler.validate(mint_request)
 
     @pytest.mark.skip
     def test_no_quorum_trustees(self, helpers, mint_request, trustee_wallets):
@@ -537,8 +535,7 @@ class TestValidateMintPublic():
             mint_request,
             increased_trustees
         )
-        valid = self.handler.validate(mint_request)
-        assert valid is None
+        assert self.handler.validate(mint_request)
 
     @pytest.mark.skip
     def test_no_quorum_increased_trustees(
