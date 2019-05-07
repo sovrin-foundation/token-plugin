@@ -374,7 +374,7 @@ class TestCanPayFees():
         """
         Transfer request with valid fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_xfer_fees)
+        fee_handler.can_pay_fees_xfer(request_xfer_fees)
 
     def test_xfer_set_without_fees(
             self,
@@ -387,7 +387,7 @@ class TestCanPayFees():
         Transfer request without fees and fees are set.
         """
         with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request_xfer)
+            fee_handler.can_pay_fees_xfer(request_xfer)
 
     def test_xfer_not_set_with_fees(
             self,
@@ -399,13 +399,13 @@ class TestCanPayFees():
         Transfer request with fees and fees are not set.
         """
         with pytest.raises(ExtraFundsError):
-            fee_handler.can_pay_fees(request_xfer_fees)
+            fee_handler.can_pay_fees_xfer(request_xfer_fees)
 
     def test_xfer_not_set_without_fees(self, helpers, fee_handler, request_xfer):
         """
         Transfer request without fees and fees are not set.
         """
-        fee_handler.can_pay_fees(request_xfer)
+        fee_handler.can_pay_fees_xfer(request_xfer)
 
     def test_xfer_set_with_additional_fees(
             self,
@@ -424,7 +424,7 @@ class TestCanPayFees():
             inputs,
             outputs
         )
-        fee_handler.can_pay_fees(request)
+        fee_handler.can_pay_fees_xfer(request)
 
     def test_nym_set_with_fees(
             self,
@@ -436,7 +436,7 @@ class TestCanPayFees():
         """
         Nym request with fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_nym_fees)
+        fee_handler.can_pay_fees(request_nym_fees, None)
 
     def test_nym_set_with_invalid_fees(
             self,
@@ -457,7 +457,7 @@ class TestCanPayFees():
         )
 
         with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request)
+            fee_handler.can_pay_fees(request, None)
 
     def test_nym_set_without_fees(self, helpers, fee_handler, fees_set):
         """
@@ -469,7 +469,7 @@ class TestCanPayFees():
                 InvalidClientMessageException,
                 message='Fees are required for this txn type'
         ):
-            fee_handler.can_pay_fees(request)
+            fee_handler.can_pay_fees(request, None)
 
     def test_nym_unset_with_fees(self, helpers, fee_handler, request_nym_fees):
         """
@@ -479,14 +479,14 @@ class TestCanPayFees():
                 InvalidClientMessageException,
                 message='Fees are not allowed for this txn type'
         ):
-            fee_handler.can_pay_fees(request_nym_fees)
+            fee_handler.can_pay_fees(request_nym_fees, None)
 
     def test_nym_unset_without_fees(self, helpers, fee_handler):
         """
         Nym request without fees and fees are not set.
         """
         request = helpers.request.nym()
-        fee_handler.can_pay_fees(request)
+        fee_handler.can_pay_fees(request, None)
 
 
 # - Static Fee Request Handler (apply)
