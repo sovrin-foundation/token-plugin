@@ -2,7 +2,6 @@ import json
 
 import pytest
 from indy.did import create_and_store_my_did
-from sovtoken.constants import ADDRESS, AMOUNT
 from sovtoken.test.wallet import Address
 
 from plenum.common.util import randomString
@@ -12,12 +11,6 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym
 @pytest.fixture()
 def addresses(helpers, new_client_wallet):
     return [new_client_wallet[2]] + helpers.wallet.create_new_addresses(4)
-
-
-@pytest.fixture()
-def mint_tokens(helpers, addresses):
-    outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
-    return helpers.general.do_mint(outputs)
 
 
 @pytest.fixture()

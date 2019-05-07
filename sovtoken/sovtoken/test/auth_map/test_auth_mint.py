@@ -3,7 +3,8 @@ from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX
 from indy_common.authorize.auth_constraints import AuthConstraint
-from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map, add_mint
+from sovtoken.sovtoken_auth_map import sovtoken_auth_map, add_mint
+
 from plenum.common.constants import STEWARD, TXN_TYPE
 from plenum.common.exceptions import RequestRejectedException
 
@@ -69,6 +70,6 @@ def test_auth_mint(helpers,
                                          auth_type=MINT_PUBLIC,
                                          field='*',
                                          new_value='*',
-                                         constraint=sovtokenfees_auth_map[add_mint.get_action_id()].as_dict)
+                                         constraint=sovtoken_auth_map[add_mint.get_action_id()].as_dict)
 
     helpers.general.do_mint(outputs)

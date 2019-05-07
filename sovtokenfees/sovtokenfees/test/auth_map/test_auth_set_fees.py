@@ -10,6 +10,11 @@ from plenum.common.constants import STEWARD, TXN_TYPE
 from plenum.common.exceptions import RequestRejectedException
 
 
+@pytest.fixture()
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(4)
+
+
 def steward_do_set_fees(helpers, fees):
     """ Sends and check a set_fees txn """
     payload = {
