@@ -48,8 +48,7 @@ class HelperRequest(token_helper_request.HelperRequest):
         request,
         utxos,
         fee_amount,
-        change_address=None,
-        sign_request=False
+        change_address=None
     ):
         """
         Add fees to a non transfer request.
