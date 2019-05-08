@@ -87,7 +87,7 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
         client_utxos,
         fee_amount=TXN_FEES[NYM],
         change_address=client_address
-    )
+    )[0]
 
     # =============
     # Send nym request.

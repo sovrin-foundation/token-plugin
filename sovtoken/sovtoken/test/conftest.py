@@ -164,6 +164,11 @@ def sdk_stewards(looper, sdk_wallet_handle, poolTxnData):
     return stewards
 
 
+@pytest.fixture(scope="module")
+def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):
+    return sdk_wallet_handle, sdk_stewards[0]
+
+
 @pytest.fixture(scope='module')
 def helpers(
     nodeSetWithIntegratedTokenPlugin,

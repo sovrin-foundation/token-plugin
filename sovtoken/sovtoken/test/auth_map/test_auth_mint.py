@@ -31,6 +31,11 @@ def steward_do_mint(helpers, outputs):
     return helpers.general._send_get_first_result(request)
 
 
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(5)
+
+
 def test_auth_mint(helpers,
                    addresses,
                    looper,

@@ -76,6 +76,7 @@ def test_non_trustee_minting(helpers, addresses):
     outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures = {}
+    request.identifier = helpers.wallet._stewards[0]
     request = json.dumps(request.as_dict)
     request = helpers.wallet.sign_request_stewards(request)
     request = json.loads(request)

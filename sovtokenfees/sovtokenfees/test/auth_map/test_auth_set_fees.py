@@ -23,7 +23,7 @@ def steward_do_set_fees(helpers, fees):
     }
 
     request = helpers.request._create_request(payload,
-                                              identifier=helpers.wallet._steward_wallets[0].defaultId)
+                                              identifier=helpers.wallet._stewards[0])
     request = helpers.wallet.sign_request_stewards(request, number_signers=1)
     return helpers.general._send_get_first_result(request)
 
