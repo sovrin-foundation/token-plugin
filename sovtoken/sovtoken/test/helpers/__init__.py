@@ -52,8 +52,7 @@ def form_helpers(
         helper_sdk,
         looper,
         sdk_wallet_client,
-        sdk_wallet_steward,
-        helper_inner_wallet
+        sdk_wallet_steward
     )
     helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests)
 
