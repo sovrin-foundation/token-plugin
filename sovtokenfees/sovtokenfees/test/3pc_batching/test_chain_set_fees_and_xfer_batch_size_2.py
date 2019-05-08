@@ -15,7 +15,7 @@ from indy_node.test.pool_config.helper import sdk_pool_config_sent
 
 TXN_IN_BATCH = 2
 
-#
+
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
@@ -99,7 +99,6 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
     for n in nodeSetWithIntegratedTokenPlugin:
         fee_rq = n.ledger_to_req_handler[CONFIG_LEDGER_ID]
         assert fee_rq.fees == fees_xfer_3
-
 
     with pytest.raises(RequestRejectedException):
         sdk_get_and_check_replies(looper, a_b_transfer_2)
