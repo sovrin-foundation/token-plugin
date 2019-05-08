@@ -15,7 +15,8 @@ from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.types import f
 from plenum.common.constants import DATA
 from plenum.test.helper import sdk_get_and_check_replies
-from plenum.test.conftest import getValueFromModule
+from plenum.test.conftest import getValueFromModule, sdk_wallet_handle
+from sovtoken.test.conftest import sdk_trustees, sdk_stewards
 
 # fixtures, do not remove
 from indy_node.test.conftest import *
@@ -145,7 +146,10 @@ def helpers(
     steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward,
-    libsovtoken
+    libsovtoken,
+    sdk_wallet_handle,
+    sdk_trustees,
+    sdk_stewards
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -154,7 +158,10 @@ def helpers(
         trustee_wallets,
         steward_wallets,
         sdk_wallet_client,
-        sdk_wallet_steward
+        sdk_wallet_steward,
+        sdk_wallet_handle,
+        sdk_trustees,
+        sdk_stewards
     )
 
 

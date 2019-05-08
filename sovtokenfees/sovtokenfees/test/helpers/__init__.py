@@ -24,12 +24,18 @@ def form_helpers(
     steward_wallets,
     sdk_wallet_client,
     sdk_wallet_steward,
+    sdk_wallet_handle,
+    sdk_trustees,
+    sdk_stewards
 ):
     helper_wallet = HelperWallet(
         looper,
         sdk_wallet_client,
         trustee_wallets,
-        steward_wallets
+        steward_wallets,
+        sdk_wallet_handle,
+        sdk_trustees,
+        sdk_stewards
     )
 
     helper_inner_wallet = HelperInnerWallet(

@@ -76,6 +76,7 @@ def test_non_trustee_minting(helpers, addresses):
     outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures = {}
+    request = json.dumps(request.as_dict())
     request = helpers.wallet.sign_request_stewards(request)
     request = json.loads(request)
     sigs = request["signatures"]
@@ -103,14 +104,14 @@ def test_less_than_min_trustee_minting(helpers, addresses):
         helpers.sdk.send_and_check_request_objects([request])
 
 
-def test_more_than_min_trustee(capsys, helpers, addresses, increased_trustees):
+def test_more_than_min_trustee(capsys, helpers, addresses):
     """
     Should be able to mint with more than the minimum number of trustees.
     """
     [address1, *_] = addresses
     outputs = [{ADDRESS: address1, AMOUNT: 100}]
     request = helpers.request.mint(outputs)
-    request = helpers.wallet.sign_request(request, increased_trustees)
+    request = helpers.wallet.sign_request_trustees(request, number_signers=4)
 
     result = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(result)
@@ -134,7 +135,7 @@ def test_stewards_with_trustees(helpers, addresses, steward_wallets):
     request = helpers.wallet.sign_request_stewards(request, number_signers=1)
     request = json.loads(request)
     signatures = request["signatures"]
-    request = self._sdk.sdk_json_to_request_object(request)
+    request = helpers.sdk.sdk_json_to_request_object(request)
     setattr(request, "signatures", signatures)
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
