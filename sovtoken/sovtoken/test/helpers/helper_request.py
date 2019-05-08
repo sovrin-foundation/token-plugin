@@ -91,7 +91,8 @@ class HelperRequest():
             OUTPUTS: outputs_ready,
         }
 
-        request = self._create_request(payload)
+        request = self._create_request(payload,
+                                       identifier=self._wallet._trustee_wallets[0].defaultId)
         request = self._wallet.sign_request_trustees(request, number_signers=3)
         return request
 
@@ -102,7 +103,7 @@ class HelperRequest():
         role=None,
         dest=None,
         verkey=None,
-        sdk_wallet=None,
+        sdk_wallet=None
     ):
         """
         Builds a nym request.
@@ -133,8 +134,6 @@ class HelperRequest():
 
         nym_request = self._looper.loop.run_until_complete(nym_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
-        request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
-
         return request
 
     def schema(
@@ -146,7 +145,6 @@ class HelperRequest():
         schema_request_future = build_schema_request(sdk_wallet_did, schema_data)
         schema_request = self._looper.loop.run_until_complete(schema_request_future)
         request = self._sdk.sdk_json_to_request_object(json.loads(schema_request))
-        request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
         return request
 
     def _find_wallet_did(self, sdk_wallet):
@@ -187,21 +185,3 @@ class HelperRequest():
             protocolVersion=CURRENT_PROTOCOL_VERSION,
             identifier=identifier
         )
-
-    # Copied this over from another helper. Don't really know what it does.
-    def _sign_sdk(self, request, sdk_wallet=None):
-        request = self._sdk.sdk_sign_request_objects(
-            [request],
-            sdk_wallet=sdk_wallet
-        )[0]
-
-        request = self._sdk.sdk_json_to_request_object(json.loads(request))
-
-        if request.signatures is None:
-            request.signatures = {}
-
-        request.signatures[request._identifier] = request.signature
-        request.signature = None
-        request._identifier = None
-
-        return request

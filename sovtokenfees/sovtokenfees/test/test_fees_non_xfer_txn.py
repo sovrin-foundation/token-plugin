@@ -66,7 +66,7 @@ def test_invalid_fees_numeric(helpers, address_main, mint_tokens):
 def test_zero_fees(
     helpers,
     address_main,
-    mint_tokens,
+    mint_tokens
 ):
     """
     The fee amount is zero
@@ -302,6 +302,7 @@ def test_valid_fees_invalid_payload_sig(
         request,
         address_main
     )
+    request = helpers.wallet.sign_request_trustees(request)
     sigs = getattr(request, f.SIGS.nm)
     # Reverse the signature of NYM txn sender, making it invalid
     first_sig_did = next(iter(sigs.keys()))
@@ -351,7 +352,7 @@ def test_valid_fees_invalid_payload(
     )
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([req])
+        helpers.sdk.send_and_check_request_objects([req], sdk_wallet_client)
 
 
 def test_valid_txn_with_fees(

@@ -99,7 +99,7 @@ class HelperWallet():
         assert number_signers <= len(self._steward_wallets)
         return self.sign_request(request, self._steward_wallets[:number_signers])
 
-    def sign_request(self, request, wallets):
+    def sign_request(self, request, wallets=None):
         """ Sign a request with wallets from plenum/client/wallet """
         for wallet in wallets:
             wallet.do_multi_sig_on_req(request, identifier=wallet.defaultId)

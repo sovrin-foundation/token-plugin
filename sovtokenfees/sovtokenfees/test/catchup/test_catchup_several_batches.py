@@ -3,7 +3,8 @@ import json
 import pytest
 from sovtokenfees.test.helper import get_amount_from_token_txn, nyms_with_fees
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp, \
+    sdk_sign_and_submit_req_obj
 
 from plenum.test.stasher import delay_rules
 
@@ -55,18 +56,21 @@ def test_catchup_several_batches(looper, helpers,
     with delay_rules(reverted_node.nodeIbStasher, cDelay()):
 
         len_batches_before = len(reverted_node.master_replica.batches)
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(req.as_dict) for req in reqs_to_catchup])
+        sdk_requests = []
+        for req in reqs_to_catchup:
+            r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, req)
+            sdk_requests.append(r)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         len_batches_after = len(reverted_node.master_replica.batches)
         """
         Checks, that we have a 2 new batches
         """
         assert len_batches_after - len_batches_before == NUM_BATCHES
-        sdk_get_and_check_replies(looper, r)
+        sdk_get_and_check_replies(looper, sdk_requests)
         reverted_node.start_catchup()
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))
     ensure_all_nodes_have_same_data(looper, node_set)
 
-    r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(req_for_check.as_dict)])
-    sdk_get_and_check_replies(looper, r)
+    r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, req_for_check)
+    sdk_get_and_check_replies(looper, [r])
     ensure_all_nodes_have_same_data(looper, node_set)
