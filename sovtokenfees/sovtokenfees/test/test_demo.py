@@ -89,7 +89,7 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
         nym_request,
         client_utxos,
         fee_amount=TXN_FEES[NYM],
-        change_address=client_address,
+        change_address=client_address
     )
 
     # =============

@@ -7,7 +7,8 @@ from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.test.helper import add_fees_request_with_address, get_head_hash_for_pool, \
     get_uncommitted_txns_count_for_pool
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, sdk_send_random_and_check
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, sdk_send_random_and_check, \
+    sdk_sign_and_submit_req_obj
 
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
@@ -36,14 +37,14 @@ def test_revert_batches_with_fees_unset_fees_without_fee(looper, helpers,
             request_check_health,
             address_main
         )
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_check_health.as_dict)])
+        r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_check_health)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         """
         We send only 1 txn with fees, and expects, 
         that we have only 1 uncommitted txn for token_ledger
         """
         assert get_uncommitted_txns_count_for_pool([reverted_node], TOKEN_LEDGER_ID) - uncommitted_size_before == 1
-        sdk_get_and_check_replies(looper, r)
+        sdk_get_and_check_replies(looper, [r])
         assert get_uncommitted_txns_count_for_pool([reverted_node], TOKEN_LEDGER_ID) - uncommitted_size_before == 1
         """
         Unset fees, for sending txn without fees

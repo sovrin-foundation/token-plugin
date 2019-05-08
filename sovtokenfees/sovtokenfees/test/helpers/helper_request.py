@@ -48,7 +48,8 @@ class HelperRequest(token_helper_request.HelperRequest):
         request,
         utxos,
         fee_amount,
-        change_address=None
+        change_address=None,
+        sign_request=False
     ):
         """
         Add fees to a non transfer request.
@@ -79,7 +80,6 @@ class HelperRequest(token_helper_request.HelperRequest):
         logger.info(str(outputs))
 
         request = self.add_fees_specific(request, inputs, outputs)
-
         return request
 
     def add_fees_specific(self, request, inputs, outputs):

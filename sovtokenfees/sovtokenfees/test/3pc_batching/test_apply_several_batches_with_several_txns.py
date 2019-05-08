@@ -7,7 +7,8 @@ from sovtokenfees.test.helper import get_amount_from_token_txn, nyms_with_fees, 
 
 from plenum.common.constants import NYM, DOMAIN_LEDGER_ID
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp, \
+    sdk_sign_and_submit_req_obj
 
 from plenum.test import waits
 
@@ -42,9 +43,12 @@ def test_apply_several_batches_with_several_txns(looper, helpers,
                               init_seq_no=init_seq_no)
     domain_txns_before = get_committed_txns_count_for_pool(node_set, DOMAIN_LEDGER_ID)
     token_txns_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
-    r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(req.as_dict) for req in all_reqs])
+    sdk_requests = []
+    for req in all_reqs:
+        r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, req)
+        sdk_requests.append(r)
     looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
-    sdk_get_and_check_replies(looper, r)
+    sdk_get_and_check_replies(looper, sdk_requests)
     domain_txns_after = get_committed_txns_count_for_pool(node_set, DOMAIN_LEDGER_ID)
     token_txns_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
 

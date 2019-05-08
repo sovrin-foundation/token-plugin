@@ -71,10 +71,9 @@ def test_authenticate_success(node):
             },
         'protocolVersion': 1
     }
-
-    value = fees_authenticator.authenticate(req_data)
-    assert value is not None
-    assert 4 == len(value)
+    with pytest.raises(InsufficientCorrectSignatures) as ex:
+        fees_authenticator.authenticate(req_data)
+    assert ex.value.args == (0, 4)
 
 
 # ------------------------------------------------------------------------------------
@@ -99,9 +98,9 @@ def test_authenticate_success_one_signature(node):
         'protocolVersion': 1
     }
 
-    value = fees_authenticator.authenticate(req_data)
-    assert value is not None
-    assert 1 == len(value)
+    with pytest.raises(InsufficientCorrectSignatures) as ex:
+        fees_authenticator.authenticate(req_data)
+    assert ex.value.args == (0, 1)
 
 # ------------------------------------------------------------------------------------
 # only 2 of the 4 signatures are valid.  (hint: the last two are mucky)

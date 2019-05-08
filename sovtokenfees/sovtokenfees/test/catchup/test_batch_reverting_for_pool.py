@@ -7,7 +7,7 @@ from sovtokenfees.test.helper import add_fees_request_with_address, check_state
 
 from stp_core.loop.eventually import eventually
 
-from plenum.test.helper import sdk_send_signed_requests, assertExp
+from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_sign_and_submit_req_obj
 
 from plenum.common.startable import Mode
 
@@ -33,7 +33,7 @@ def test_revert_works_for_fees_before_catch_up_on_all_nodes(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
-        sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request.as_dict)])
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request)
 
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, False, retryWait=0.2, timeout=15))
