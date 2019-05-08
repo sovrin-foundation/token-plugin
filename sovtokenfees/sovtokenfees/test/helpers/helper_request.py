@@ -28,8 +28,11 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
 
         request = build_set_txn_fees_req(self._client_wallet_handle, None, 'sov', json.dumps(fees))
         request = self._looper.loop.run_until_complete(request)
-        request = self._sdk.sdk_json_to_request_object(json.loads(request))
         request = self._wallet.sign_request_trustees(request, number_signers=3)
+        request = json.loads(request)
+        sigs = request["signatures"]
+        request = self._sdk.sdk_json_to_request_object(request)
+        setattr(request, "signatures", sigs)
         return request
 
     def get_fees(self):
