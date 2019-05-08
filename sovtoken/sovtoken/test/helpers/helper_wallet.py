@@ -1,6 +1,7 @@
 import json
 
 from indy import did
+from indy.ledger import multi_sign_request
 from indy.payment import create_payment_address
 from sovtoken.test.wallet import Address
 
@@ -24,12 +25,14 @@ class HelperWallet():
     - sign_request_stewards
     """
 
-    def __init__(self, looper, client_wallet, trustee_wallets, steward_wallets):
+    def __init__(self, looper, client_wallet, trustee_wallets, steward_wallets, sdk_wallet_handle, sdk_trustees):
         self._looper = looper
         self._client_wallet = client_wallet
         self._trustee_wallets = trustee_wallets
         self._steward_wallets = steward_wallets
-        self.address_map = {}
+        self.address_map = {},
+        self._wallet_handle = sdk_wallet_handle
+        self._trustees = sdk_trustees
 
     def create_address(self):
         """ Create a new address and add it to the address_map """
@@ -59,8 +62,11 @@ class HelperWallet():
 
     def sign_request_trustees(self, request, number_signers=4):
         """ Sign a request with trustees. """
-        assert number_signers <= len(self._trustee_wallets)
-        return self.sign_request(request, self._trustee_wallets[:number_signers])
+        assert number_signers <= len(self._trustees)
+        for i in range(0, number_signers):
+            fut = multi_sign_request(self._wallet_handle, self._trustees[i], request)
+            request = self._looper.loop.run_until_complete(fut)
+        return request
 
     def sign_request_stewards(self, request, number_signers=4):
         """ Sign a request with stewards. """

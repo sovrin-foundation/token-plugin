@@ -1,3 +1,5 @@
+import json
+
 from plenum.client.wallet import Wallet
 from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY
 from plenum.common.txn_util import get_seq_no
@@ -10,6 +12,8 @@ from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers, libloader
 from indy_node.test.conftest import *
+from indy.did import create_and_store_my_did
+from indy.ledger import build_nym_request, sign_and_submit_request
 
 total_mint = 100
 seller_gets = 40
@@ -132,6 +136,34 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
 @pytest.fixture(scope="module")
 def libsovtoken():
     libloader.load_libsovtoken()
+
+
+@pytest.fixture(scope="module")
+def sdk_trustees(looper, sdk_wallet_handle, sdk_pool_handle):
+    did_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({"seed": "000000000000000000000000Trustee1"}))
+    did_1_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({}))
+    did_2_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({}))
+    did_3_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({}))
+    did, _ = looper.loop.run_until_complete(did_future)
+    did_1, verkey_1 = looper.loop.run_until_complete(did_1_future)
+    did_2, verkey_2 = looper.loop.run_until_complete(did_2_future)
+    did_3, verkey_3 = looper.loop.run_until_complete(did_3_future)
+
+    nym_1 = build_nym_request(did, did_1, verkey_1, None, "TRUSTEE")
+    nym_2 = build_nym_request(did, did_2, verkey_2, None, "TRUSTEE")
+    nym_3 = build_nym_request(did, did_3, verkey_3, None, "TRUSTEE")
+    nym_1 = looper.loop.run_until_complete(nym_1)
+    nym_2 = looper.loop.run_until_complete(nym_2)
+    nym_3 = looper.loop.run_until_complete(nym_3)
+
+    resp_1_future = sign_and_submit_request(sdk_pool_handle, sdk_wallet_handle, did, nym_1)
+    resp_1 = looper.loop.run_until_complete(resp_1_future)
+    resp_2_future = sign_and_submit_request(sdk_pool_handle, sdk_wallet_handle, did, nym_2)
+    resp_2 = looper.loop.run_until_complete(resp_2_future)
+    resp_3_future = sign_and_submit_request(sdk_pool_handle, sdk_wallet_handle, did, nym_3)
+    resp_3 = looper.loop.run_until_complete(resp_3_future)
+
+    return [did, did_1, did_2, did_3]
 
 
 @pytest.fixture(scope='module')

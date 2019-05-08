@@ -21,7 +21,9 @@ def form_helpers(
     trustee_wallets,
     steward_wallets,
     sdk_wallet_client,
-    sdk_wallet_steward
+    sdk_wallet_steward,
+    sdk_wallet_handle,
+    sdk_trustees
 ):
     helper_node = HelperNode(txn_pool_node_set)
     helper_sdk = HelperSdk(
@@ -30,18 +32,28 @@ def form_helpers(
         txn_pool_node_set,
         sdk_wallet_steward
     )
-    helper_wallet = HelperWallet(
+
+    helper_inner_wallet = HelperInnerWallet(
         looper,
         sdk_wallet_client,
         trustee_wallets,
         steward_wallets
+    )
+    helper_wallet = HelperWallet(
+        looper,
+        sdk_wallet_client,
+        trustee_wallets,
+        steward_wallets,
+        sdk_wallet_handle,
+        sdk_trustees
     )
     helper_requests = HelperRequest(
         helper_wallet,
         helper_sdk,
         looper,
         sdk_wallet_client,
-        sdk_wallet_steward
+        sdk_wallet_steward,
+        helper_inner_wallet
     )
     helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests)
 
