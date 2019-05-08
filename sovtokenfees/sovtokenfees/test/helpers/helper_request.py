@@ -26,7 +26,7 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
     def set_fees(self, fees):
         """ Build a request to set the fees. """
 
-        request = build_set_txn_fees_req(self._client_wallet_handle, None, 'sov', json.dumps(fees))
+        request = build_set_txn_fees_req(self._client_wallet_handle, self._wallet._trustees[0], 'sov', json.dumps(fees))
         request = self._looper.loop.run_until_complete(request)
         request = self._wallet.sign_request_trustees(request, number_signers=3)
         request = json.loads(request)
