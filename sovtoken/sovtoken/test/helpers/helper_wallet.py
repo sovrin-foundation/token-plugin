@@ -30,7 +30,7 @@ class HelperWallet():
         self._client_wallet = client_wallet
         self._trustee_wallets = trustee_wallets
         self._steward_wallets = steward_wallets
-        self.address_map = {},
+        self.address_map = {}
         self._wallet_handle = sdk_wallet_handle
         self._trustees = sdk_trustees
 
