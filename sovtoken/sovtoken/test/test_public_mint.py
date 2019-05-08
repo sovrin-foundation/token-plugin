@@ -76,7 +76,7 @@ def test_non_trustee_minting(helpers, addresses):
     outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures = {}
-    request = json.dumps(request.as_dict())
+    request = json.dumps(request.as_dict)
     request = helpers.wallet.sign_request_stewards(request)
     request = json.loads(request)
     sigs = request["signatures"]
@@ -111,7 +111,12 @@ def test_more_than_min_trustee(capsys, helpers, addresses):
     [address1, *_] = addresses
     outputs = [{ADDRESS: address1, AMOUNT: 100}]
     request = helpers.request.mint(outputs)
-    request = helpers.wallet.sign_request_trustees(request, number_signers=4)
+    request = helpers.wallet.sign_request_trustees(json.dumps(request.as_dict), number_signers=4)
+
+    request = json.loads(request)
+    sigs = request["signatures"]
+    request = helpers.sdk.sdk_json_to_request_object(request)
+    setattr(request, "signatures", sigs)
 
     result = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(result)
@@ -131,7 +136,7 @@ def test_stewards_with_trustees(helpers, addresses, steward_wallets):
     # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
     request.signatures.popitem()
     # Add a steward in place of the removed Trustee
-    request = json.dumps(request.as_dict())
+    request = json.dumps(request.as_dict)
     request = helpers.wallet.sign_request_stewards(request, number_signers=1)
     request = json.loads(request)
     signatures = request["signatures"]
