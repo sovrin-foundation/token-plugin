@@ -57,6 +57,9 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.bls_store = bls_store
         self.write_req_validator = write_req_validator
 
+        # In-memory map of sovtokenfees, changes on SET_FEES txns
+        self.fees = self._get_fees(is_committed=True)
+
         self.query_handlers = {
             GET_FEES: self.get_fees,
         }
@@ -72,10 +75,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                       token_ledger.uncommitted_root_hash,
                                                       token_ledger.size)
 
-    @property
-    def fees(self):
-        return self._get_fees()
-
     @staticmethod
     def has_fees(request) -> bool:
         return hasattr(request, FEES) and request.fees is not None
@@ -88,23 +87,11 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_ref_for_txn_fees(ledger_id, seq_no):
         return '{}:{}'.format(ledger_id, seq_no)
 
-    def get_txn_fees(self, request, action_id=None) -> int:
-        fees = self._get_fees()
-        txnid = request.operation[TXN_TYPE]
-        return fees.get(action_id, fees.get(txnid, 0))
+    def get_txn_fees(self, request) -> int:
+        return self.fees.get(request.operation[TXN_TYPE], 0)
 
-    def can_pay_fees_xfer(self, request):
-
-        if request.operation[TXN_TYPE] == XFER_PUBLIC:
-            required_fees = self.get_txn_fees(request)
-            # Fees in XFER_PUBLIC is part of operation[INPUTS]
-            inputs = request.operation[INPUTS]
-            outputs = request.operation[OUTPUTS]
-            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
-            self.deducted_fees_xfer[request.key] = required_fees
-
-    def can_pay_fees(self, request, action_id):
-        required_fees = self.get_txn_fees(request, action_id)
+    def can_pay_fees(self, request):
+        required_fees = self.get_txn_fees(request)
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
@@ -140,9 +127,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
-                sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
-                change_amount = sum([a[AMOUNT] for a in outputs])
-                fees = sum_inputs - change_amount
+                fees = self.get_txn_fees(request)
                 sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
@@ -325,6 +310,7 @@ class StaticFeesReqHandler(FeeReqHandler):
             existing_fees.update(payload[FEES])
             val = self.state_serializer.serialize(existing_fees)
             self.state.set(self.fees_state_key, val)
+            self.fees = existing_fees
         elif typ == FEE_TXN:
             for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
                 TokenReqHandler.spend_input(

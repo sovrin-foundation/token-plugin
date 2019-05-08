@@ -36,7 +36,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     def fee_handler_can_pay_fees(self, request):
         """ Check the request can pay fees using a StaticFeeRequestHandler. """
         request_handler = self.get_fees_req_handler()
-        return request_handler.can_pay_fees(request, None)
+        return request_handler.can_pay_fees(request)
 
     def get_fees_req_handler(self):
         """ Get the fees request handler of the first node """
@@ -46,7 +46,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         req_handler = self._get_fees_req_handler(node)
         empty_fees = req_handler.state_serializer.serialize({})
         req_handler.state.set(req_handler.fees_state_key, empty_fees)
-        # req_handler.fees = {}
+        req_handler.fees = {}
 
     def _get_fees_req_handler(self, node):
         return node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)

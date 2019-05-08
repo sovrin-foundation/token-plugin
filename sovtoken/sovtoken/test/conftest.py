@@ -149,6 +149,11 @@ def sdk_trustees(looper, sdk_wallet_handle, trustee_data):
 
 
 @pytest.fixture(scope="module")
+def sdk_wallet_trustee(sdk_wallet_handle, sdk_trustees):
+    return sdk_wallet_handle, sdk_trustees[0]
+
+
+@pytest.fixture(scope="module")
 def sdk_stewards(looper, sdk_wallet_handle, poolTxnData):
     stewards = []
     pool_txn_stewards_data = get_data_for_role(poolTxnData, STEWARD)
