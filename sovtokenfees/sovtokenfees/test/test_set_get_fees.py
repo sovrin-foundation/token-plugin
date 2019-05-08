@@ -132,7 +132,7 @@ def test_set_fees_with_stewards(helpers):
         json.dumps(fees_request.as_dict),
         number_signers=1
     )
-    assert len(fees_request.signatures) == 3
+    assert len(json.loads(fees_request)["signatures"]) == 3
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.sdk_send_and_check([fees_request])

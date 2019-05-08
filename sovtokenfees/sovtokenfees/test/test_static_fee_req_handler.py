@@ -181,6 +181,10 @@ class TestStaticValidation:
         payload = {TXN_TYPE: '300'}
         request = helpers.request._create_request(payload)
         request = helpers.wallet.sign_request_trustees(json.dumps(request.as_dict), 1)
+        request = json.loads(request)
+        sigs = request["signatures"]
+        request = helpers.sdk.sdk_json_to_request_object(request)
+        setattr(request, "signatures", sigs)
 
         fee_handler.doStaticValidation(request)
 

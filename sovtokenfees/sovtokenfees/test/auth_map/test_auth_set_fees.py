@@ -27,7 +27,7 @@ def steward_do_set_fees(helpers, fees):
     request = helpers.request._create_request(payload,
                                               identifier=helpers.wallet._stewards[0])
     request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict), number_signers=1)
-    helpers.sdk.sdk_send_and_check(request)
+    helpers.sdk.sdk_send_and_check([request])
 
 
 def set_fees(helpers, fees, trustee=True):

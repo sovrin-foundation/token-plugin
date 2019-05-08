@@ -30,7 +30,7 @@ def steward_do_mint(helpers, outputs):
                                               identifier=identifier)
     request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict),
                                                    number_signers=1)
-    helpers.sdk.sdk_send_and_check(request)
+    helpers.sdk.sdk_send_and_check([request])
 
 
 @pytest.fixture
