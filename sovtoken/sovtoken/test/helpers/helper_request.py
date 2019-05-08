@@ -76,8 +76,11 @@ class HelperRequest():
 
         mint_request_future = build_mint_req(self._client_wallet_handle, None, json.dumps(outputs_ready), None)
         mint_request = self._looper.loop.run_until_complete(mint_request_future)[0]
-        mint_request = self._sdk.sdk_json_to_request_object(json.loads(mint_request))
-        self._wallet.sign_request_trustees(mint_request, number_signers=3)
+        mint_request = self._wallet.sign_request_trustees(mint_request, number_signers=3)
+        mint_request = json.loads(mint_request)
+        signatures = mint_request["signatures"]
+        mint_request = self._sdk.sdk_json_to_request_object(mint_request)
+        setattr(mint_request, "signatures", signatures)
         return mint_request
 
     def nym(
