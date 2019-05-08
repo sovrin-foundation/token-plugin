@@ -166,7 +166,6 @@ def helpers(
     trustee_wallets,
     steward_wallets,
     sdk_wallet_client,
-    sdk_wallet_steward,
     libsovtoken,
     sdk_wallet_handle,
     sdk_trustees,
@@ -179,7 +178,7 @@ def helpers(
         trustee_wallets,
         steward_wallets,
         sdk_wallet_client,
-        sdk_wallet_steward,
+        (sdk_wallet_handle, sdk_stewards[0]),
         sdk_wallet_handle,
         sdk_trustees,
         sdk_stewards
