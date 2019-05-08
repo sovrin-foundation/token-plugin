@@ -187,8 +187,8 @@ def helpers(
 
 
 @pytest.fixture()
-def increased_trustees(helpers, trustee_wallets, sdk_trustees):
-    sdk_wallet_trustee = sdk_trustees[0]
+def increased_trustees(helpers, trustee_wallets, sdk_trustees, sdk_wallet_handle):
+    sdk_wallet_trustee = (sdk_wallet_handle, sdk_trustees[0])
     wallets = [helpers.inner.wallet.create_client_wallet() for _ in range(3)]
 
     def _nym_request_from_client_wallet(wallet):

@@ -1,6 +1,8 @@
 # It is assumed the initial minting will give some tokens to the Sovrin
 # Foundation and sovtoken seller platform. From then on, exchange will be
 # responsible for giving tokens to "users".
+import json
+
 import pytest
 
 from base58 import b58encode_check
@@ -66,7 +68,7 @@ def test_trustee_invalid_minting(helpers, addresses):
 
 
 # What about trust anchors, TGB, do those fail as well?
-def test_non_trustee_minting(helpers, steward_wallets, addresses):
+def test_non_trustee_minting(helpers, addresses):
     """
     Non trustees (stewards in this case) should not be able to mint new tokens
     """
@@ -74,7 +76,11 @@ def test_non_trustee_minting(helpers, steward_wallets, addresses):
     outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     request.signatures = {}
-    request = helpers.wallet.sign_request(request, steward_wallets)
+    request = helpers.wallet.sign_request_stewards(request)
+    request = json.loads(request)
+    sigs = request["signatures"]
+    request = helpers.sdk.sdk_json_to_request_object(request)
+    setattr(request, "signatures", sigs)
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
 
@@ -124,8 +130,12 @@ def test_stewards_with_trustees(helpers, addresses, steward_wallets):
     # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
     request.signatures.popitem()
     # Add a steward in place of the removed Trustee
-    request = helpers.wallet.sign_request(request, steward_wallets[0:1])
-
+    request = json.dumps(request.as_dict())
+    request = helpers.wallet.sign_request_stewards(request, number_signers=1)
+    request = json.loads(request)
+    signatures = request["signatures"]
+    request = self._sdk.sdk_json_to_request_object(request)
+    setattr(request, "signatures", signatures)
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
 
