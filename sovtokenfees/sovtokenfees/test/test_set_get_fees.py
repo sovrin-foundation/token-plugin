@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from common.serializers.serialization import state_roots_serializer
@@ -87,10 +89,10 @@ def test_non_trustee_set_fees(helpers):
     }
     fees_request = helpers.request.set_fees(fees)
     fees_request.signatures = None
-    fees_request._identifier = helpers.wallet._steward_wallets[0].defaultId
-    fees_request = helpers.wallet.sign_request_stewards(fees_request)
+    fees_request._identifier = helpers.wallet._stewards[0]
+    fees_request = helpers.wallet.sign_request_stewards(json.dumps(fees_request.as_dict))
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([fees_request])
+        helpers.sdk.sdk_send_and_check([fees_request])
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
 
@@ -127,13 +129,13 @@ def test_set_fees_with_stewards(helpers):
     assert len(fees_request.signatures) == 2
 
     fees_request = helpers.wallet.sign_request_stewards(
-        fees_request,
+        json.dumps(fees_request.as_dict),
         number_signers=1
     )
     assert len(fees_request.signatures) == 3
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([fees_request])
+        helpers.sdk.sdk_send_and_check([fees_request])
 
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}

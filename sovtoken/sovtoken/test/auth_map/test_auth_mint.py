@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
@@ -26,9 +28,9 @@ def steward_do_mint(helpers, outputs):
 
     request = helpers.request._create_request(payload,
                                               identifier=identifier)
-    request = helpers.wallet.sign_request_stewards(request,
+    request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict),
                                                    number_signers=1)
-    return helpers.general._send_get_first_result(request)
+    helpers.sdk.sdk_send_and_check(request)
 
 
 @pytest.fixture
