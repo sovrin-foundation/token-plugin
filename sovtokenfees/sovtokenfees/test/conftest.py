@@ -206,8 +206,8 @@ def mint_tokens(helpers, address_main):
 
 @pytest.fixture()
 def mint_tokens_inner(helpers, address_main_inner):
-    return helpers.inner.general.do_mint([
-        {ADDRESS: address_main_inner, AMOUNT: 1000},
+    return helpers.general.do_mint([
+        {ADDRESS: "pay:sov:" + address_main_inner, AMOUNT: 1000},
     ])
 
 
