@@ -94,7 +94,7 @@ def test_invalid_fees_numeric(helpers, mint_tokens):
 def test_zero_fees(
     helpers,
     address_main,
-    mint_tokens,
+    mint_tokens
 ):
     """
     The fee amount is zero
@@ -378,7 +378,7 @@ def test_valid_fees_invalid_payload(
     )
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([req])
+        helpers.sdk.send_and_check_request_objects([req], sdk_wallet_client)
 
 
 def test_valid_txn_with_fees(

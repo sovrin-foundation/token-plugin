@@ -10,7 +10,7 @@ from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import get_amount_from_token_txn, check_uncommitted_txn, \
     get_committed_txns_count_for_pool, nyms_with_fees
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, sdk_sign_and_submit_req_obj
 
 from plenum.common.constants import DATA, TXN_TYPE
 
@@ -44,12 +44,12 @@ def test_apply_several_batches(looper, helpers,
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin, TOKEN_LEDGER_ID)
     with delay_rules(node_set, cDelay()):
-        r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request1.as_dict)])
-        r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request2.as_dict)])
+        r1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
+        r2 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_uncommitted_txn, n, expected_txns_length, TOKEN_LEDGER_ID, retryWait=0.2, timeout=15))
 
-    sdk_get_and_check_replies(looper, r1)
-    sdk_get_and_check_replies(looper, r2)
+    sdk_get_and_check_replies(looper, [r1])
+    sdk_get_and_check_replies(looper, [r2])
     txns_count_after = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin, TOKEN_LEDGER_ID)
     assert txns_count_after - txns_count_before == expected_txns_length

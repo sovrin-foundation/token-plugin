@@ -90,7 +90,7 @@ def test_non_trustee_minting(helpers, addresses):
 # created here?
 # who can set the number of trustees needed, where is that value configured?
 # Is there a mint limit?
-def test_less_than_min_trustee_minting(helpers, addresses):
+def test_less_than_min_trustee_minting(helpers, addresses, trustee_wallets):
     """
     Less than the required number of trustees participate in minting,
     hence the txn fails
@@ -99,7 +99,10 @@ def test_less_than_min_trustee_minting(helpers, addresses):
     outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
     request = helpers.request.mint(outputs)
     # Remove one signature.
-    request.signatures.popitem()
+    for idr in dict(request.signatures):
+        if idr != request.identifier:
+            request.signatures.pop(idr)
+            break
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
 
@@ -128,13 +131,17 @@ def test_more_than_min_trustee(capsys, helpers, addresses):
     assert address1_utxos[0][AMOUNT] == 100
 
 
-def test_stewards_with_trustees(helpers, addresses, steward_wallets):
+def test_stewards_with_trustees(helpers, addresses, trustee_wallets, steward_wallets):
     [address1, address2, *_] = addresses
 
     outputs = [{ADDRESS: address1, AMOUNT: 1000}, {ADDRESS: address2, AMOUNT: 1000}]
     request = helpers.request.mint(outputs)
+
     # Remove 1 Trustees' signature, assumption is that there were exactly the number of trustees required
-    request.signatures.popitem()
+    for idr in dict(request.signatures):
+        if idr != request.identifier:
+            request.signatures.pop(idr)
+            break
     # Add a steward in place of the removed Trustee
     request = json.dumps(request.as_dict)
     request = helpers.wallet.sign_request_stewards(request, number_signers=1)
@@ -172,21 +179,6 @@ def test_non_existant_dids(helpers, addresses, wallets_non_existant_dids):
     request = helpers.wallet.sign_request(request, wallets_non_existant_dids)
 
     with pytest.raises(RequestNackedException):
-        helpers.sdk.send_and_check_request_objects([request])
-
-
-def test_repeat_trustee(helpers, addresses):
-    """
-        Should not be possible to use the same trustee more than once
-    """
-    [address1, address2, *_] = addresses
-    outputs = [{ADDRESS: address1, AMOUNT: 100}, {ADDRESS: address2, AMOUNT: 60}]
-    request = helpers.request.mint(outputs)
-    request.signatures.popitem()
-    (did, sig) = request.signatures.popitem()
-    request.signatures[did] = sig
-
-    with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([request])
 
 

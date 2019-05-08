@@ -243,9 +243,7 @@ class TestValidation():
         request = helpers.wallet.sign_request(request, increased_trustees)
         assert len(request.signatures) == 7
 
-        valid = fee_handler.validate(request)
-
-        assert valid is None
+        assert fee_handler.validate(request)
 
     def test_get_fees_invalid_identifier(self, helpers, fee_handler):
         """

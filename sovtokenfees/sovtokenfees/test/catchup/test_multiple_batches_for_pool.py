@@ -12,7 +12,7 @@ from plenum.common.types import f
 
 from plenum.test.delayers import cDelay
 
-from plenum.test.helper import sdk_send_signed_requests, assertExp
+from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_sign_and_submit_req_obj
 
 from plenum.test.stasher import delay_rules
 
@@ -53,9 +53,9 @@ def test_multiple_batches_for_pool(looper, helpers,
 
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     with delay_rules(node_stashers, cDelay()):
-        r1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request1.as_dict)])
+        r1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
-        r2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request2.as_dict)])
+        r2 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         for n in node_set:
             n.start_catchup()

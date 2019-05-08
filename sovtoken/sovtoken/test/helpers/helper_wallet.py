@@ -77,7 +77,7 @@ class HelperWallet():
             request = self._looper.loop.run_until_complete(fut)
         return request
 
-    def sign_request(self, request, wallets):
+    def sign_request(self, request, wallets=None):
         """ Sign a request with wallets from plenum/client/wallet """
         for wallet in wallets:
             wallet.do_multi_sig_on_req(request, identifier=wallet.defaultId)

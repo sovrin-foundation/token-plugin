@@ -8,7 +8,7 @@ from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.test.helper import get_committed_txns_count_for_pool, sdk_send_new_nym, \
     get_amount_from_token_txn, nyms_with_fees
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, sdk_sign_and_submit_req_obj
 
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
@@ -55,7 +55,7 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Sending 1 NYM txn with fees
         """
-        r_with_1 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_1.as_dict)])
+        r_with_1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_1)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         """
         Unset fees for pool
@@ -75,16 +75,16 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         """
         Send another NYM txn with fees
         """
-        r_with_2 = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_2.as_dict)])
+        r_with_2 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_2)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
     """
     Reset delays and check, that all txns was ordered successfully
     """
-    sdk_get_and_check_replies(looper, r_with_1)
+    sdk_get_and_check_replies(looper, [r_with_1])
     sdk_get_and_check_replies(looper, r_unset_fees)
     sdk_get_and_check_replies(looper, r_without)
     sdk_get_and_check_replies(looper, r_set_fees)
-    sdk_get_and_check_replies(looper, r_with_2)
+    sdk_get_and_check_replies(looper, [r_with_2])
 
     committed_tokens_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     committed_domain_after = get_committed_txns_count_for_pool(node_set, DOMAIN_LEDGER_ID)

@@ -201,9 +201,9 @@ def increased_trustees(helpers, trustee_wallets, sdk_trustees, sdk_wallet_handle
             sdk_wallet=sdk_wallet_trustee
         )
 
-    requests = map(_nym_request_from_client_wallet, wallets)
+    requests = [_nym_request_from_client_wallet(wallet) for wallet in wallets]
 
-    responses = helpers.sdk.send_and_check_request_objects(requests)
+    responses = helpers.sdk.send_and_check_request_objects(requests, sdk_wallet_trustee)
 
     yield trustee_wallets + wallets
 
@@ -221,4 +221,4 @@ def increased_trustees(helpers, trustee_wallets, sdk_trustees, sdk_wallet_handle
         for _, response in responses
     ]
 
-    helpers.sdk.send_and_check_request_objects(requests)
+    helpers.sdk.send_and_check_request_objects(requests, sdk_wallet_trustee)
