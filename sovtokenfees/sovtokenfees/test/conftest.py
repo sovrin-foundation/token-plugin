@@ -137,7 +137,7 @@ def libsovtoken():
     libloader.load_libsovtoken()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):
     return sdk_wallet_handle, sdk_stewards[0]
 
@@ -423,7 +423,7 @@ def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, cur
     return wrapped
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def sdk_wallet_trustee(sdk_wallet_handle, sdk_trustees):
     return sdk_wallet_handle, sdk_trustees[0]
 
