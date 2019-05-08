@@ -23,7 +23,8 @@ def form_helpers(
     sdk_wallet_client,
     sdk_wallet_steward,
     sdk_wallet_handle,
-    sdk_trustees
+    sdk_trustees,
+    sdk_stewards
 ):
     helper_node = HelperNode(txn_pool_node_set)
     helper_sdk = HelperSdk(
@@ -45,7 +46,8 @@ def form_helpers(
         trustee_wallets,
         steward_wallets,
         sdk_wallet_handle,
-        sdk_trustees
+        sdk_trustees,
+        sdk_stewards
     )
     helper_requests = HelperRequest(
         helper_wallet,

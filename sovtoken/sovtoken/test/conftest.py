@@ -148,6 +148,16 @@ def sdk_trustees(looper, sdk_wallet_handle, trustee_data):
     return trustees
 
 
+@pytest.fixture(scope="module")
+def sdk_stewards(looper, sdk_wallet_handle, pool_txn_stewards_data):
+    stewards = []
+    for _, steward_seed in pool_txn_stewards_data:
+        did_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({"seed": steward_seed}))
+        did, _ = looper.loop.run_until_complete(did_future)
+        stewards.append(did)
+    return stewards
+
+
 @pytest.fixture(scope='module')
 def helpers(
     nodeSetWithIntegratedTokenPlugin,
@@ -159,7 +169,8 @@ def helpers(
     sdk_wallet_steward,
     libsovtoken,
     sdk_wallet_handle,
-    sdk_trustees
+    sdk_trustees,
+    sdk_stewards
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -170,12 +181,14 @@ def helpers(
         sdk_wallet_client,
         sdk_wallet_steward,
         sdk_wallet_handle,
-        sdk_trustees
+        sdk_trustees,
+        sdk_stewards
     )
 
 
 @pytest.fixture()
-def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
+def increased_trustees(helpers, trustee_wallets, sdk_trustees):
+    sdk_wallet_trustee = sdk_trustees[0]
     wallets = [helpers.inner.wallet.create_client_wallet() for _ in range(3)]
 
     def _nym_request_from_client_wallet(wallet):

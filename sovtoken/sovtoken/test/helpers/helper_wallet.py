@@ -25,7 +25,7 @@ class HelperWallet():
     - sign_request_stewards
     """
 
-    def __init__(self, looper, client_wallet, trustee_wallets, steward_wallets, sdk_wallet_handle, sdk_trustees):
+    def __init__(self, looper, client_wallet, trustee_wallets, steward_wallets, sdk_wallet_handle, sdk_trustees, sdk_stewards):
         self._looper = looper
         self._client_wallet = client_wallet
         self._trustee_wallets = trustee_wallets
@@ -33,6 +33,7 @@ class HelperWallet():
         self.address_map = {}
         self._wallet_handle = sdk_wallet_handle
         self._trustees = sdk_trustees
+        self._stewards = sdk_stewards
 
     def create_address(self):
         """ Create a new address and add it to the address_map """
@@ -70,8 +71,11 @@ class HelperWallet():
 
     def sign_request_stewards(self, request, number_signers=4):
         """ Sign a request with stewards. """
-        assert number_signers <= len(self._steward_wallets)
-        return self.sign_request(request, self._steward_wallets[:number_signers])
+        assert number_signers <= len(self._stewards)
+        for i in range(0, number_signers):
+            fut = multi_sign_request(self._wallet_handle, self._stewards[i], request)
+            request = self._looper.loop.run_until_complete(fut)
+        return request
 
     def sign_request(self, request, wallets):
         """ Sign a request with wallets from plenum/client/wallet """
