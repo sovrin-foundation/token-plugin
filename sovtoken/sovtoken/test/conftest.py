@@ -149,8 +149,9 @@ def sdk_trustees(looper, sdk_wallet_handle, trustee_data):
 
 
 @pytest.fixture(scope="module")
-def sdk_stewards(looper, sdk_wallet_handle, pool_txn_stewards_data):
+def sdk_stewards(looper, sdk_wallet_handle, poolTxnData):
     stewards = []
+    pool_txn_stewards_data = get_data_for_role(poolTxnData, STEWARD)
     for _, steward_seed in pool_txn_stewards_data:
         did_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({"seed": steward_seed}))
         did, _ = looper.loop.run_until_complete(did_future)
