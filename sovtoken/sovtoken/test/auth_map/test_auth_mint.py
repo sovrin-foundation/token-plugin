@@ -21,7 +21,7 @@ def steward_do_mint(helpers, outputs):
     request = helpers.request.mint(outputs)
 
     request.signatures = {}
-    request.identifier = helpers.wallet._stewards[0]
+    request._identifier = helpers.wallet._stewards[0]
 
     request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict),
                                                    number_signers=1)
