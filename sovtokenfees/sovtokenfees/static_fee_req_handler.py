@@ -18,10 +18,11 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, FEES_STATE_PREFIX, \
-    FEES_KEY_FOR_ALL
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, \
+    FEES_STATE_PREFIX, \
+    FEES_KEY_FOR_ALL, FEE
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg
+from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg, GetFeeMsg
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
@@ -38,6 +39,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
     query_types = FeeReqHandler.query_types.union({GET_FEES, GET_FEE})
     set_fees_validator_cls = SetFeesMsg
+    get_fee_validator_cls = GetFeeMsg
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
@@ -162,9 +164,11 @@ class StaticFeesReqHandler(FeeReqHandler):
     def doStaticValidation(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] in (SET_FEES, GET_FEES, GET_FEE):
-            if operation[TXN_TYPE] == SET_FEES:
                 try:
-                    self.set_fees_validator_cls(**request.operation)
+                    if operation[TXN_TYPE] == SET_FEES:
+                        self.set_fees_validator_cls(**request.operation)
+                    elif operation[TXN_TYPE] == GET_FEE:
+                        self.get_fee_validator_cls(**request.operation)
                 except TypeError as exc:
                     raise InvalidClientRequest(request.identifier,
                                                request.reqId,
@@ -203,7 +207,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_fee(self, request: Request):
         alias = request.operation.get(ALIAS)
         fee, proof = self._get_fee(alias, is_committed=True, with_proof=True)
-        if fee:
+        if not fee:
             raise InvalidClientRequest(request.identifier, request.reqId,
                                        "'{}' not found.".format(alias))
         result = {f.IDENTIFIER.nm: request.identifier,

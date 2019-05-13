@@ -1,10 +1,11 @@
 from plenum.common.messages.fields import MapField, \
-    NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField, ConstantField
+    NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField, ConstantField, \
+    LimitedLengthStringField
 from plenum.config import SIGNATURE_FIELD_LIMIT
 
 from sovtoken.messages.fields import PublicInputsField, \
     PublicOutputsField
-from sovtokenfees.constants import MAX_FEE_OUTPUTS, FEES, SET_FEES
+from sovtokenfees.constants import MAX_FEE_OUTPUTS, FEES, SET_FEES, FEE_ALIAS_LENGTH, GET_FEES, GET_FEE
 from sovtoken.transactions import TokenTransactions
 
 from plenum.common.messages.message_base import MessageValidator, MessageBase
@@ -27,6 +28,13 @@ FEES_VALUE = 'value'
 
 # WARNING: This validation is a temporary solution!
 # Set of allowed transactions should be moved to config ledger.
+
+
+class GetFeeMsg(MessageBase):
+    schema = (
+        (TXN_TYPE, ConstantField(GET_FEE)),
+        (FEES_ALIAS, LimitedLengthStringField(max_length=FEE_ALIAS_LENGTH)),
+    )
 
 class SetFeesField(MapField):
     def __init__(self, **kwargs):

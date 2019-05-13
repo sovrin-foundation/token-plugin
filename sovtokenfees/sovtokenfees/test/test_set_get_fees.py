@@ -7,7 +7,7 @@ from plenum.common.exceptions import (RequestNackedException,
 from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC
 from sovtoken.test.helper import decode_proof
-from sovtokenfees.constants import FEES
+from sovtokenfees.constants import FEES, FEE
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from state.db.persistent_db import PersistentDB
 from state.trie.pruning_trie import Trie, rlp_encode
@@ -139,6 +139,25 @@ def test_get_fees(helpers, fees_set, fees):
     """
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == fees
+
+
+def test_get_fee(helpers):
+    """
+    Get the sovtokenfee from the ledger by alias
+    """
+    alias = "test_alias"
+    fee = 5
+    helpers.general.do_set_fees({alias: fee})
+    assert fee == helpers.general.do_get_fee(alias)[FEE]
+
+
+def test_get_fee_with_unknown_alias(helpers, fees):
+    """
+    Get the sovtokenfee from the ledger by alias
+    """
+    alias = "test_alias"
+    with pytest.raises(RequestNackedException, match="'{}' not found.".format(alias)):
+        helpers.general.do_get_fee(alias)
 
 
 def test_change_fees(helpers, fees_set, fees):
