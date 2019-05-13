@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
@@ -16,19 +18,19 @@ def mint_tokens(helpers, addresses):
 
 def steward_do_mint(helpers, outputs):
     """ Sends and check a mint txn """
-    outputs_ready = helpers.request._prepare_outputs(outputs)
+    request = helpers.request.mint(outputs)
 
-    payload = {
-        TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: outputs_ready,
-    }
-    identifier = helpers.wallet._steward_wallets[0].defaultId
+    request.signatures = {}
+    request._identifier = helpers.wallet._stewards[0]
 
-    request = helpers.request._create_request(payload,
-                                              identifier=identifier)
-    request = helpers.wallet.sign_request_stewards(request,
+    request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict),
                                                    number_signers=1)
-    return helpers.general._send_get_first_result(request)
+    helpers.sdk.sdk_send_and_check([request])
+
+
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(5)
 
 
 def test_auth_mint(helpers,

@@ -3,7 +3,7 @@ from sovtoken.constants import ADDRESS, AMOUNT
 
 
 @pytest.fixture()
-def xfer_addresses(helpers):
+def xfer_addresses(helpers, libsovtoken):
     return helpers.wallet.create_new_addresses(2)
 
 
