@@ -1,7 +1,7 @@
 import sovtoken.test.helpers.helper_request as token_helper_request
 
-from plenum.common.constants import TXN_TYPE
-from sovtokenfees.constants import SET_FEES, FEES, GET_FEES
+from plenum.common.constants import TXN_TYPE, ALIAS
+from sovtokenfees.constants import SET_FEES, FEES, GET_FEES, GET_FEE
 from sovtoken.constants import AMOUNT, ADDRESS
 
 from stp_core.common.log import getlogger
@@ -38,6 +38,16 @@ class HelperRequest(token_helper_request.HelperRequest):
         """ Build a request to get the fees. """
         payload = {
             TXN_TYPE: GET_FEES
+        }
+
+        request = self._create_request(payload, identifier=self._client_did)
+        return request
+
+    def get_fee(self, alias):
+        """ Build a request to get the fees. """
+        payload = {
+            TXN_TYPE: GET_FEE,
+            ALIAS: alias
         }
 
         request = self._create_request(payload, identifier=self._client_did)

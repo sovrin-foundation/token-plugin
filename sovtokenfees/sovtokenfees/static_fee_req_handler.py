@@ -11,14 +11,14 @@ txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA
+    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA, ALIAS
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEE
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
 from sovtoken.constants import INPUTS, OUTPUTS, \
@@ -32,10 +32,13 @@ from state.trie.pruning_trie import rlp_decode
 txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
+FEES_KEY_DELIMITER = ":"
+FEES_STATE_PREFIX = "200"
+FEES_KEY_FOR_ALL = "fees"
 
 class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
-    query_types = FeeReqHandler.query_types.union({GET_FEES, })
+    query_types = FeeReqHandler.query_types.union({GET_FEES, GET_FEES})
     _fees_validator = FeesStructureField()
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
@@ -62,6 +65,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
         self.query_handlers = {
             GET_FEES: self.get_fees,
+            GET_FEE: self.get_fee,
         }
 
         # Tracks count of transactions paying sovtokenfees while a batch is being
@@ -151,7 +155,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def doStaticValidation(self, request: Request):
         operation = request.operation
-        if operation[TXN_TYPE] in (SET_FEES, GET_FEES):
+        if operation[TXN_TYPE] in (SET_FEES, GET_FEES, GET_FEE):
             error = ''
             if operation[TXN_TYPE] == SET_FEES:
                 error = self._fees_validator.validate(operation.get(FEES))
@@ -184,6 +188,19 @@ class StaticFeesReqHandler(FeeReqHandler):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEES: fees}
+        if proof:
+            result[STATE_PROOF] = proof
+        result.update(request.operation)
+        return result
+
+    def get_fee(self, request: Request):
+        alias = request.operation.get(ALIAS)
+        fee, proof = self._get_fee(alias, is_committed=True, with_proof=True)
+        if fee:
+            raise InvalidClientRequest(request.identifier, request.reqId,
+                                       "'{}' not found.".format(alias))
+        result = {f.IDENTIFIER.nm: request.identifier,
+                  f.REQ_ID.nm: request.reqId, FEE: fee}
         if proof:
             result[STATE_PROOF] = proof
         result.update(request.operation)
@@ -270,11 +287,26 @@ class StaticFeesReqHandler(FeeReqHandler):
             )
 
     def _get_fees(self, is_committed=False, with_proof=False):
-        fees = {}
+        result = self._get_fee_from_state(is_committed=is_committed,
+                                          with_proof=with_proof)
+        if with_proof:
+            fees, proof = result
+            return fees, proof if fees is not None else ({}, None)
+        else:
+            return result if result is not None else {}
+
+    def _get_fee(self, alias, is_committed=False, with_proof=False):
+        return self._get_fee_from_state(alias=alias,
+                                        is_committed=is_committed,
+                                        with_proof=with_proof)
+
+    def _get_fee_from_state(self, alias=None, is_committed=False, with_proof=False):
+        fees = None
+        fee_state_key = StaticFeesReqHandler.build_path_for_set_fees(alias)
         proof = None
         try:
             if with_proof:
-                proof, serz = self.state.generate_state_proof(self.fees_state_key,
+                proof, serz = self.state.generate_state_proof(fee_state_key,
                                                               serialize=True,
                                                               get_value=True)
                 if serz:
@@ -292,7 +324,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 else:
                     proof = {}
             else:
-                serz = self.state.get(self.fees_state_key,
+                serz = self.state.get(fee_state_key,
                                       isCommitted=is_committed)
             if serz:
                 fees = self.state_serializer.deserialize(serz)
@@ -351,6 +383,12 @@ class StaticFeesReqHandler(FeeReqHandler):
         ledger
         """
         return txn
+
+    @staticmethod
+    def build_path_for_set_fees(alias=None):
+        if alias:
+            return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, alias])
+        return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, FEES_KEY_FOR_ALL])
 
     def postCatchupCompleteClbk(self):
         self.token_tracker.set_last_committed(self.token_state.committedHeadHash,
