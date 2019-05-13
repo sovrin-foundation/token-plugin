@@ -19,7 +19,7 @@ def mint_tokens(helpers, addresses):
     return helpers.general.do_mint(outputs)
 
 
-def do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, sdk_wallet, addresses, amount, sign=False):
+def _do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, sdk_wallet, addresses, amount, sign=False):
     [address_giver, address_receiver] = addresses
 
     utxos = helpers.general.get_utxo_addresses([address_giver])[0]
@@ -34,6 +34,12 @@ def do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, sdk_wallet, ad
     requests = sdk_sign_request_objects(looper, sdk_wallet, [request]) \
         if sign else [json.dumps(request.as_dict)]
     sdk_send_and_check(requests, looper, txnPoolNodeSet, sdk_pool_handle)
+
+
+def _check_transfer(helpers, address, transfer_count, seq_no):
+    utxos = helpers.general.do_get_utxo(address)
+    assert utxos[OUTPUTS][-1][AMOUNT] == transfer_count
+    assert utxos[OUTPUTS][-1][SEQNO] == seq_no
 
 
 def test_auth_xfer(helpers,
@@ -54,7 +60,8 @@ def test_auth_xfer(helpers,
     transfer_count = 10
     client_wallet = (new_client_wallet[0], new_client_wallet[1])
 
-    do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
+    _do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
+    _check_transfer(helpers, addresses[1], transfer_count, seq_no=2)
 
     sdk_send_and_check_auth_rule_request(looper,
                                          sdk_wallet_trustee,
@@ -67,10 +74,11 @@ def test_auth_xfer(helpers,
                                                                    need_to_be_owner=False).as_dict)
 
     with pytest.raises(RequestRejectedException, match="Not enough STEWARD signatures"):
-        do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
+        _do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
 
-    do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper,
-                sdk_wallet_steward, addresses[:2], transfer_count, sign=True)
+    _do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper,
+                 sdk_wallet_steward, addresses[:2], transfer_count, sign=True)
+    _check_transfer(helpers, addresses[1], transfer_count, seq_no=3)
 
     sdk_send_and_check_auth_rule_request(looper,
                                          sdk_wallet_trustee,
@@ -81,4 +89,6 @@ def test_auth_xfer(helpers,
                                          new_value='*',
                                          constraint=sovtoken_auth_map[add_xfer.get_action_id()].as_dict)
 
-    do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
+    _do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
+    _check_transfer(helpers, addresses[1], transfer_count, seq_no=4)
+
