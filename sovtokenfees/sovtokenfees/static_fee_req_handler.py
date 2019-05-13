@@ -18,9 +18,10 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEE
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, FEES_STATE_PREFIX, \
+    FEES_KEY_FOR_ALL
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import FeesStructureField, TxnFeesField
+from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
@@ -29,18 +30,14 @@ from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
     UTXOError, InvalidFundsError
 from state.trie.pruning_trie import rlp_decode
 
+
 txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
-FEES_KEY_DELIMITER = ":"
-FEES_STATE_PREFIX = "200"
-FEES_KEY_FOR_ALL = "fees"
-
 class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
-    query_types = FeeReqHandler.query_types.union({GET_FEES, GET_FEES})
-    _fees_validator = FeesStructureField()
-    fees_state_key = b'fees'
+    query_types = FeeReqHandler.query_types.union({GET_FEES, GET_FEE})
+    set_fees_validator_cls = SetFeesMsg
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
@@ -60,9 +57,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.bls_store = bls_store
         self.write_req_validator = write_req_validator
 
-        # In-memory map of sovtokenfees, changes on SET_FEES txns
-        self.fees = self._get_fees(is_committed=True)
-
         self.query_handlers = {
             GET_FEES: self.get_fees,
             GET_FEE: self.get_fee,
@@ -79,6 +73,10 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                       token_ledger.uncommitted_root_hash,
                                                       token_ledger.size)
 
+    @property
+    def fees(self):
+        return self._get_fees(is_committed=False)
+
     @staticmethod
     def has_fees(request) -> bool:
         return hasattr(request, FEES) and request.fees is not None
@@ -91,11 +89,29 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_ref_for_txn_fees(ledger_id, seq_no):
         return '{}:{}'.format(ledger_id, seq_no)
 
+    @staticmethod
+    def build_path_for_set_fees(alias=None):
+        if alias:
+            return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, alias])
+        return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, FEES_KEY_FOR_ALL])
+
     def get_txn_fees(self, request) -> int:
         return self.fees.get(request.operation[TXN_TYPE], 0)
 
-    def can_pay_fees(self, request):
-        required_fees = self.get_txn_fees(request)
+    def calculate_fees_from_req(self, request):
+        inputs = request.fees[0]
+        outputs = self.get_change_for_fees(request)
+        try:
+            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
+        except Exception as e:
+            logger.error("Unexpected exception while sum_inputs calculating: {}".format(e))
+            return 0
+
+        sum_outputs = sum([a[AMOUNT] for a in outputs])
+        return sum_inputs - sum_outputs
+
+
+    def can_pay_fees(self, request, required_fees):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
             # Fees in XFER_PUBLIC is part of operation[INPUTS]
@@ -103,20 +119,10 @@ class StaticFeesReqHandler(FeeReqHandler):
             outputs = request.operation[OUTPUTS]
             self._validate_fees_can_pay(request, inputs, outputs, required_fees)
             self.deducted_fees_xfer[request.key] = required_fees
-        elif required_fees:
-            if StaticFeesReqHandler.has_fees(request):
-                inputs = request.fees[0]
-                outputs = self.get_change_for_fees(request)
-                self._validate_fees_can_pay(request, inputs, outputs, required_fees)
-            else:
-                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                    getattr(request, f.REQ_ID.nm, None),
-                                                    'Fees are required for this txn type')
         else:
-            if StaticFeesReqHandler.has_fees(request):
-                raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
-                                                    getattr(request, f.REQ_ID.nm, None),
-                                                    'Fees are not allowed for this txn type')
+            inputs = request.fees[0]
+            outputs = self.get_change_for_fees(request)
+            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -131,7 +137,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
-                fees = self.get_txn_fees(request)
+                fees = self.calculate_fees_from_req(request)
                 sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
@@ -156,12 +162,13 @@ class StaticFeesReqHandler(FeeReqHandler):
     def doStaticValidation(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] in (SET_FEES, GET_FEES, GET_FEE):
-            error = ''
             if operation[TXN_TYPE] == SET_FEES:
-                error = self._fees_validator.validate(operation.get(FEES))
-            if error:
-                raise InvalidClientRequest(request.identifier, request.reqId,
-                                           error)
+                try:
+                    self.set_fees_validator_cls(**request.operation)
+                except TypeError as exc:
+                    raise InvalidClientRequest(request.identifier,
+                                               request.reqId,
+                                               exc)
         else:
             super().doStaticValidation(request)
 
@@ -296,17 +303,17 @@ class StaticFeesReqHandler(FeeReqHandler):
             return result if result is not None else {}
 
     def _get_fee(self, alias, is_committed=False, with_proof=False):
-        return self._get_fee_from_state(alias=alias,
+        return self._get_fee_from_state(fees_alias=alias,
                                         is_committed=is_committed,
                                         with_proof=with_proof)
 
-    def _get_fee_from_state(self, alias=None, is_committed=False, with_proof=False):
+    def _get_fee_from_state(self, fees_alias=None, is_committed=False, with_proof=False):
         fees = None
-        fee_state_key = StaticFeesReqHandler.build_path_for_set_fees(alias)
         proof = None
         try:
+            fees_key = self.build_path_for_set_fees(alias=fees_alias)
             if with_proof:
-                proof, serz = self.state.generate_state_proof(fee_state_key,
+                proof, serz = self.state.generate_state_proof(fees_key,
                                                               serialize=True,
                                                               get_value=True)
                 if serz:
@@ -324,7 +331,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                 else:
                     proof = {}
             else:
-                serz = self.state.get(fee_state_key,
+                serz = self.state.get(fees_key,
                                       isCommitted=is_committed)
             if serz:
                 fees = self.state_serializer.deserialize(serz)
@@ -334,15 +341,20 @@ class StaticFeesReqHandler(FeeReqHandler):
             return fees, proof
         return fees
 
+    def _set_to_state(self, key, val):
+        val = self.state_serializer.serialize(val)
+        key = key.encode()
+        self.state.set(key, val)
+
     def _update_state_with_single_txn(self, txn, is_committed=False):
         typ = get_type(txn)
         if typ == SET_FEES:
             payload = get_payload_data(txn)
-            existing_fees = self._get_fees(is_committed=is_committed)
-            existing_fees.update(payload[FEES])
-            val = self.state_serializer.serialize(existing_fees)
-            self.state.set(self.fees_state_key, val)
-            self.fees = existing_fees
+            all_fees = payload.get(FEES)
+            for fees_alias, fees_value in all_fees.items():
+                self._set_to_state(self.build_path_for_set_fees(alias=fees_alias), fees_value)
+            self._set_to_state(self.build_path_for_set_fees(), all_fees)
+
         elif typ == FEE_TXN:
             for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
                 TokenReqHandler.spend_input(
@@ -383,12 +395,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         ledger
         """
         return txn
-
-    @staticmethod
-    def build_path_for_set_fees(alias=None):
-        if alias:
-            return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, alias])
-        return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, FEES_KEY_FOR_ALL])
 
     def postCatchupCompleteClbk(self):
         self.token_tracker.set_last_committed(self.token_state.committedHeadHash,

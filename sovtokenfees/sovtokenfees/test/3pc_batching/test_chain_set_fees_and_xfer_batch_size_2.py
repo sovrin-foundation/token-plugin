@@ -65,6 +65,7 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
     transfer_summ = 20
 
     # Set fees and some config txn
+    helpers.node.set_fees_directly({XFER_PUBLIC: 42})
     fees_xfer_2 = {XFER_PUBLIC: 2}
     fees_2_rsp = helpers.general.set_fees_without_waiting(fees_xfer_2)
     sdk_pool_config_sent(looper, sdk_pool_handle,

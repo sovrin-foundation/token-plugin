@@ -1,5 +1,4 @@
 import functools
-
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
@@ -7,6 +6,13 @@ from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
 from plenum.common.txn_util import get_type
 from sovtokenfees.transactions import FeesTransactions
 from typing import Any
+from sovtokenfees.fees_authorizer import FeesAuthorizer
+
+from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks, ReplicaHooks
+
+from indy_common.constants import CONFIG_LEDGER_ID
+
+from plenum.common.txn_util import get_type
 
 
 def integrate_plugin_in_node(node):
@@ -65,8 +71,10 @@ def integrate_plugin_in_node(node):
     node_config_req_handler = node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
     node.unregister_req_handler(node_config_req_handler, CONFIG_LEDGER_ID)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
+    fees_authorizer = FeesAuthorizer(fees_req_handler, config_state=node.getState(CONFIG_LEDGER_ID))
+    node.write_req_validator.register_authorizer(fees_authorizer)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
-    node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
+    # node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)
     node.register_hook(NodeHooks.POST_REQUEST_APPLICATION, fees_req_handler.deduct_fees)
     node.register_hook(NodeHooks.POST_REQUEST_COMMIT, fees_req_handler.commit_fee_txns)
     node.register_hook(NodeHooks.POST_BATCH_CREATED, fees_req_handler.post_batch_created)

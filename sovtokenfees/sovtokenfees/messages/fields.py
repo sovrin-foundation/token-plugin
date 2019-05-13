@@ -1,11 +1,15 @@
 from plenum.common.messages.fields import MapField, \
-    NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField
+    NonNegativeNumberField, NonEmptyStringField, FixedLengthField, IterableField, SignatureField, ConstantField
 from plenum.config import SIGNATURE_FIELD_LIMIT
 
 from sovtoken.messages.fields import PublicInputsField, \
     PublicOutputsField
-from sovtokenfees.constants import MAX_FEE_OUTPUTS
+from sovtokenfees.constants import MAX_FEE_OUTPUTS, FEES, SET_FEES
 from sovtoken.transactions import TokenTransactions
+
+from plenum.common.messages.message_base import MessageValidator, MessageBase
+
+from plenum.common.constants import TXN_TYPE
 
 ALLOWED_FEES_TXNS = [
     TokenTransactions.XFER_PUBLIC.value,
@@ -17,10 +21,14 @@ ALLOWED_FEES_TXNS = [
     "114", #REVOC_REG_ENTRY
 ]
 
+
+FEES_ALIAS = 'alias'
+FEES_VALUE = 'value'
+
 # WARNING: This validation is a temporary solution!
 # Set of allowed transactions should be moved to config ledger.
 
-class FeesStructureField(MapField):
+class SetFeesField(MapField):
     def __init__(self, **kwargs):
         super().__init__(NonEmptyStringField(), NonNegativeNumberField(),
                          **kwargs)
@@ -30,9 +38,12 @@ class FeesStructureField(MapField):
         if error:
             return "set_fees -- " + error
 
-        for (k, _) in val.items():
-            if not k in ALLOWED_FEES_TXNS:
-                return "set_fees -- Fees are not allowed for txn " + k
+
+class SetFeesMsg(MessageBase):
+    schema = (
+        (TXN_TYPE, ConstantField(SET_FEES)),
+        (FEES, SetFeesField()),
+    )
 
 
 class TxnFeesField(FixedLengthField):

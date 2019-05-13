@@ -38,7 +38,7 @@ def form_helpers(
         sdk_wallet_client,
         sdk_wallet_steward
     )
-    helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests)
+    helper_general = HelperGeneral(helper_sdk, helper_wallet, helper_requests, helper_node)
 
     helpers = {
         'general': helper_general,
