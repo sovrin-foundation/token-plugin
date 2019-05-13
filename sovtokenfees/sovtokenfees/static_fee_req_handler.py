@@ -41,14 +41,15 @@ class StaticFeesReqHandler(FeeReqHandler):
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store, node, write_req_validator):
+                 domain_state, bls_store, node, write_req_validator, ts_store=None):
 
         super().__init__(ledger, state,
                          idrCache=node.idrCache,
                          upgrader=node.upgrader,
                          poolManager=node.poolManager,
                          poolCfg=node.poolCfg,
-                         write_req_validator=node.write_req_validator)
+                         write_req_validator=node.write_req_validator,
+                         ts_store=ts_store)
 
         self.token_ledger = token_ledger
         self.token_state = token_state
