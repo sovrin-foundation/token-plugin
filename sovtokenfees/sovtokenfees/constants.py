@@ -10,4 +10,9 @@ SET_FEES = FeesTransactions.SET_FEES.value
 GET_FEES = FeesTransactions.GET_FEES.value
 FEE_TXN = FeesTransactions.FEES.value
 
+FEES_STATE_PREFIX = '200'
+FEES_KEY_DELIMITER = ':'
+FEES_KEY_FOR_ALL = 'fees'
+FEES_FIELD_NAME = 'fees'
+
 MAX_FEE_OUTPUTS = 1

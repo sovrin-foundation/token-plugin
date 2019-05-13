@@ -71,7 +71,7 @@ def integrate_plugin_in_node(node):
     node_config_req_handler = node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
     node.unregister_req_handler(node_config_req_handler, CONFIG_LEDGER_ID)
     node.register_req_handler(fees_req_handler, CONFIG_LEDGER_ID)
-    fees_authorizer = FeesAuthorizer(fees_req_handler)
+    fees_authorizer = FeesAuthorizer(fees_req_handler, config_state=node.getState(CONFIG_LEDGER_ID))
     node.write_req_validator.register_authorizer(fees_authorizer)
     node.register_hook(NodeHooks.PRE_SIG_VERIFICATION, fees_authnr.verify_signature)
     # node.register_hook(NodeHooks.PRE_DYNAMIC_VALIDATION, fees_req_handler.can_pay_fees)

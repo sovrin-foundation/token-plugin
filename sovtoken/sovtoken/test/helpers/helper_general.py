@@ -12,10 +12,11 @@ class HelperGeneral():
     - do_get_utxo
     """
 
-    def __init__(self, helper_sdk, helper_wallet, helper_request):
+    def __init__(self, helper_sdk, helper_wallet, helper_request, helper_node):
         self._sdk = helper_sdk
         self._wallet = helper_wallet
         self._request = helper_request
+        self._node = helper_node
 
     # =============
     # Requests

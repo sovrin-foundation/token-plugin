@@ -63,20 +63,6 @@ def test_fees_can_be_zero(helpers):
     helpers.general.do_nym()
 
 
-def test_trustee_set_fees_for_invalid_txns(helpers):
-    """
-    Fees are not allowed for MINT_PUBLIC
-    """
-    fees = {
-        NYM: 1,
-        MINT_PUBLIC: 2
-    }
-    with pytest.raises(RequestNackedException):
-        helpers.general.do_set_fees(fees)
-    ledger_fees = helpers.general.do_get_fees()[FEES]
-    assert ledger_fees == {}
-
-
 def test_non_trustee_set_fees(helpers):
     """
     Only trustees can change the sovtokenfees
@@ -181,7 +167,7 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
     fees = rlp_encode([StaticFeesReqHandler.state_serializer.serialize(fees)])
     assert client_trie.verify_spv_proof(
         state_roots_serializer.deserialize(result[STATE_PROOF][ROOT_HASH]),
-        StaticFeesReqHandler.fees_state_key, fees, proof_nodes)
+        StaticFeesReqHandler.build_path_for_set_fees(), fees, proof_nodes)
 
 
 def test_mint_after_set_fees(helpers, fees_set):

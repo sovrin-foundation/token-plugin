@@ -1,6 +1,7 @@
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT
-from sovtokenfees.fees_authorizer import FeesAuthorizer, FEES_FIELD_NAME
+from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.fees_authorizer import FeesAuthorizer
 
 from plenum.test.testing_utils import FakeSomething
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
@@ -54,13 +55,13 @@ def fees_authorizer(fees_req_handler):
 def test_get_fees_from_constraint(fees_authorizer,
                                   fees_constraint,
                                   fees):
-    assert fees_authorizer._get_fees_from_constraint(fees_constraint) == fees.get(NYM)
+    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) == fees.get(NYM)
 
 
 def test_get_fees_from_constraint_None_if_empty(fees_authorizer,
                                                 fees_constraint):
     fees_constraint.metadata = {}
-    assert fees_authorizer._get_fees_from_constraint(fees_constraint) is None
+    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) is None
 
 
 def test_fail_on_req_with_fees_but_fees_not_required(fees_authorizer,
