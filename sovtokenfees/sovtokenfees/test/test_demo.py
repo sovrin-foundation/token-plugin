@@ -2,7 +2,7 @@ import pytest
 from plenum.common.constants import NYM
 from plenum.common.txn_util import get_payload_data, get_seq_no
 from sovtokenfees.constants import FEES
-from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO
+from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
 from sovtoken.test.demo.demo_helpers import demo_logger
 
 
@@ -57,15 +57,12 @@ def mint_tokens_to_client(helpers, client_address):
     outputs = [{ADDRESS: client_address, AMOUNT: MINT_TOKEN_AMOUNT}]
     result = helpers.general.do_mint(outputs)
     assert get_payload_data(result)[OUTPUTS][0] == {
-        ADDRESS: client_address,
+        ADDRESS: client_address.replace("pay:sov:", ""),
         AMOUNT: MINT_TOKEN_AMOUNT
     }
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
-    assert client_utxos == [{
-        ADDRESS: client_address,
-        SEQNO: 1,
-        AMOUNT: MINT_TOKEN_AMOUNT
-    }]
+    assert client_utxos[0][PAYMENT_ADDRESS] == client_address
+    assert client_utxos[0][AMOUNT] == MINT_TOKEN_AMOUNT
 
     formatted_utxos = demo_logger.format_json(client_utxos)
     demo_logger.log_header(step4_info)
@@ -90,16 +87,16 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
         client_utxos,
         fee_amount=TXN_FEES[NYM],
         change_address=client_address
-    )
+    )[0]
 
     # =============
     # Send nym request.
     # =============
 
-    responses = helpers.sdk.send_and_check_request_objects([nym_request])
+    responses = helpers.sdk.sdk_send_and_check([nym_request])
     result = helpers.sdk.get_first_result(responses)
 
-    formatted_request = demo_logger.format_json(nym_request.as_dict)
+    formatted_request = demo_logger.format_json(nym_request)
     demo_logger.log_header(step5_info)
     demo_logger.log_blue("Sent NYM request:")
     demo_logger.log_yellow(formatted_request)
@@ -113,11 +110,8 @@ step6_info = """
 def check_tokens_at_address(helpers, client_address):
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
     expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
-    assert client_utxos == [{
-        ADDRESS: client_address,
-        SEQNO: 2,
-        AMOUNT: expected_amount
-    }]
+    assert client_utxos[0][PAYMENT_ADDRESS] == client_address
+    assert client_utxos[0][AMOUNT] == expected_amount
 
     formatted_utxos = demo_logger.format_json(client_utxos)
     demo_logger.log_header(step6_info)
@@ -133,7 +127,7 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
     for fee_txn in transactions:
         fee_data = get_payload_data(fee_txn)
         assert fee_data[OUTPUTS] == [{
-            ADDRESS: client_address,
+            ADDRESS: client_address.replace("pay:sov:", ""),
             AMOUNT: MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
         }]
         assert fee_data[FEES] == TXN_FEES[NYM]

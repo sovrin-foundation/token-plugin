@@ -1,6 +1,8 @@
 from random import randint
 
 import pytest
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+
 from plenum.common.exceptions import RequestRejectedException
 from plenum.common.txn_util import get_seq_no
 
@@ -16,7 +18,7 @@ def test_utxo_reuse(helpers, addresses, initial_mint):
     address1, address2, address3, _, _ = addresses
     mint_seq_no = get_seq_no(initial_mint)
     inputs = [
-        {"address": address1, "seqNo": mint_seq_no},
+        {"source": utxo_from_addr_and_seq_no(address1, mint_seq_no)},
     ]
     outputs = [
         {"address": address1, "amount": 100},
@@ -25,8 +27,8 @@ def test_utxo_reuse(helpers, addresses, initial_mint):
     helpers.sdk.send_and_check_request_objects([request])
 
     inputs = [
-        {"address": address2, "seqNo": mint_seq_no},
-        {"address": address1, "seqNo": mint_seq_no},
+        {"source": utxo_from_addr_and_seq_no(address2, mint_seq_no)},
+        {"source": utxo_from_addr_and_seq_no(address1, mint_seq_no)},
     ]
     outputs = [
         {"address": address3, "amount": 100},
@@ -42,7 +44,7 @@ def test_incorrect_funds(helpers, addresses, initial_mint):
     _, _, _, address4, address5 = addresses
     mint_seq_no = get_seq_no(initial_mint)
     inputs = [
-        {"address": address4, "seqNo": mint_seq_no},
+        {"source": utxo_from_addr_and_seq_no(address4, mint_seq_no)},
     ]
 
     for i in range(200):

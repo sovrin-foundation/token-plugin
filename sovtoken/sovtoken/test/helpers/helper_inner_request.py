@@ -1,16 +1,16 @@
 import json
 
 from indy.ledger import build_nym_request, build_schema_request
-from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req
-from sovtoken.test.constants import VALID_IDENTIFIER
 
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from sovtoken.constants import ADDRESS, AMOUNT
+from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
+    MINT_PUBLIC, GET_UTXO, ADDRESS, SEQNO, AMOUNT
+from sovtoken.util import address_to_verkey
 
 
-class HelperRequest():
+class HelperInnerRequest:
     """
     Helper to build different requests.
 
@@ -40,12 +40,14 @@ class HelperRequest():
 
     def get_utxo(self, address):
         """ Builds a get_utxo request. """
+        payload = {
+            TXN_TYPE: GET_UTXO,
+            ADDRESS: address
+        }
 
-        get_utxo_request_future = build_get_payment_sources_request(self._client_wallet_handle, VALID_IDENTIFIER, address)
-        get_utxo_request = self._looper.loop.run_until_complete(get_utxo_request_future)[0]
-        get_utxo_request = self._sdk.sdk_json_to_request_object(json.loads(get_utxo_request))
+        request = self._create_request(payload, self._client_did)
 
-        return get_utxo_request
+        return request
 
     def get_txn(self, ledger_id, seq_no):
         """ Builds a get_txn request. """
@@ -60,28 +62,39 @@ class HelperRequest():
 
     def transfer(self, inputs, outputs, extra=None, identifier=None):
         """ Builds a transfer request. """
+        payment_signatures = self.payment_signatures(inputs, outputs)
 
-        outputs_ready = json.dumps(self._prepare_outputs(outputs))
-        inputs_ready = json.dumps(self._prepare_inputs(inputs))
+        outputs_ready = self._prepare_outputs(outputs)
+        inputs_ready = self._prepare_inputs(inputs)
 
-        payment_request_future = build_payment_req(
-            self._client_wallet_handle, None, inputs_ready, outputs_ready, None)
-        payment_request = self._looper.loop.run_until_complete(payment_request_future)[0]
+        payload = {
+            TXN_TYPE: XFER_PUBLIC,
+            OUTPUTS: outputs_ready,
+            INPUTS: inputs_ready,
+            EXTRA: extra,
+            SIGS: payment_signatures
+        }
 
-        return self._sdk.sdk_json_to_request_object(json.loads(payment_request))
+        if not identifier:
+            first_address = inputs_ready[0][ADDRESS]
+            identifier = address_to_verkey(first_address)
+
+        request = self._create_request(payload, identifier)
+
+        return request
 
     def mint(self, outputs):
         """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
 
-        mint_request_future = build_mint_req(self._client_wallet_handle, self._wallet._trustees[0], json.dumps(outputs_ready), None)
-        mint_request = self._looper.loop.run_until_complete(mint_request_future)[0]
-        mint_request = self._wallet.sign_request_trustees(mint_request, number_signers=3)
-        mint_request = json.loads(mint_request)
-        signatures = mint_request["signatures"]
-        mint_request = self._sdk.sdk_json_to_request_object(mint_request)
-        setattr(mint_request, "signatures", signatures)
-        return mint_request
+        payload = {
+            TXN_TYPE: MINT_PUBLIC,
+            OUTPUTS: outputs_ready,
+        }
+
+        request = self._create_request(payload)
+        request = self._wallet.sign_request_trustees(request, number_signers=3)
+        return request
 
     def nym(
         self,
@@ -142,19 +155,31 @@ class HelperRequest():
         _, sdk_wallet_did = sdk_wallet
         return sdk_wallet_did
 
+    def payment_signatures(self, inputs, outputs):
+        """ Generate a list of payment signatures from inptus and outputs. """
+        signatures = []
+        inputs = self._prepare_inputs(inputs)
+        outputs = self._prepare_outputs(outputs)
+
+        for utxo in inputs:
+            to_sign = [[utxo], outputs]
+            signer = self._wallet.get_address_instance(utxo[ADDRESS]).signer
+            signature = signer.sign(to_sign)
+            signatures.append(signature)
+
+        return signatures
+
     def _prepare_outputs(self, outputs):
         return [
-            {"recipient": output[ADDRESS], AMOUNT: output[AMOUNT]}
+            {ADDRESS: output[ADDRESS], AMOUNT: output[AMOUNT]}
             for output in outputs
         ]
 
     def _prepare_inputs(self, inputs):
-        inps = [
-            utxo["source"]
+        return [
+            {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
             for utxo in inputs
         ]
-
-        return inps
 
     def _create_request(self, payload, identifier=None):
         return Request(
