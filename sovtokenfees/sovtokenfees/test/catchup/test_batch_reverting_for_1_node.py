@@ -9,7 +9,8 @@ from sovtokenfees.test.helper import get_amount_from_token_txn, \
 
 from stp_core.loop.eventually import eventually
 
-from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
+from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies, \
+    sdk_sign_and_submit_req_obj
 
 from plenum.common.startable import Mode
 
@@ -36,8 +37,8 @@ def test_revert_works_for_fees_before_catch_up_on_one_node(looper, helpers,
         """
         Send NYM with FEES and wait for reply. All of nodes, except reverted_node will order them 
         """
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_1.as_dict)])
-        sdk_get_and_check_replies(looper, r)
+        r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_1)
+        sdk_get_and_check_replies(looper, [r])
         check_state(reverted_node, is_equal=False)
         c_ledger_root_for_other = get_committed_txn_root_for_pool(node_set[:-1], TOKEN_LEDGER_ID)
         """
@@ -58,8 +59,8 @@ def test_revert_works_for_fees_before_catch_up_on_one_node(looper, helpers,
     """
     Send another NYM with FEES and check, that committed ledger's root was changed
     """
-    r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_2.as_dict)])
-    sdk_get_and_check_replies(looper, r)
+    r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_2)
+    sdk_get_and_check_replies(looper, [r])
     c_ledger_root_after = get_committed_txn_root_for_pool(node_set, TOKEN_LEDGER_ID)
     assert c_ledger_root_after != c_ledger_root_before
     ensure_all_nodes_have_same_data(looper, node_set)

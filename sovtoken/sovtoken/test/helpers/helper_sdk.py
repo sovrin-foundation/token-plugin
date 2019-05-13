@@ -40,22 +40,26 @@ class HelperSdk():
     # =============
     # Methods for sending Request from plenum.common.request
 
-    def prepare_request_objects(self, request_objects):
-        """ Prepares the request to be sent by transforming it into json. """
-        return [json.dumps(request.as_dict) for request in request_objects]
+    def prepare_request_objects(self, request_objects, wallet=None, sign=False):
+        """ Prepares the request to be sent by transforming it into json and sign. """
+        if sign and all(not(req.signature or req.signatures) for req in request_objects):
+            requests = self.sdk_sign_request_objects(request_objects, wallet)
+        else:
+            requests = [json.dumps(request.as_dict) for request in request_objects]
+        return requests
 
-    def send_and_check_request_objects(self, request_objects):
+    def send_and_check_request_objects(self, request_objects, wallet=None, sign=True):
         """
         Sends the request objects and checks the replies are valid.
 
         Returns a list of request_response tuples.
         """
-        requests = self.prepare_request_objects(request_objects)
+        requests = self.prepare_request_objects(request_objects, wallet, sign)
         return self.sdk_send_and_check(requests)
 
-    def send_request_objects(self, request_objects):
+    def send_request_objects(self, request_objects, wallet=None, sign=True):
         """ Sends the request objects """
-        requests = self.prepare_request_objects(request_objects)
+        requests = self.prepare_request_objects(request_objects, wallet, sign)
         return self.sdk_send_signed_requests(requests)
 
     # =============

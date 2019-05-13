@@ -87,6 +87,7 @@ def test_non_trustee_set_fees(helpers):
     }
     fees_request = helpers.request.set_fees(fees)
     fees_request.signatures = None
+    fees_request._identifier = helpers.wallet._steward_wallets[0].defaultId
     fees_request = helpers.wallet.sign_request_stewards(fees_request)
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([fees_request])
@@ -103,7 +104,10 @@ def test_set_fees_not_enough_trustees(helpers):
         XFER_PUBLIC: 2
     }
     fees_request = helpers.request.set_fees(fees)
-    fees_request.signatures.popitem()
+    for idr in dict(fees_request.signatures).keys():
+        if idr != fees_request.identifier:
+            fees_request.signatures.pop(idr)
+            break
     assert len(fees_request.signatures) == 2
 
     with pytest.raises(RequestRejectedException):

@@ -1,7 +1,8 @@
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
 from common.serializers.base58_serializer import Base58Serializer
-from sovtoken.util import validate_multi_sig_txn
+
+from indy_common.authorize.auth_actions import AuthActionEdit
 from stp_core.common.log import getlogger
 from plenum.server.node import Node
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
@@ -36,12 +37,11 @@ class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
     query_types = FeeReqHandler.query_types.union({GET_FEES, })
     _fees_validator = FeesStructureField()
-    MinSendersForFees = 3
     fees_state_key = b'fees'
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
-                 domain_state, bls_store, node):
+                 domain_state, bls_store, node, write_req_validator):
 
         super().__init__(ledger, state,
                          idrCache=node.idrCache,
@@ -55,6 +55,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
+        self.write_req_validator = write_req_validator
 
         # In-memory map of sovtokenfees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
@@ -165,7 +166,11 @@ class StaticFeesReqHandler(FeeReqHandler):
     def validate(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == SET_FEES:
-            validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForFees)
+            return self.write_req_validator.validate(request,
+                                                     [AuthActionEdit(txn_type=SET_FEES,
+                                                                     field="*",
+                                                                     old_value="*",
+                                                                     new_value="*")])
         else:
             super().validate(request)
 

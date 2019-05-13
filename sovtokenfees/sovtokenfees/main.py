@@ -1,4 +1,9 @@
 import functools
+from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
+
+from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID, \
+    NodeHooks, ReplicaHooks
+from plenum.common.txn_util import get_type
 from sovtokenfees.transactions import FeesTransactions
 from typing import Any
 from sovtokenfees.fees_authorizer import FeesAuthorizer
@@ -23,6 +28,7 @@ def integrate_plugin_in_node(node):
             origin_clb()
         fees_req_handler.postCatchupCompleteClbk()
 
+    node.write_req_validator.auth_map.update(sovtokenfees_auth_map)
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
@@ -49,7 +55,8 @@ def integrate_plugin_in_node(node):
                                             token_state,
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
-                                            node.bls_bft.bls_store, node)
+                                            node.bls_bft.bls_store, node,
+                                            node.write_req_validator)
     origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)
