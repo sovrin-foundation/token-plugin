@@ -94,7 +94,6 @@ def _restart_node(txnPoolNodeSet, looper, tconf, tdir, allPluginsPath, do_post_n
                                             txnPoolNodeSet,
                                             node_to_disconnect.name,
                                             stopNode=True)
-    # node_to_disconnect.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache._store.close()
     looper.removeProdable(node_to_disconnect)
     restarted_node = start_stopped_node(node_to_disconnect, looper,
                                         tconf, tdir, allPluginsPath,
