@@ -1,4 +1,5 @@
 import pytest
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.txn_util import get_seq_no
 from sovtoken.util import update_token_wallet_with_result
@@ -36,7 +37,7 @@ def mint_tokens(helpers, addresses):
 
 
 def sovrin_sends_tokens(helpers, addresses):
-    inputs = [{"address": addresses[SOVRIN], "seqNo": 1}]
+    inputs = helpers.general.get_utxo_addresses([addresses[SOVRIN]])[0]
     outputs = [
         {"address": addresses[USER1], "amount": SOVRIN_TO_USER1},
         {"address": addresses[USER2], "amount": SOVRIN_TO_USER2},
@@ -50,7 +51,7 @@ def sovrin_sends_tokens(helpers, addresses):
 
 
 def user1_sends_tokens(helpers, addresses):
-    inputs = [{"address": addresses[USER1], "seqNo": 2}]
+    inputs = [{"source": utxo_from_addr_and_seq_no(addresses[USER1], 2)}]
     outputs = [
         {"address": addresses[USER2], "amount": USER1_TO_USER2},
         {"address": addresses[USER1], "amount": SOVRIN_TO_USER1 - USER1_TO_USER2},

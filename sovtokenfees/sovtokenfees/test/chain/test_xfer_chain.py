@@ -7,10 +7,9 @@ from plenum.common.exceptions import RequestRejectedException
 def send_transfer_request(helpers, addresses, amount, adjust_change=0):
     [address_giver, address_receiver] = addresses
 
-    utxos = helpers.general.get_utxo_addresses([address_giver])
+    utxos = helpers.general.get_utxo_addresses([address_giver])[0]
 
-    utxos = helpers.request.find_utxos_can_pay(utxos[0], amount)
-    inputs = [{ADDRESS: utxo["address"], SEQNO: utxo["seqNo"]} for utxo in utxos]
+    inputs = helpers.request.find_utxos_can_pay(utxos, amount)
     change = sum([utxo["amount"] for utxo in utxos]) - amount
     outputs = [
         {ADDRESS: address_receiver, AMOUNT: amount},

@@ -2,7 +2,7 @@ import functools
 
 import pytest
 
-from sovtoken.constants import XFER_PUBLIC, ADDRESS, AMOUNT, SEQNO, OUTPUTS
+from sovtoken.constants import XFER_PUBLIC, ADDRESS, AMOUNT, SEQNO, OUTPUTS, PAYMENT_ADDRESS
 from sovtokenfees.constants import FEES
 from sovtokenfees.test.helper import check_state, ensure_all_nodes_have_same_data, send_and_check_nym_with_fees
 
@@ -43,11 +43,7 @@ def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegrate
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     addr = xfer_addresses[0]
-    seq_no = get_seq_no(xfer_mint_tokens)
-    utxo = [{
-        ADDRESS: addr,
-        SEQNO: seq_no
-    }]
+    utxo = helpers.general.get_utxo_addresses([addr])[0]
 
     outputs = [{
         ADDRESS: xfer_addresses[1],
@@ -72,10 +68,9 @@ def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegrate
     for n in nodes:
         looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
-    utxos = helpers.general.do_get_utxo(xfer_addresses[1])
-    assert utxos[OUTPUTS][0][ADDRESS] == xfer_addresses[1]
-    assert utxos[OUTPUTS][0][AMOUNT] == 998
-    assert utxos[OUTPUTS][0][SEQNO] == seq_no+1
+    utxos = helpers.general.get_utxo_addresses(xfer_addresses[1:])[0]
+    assert utxos[0][PAYMENT_ADDRESS] == xfer_addresses[1]
+    assert utxos[0][AMOUNT] == 998
 
 
 def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
@@ -107,10 +102,39 @@ def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegrated
     for n in nodes:
         looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
-    utxos = helpers.general.do_get_utxo(xfer_addresses[0])
-    assert utxos[OUTPUTS][0][ADDRESS] == xfer_addresses[0]
-    assert utxos[OUTPUTS][0][AMOUNT] == 998
-    assert utxos[OUTPUTS][0][SEQNO] == seq_no + 1
+    utxos = helpers.general.get_utxo_addresses([xfer_addresses[0]])[0]
+    assert utxos[0][PAYMENT_ADDRESS] == xfer_addresses[0]
+    assert utxos[0][AMOUNT] == 998
+
+
+def test_revert_during_view_change_all_nodes_set_fees(tconf, nodeSetWithIntegratedTokenPlugin,
+                                    fees_set, helpers, looper):
+    """
+        Check that SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
+    """
+    nodes = nodeSetWithIntegratedTokenPlugin
+    node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+
+    _old_pp_seq_no = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    helpers.general.set_fees_without_waiting({ATTRIB: 3})
+
+    assert _old_pp_seq_no == get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+
+    with delay_rules(node_set, cDelay()):
+        # should be changed for auth rule
+        helpers.general.set_fees_without_waiting({ATTRIB: 4})
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_pp_seq_no, nodeSetWithIntegratedTokenPlugin)))
+        ensure_view_change(looper, nodes)
+
+    ensureElectionsDone(looper=looper, nodes=nodes)
+    ensure_all_nodes_have_same_data(looper, nodes)
+    for n in nodes:
+        looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
+    for n in nodes:
+        looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
+
+    fees = helpers.general.do_get_fees()
+    assert fees[FEES][ATTRIB] == 4
 
 
 @pytest.mark.skip(reason="Skipped because of incorrect revert of SET_FEES")

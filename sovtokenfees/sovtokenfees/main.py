@@ -56,7 +56,8 @@ def integrate_plugin_in_node(node):
                                             utxo_cache,
                                             node.getState(DOMAIN_LEDGER_ID),
                                             node.bls_bft.bls_store, node,
-                                            node.write_req_validator)
+                                            node.write_req_validator,
+                                            ts_store=node.getStateTsDbStorage())
     origin_token_clb = node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)

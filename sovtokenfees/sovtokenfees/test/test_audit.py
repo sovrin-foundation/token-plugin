@@ -1,8 +1,17 @@
-from sovtoken.constants import ADDRESS, AMOUNT, SEQNO
+import pytest
+from sovtoken.constants import ADDRESS, AMOUNT
 
 from plenum.common.constants import TXN_PAYLOAD, TXN_PAYLOAD_DATA, AUDIT_TXN_LEDGERS_SIZE, AUDIT_TXN_LEDGER_ROOT
-from plenum.common.txn_util import get_seq_no
 
+@pytest.fixture()
+def xfer_addresses(helpers, libsovtoken):
+    return helpers.wallet.create_new_addresses(2)
+
+
+@pytest.fixture()
+def xfer_mint_tokens(helpers, xfer_addresses):
+    outputs = [{ADDRESS: xfer_addresses[0], AMOUNT: 1000}]
+    return helpers.general.do_mint(outputs)
 
 def test_revert_fees_reset(looper, helpers, txnPoolNodeSet,
                            nodeSetWithIntegratedTokenPlugin,
@@ -13,8 +22,7 @@ def test_revert_fees_reset(looper, helpers, txnPoolNodeSet,
 
     # nodes[0].
     [address_giver, address_receiver] = xfer_addresses
-    seq_no = get_seq_no(xfer_mint_tokens)
-    inputs = [{ADDRESS: address_giver, SEQNO: seq_no}]
+    inputs = helpers.general.get_utxo_addresses([address_giver])[0]
     outputs = [{ADDRESS: address_receiver, AMOUNT: 1000}]
     request = helpers.request.transfer(inputs, outputs)
 

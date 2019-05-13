@@ -16,7 +16,7 @@ from plenum.common.exceptions import InvalidClientMessageException, OperationErr
 from plenum.common.request import Request
 from plenum.common.types import f
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS, TOKEN_LEDGER_ID
 from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
 from sovtoken.util import SortedItems
@@ -33,7 +33,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache,
                  domain_state, bls_store, write_req_validator):
-        super().__init__(ledger, state)
+        super().__init__(TOKEN_LEDGER_ID, ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
@@ -289,7 +289,7 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
                    ppTime, ts_store=None):
-        r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
+        r = LedgerRequestHandler._commit(TOKEN_LEDGER_ID, ledger, state, txnCount, stateRoot,
                                          txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
         return r
