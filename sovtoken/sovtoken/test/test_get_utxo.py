@@ -3,11 +3,13 @@ from random import randint
 import pytest
 
 from base58 import b58encode_check
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.util import randomString
-from sovtoken.constants import OUTPUTS, ADDRESS
+from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS
+
 
 @pytest.fixture
 def addresses(helpers):
@@ -15,7 +17,7 @@ def addresses(helpers):
 
 def test_empty_address(helpers):
     with pytest.raises(RequestNackedException):
-        helpers.general.do_get_utxo('')
+        helpers.inner.general.do_get_utxo('')
 
 
 def test_invalid_address(helpers, addresses):
@@ -28,7 +30,7 @@ def test_invalid_address(helpers, addresses):
 
     def _test_invalid_address(address):
         with pytest.raises(RequestNackedException):
-            helpers.general.get_utxo_addresses([address])
+            helpers.inner.general.get_utxo_addresses([address])
 
     valid_address = addresses[0]
     invalid_address_length = b58encode_check(randomString(33).encode()).decode()
@@ -57,9 +59,10 @@ def test_address_utxos(helpers, addresses):
     mint_result = helpers.general.do_mint(outputs)
 
     mint_seq_no = get_seq_no(mint_result)
-    get_utxo_result = helpers.general.do_get_utxo(address)
+    get_utxo_result = helpers.general.get_utxo_addresses([address])[0]
 
-    assert get_utxo_result[OUTPUTS] == [{"address": address, "seqNo": mint_seq_no, "amount": 1000}]
+    assert get_utxo_result[0][PAYMENT_ADDRESS] == address
+    assert get_utxo_result[0][AMOUNT] == 1000
 
 
 # We can't handle multiple addresses at the moment because it requires a more
@@ -92,7 +95,7 @@ def test_get_utxo_utxos_in_order(helpers, addresses):
     for _ in range(10):
         amount = randint(1, 10)
         inputs = [
-            {"address": address_1, "seqNo": seq_no},
+            {"source": utxo_from_addr_and_seq_no(address_1, seq_no)},
         ]
         outputs = [
             {"address": address_2, "amount": amount},

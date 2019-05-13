@@ -47,11 +47,11 @@ def test_ordering_with_fees_and_without_fees(looper, helpers,
         amount = get_amount_from_token_txn(mint_tokens)
         init_seq_no = 1
         request_1, request_2 = nyms_with_fees(2,
-                                            helpers,
-                                            fees_set,
-                                            address_main,
-                                            amount,
-                                            init_seq_no=init_seq_no)
+                                              helpers,
+                                              fees_set,
+                                              address_main,
+                                              amount,
+                                              init_seq_no=init_seq_no)
         """
         Sending 1 NYM txn with fees
         """

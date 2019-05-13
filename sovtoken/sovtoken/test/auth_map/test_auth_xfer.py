@@ -14,6 +14,11 @@ from plenum.test.helper import sdk_sign_request_objects, sdk_send_and_check
 
 
 @pytest.fixture()
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
+
+
+@pytest.fixture()
 def mint_tokens(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
     return helpers.general.do_mint(outputs)
@@ -22,15 +27,15 @@ def mint_tokens(helpers, addresses):
 def do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, sdk_wallet, addresses, amount, sign=False):
     [address_giver, address_receiver] = addresses
 
-    utxos = helpers.general.get_utxo_addresses([address_giver])[0]
-    inputs = [{ADDRESS: utxo["address"], SEQNO: utxo["seqNo"]} for utxo in utxos]
-    change = sum([utxo["amount"] for utxo in utxos]) - amount
+    inputs = helpers.general.get_utxo_addresses([address_giver])[0]
+    change = sum([utxo["amount"] for utxo in inputs]) - amount
     outputs = [
         {ADDRESS: address_receiver, AMOUNT: amount},
         {ADDRESS: address_giver, AMOUNT: change},
     ]
 
-    request = helpers.request.transfer(inputs, outputs, identifier=sdk_wallet[1])
+    request = helpers.request.transfer(inputs, outputs)
+    _, request._identifier = sdk_wallet
     requests = sdk_sign_request_objects(looper, sdk_wallet, [request]) \
         if sign else [json.dumps(request.as_dict)]
     sdk_send_and_check(requests, looper, txnPoolNodeSet, sdk_pool_handle)
