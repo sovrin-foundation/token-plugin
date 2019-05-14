@@ -23,18 +23,20 @@ def get_len_preprepares(n):
     replica = n.master_replica
     return len(replica.sentPrePrepares if replica.isPrimary else replica.prePrepares)
 
+def _get_ppseqno(n):
+    return n.master_replica.last_prepared_certificate_in_view()[1]
 
 def get_ppseqno_from_all_nodes(nodes):
     res = set()
     for n in nodes:
-        res.add(get_len_preprepares(n))
+        res.add(_get_ppseqno(n))
     assert len(res) == 1
     return min(res)
 
 
 def check_batch_ordered(old, nodes):
     for n in nodes:
-        assert get_len_preprepares(n) == old + 1
+        assert _get_ppseqno(n) == old + 1
 
 
 def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
@@ -53,15 +55,15 @@ def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegrate
         AMOUNT: 998
     }]
 
-    _ol_len_ppr = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    _old_pp_seq_no = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
 
     with delay_rules(node_set, cDelay()):
         # should be changed for auth rule
         helpers.general.set_fees_without_waiting({XFER_PUBLIC: 2})
-        looper.run(eventually(functools.partial(check_batch_ordered, _ol_len_ppr, nodeSetWithIntegratedTokenPlugin)))
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_pp_seq_no, nodeSetWithIntegratedTokenPlugin)))
         helpers.general.transfer_without_waiting(utxo, outputs)
         looper.run(
-            eventually(functools.partial(check_batch_ordered, _ol_len_ppr + 1, nodeSetWithIntegratedTokenPlugin)))
+            eventually(functools.partial(check_batch_ordered, _old_pp_seq_no + 1, nodeSetWithIntegratedTokenPlugin)))
         ensure_view_change(looper, nodes)
 
     ensureElectionsDone(looper=looper, nodes=nodes)
@@ -87,16 +89,16 @@ def test_revert_during_view_change_all_nodes_nym_with_fees(nodeSetWithIntegrated
     addr = xfer_addresses[0]
     seq_no = get_seq_no(xfer_mint_tokens)
 
-    _ol_len_ppr = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    _old_pp_seq_no = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
     dledger_size_before = set([n.domainLedger.size for n in nodeSetWithIntegratedTokenPlugin]).pop()
 
     with delay_rules(node_set, cDelay()):
         # should be changed for auth rule
         helpers.general.set_fees_without_waiting({NYM: 2})
-        looper.run(eventually(functools.partial(check_batch_ordered, _ol_len_ppr, nodeSetWithIntegratedTokenPlugin)))
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_pp_seq_no, nodeSetWithIntegratedTokenPlugin)))
         send_and_check_nym_with_fees(helpers, {FEES: {NYM: 2}}, seq_no, looper, xfer_addresses, 1000, check_reply=False)
         looper.run(
-            eventually(functools.partial(check_batch_ordered, _ol_len_ppr + 1, nodeSetWithIntegratedTokenPlugin)))
+            eventually(functools.partial(check_batch_ordered, _old_pp_seq_no + 1, nodeSetWithIntegratedTokenPlugin)))
         ensure_view_change(looper, nodes)
 
     ensureElectionsDone(looper=looper, nodes=nodes)
@@ -121,15 +123,15 @@ def test_revert_during_view_change_all_nodes_set_fees(tconf, nodeSetWithIntegrat
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
-    _ol_len_ppr = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    _old_pp_seq_no = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
     helpers.general.set_fees_without_waiting({ATTRIB: 3})
 
-    assert _ol_len_ppr == get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    assert _old_pp_seq_no == get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
 
     with delay_rules(node_set, cDelay()):
         # should be changed for auth rule
         helpers.general.set_fees_without_waiting({ATTRIB: 4})
-        looper.run(eventually(functools.partial(check_batch_ordered, _ol_len_ppr, nodeSetWithIntegratedTokenPlugin)))
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_pp_seq_no, nodeSetWithIntegratedTokenPlugin)))
         ensure_view_change(looper, nodes)
 
     ensureElectionsDone(looper=looper, nodes=nodes)
@@ -153,11 +155,13 @@ def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlu
     nodes = nodeSetWithIntegratedTokenPlugin
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
     seq_no = get_seq_no(xfer_mint_tokens)
-    _ol_len_ppr = get_ppseqno_from_all_nodes(nodeSetWithIntegratedTokenPlugin)
+    _old_len_pprs = set([get_len_preprepares(n) for n in nodeSetWithIntegratedTokenPlugin])
+    assert len(_old_len_pprs)
+    _old_len_ppr = _old_len_pprs.pop()
 
     with delay_rules_without_processing(node_set, pDelay(), cDelay()):
         helpers.general.set_fees_without_waiting({NYM: 5})
-        looper.run(eventually(functools.partial(check_batch_ordered, _ol_len_ppr, nodeSetWithIntegratedTokenPlugin)))
+        looper.run(eventually(functools.partial(check_batch_ordered, _old_len_ppr, nodeSetWithIntegratedTokenPlugin)))
         send_and_check_nym_with_fees(helpers,
                                      {FEES: {NYM: 5}},
                                      seq_no,
