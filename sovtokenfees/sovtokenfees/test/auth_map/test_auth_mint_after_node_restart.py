@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS, TOKEN_LEDGER_ID
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
@@ -20,19 +22,16 @@ def mint_tokens(helpers, addresses):
 
 def steward_do_mint(helpers, outputs):
     """ Sends and check a mint txn """
-    outputs_ready = helpers.request._prepare_outputs(outputs)
-
-    payload = {
-        TXN_TYPE: MINT_PUBLIC,
-        OUTPUTS: outputs_ready,
-    }
-    identifier = helpers.wallet._steward_wallets[0].defaultId
-
-    request = helpers.request._create_request(payload,
-                                              identifier=identifier)
-    request = helpers.wallet.sign_request_stewards(request,
-                                                   number_signers=1)
-    return helpers.general._send_get_first_result(request)
+    request = helpers.request.mint(outputs)
+    request.signatures = {}
+    request._identifier = helpers.wallet._stewards[0]
+    request = json.dumps(request.as_dict)
+    request = helpers.wallet.sign_request_stewards(request)
+    request = json.loads(request)
+    sigs = request["signatures"]
+    request = helpers.sdk.sdk_json_to_request_object(request)
+    setattr(request, "signatures", sigs)
+    return helpers.sdk.send_and_check_request_objects([request])
 
 
 def test_auth_mint_after_node_restart(helpers,
