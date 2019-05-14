@@ -69,7 +69,7 @@ def form_helpers(
     helper_general = type("HelperGeneral", (
         HelperGeneral,
         sovtoken.test.helpers.helper_general.HelperGeneral,
-    ), {})(helper_sdk, helper_wallet, helper_requests)
+    ), {})(helper_sdk, helper_wallet, helper_requests, helper_node)
     helper_general_inner = type("HelperInnerGeneral", (
         HelperGeneral,
         sovtoken.test.helpers.helper_inner_general.HelperInnerGeneral,

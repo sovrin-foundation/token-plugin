@@ -147,15 +147,17 @@ def test_get_fee(helpers):
     """
     Get the sovtokenfee from the ledger by alias
     """
-    alias = "test_alias"
+    alias = NYM
     fee = 5
     helpers.general.do_set_fees({alias: fee})
-    assert fee == helpers.general.do_get_fee(alias)[FEE]
+    resp = helpers.general.do_get_fee(alias)
+    assert resp.get(STATE_PROOF, False)
+    assert fee == resp[FEE]
 
 
 def test_get_fee_with_unknown_alias(helpers, fees):
     """
-    Get the sovtokenfee from the ledger by alias
+    Get the sovtokenfee from the ledger by unknown alias
     """
     alias = "test_alias"
     with pytest.raises(RequestNackedException, match="'{}' not found.".format(alias)):
