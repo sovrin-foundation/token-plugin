@@ -8,6 +8,7 @@ SIGS = 'signatures'
 RESULT = 'result'
 AMOUNT = 'amount'
 SEQNO = 'seqNo'
+PAYMENT_ADDRESS = "paymentAddress"
 
 TOKEN_LEDGER_ID = 1001
 

@@ -1,4 +1,5 @@
 import pytest
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.config_helper import PNodeConfigHelper
 from plenum.common.constants import NYM
@@ -43,9 +44,9 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
     nodeSetWithIntegratedTokenPlugin = nodeSetWithIntegratedTokenPlugin[:-1]
 
     for address in addresses:
-        inputs = [
-            {ADDRESS: address_main, SEQNO: seq_no},
-        ]
+        inputs = [{
+            "source": utxo_from_addr_and_seq_no(address_main, seq_no)
+        }]
         outputs = [
             {ADDRESS: address, AMOUNT: 1},
             {ADDRESS: address_main, AMOUNT: remaining - 2}, # XFER fee is 1

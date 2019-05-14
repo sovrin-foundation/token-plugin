@@ -1,7 +1,11 @@
 import sovtoken.test.helpers.helper_general as token_helper_general
+import base58
+import json
+
+from sovtoken.constants import ADDRESS, SEQNO
 
 
-class HelperGeneral(token_helper_general.HelperGeneral):
+class HelperGeneral:
     """
     Extends the sovtoken HelperGeneral with fee related methods.
 
@@ -13,6 +17,11 @@ class HelperGeneral(token_helper_general.HelperGeneral):
     def do_get_fees(self):
         """ Builds and sends a get_fees request """
         request = self._request.get_fees()
+        return self._send_get_first_result(request)
+
+    def do_get_fee(self, alias):
+        """ Builds and sends a get_fees request """
+        request = self._request.get_fee(alias)
         return self._send_get_first_result(request)
 
     def do_set_fees(self, fees, fill_auth_map=True):

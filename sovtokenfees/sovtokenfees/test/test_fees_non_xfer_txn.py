@@ -13,8 +13,13 @@ from plenum.common.util import randomString
 from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
-from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO
-from sovtokenfees.test.helper import pay_fees, add_fees_request_with_address
+from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO, PAYMENT_ADDRESS
+from sovtokenfees.test.helper import pay_fees, add_fees_request_with_address, pay_fees_inner
+
+
+@pytest.fixture()
+def address_main_inner(helpers):
+    return helpers.inner.wallet.create_address()
 
 
 @pytest.fixture()
@@ -27,7 +32,30 @@ def fees_paid(
     return pay_fees(helpers, fees_set, address_main)
 
 
-def test_invalid_fees_numeric(helpers, address_main, mint_tokens):
+@pytest.fixture()
+def fees_paid(
+    helpers,
+    fees_set,
+    address_main,
+    mint_tokens
+):
+    return pay_fees(helpers, fees_set, address_main)
+
+
+@pytest.fixture()
+def fees_paid_manually(
+    helpers,
+    fees_set,
+    address_main_inner,
+    mint_tokens_inner
+):
+    return pay_fees_inner(helpers, fees_set, address_main_inner)
+
+
+def test_invalid_fees_numeric(helpers, mint_tokens):
+
+    address_main = helpers.inner.wallet.create_address()
+
     """
     Testing fees outputs with an invalid numeric type
     """
@@ -48,7 +76,7 @@ def test_invalid_fees_numeric(helpers, address_main, mint_tokens):
 
         request = helpers.request.nym()
 
-        request = helpers.request.add_fees_specific(
+        request = helpers.inner.request.add_fees_specific(
             request,
             inputs,
             outputs
@@ -76,15 +104,15 @@ def test_zero_fees(
 
     req = helpers.request.nym()
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
-    helpers.request.add_fees(
+    request = helpers.request.add_fees(
         req,
         utxos,
         0,
         change_address=address_main
-    )
+    )[0]
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([req])
+        helpers.sdk.sdk_send_and_check([request])
 
 
 def test_insufficient_fees(
@@ -133,7 +161,7 @@ def test_fees_larger(
         helpers.sdk.send_and_check_request_objects([req])
 
 
-def test_invalid_address(helpers, address_main, mint_tokens, fees, fees_set):
+def test_invalid_address(helpers, address_main_inner, mint_tokens_inner, fees, fees_set):
     """
     Fees with invalid address.
     """
@@ -142,9 +170,9 @@ def test_invalid_address(helpers, address_main, mint_tokens, fees, fees_set):
         return s[:index] + func(s[index]) + s[index + 1:]
 
     def _test_invalid_address(address):
-        utxos = helpers.general.get_utxo_addresses([address_main])[0]
+        utxos = helpers.inner.general.get_utxo_addresses([address_main_inner])[0]
         request = helpers.request.nym()
-        request = helpers.request.add_fees(
+        request = helpers.inner.request.add_fees(
             request,
             utxos,
             fees[NYM],
@@ -155,9 +183,9 @@ def test_invalid_address(helpers, address_main, mint_tokens, fees, fees_set):
             helpers.sdk.send_and_check_request_objects([request])
 
     invalid_address_length = b58encode_check(randomString(33).encode()).decode()
-    invalid_address_character = _update_char(address_main, 2, lambda _: '!')
+    invalid_address_character = _update_char(address_main_inner, 2, lambda _: '!')
     invalid_address_checksum = _update_char(
-        address_main,
+        address_main_inner,
         2,
         lambda c: 'B' if c == 'A' else 'A'
     )
@@ -171,6 +199,7 @@ def test_fees_too_many_outputs(
     helpers,
     fees_set,
     address_main,
+    xfer_addresses,
     mint_tokens,
 ):
     """
@@ -179,14 +208,14 @@ def test_fees_too_many_outputs(
     req = helpers.request.nym()
     fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
-    helpers.request.add_fees(
+    req = helpers.request.add_fees(
         req,
         utxos,
         fee_amount,
-        change_address=[address_main, Address().address]
-    )
+        change_address=[address_main, xfer_addresses[0]]
+    )[0]
     with pytest.raises(RequestNackedException):
-        helpers.sdk.send_and_check_request_objects([req])
+        helpers.sdk.sdk_send_and_check([req])
 
 
 def test_fees_output_with_zero_tokens(
@@ -200,17 +229,17 @@ def test_fees_output_with_zero_tokens(
     """
     outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM])}]
     result = helpers.general.do_mint(outputs)
-    seq_no = get_seq_no(result)
+    seqno = get_seq_no(result)
 
     empty_address = helpers.wallet.create_address()
-    inputs = [{ADDRESS: address_main, SEQNO: seq_no}]
+    inputs = helpers.general.get_utxo_addresses([address_main])[0]
     outputs = [{ADDRESS: empty_address, AMOUNT: 0}]
  
     request = helpers.request.nym()
-    request = helpers.request.add_fees_specific(request, inputs, outputs)
+    request = helpers.request.add_fees_specific(request, inputs, outputs)[0]
 
     with pytest.raises(RequestNackedException):
-        helpers.sdk.send_and_check_request_objects([request])
+        helpers.sdk.sdk_send_and_check([request])
 
 
 def test_no_fees_when_required(
@@ -302,12 +331,10 @@ def test_valid_fees_invalid_payload_sig(
         request,
         address_main
     )
-    request = helpers.wallet.sign_request_trustees(request)
-    sigs = getattr(request, f.SIGS.nm)
+    sig = getattr(request, f.SIG.nm)
     # Reverse the signature of NYM txn sender, making it invalid
-    first_sig_did = next(iter(sigs.keys()))
-    sigs[first_sig_did] = sigs[first_sig_did][::-1]
-    setattr(request, f.SIGS.nm, sigs)
+    sig = sig[::-1]
+    setattr(request, f.SIG.nm, sig)
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
 
@@ -324,10 +351,9 @@ def test_fees_extra_field(helpers, address_main, mint_tokens, fees_set):
         address_main
     )
 
-    fees = getattr(request, FEES)
+    fees = request.fees
     fees.append([])
-    setattr(request, FEES, fees)
-
+    request.fees = fees
     with pytest.raises(RequestNackedException):
         helpers.sdk.send_and_check_request_objects([request])
 
@@ -382,11 +408,8 @@ def test_valid_txn_with_fees(
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     last_utxo = utxos[-1]
     expected_amount = fee_payload_from_resp[OUTPUTS][0][AMOUNT]
-    assert last_utxo == {
-        ADDRESS: address_main,
-        SEQNO: get_seq_no(fee_txn),
-        AMOUNT: expected_amount
-    }
+    assert last_utxo[PAYMENT_ADDRESS] == address_main
+    assert last_utxo[AMOUNT] == expected_amount
 
 
 def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
@@ -405,20 +428,20 @@ def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
 
 def test_fees_utxo_reuse(
     helpers,
-    fees_paid,
+    fees_paid_manually,
     fees_set,
-    address_main
+    address_main_inner
 ):
     """
     Check that utxo used in sovtokenfees cannot be reused
     """
-    nym_fees_data = get_payload_data(fees_paid[FEES])
+    nym_fees_data = get_payload_data(fees_paid_manually[FEES])
     inputs = nym_fees_data[INPUTS]
     outputs = nym_fees_data[OUTPUTS]
     fee_amount = fees_set[FEES][NYM]
 
     req = helpers.request.nym()
-    fee_sigs = helpers.request.fees_signatures(
+    fee_sigs = helpers.inner.request.fees_signatures(
         inputs,
         outputs,
         req.payload_digest
@@ -447,10 +470,10 @@ def test_unset_fees_transfer_tokens_with_fees(helpers, address_main, mint_tokens
         utxos,
         0,
         change_address=receiving_address
-    )
+    )[0]
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([request])
+        helpers.sdk.sdk_send_and_check([request])
 
 
 def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens):
@@ -464,10 +487,14 @@ def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens
         utxos,
         fees[NYM],
         change_address=address_main
-    )
+    )[0]
 
     new_request = helpers.request.nym()
-    setattr(new_request, FEES, getattr(request, FEES))
+
+    request = json.loads(request)
+    new_request = new_request.as_dict
+
+    new_request[FEES] = request[FEES]
 
     with pytest.raises(RequestNackedException):
-        helpers.sdk.send_and_check_request_objects([new_request])
+        helpers.sdk.sdk_send_and_check([json.dumps(new_request)])

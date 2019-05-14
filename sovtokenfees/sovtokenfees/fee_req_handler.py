@@ -1,6 +1,8 @@
 from abc import abstractmethod
 from indy_node.server.config_req_handler import ConfigReqHandler
 
+from plenum.common.request import Request
+
 
 class FeeReqHandler(ConfigReqHandler):
     @abstractmethod
@@ -12,4 +14,7 @@ class FeeReqHandler(ConfigReqHandler):
         pass
 
     def commit_fee_txns(self, txn, pp_time, state_root, txn_root):
+        pass
+
+    def doStaticValidation(self, request: Request):
         pass
