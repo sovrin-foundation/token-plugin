@@ -57,16 +57,24 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     def _get_fees_req_handler(self, node):
         return node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
 
+    @staticmethod
+    def fill_auth_map_for_node(node, txn_type):
+        validator = node.write_req_validator
+        for rule_id, constraint in validator.auth_map.items():
+            add_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
+                                            prefix=ADD_PREFIX)
+            edit_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
+                                             prefix=EDIT_PREFIX)
+            if AbstractAuthStrategy.is_accepted_action_id(add_rule_id,
+                                                          rule_id) or AbstractAuthStrategy.is_accepted_action_id(
+                    edit_rule_id, rule_id):
+                constraint = copy.deepcopy(constraint)
+                constraint.set_metadata({FEES_FIELD_NAME: txn_type})
+                validator.auth_map[rule_id] = constraint
+
     def _fill_auth_map(self, txn_type):
         for node in self._nodes:
-            validator = node.write_req_validator
-            for rule_id, constraint in validator.auth_map.items():
-                add_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*', prefix=ADD_PREFIX)
-                edit_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*', prefix=EDIT_PREFIX)
-                if AbstractAuthStrategy.is_accepted_action_id(add_rule_id, rule_id) or AbstractAuthStrategy.is_accepted_action_id(edit_rule_id, rule_id):
-                    constraint = copy.deepcopy(constraint)
-                    constraint.set_metadata({FEES_FIELD_NAME: txn_type})
-                    validator.auth_map[rule_id] = constraint
+            self.fill_auth_map_for_node(node, txn_type)
 
     def set_fees_directly(self, fees):
         for txn_type, fee in fees.items():

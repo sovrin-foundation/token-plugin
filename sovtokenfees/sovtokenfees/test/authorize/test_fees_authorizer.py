@@ -1,19 +1,22 @@
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT
+from sovtoken.constants import AMOUNT
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtokenfees.constants import FEES_FIELD_NAME
 from sovtokenfees.fees_authorizer import FeesAuthorizer
-
-from plenum.test.testing_utils import FakeSomething
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from sovtokenfees.test.helper import add_fees_request_with_address
-
 from indy_common.authorize.auth_constraints import AuthConstraint
-
 from indy_common.constants import NYM
-
-from plenum.common.types import f
-
 from plenum.common.exceptions import UnauthorizedClientRequest
+from plenum.test.testing_utils import FakeSomething
+
+from state.pruning_state import PruningState
+from storage.kv_in_memory import KeyValueStorageInMemory
+
+
+def _set_fees(authorizer):
+    authorizer.config_state.set(StaticFeesReqHandler.build_path_for_set_fees().encode(),
+                                '{"1": 4}'.encode())
 
 
 @pytest.fixture()
@@ -22,9 +25,8 @@ def req_with_fees(helpers,
                   address_main,
                   fees):
     request = helpers.request.nym()
-    utxos = [{ADDRESS: address_main,
-              AMOUNT: fees.get(NYM),
-              f.SEQ_NO.nm: 1}]
+    utxos = [{"source": utxo_from_addr_and_seq_no(address_main, 1),
+              AMOUNT: fees.get(NYM)}]
     return add_fees_request_with_address(
         helpers,
         fees_set,
@@ -38,7 +40,7 @@ def fees_constraint(fees):
     return AuthConstraint(role='*',
                           sig_count=1,
                           need_to_be_owner=True,
-                          metadata={FEES_FIELD_NAME: fees.get(NYM)})
+                          metadata={FEES_FIELD_NAME: NYM})
 
 
 @pytest.fixture()
@@ -49,13 +51,14 @@ def fees_req_handler():
 
 @pytest.fixture()
 def fees_authorizer(fees_req_handler):
-    return FeesAuthorizer(fees_req_handler)
+    return FeesAuthorizer(fees_req_handler,
+                          config_state=PruningState(KeyValueStorageInMemory()))
 
 
 def test_get_fees_from_constraint(fees_authorizer,
                                   fees_constraint,
                                   fees):
-    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) == fees.get(NYM)
+    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) == NYM
 
 
 def test_get_fees_from_constraint_None_if_empty(fees_authorizer,
@@ -86,6 +89,7 @@ def test_fail_on_req_without_fees_but_required(fees_authorizer,
                                                req_with_fees,
                                                fees_constraint):
     delattr(req_with_fees, 'fees')
+    _set_fees(fees_authorizer)
     with pytest.raises(UnauthorizedClientRequest, match="Fees are required for this txn type"):
         authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                     auth_constraint=fees_constraint)
@@ -95,9 +99,13 @@ def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
                                               req_with_fees,
                                               fees_constraint):
     def raise_some_exp():
-        raise KeyError("bla bla bla")
+        raise UnauthorizedClientRequest("identifier",
+                                        "reqId",
+                                        "bla bla bla")
+
+    _set_fees(fees_authorizer)
     fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: raise_some_exp()
-    with pytest.raises(UnauthorizedClientRequest, match="Cannot pay fees"):
+    with pytest.raises(UnauthorizedClientRequest, match="bla bla bla"):
         authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                     auth_constraint=fees_constraint)
 
@@ -105,6 +113,7 @@ def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
 def test_success_authorization(fees_authorizer,
                                req_with_fees,
                                fees_constraint):
+    _set_fees(fees_authorizer)
     fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: True
     authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                 auth_constraint=fees_constraint)
