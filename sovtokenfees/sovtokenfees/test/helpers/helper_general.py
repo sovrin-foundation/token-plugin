@@ -19,6 +19,11 @@ class HelperGeneral:
         request = self._request.get_fees()
         return self._send_get_first_result(request)
 
+    def do_get_fee(self, alias):
+        """ Builds and sends a get_fees request """
+        request = self._request.get_fee(alias)
+        return self._send_get_first_result(request)
+
     def do_set_fees(self, fees, fill_auth_map=True):
         """ Builds and sends a set_fees request """
         request = self._request.set_fees(fees)

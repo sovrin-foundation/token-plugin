@@ -11,17 +11,18 @@ txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
 from plenum.common.constants import TXN_TYPE, TRUSTEE, ROOT_HASH, PROOF_NODES, \
-    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA
+    STATE_PROOF, MULTI_SIGNATURE, TXN_PAYLOAD, TXN_PAYLOAD_DATA, ALIAS
 from plenum.common.exceptions import UnauthorizedClientRequest, \
     InvalidClientRequest, InvalidClientMessageException
 from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, FEES_STATE_PREFIX, \
-    FEES_KEY_FOR_ALL
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, \
+    FEES_STATE_PREFIX, \
+    FEES_KEY_FOR_ALL, FEE
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg
+from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg, GetFeeMsg
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
@@ -34,11 +35,11 @@ from state.trie.pruning_trie import rlp_decode
 txn_root_serializer = Base58Serializer()
 logger = getlogger()
 
-
 class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
-    query_types = FeeReqHandler.query_types.union({GET_FEES, })
+    query_types = FeeReqHandler.query_types.union({GET_FEES, GET_FEE})
     set_fees_validator_cls = SetFeesMsg
+    get_fee_validator_cls = GetFeeMsg
     state_serializer = JsonSerializer()
 
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
@@ -61,6 +62,7 @@ class StaticFeesReqHandler(FeeReqHandler):
 
         self.query_handlers = {
             GET_FEES: self.get_fees,
+            GET_FEE: self.get_fee,
         }
 
         # Tracks count of transactions paying sovtokenfees while a batch is being
@@ -162,10 +164,12 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def doStaticValidation(self, request: Request):
         operation = request.operation
-        if operation[TXN_TYPE] in (SET_FEES, GET_FEES):
-            if operation[TXN_TYPE] == SET_FEES:
+        if operation[TXN_TYPE] in (SET_FEES, GET_FEES, GET_FEE):
                 try:
-                    self.set_fees_validator_cls(**request.operation)
+                    if operation[TXN_TYPE] == SET_FEES:
+                        self.set_fees_validator_cls(**request.operation)
+                    elif operation[TXN_TYPE] == GET_FEE:
+                        self.get_fee_validator_cls(**request.operation)
                 except TypeError as exc:
                     raise InvalidClientRequest(request.identifier,
                                                request.reqId,
@@ -196,6 +200,19 @@ class StaticFeesReqHandler(FeeReqHandler):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEES: fees}
+        if proof:
+            result[STATE_PROOF] = proof
+        result.update(request.operation)
+        return result
+
+    def get_fee(self, request: Request):
+        alias = request.operation.get(ALIAS)
+        fee, proof = self._get_fee(alias, is_committed=True, with_proof=True)
+        if not fee:
+            raise InvalidClientRequest(request.identifier, request.reqId,
+                                       "'{}' not found.".format(alias))
+        result = {f.IDENTIFIER.nm: request.identifier,
+                  f.REQ_ID.nm: request.reqId, FEE: fee}
         if proof:
             result[STATE_PROOF] = proof
         result.update(request.operation)
@@ -281,8 +298,22 @@ class StaticFeesReqHandler(FeeReqHandler):
                 'fees: {}'.format(required_fees)
             )
 
-    def _get_fees(self, is_committed=False, with_proof=False, fees_alias=None):
-        fees = {}
+    def _get_fees(self, is_committed=False, with_proof=False):
+        result = self._get_fee_from_state(is_committed=is_committed,
+                                          with_proof=with_proof)
+        if with_proof:
+            fees, proof = result
+            return fees, proof if fees is not None else ({}, None)
+        else:
+            return result if result is not None else {}
+
+    def _get_fee(self, alias, is_committed=False, with_proof=False):
+        return self._get_fee_from_state(fees_alias=alias,
+                                        is_committed=is_committed,
+                                        with_proof=with_proof)
+
+    def _get_fee_from_state(self, fees_alias=None, is_committed=False, with_proof=False):
+        fees = None
         proof = None
         try:
             fees_key = self.build_path_for_set_fees(alias=fees_alias)

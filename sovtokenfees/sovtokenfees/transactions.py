@@ -13,6 +13,7 @@ class FeesTransactions(Enum):
     SET_FEES = PREFIX + '0'
     GET_FEES = PREFIX + '1'
     FEES = PREFIX + '2'
+    GET_FEE = PREFIX + '3'
 
     def __str__(self):
         return self.name

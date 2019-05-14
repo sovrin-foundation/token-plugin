@@ -128,6 +128,25 @@ class TestStaticValidation:
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
     # - Static Fee Request Handler (doStaticValidation)
+    def test_get_fee_valid_txn_types(self, helpers, fee_handler):
+        """
+        StaticValidation of a get fee request with all of the whitelisted txn
+        types.
+        """
+        request = helpers.request.get_fee("test_alias")
+        result = fee_handler.doStaticValidation(request)
+
+        assert result is None
+
+    def test_invalid_get_fee_valid_txn_types(self, helpers, fee_handler):
+        """
+        StaticValidation of a get fee request with all of the whitelisted txn
+        types.
+        """
+        request = helpers.request.get_fee("")
+        with pytest.raises(InvalidClientRequest, match="empty string"):
+            fee_handler.doStaticValidation(request)
+
     def test_set_fees_valid_txn_types(self, helpers, fee_handler):
         """
         StaticValidation of a set fees request with all of the whitelisted txn
