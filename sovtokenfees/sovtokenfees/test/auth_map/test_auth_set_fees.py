@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
@@ -18,9 +20,9 @@ def steward_do_set_fees(helpers, fees):
     }
 
     request = helpers.request._create_request(payload,
-                                              identifier=helpers.wallet._steward_wallets[0].defaultId)
-    request = helpers.wallet.sign_request_stewards(request, number_signers=1)
-    return helpers.general._send_get_first_result(request)
+                                              identifier=helpers.wallet._stewards[0])
+    request = helpers.wallet.sign_request_stewards(json.dumps(request.as_dict), number_signers=1)
+    helpers.sdk.sdk_send_and_check([request])
 
 
 def set_fees(helpers, fees, trustee=True):

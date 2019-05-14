@@ -1,5 +1,6 @@
 import pytest
 import mock
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
@@ -145,7 +146,7 @@ def test_authenticate_success_3_sigs(helpers, node, addresses):
 def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [{"address": SF_address, "seqNo": 1}]
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
     req_data = request.as_dict

@@ -1,7 +1,11 @@
 import sovtoken.test.helpers.helper_general as token_helper_general
+import base58
+import json
+
+from sovtoken.constants import ADDRESS, SEQNO
 
 
-class HelperGeneral(token_helper_general.HelperGeneral):
+class HelperGeneral:
     """
     Extends the sovtoken HelperGeneral with fee related methods.
 

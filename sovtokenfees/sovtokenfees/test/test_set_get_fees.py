@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from common.serializers.serialization import state_roots_serializer
@@ -5,7 +7,7 @@ from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException)
 from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC
+from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC, PAYMENT_ADDRESS
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
@@ -31,7 +33,7 @@ def test_set_fees_invalid_numeric(helpers):
         }
 
         with pytest.raises(RequestNackedException):
-            helpers.general.do_set_fees(fees)
+            helpers.inner.general.do_set_fees(fees)
 
         ledger_fees = helpers.general.do_get_fees()[FEES]
         assert ledger_fees == {}
@@ -87,10 +89,10 @@ def test_non_trustee_set_fees(helpers):
     }
     fees_request = helpers.request.set_fees(fees)
     fees_request.signatures = None
-    fees_request._identifier = helpers.wallet._steward_wallets[0].defaultId
-    fees_request = helpers.wallet.sign_request_stewards(fees_request)
+    fees_request._identifier = helpers.wallet._stewards[0]
+    fees_request = helpers.wallet.sign_request_stewards(json.dumps(fees_request.as_dict))
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([fees_request])
+        helpers.sdk.sdk_send_and_check([fees_request])
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
 
@@ -127,13 +129,13 @@ def test_set_fees_with_stewards(helpers):
     assert len(fees_request.signatures) == 2
 
     fees_request = helpers.wallet.sign_request_stewards(
-        fees_request,
+        json.dumps(fees_request.as_dict),
         number_signers=1
     )
-    assert len(fees_request.signatures) == 3
+    assert len(json.loads(fees_request)["signatures"]) == 3
 
     with pytest.raises(RequestRejectedException):
-        helpers.sdk.send_and_check_request_objects([fees_request])
+        helpers.sdk.sdk_send_and_check([fees_request])
 
     ledger_fees = helpers.general.do_get_fees()[FEES]
     assert ledger_fees == {}
@@ -189,9 +191,6 @@ def test_mint_after_set_fees(helpers, fees_set):
     address = helpers.wallet.create_address()
     outputs = [{ADDRESS: address, AMOUNT: 60}]
     mint_req = helpers.general.do_mint(outputs)
-    utxos = helpers.general.do_get_utxo(address)[OUTPUTS]
-    assert utxos == [{
-        ADDRESS: address,
-        SEQNO: get_seq_no(mint_req),
-        AMOUNT: 60
-    }]
+    utxos = helpers.general.get_utxo_addresses([address])[0]
+    assert utxos[0][PAYMENT_ADDRESS] == address
+    assert utxos[0][AMOUNT] == 60
