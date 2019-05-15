@@ -113,7 +113,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         sum_outputs = sum([a[AMOUNT] for a in outputs])
         return sum_inputs - sum_outputs
 
-
     def can_pay_fees(self, request, required_fees):
 
         if request.operation[TXN_TYPE] == XFER_PUBLIC:
@@ -208,9 +207,6 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_fee(self, request: Request):
         alias = request.operation.get(ALIAS)
         fee, proof = self._get_fee(alias, is_committed=True, with_proof=True)
-        if not fee:
-            raise InvalidClientRequest(request.identifier, request.reqId,
-                                       "'{}' not found.".format(alias))
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEE: fee}
         if proof:
