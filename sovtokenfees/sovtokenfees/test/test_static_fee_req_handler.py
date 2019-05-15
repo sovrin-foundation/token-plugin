@@ -130,7 +130,7 @@ class TestStaticValidation:
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
     # - Static Fee Request Handler (doStaticValidation)
-    def test_get_fee_valid_txn_types(self, helpers, fee_handler):
+    def test_get_fee_valid_alias(self, helpers, fee_handler):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
@@ -140,7 +140,7 @@ class TestStaticValidation:
 
         assert result is None
 
-    def test_invalid_get_fee_valid_txn_types(self, helpers, fee_handler):
+    def test_get_fee_invalid_alias(self, helpers, fee_handler):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
@@ -326,7 +326,7 @@ class TestCanPayFees():
         return (inputs, outputs)
 
     @pytest.fixture
-    def inputs_outputs(self, helpers, addresses):
+    def inputs_outputs(self, helpers, addresses, mint):
         [
             address1,
             address2,
@@ -355,7 +355,7 @@ class TestCanPayFees():
     @pytest.fixture
     def request_xfer_fees(self, helpers, inputs_outputs_fees, mint):
         inputs, outputs = inputs_outputs_fees
-        return helpers.inner.request.transfer(inputs, outputs)
+        return helpers.request.transfer(inputs, outputs)
 
     @pytest.fixture
     def request_nym_fees(self, helpers, inputs_outputs_fees):
@@ -383,7 +383,7 @@ class TestCanPayFees():
         """
         Transfer request with valid fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_xfer_fees)
+        fee_handler.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC])
 
     def test_xfer_set_without_fees(
             self,
@@ -396,7 +396,7 @@ class TestCanPayFees():
         Transfer request without fees and fees are set.
         """
         with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request_xfer)
+            fee_handler.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC])
 
     def test_xfer_not_set_with_fees(
             self,
@@ -408,7 +408,7 @@ class TestCanPayFees():
         Transfer request with fees and fees are not set.
         """
         with pytest.raises(ExtraFundsError):
-            fee_handler.can_pay_fees(request_xfer_fees, required_fees=VALID_FEES.get(XFER_PUBLIC))
+            fee_handler.can_pay_fees(request_xfer_fees, required_fees=0)
 
     def test_xfer_not_set_without_fees(self, helpers, fee_handler, request_xfer):
         """
