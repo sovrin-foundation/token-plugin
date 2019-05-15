@@ -367,7 +367,7 @@ Example:
         "identifier": "6ouriXMZkLeHsuXrN1X1fd",
         "reqId": 10378,
         "type": "20001",
-        "fees": 10,
+        "fee": 10,
         "state_proof":
         {
             "multi_signature": {//TODO add valid json string in here},
