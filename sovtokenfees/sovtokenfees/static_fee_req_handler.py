@@ -355,10 +355,12 @@ class StaticFeesReqHandler(FeeReqHandler):
         typ = get_type(txn)
         if typ == SET_FEES:
             payload = get_payload_data(txn)
-            all_fees = payload.get(FEES)
-            for fees_alias, fees_value in all_fees.items():
+            fees_from_req = payload.get(FEES)
+            current_fees = self._get_fees()
+            current_fees.update(fees_from_req)
+            for fees_alias, fees_value in fees_from_req.items():
                 self._set_to_state(self.build_path_for_set_fees(alias=fees_alias), fees_value)
-            self._set_to_state(self.build_path_for_set_fees(), all_fees)
+            self._set_to_state(self.build_path_for_set_fees(), current_fees)
 
         elif typ == FEE_TXN:
             for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:

@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from sovtoken.constants import AMOUNT
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
@@ -14,9 +16,10 @@ from state.pruning_state import PruningState
 from storage.kv_in_memory import KeyValueStorageInMemory
 
 
-def _set_fees(authorizer):
+def _set_fees(authorizer, fees=None):
+    fees = fees or {"1": 4}
     authorizer.config_state.set(StaticFeesReqHandler.build_path_for_set_fees().encode(),
-                                '{"1": 4}'.encode())
+                                json.dumps(fees).encode())
 
 
 @pytest.fixture()
@@ -79,7 +82,8 @@ def test_fail_on_req_with_fees_but_fees_not_required(fees_authorizer,
 def test_fail_on_req_with_fees_but_fees_have_zero_amount(fees_authorizer,
                                                          req_with_fees,
                                                          fees_constraint):
-    fees_constraint.metadata = {FEES_FIELD_NAME: 0}
+    fees_constraint.metadata = {FEES_FIELD_NAME: NYM}
+    _set_fees(fees_authorizer, {NYM: 0})
     with pytest.raises(UnauthorizedClientRequest, match="Fees are not required for this txn type"):
         authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                     auth_constraint=fees_constraint)
