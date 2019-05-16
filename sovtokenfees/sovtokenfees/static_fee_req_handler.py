@@ -61,9 +61,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         # In-memory map of sovtokenfees, changes on SET_FEES txns
         self.fees = self._get_fees(is_committed=True)
 
-        self.query_handlers = {
-            GET_FEES: self.get_fees,
-        }
+        self._add_query_handler(GET_FEES, self.get_fees)
 
         # Tracks count of transactions paying sovtokenfees while a batch is being
         # processed. Reset to zero once a batch is created (not committed)
@@ -172,9 +170,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                                      new_value="*")])
         else:
             super().validate(request)
-
-    def get_query_response(self, request: Request):
-        return self.query_handlers[request.operation[TXN_TYPE]](request)
 
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
