@@ -18,14 +18,14 @@ from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX
 
 
-def test_validation_nym_with_fees_cannot_pay(fees,
-                                             helpers,
-                                             nodeSetWithIntegratedTokenPlugin,
-                                             address_main,
-                                             sdk_pool_handle,
-                                             sdk_wallet_trustee,
-                                             mint_tokens,
-                                             looper):
+def test_validation_nym_with_fees_more_than_required(fees,
+                                                     helpers,
+                                                     nodeSetWithIntegratedTokenPlugin,
+                                                     address_main,
+                                                     sdk_pool_handle,
+                                                     sdk_wallet_trustee,
+                                                     mint_tokens,
+                                                     looper):
     """
     Steps:
     1. Checks that nym with fees will be rejected, because fees are not set

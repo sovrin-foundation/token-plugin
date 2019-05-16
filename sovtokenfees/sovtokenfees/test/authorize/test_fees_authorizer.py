@@ -1,5 +1,6 @@
 import json
 
+import functools
 import pytest
 from sovtoken.constants import AMOUNT
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
@@ -39,7 +40,7 @@ def req_with_fees(helpers,
     )
 
 @pytest.fixture()
-def fees_constraint(fees):
+def fees_constraint():
     return AuthConstraint(role='*',
                           sig_count=1,
                           need_to_be_owner=True,
@@ -47,9 +48,12 @@ def fees_constraint(fees):
 
 
 @pytest.fixture()
-def fees_req_handler():
-    return FakeSomething(deducted_fees_xfer={},
-                         has_fees=StaticFeesReqHandler.has_fees)
+def fees_req_handler(fees):
+    handler = FakeSomething(deducted_fees_xfer={},
+                            has_fees=StaticFeesReqHandler.has_fees,
+                            calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM))
+    return handler
+
 
 
 @pytest.fixture()
@@ -74,9 +78,10 @@ def test_fail_on_req_with_fees_but_fees_not_required(fees_authorizer,
                                                      req_with_fees,
                                                      fees_constraint):
     fees_constraint.metadata = {}
-    with pytest.raises(UnauthorizedClientRequest, match="Fees are not required for this txn type"):
-        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                    auth_constraint=fees_constraint)
+    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                auth_constraint=fees_constraint)
+    assert not authorized
+    assert "Fees are not required for this txn type" in msg
 
 
 def test_fail_on_req_with_fees_but_fees_have_zero_amount(fees_authorizer,
@@ -84,9 +89,10 @@ def test_fail_on_req_with_fees_but_fees_have_zero_amount(fees_authorizer,
                                                          fees_constraint):
     fees_constraint.metadata = {FEES_FIELD_NAME: NYM}
     _set_fees(fees_authorizer, {NYM: 0})
-    with pytest.raises(UnauthorizedClientRequest, match="Fees are not required for this txn type"):
-        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                    auth_constraint=fees_constraint)
+    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                auth_constraint=fees_constraint)
+    assert not authorized
+    assert "Fees are not required for this txn type" in msg
 
 
 def test_fail_on_req_without_fees_but_required(fees_authorizer,
@@ -94,9 +100,10 @@ def test_fail_on_req_without_fees_but_required(fees_authorizer,
                                                fees_constraint):
     delattr(req_with_fees, 'fees')
     _set_fees(fees_authorizer)
-    with pytest.raises(UnauthorizedClientRequest, match="Fees are required for this txn type"):
-        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                    auth_constraint=fees_constraint)
+    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                auth_constraint=fees_constraint)
+    assert not authorized
+    assert  "Fees are required for this txn type" in msg
 
 
 def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
@@ -109,9 +116,10 @@ def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
 
     _set_fees(fees_authorizer)
     fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: raise_some_exp()
-    with pytest.raises(UnauthorizedClientRequest, match="bla bla bla"):
-        authorized, msg = fees_authorizer.authorize(request=req_with_fees,
-                                                    auth_constraint=fees_constraint)
+    authorized, msg = fees_authorizer.authorize(request=req_with_fees,
+                                                auth_constraint=fees_constraint)
+    assert not authorized
+    assert "bla bla bla" in msg
 
 
 def test_success_authorization(fees_authorizer,
