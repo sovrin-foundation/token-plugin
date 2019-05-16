@@ -128,6 +128,35 @@ def test_set_fees_with_stewards(helpers):
     helpers.node.assert_set_fees_in_memory({})
 
 
+def test_set_fees_update(helpers):
+
+    fees_1 = {NYM: 1, XFER_PUBLIC: 2}
+    helpers.general.do_set_fees(fees_1)
+
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    assert ledger_fees == fees_1
+
+    # Update XFER_PUBLIC fees
+
+    fees_2 = {XFER_PUBLIC: 42}
+    helpers.general.do_set_fees(fees_2)
+
+    # Check, that XFER_PUBLIC fee was updated
+    ledger_fee = helpers.general.do_get_fee(XFER_PUBLIC)[FEE]
+    assert ledger_fee == fees_2.get(XFER_PUBLIC)
+
+    # Check, that NYM fee was not affected
+    ledger_fee = helpers.general.do_get_fee(NYM)[FEE]
+    assert ledger_fee == fees_1.get(NYM)
+
+    # Check, that all fees was updated and not rewritten
+    ledger_fees = helpers.general.do_get_fees()[FEES]
+    result_fees = fees_1
+    result_fees.update(fees_2)
+    assert result_fees == ledger_fees
+
+
+
 def test_trustee_set_valid_fees(helpers, fees_set, fees):
     """
     Set a valid sovtokenfees

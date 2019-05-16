@@ -7,7 +7,7 @@ from sovtokenfees.test.helper import add_fees_request_with_address, ensure_all_n
 
 from plenum.common.exceptions import RequestRejectedException
 
-from plenum.test.helper import sdk_send_and_check, sdk_sign_request_from_dict
+from plenum.test.helper import sdk_send_and_check, sdk_sign_request_from_dict, sdk_send_random_and_check
 
 from indy_common.authorize.auth_map import auth_map, add_new_identity_owner
 
@@ -16,6 +16,8 @@ from indy_common.constants import NYM
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
 from indy_common.authorize.auth_actions import ADD_PREFIX
+
+from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 
 def test_validation_nym_with_zero_fees(helpers,
@@ -38,6 +40,7 @@ def test_validation_nym_with_zero_fees(helpers,
     helpers.general.do_set_fees(fees, fill_auth_map=False)
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, {FEES: fees}, seq_no, looper, [address_main],
                                                              current_amount)
+    sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
 
     original_action = add_new_identity_owner
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
@@ -50,4 +53,5 @@ def test_validation_nym_with_zero_fees(helpers,
                                          old_value=None, constraint=original_constraint.as_dict)
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, {FEES: fees}, seq_no, looper, [address_main],
                                                              current_amount)
+    sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)

@@ -29,8 +29,8 @@ def test_validation_nym_with_fees_cannot_pay(fees,
     """
     Steps:
     1. Checks that nym with fees will be rejected, because fees are not set
-    2. Send auth_rule txn with fees in metadata
-    3. Resend nym with fees and check, that it will be stored
+    2. Send auth_rule txn with fees in metadata and set fees for pool
+    3. Resend nym with fees more than required and check, that it will be rejected
     """
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = 1

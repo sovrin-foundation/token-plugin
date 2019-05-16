@@ -28,7 +28,14 @@ class FeesAuthorizer(AbstractAuthorizer):
                 return auth_constaint.metadata[FEES_FIELD_NAME]
 
     def _can_pay_fees(self, request, required_fees):
-        self.fees_req_handler.can_pay_fees(request, required_fees)
+        try:
+            self.fees_req_handler.can_pay_fees(request, required_fees)
+        except Exception as e:
+            return False, str(e)
+        return True, ''
+
+    def _calculate_fees_from_req(self, request):
+        return self.fees_req_handler.calculate_fees_from_req(request)
 
     def _get_fees_from_state(self):
         key = StaticFeesReqHandler.build_path_for_set_fees()
@@ -45,19 +52,14 @@ class FeesAuthorizer(AbstractAuthorizer):
         fees_alias = self._get_fees_alias_from_constraint(auth_constraint)
         fees = self._get_fees_from_state()
         fees_amount = fees.get(fees_alias, 0)
-        is_fees_required = True if fees_amount else False
+        is_fees_required = fees_amount > 0
         if request.txn_type != XFER_PUBLIC:
             if is_fees_required and not self.fees_req_handler.has_fees(request):
                 logger.warning("Validation error: Fees are required for this txn type")
-                raise UnauthorizedClientRequest(request.identifier,
-                                                request.reqId,
-                                                "Fees are required for this txn type")
-            if not is_fees_required and self.fees_req_handler.has_fees(request):
+                return False, "Fees are required for this txn type"
+            if not is_fees_required and self.fees_req_handler.has_fees(request) and self._calculate_fees_from_req(request) > 0:
                 logger.warning("Validation error: Fees are not required for this txn type")
-                raise UnauthorizedClientRequest(request.identifier,
-                                                request.reqId,
-                                                "Fees are not required for this txn type")
+                return False, "Fees are not required for this txn type"
             if not is_fees_required and not self.fees_req_handler.has_fees(request):
                 return True, ""
-        self._can_pay_fees(request, fees_amount)
-        return True, ""
+        return self._can_pay_fees(request, fees_amount)
