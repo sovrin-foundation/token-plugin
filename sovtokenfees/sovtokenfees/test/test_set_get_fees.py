@@ -212,6 +212,19 @@ def test_state_proof_for_get_fee(helpers, nodeSetWithIntegratedTokenPlugin):
         assert fee == resp[FEE]
 
 
+def test_state_proof_for_get_fees(helpers, nodeSetWithIntegratedTokenPlugin):
+    fees = {NYM: 5}
+    with delay_rules([n.clientIbStasher for n in nodeSetWithIntegratedTokenPlugin[1:]], req_delay()):
+        with pytest.raises(PoolLedgerTimeoutException):
+            helpers.general.do_get_fees()
+
+    helpers.general.do_set_fees(fees)
+    with delay_rules([n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin[1:]], req_delay()):
+        resp = helpers.general.do_get_fees()
+        assert resp.get(STATE_PROOF, False)
+        assert fees == resp[FEES]
+
+
 def test_change_fees(helpers, fees_set, fees):
     """
     Change the sovtokenfees on the ledger and check that sovtokenfees has
