@@ -72,7 +72,7 @@ def test_first_catchup_with_not_empty_ledger(looper, helpers,
 
     node_set[idx] = node_to_disconnect
     looper.run(checkNodesConnected(node_set))
-
+    helpers.node.fill_auth_map_for_node(node_to_disconnect, XFER_PUBLIC)
     current_amount, seq_no, _ = send_and_check_transfer(helpers, from_d_to_a, fees, looper,
                                                         current_amount, seq_no, transfer_summ=current_amount)
     ensure_all_nodes_have_same_data(looper, node_set)
