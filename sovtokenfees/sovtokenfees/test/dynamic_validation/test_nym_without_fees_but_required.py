@@ -21,9 +21,8 @@ def test_nym_without_fees_but_required(fees,
                                        looper):
     """
     Steps:
-    1. Checks that nym with fees will be rejected, because fees are not set
-    2. Send auth_rule txn with fees in metadata
-    3. Resend nym with fees and check, that it will be stored
+    1. Send auth_rule txn with fees in metadata
+    2. Send nym without fees and check, that it will be rejected
     """
     original_action = add_new_identity_owner
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
