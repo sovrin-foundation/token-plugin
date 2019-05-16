@@ -13,7 +13,7 @@ from plenum.common.verifier import DidVerifier, Verifier
 from plenum.server.client_authn import CoreAuthNr
 from sovtoken import AcceptableQueryTypes, AcceptableWriteTypes
 from sovtoken.constants import (ADDRESS, INPUTS, MINT_PUBLIC, OUTPUTS, SIGS,
-                                XFER_PUBLIC)
+                                XFER_PUBLIC, EXTRA)
 from sovtoken.util import address_to_verkey
 from stp_core.crypto.nacl_wrappers import Verifier as NaclVerifier
 
@@ -53,10 +53,16 @@ class TokenAuthNr(CoreAuthNr):
     # The verkey will be unobtainable from input, it will raise CouldNotAuthenticate
     # Raises UnknownIdentifier if input is not a valid base58 value
     def authenticate_xfer(self, req_data, verifier):
+        extra_fields = []
+        if req_data[OPERATION].get(EXTRA, None):
+            extra_fields.append(req_data[OPERATION][EXTRA])
+        if req_data.get(f.TAA_ACCEPTANCE.nm, None):
+            extra_fields.append(req_data[f.TAA_ACCEPTANCE.nm])
         return self.verify_signtures_on_payments(req_data[OPERATION][INPUTS],
                                                  req_data[OPERATION][OUTPUTS],
                                                  req_data[OPERATION][SIGS],
-                                                 verifier)
+                                                 verifier,
+                                                 *extra_fields)
 
     # ------------------------------------------------------------------------------------
     # Gets verkey from payment address

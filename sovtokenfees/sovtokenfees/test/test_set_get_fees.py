@@ -125,7 +125,10 @@ def test_set_fees_with_stewards(helpers):
     """
     fees = {NYM: 1}
     fees_request = helpers.request.set_fees(fees)
-    fees_request.signatures.popitem()
+    sigs = [(k, v) for k, v in fees_request.signatures.items()]
+    sigs.sort()
+    sigs.pop(0)
+    fees_request.signatures = {k: v for k, v in sigs}
     assert len(fees_request.signatures) == 2
 
     fees_request = helpers.wallet.sign_request_stewards(

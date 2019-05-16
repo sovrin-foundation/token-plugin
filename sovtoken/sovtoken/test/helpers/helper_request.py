@@ -1,7 +1,11 @@
 import json
+import time
 
-from indy.ledger import build_nym_request, build_schema_request
-from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req
+from indy.ledger import build_nym_request, build_schema_request, \
+    build_acceptance_mechanism_request, build_txn_author_agreement_request, \
+    build_get_txn_author_agreement_request
+from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req, \
+    prepare_payment_extra_with_acceptance_data
 from sovtoken.test.constants import VALID_IDENTIFIER
 
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
@@ -65,10 +69,16 @@ class HelperRequest():
         inputs_ready = json.dumps(self._prepare_inputs(inputs))
 
         payment_request_future = build_payment_req(
-            self._client_wallet_handle, None, inputs_ready, outputs_ready, None)
+            self._client_wallet_handle, None, inputs_ready, outputs_ready, extra)
         payment_request = self._looper.loop.run_until_complete(payment_request_future)[0]
 
         return self._sdk.sdk_json_to_request_object(json.loads(payment_request))
+
+    def add_transaction_author_agreement_to_extra(self, extra, text, mechanism, version):
+        extra_future = prepare_payment_extra_with_acceptance_data(extra, text, version, None, mechanism,
+                                                                  round(time.time()))
+        extra = self._looper.loop.run_until_complete(extra_future)
+        return extra
 
     def mint(self, outputs):
         """ Builds a mint request. """
@@ -136,6 +146,28 @@ class HelperRequest():
         request = self._sdk.sdk_json_to_request_object(json.loads(schema_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
         return request
+
+    def acceptance_mechanism(self, sdk_trustee_wallet, aml, aml_context=None):
+        acceptance_mechanism_future = build_acceptance_mechanism_request(sdk_trustee_wallet[1], aml, aml_context)
+        acceptance_mechanism_request = self._looper.loop.run_until_complete(acceptance_mechanism_future)
+        acceptance_mechanism_request = self._sdk.sdk_json_to_request_object(json.loads(acceptance_mechanism_request))
+        acceptance_mechanism_request = self._sign_sdk(acceptance_mechanism_request, sdk_trustee_wallet)
+        return acceptance_mechanism_request
+
+    def transaction_author_agreement(self, sdk_trustee_wallet, text, version):
+        txn_author_agreement_future = build_txn_author_agreement_request(sdk_trustee_wallet[1], text, version)
+        txn_author_agreement_request = self._looper.loop.run_until_complete(txn_author_agreement_future)
+        txn_author_agreement_request = self._sdk.sdk_json_to_request_object(json.loads(txn_author_agreement_request))
+        txn_author_agreement_request = self._sign_sdk(txn_author_agreement_request, sdk_trustee_wallet)
+        return txn_author_agreement_request
+
+    def get_transaction_author_agreement(self):
+        get_txn_author_agreement_future = build_get_txn_author_agreement_request(None, None)
+        get_txn_author_agreement_request = self._looper.loop.run_until_complete(get_txn_author_agreement_future)
+        get_txn_author_agreement_request = self._sdk.sdk_json_to_request_object(
+            json.loads(get_txn_author_agreement_request)
+        )
+        return get_txn_author_agreement_request
 
     def _find_wallet_did(self, sdk_wallet):
         sdk_wallet = sdk_wallet or self._steward_wallet
