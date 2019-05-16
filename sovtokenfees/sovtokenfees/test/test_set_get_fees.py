@@ -5,12 +5,15 @@ import pytest
 from common.serializers.serialization import state_roots_serializer
 from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
 from plenum.common.exceptions import (RequestNackedException,
-                                      RequestRejectedException)
+                                      RequestRejectedException, PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC, PAYMENT_ADDRESS
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES, FEE
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+
+from plenum.test.delayers import req_delay
+from plenum.test.stasher import delay_rules
 from state.db.persistent_db import PersistentDB
 from state.trie.pruning_trie import Trie, rlp_encode
 from storage.kv_in_memory import KeyValueStorageInMemory
@@ -193,6 +196,20 @@ def test_get_fee_with_unknown_alias(helpers, fees):
     resp = helpers.general.do_get_fee(alias)
     assert resp[FEE] is None
     assert resp[STATE_PROOF]
+
+
+def test_state_proof_for_get_fee(helpers, nodeSetWithIntegratedTokenPlugin):
+    alias = NYM
+    fee = 5
+    with delay_rules([n.clientIbStasher for n in nodeSetWithIntegratedTokenPlugin[1:]], req_delay()):
+        with pytest.raises(PoolLedgerTimeoutException):
+            helpers.general.do_get_fee(alias)
+
+    helpers.general.do_set_fees({alias: fee})
+    with delay_rules([n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin[1:]], req_delay()):
+        resp = helpers.general.do_get_fee(alias)
+        assert resp.get(STATE_PROOF, False)
+        assert fee == resp[FEE]
 
 
 def test_change_fees(helpers, fees_set, fees):
