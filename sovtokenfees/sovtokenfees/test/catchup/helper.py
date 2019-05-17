@@ -7,8 +7,12 @@ from plenum.test.pool_transactions.helper import \
     disconnect_node_and_ensure_disconnected
 
 from indy_node.test.helper import start_stopped_node
+from sovtoken.constants import XFER_PUBLIC
 
 from sovtokenfees.test.helper import ensure_all_nodes_have_same_data
+from sovtokenfees.test.helpers import HelperNode
+
+from indy_common.constants import NYM
 
 
 def scenario_txns_during_catchup(
@@ -41,6 +45,8 @@ def scenario_txns_during_catchup(
         start=False,
     )
     do_post_node_creation(lagging_node)
+    HelperNode.fill_auth_map_for_node(lagging_node, XFER_PUBLIC)
+    HelperNode.fill_auth_map_for_node(lagging_node, NYM)
     nodes[-1] = lagging_node
 
     # Delay CathupRep for DOMAIN ledger for NodeX
