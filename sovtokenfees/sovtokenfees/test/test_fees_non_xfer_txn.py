@@ -111,8 +111,7 @@ def test_zero_fees(
         change_address=address_main
     )[0]
 
-    with pytest.raises(RequestRejectedException):
-        helpers.sdk.sdk_send_and_check([request])
+    helpers.sdk.sdk_send_and_check([request])
 
 
 def test_insufficient_fees(
@@ -451,29 +450,6 @@ def test_fees_utxo_reuse(
 
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([req])
-
-
-def test_unset_fees_transfer_tokens_with_fees(helpers, address_main, mint_tokens):
-    """
-    Tokens can't be exchanged through fees when fees aren't set for the request.
-    """
-
-    fees = {NYM: 0}
-    helpers.general.do_set_fees(fees)
-
-    utxos = helpers.general.get_utxo_addresses([address_main])[0]
-    receiving_address = helpers.wallet.create_address()
-
-    request = helpers.request.nym()
-    request = helpers.request.add_fees(
-        request,
-        utxos,
-        0,
-        change_address=receiving_address
-    )[0]
-
-    with pytest.raises(RequestRejectedException):
-        helpers.sdk.sdk_send_and_check([request])
 
 
 def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens):

@@ -117,7 +117,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
                                                                [C],
                                                                transfer_summ,
                                                                check_reply=False)
-    with pytest.raises(RequestRejectedException, match="are not found in list of"):
+    with pytest.raises(RequestRejectedException, match="are not found in list"):
         sdk_get_and_check_replies(looper, a_nym)
     a_b_get = helpers.general.do_get_utxo(A)
     assert a_b_get[OUTPUTS][1][AMOUNT] == a_amount
