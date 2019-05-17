@@ -4,21 +4,24 @@ from typing import NamedTuple, Dict
 
 import pytest
 from indy.did import replace_keys_start
+from indy.ledger import build_attrib_request
 from indy_common.authorize.auth_constraints import AuthConstraint, ROLE, AuthConstraintOr, AbstractAuthConstraint, \
     IDENTITY_OWNER, AuthConstraintAnd
 
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
-from indy_common.constants import NYM, TRUST_ANCHOR, NODE, POOL_UPGRADE, POOL_RESTART, VALIDATOR_INFO, GET_SCHEMA
+from indy_common.constants import NYM, TRUST_ANCHOR, NODE, POOL_UPGRADE, POOL_RESTART, VALIDATOR_INFO, GET_SCHEMA, \
+    ATTRIB
 
 from indy_common.authorize.auth_actions import EDIT_PREFIX, ADD_PREFIX
+from libnacl.secret import SecretBox
 from sovtoken.constants import AMOUNT, ADDRESS
 from sovtokenfees.constants import FEES, FEES_FIELD_NAME
 from sovtokenfees.test.helper import add_fees_request_with_address
 
 from plenum.common.constants import TRUSTEE, STEWARD, STEWARD_STRING, TRUSTEE_STRING, VERKEY
 from plenum.common.exceptions import RequestRejectedException
-from plenum.test.helper import sdk_multisign_request_object, sdk_multi_sign_request_objects
+from plenum.test.helper import sdk_multisign_request_object, sdk_multi_sign_request_objects, sdk_json_to_request_object
 from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
@@ -49,7 +52,7 @@ RequestParams = NamedTuple("RequestParams", [("fees", int),
                                              ("owner", str),
                                              ("wallets", Dict[str, int])]
                            )
-RequestParams.__new__.__defaults__ = (0, None, {})
+RequestParams.__new__.__defaults__ = (0, "-1", {})
 
 InputParam = NamedTuple("InputParam", [
     ("auth_constraint", AbstractAuthConstraint),
@@ -61,6 +64,7 @@ trustee_address = ""
 owner_address = ""
 
 input_params_map = [
+    # 1
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 1,
                                                                 metadata={FEES_FIELD_NAME: fee_5[0]}),
                                                  AuthConstraint(TRUSTEE, 1)]),
@@ -421,21 +425,27 @@ def add_fees_request_with_address(helpers, fee_amount, request, address):
 
 def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wallet_trustee,
                   sdk_wallet_trustees, sdk_wallet_stewards, sdk_wallet_clients):
+    print(wallets_count)
     wallets = sdk_wallet_trustees[:wallets_count.get(TRUSTEE, 0)] + \
               sdk_wallet_stewards[:wallets_count.get(STEWARD, 0)] + \
               sdk_wallet_clients[:wallets_count.get(IDENTITY_OWNER, 0)]
     # create request
-    wh, dest = sdk_wallet_trustee
     if owner == TRUSTEE:
-        wh, dest = sdk_wallet_trustees[0]
+        sender_wallet = sdk_wallet_trustees[0]
     elif owner == STEWARD:
-        wh, dest = sdk_wallet_stewards[0]
+        sender_wallet = sdk_wallet_stewards[0]
     elif owner == IDENTITY_OWNER:
-        wh, dest = sdk_wallet_clients[0]
+        sender_wallet = sdk_wallet_clients[0]
+    else:
+        sender_wallet = wallets[0]
+    target_dest = sdk_wallet_trustee[1] if owner is None else sender_wallet[1]
+    data = SecretBox().encrypt(json.dumps({'name': 'Jaime'}).encode()).hex()
+    client_request = add_attribute(looper, sender_wallet, None, target_dest, enc=data)
+    client_request = sdk_json_to_request_object(json.loads(client_request))
 
-    verkey = looper.loop.run_until_complete(
-        replace_keys_start(wh, dest, json.dumps({})))
-    client_request = helpers.request.nym(sdk_wallet=wallets[0], dest=dest, verkey=verkey)
+    # verkey = looper.loop.run_until_complete(
+    #     replace_keys_start(wh, dest, json.dumps({})))
+    #client_request = helpers.request.nym(sdk_wallet=wallets[0], dest=dest, verkey=verkey)
     client_request.signature = None
     client_request.signatures = None
     # add fees
@@ -449,13 +459,22 @@ def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wall
     return helpers.sdk.sdk_send_and_check(client_request)
 
 
+def add_attribute(looper, sdk_wallet_handle, attrib,
+                                dest=None, xhash=None, enc=None):
+    _, s_did = sdk_wallet_handle
+    t_did = dest or s_did
+    attrib_req = looper.loop.run_until_complete(
+        build_attrib_request(s_did, t_did, xhash, attrib, enc))
+    return attrib_req
+
+
 def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                        sdk_pool_handle, helpers, input_param, address,
                        sdk_wallet_trustees, sdk_wallet_stewards, sdk_wallet_clients):
     helpers.general.do_set_fees(set_fees)
     sdk_send_and_check_auth_rule_request(looper, sdk_wallet_trustee,
-                                         sdk_pool_handle, auth_action=EDIT_PREFIX,
-                                         auth_type=NYM, field=VERKEY, new_value="*", old_value="*",
+                                         sdk_pool_handle, auth_action=ADD_PREFIX,
+                                         auth_type=ATTRIB, field="*", new_value="*", old_value="*",
                                          constraint=input_param.auth_constraint.as_dict)
     for req in input_param.valid_requests:
         _send_request(looper, helpers, req.fees, req.wallets, address,
