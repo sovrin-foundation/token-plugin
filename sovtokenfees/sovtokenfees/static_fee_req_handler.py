@@ -45,7 +45,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
                  domain_state, bls_store, node, write_req_validator, ts_store=None):
 
-        super().__init__(ledger, state,
+        super().__init__(ledger, state, domain_state,
                          idrCache=node.idrCache,
                          upgrader=node.upgrader,
                          poolManager=node.poolManager,
@@ -60,10 +60,8 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.bls_store = bls_store
         self.write_req_validator = write_req_validator
 
-        self.query_handlers = {
-            GET_FEES: self.get_fees,
-            GET_FEE: self.get_fee,
-        }
+        self._add_query_handler(GET_FEES, self.get_fees)
+        self._add_query_handler(GET_FEE, self.get_fee)
 
         # Tracks count of transactions paying sovtokenfees while a batch is being
         # processed. Reset to zero once a batch is created (not committed)
@@ -186,9 +184,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                                      new_value="*")])
         else:
             super().validate(request)
-
-    def get_query_response(self, request: Request):
-        return self.query_handlers[request.operation[TXN_TYPE]](request)
 
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
