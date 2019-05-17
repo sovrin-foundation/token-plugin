@@ -72,7 +72,11 @@ class HelperRequest():
             self._client_wallet_handle, None, inputs_ready, outputs_ready, extra)
         payment_request = self._looper.loop.run_until_complete(payment_request_future)[0]
 
-        return self._sdk.sdk_json_to_request_object(json.loads(payment_request))
+        request = json.loads(payment_request)
+        taa = request["taaAcceptance"]
+        request = self._sdk.sdk_json_to_request_object(request)
+        setattr(request, "taaAcceptance", taa)
+        return request
 
     def add_transaction_author_agreement_to_extra(self, extra, text, mechanism, version):
         extra_future = prepare_payment_extra_with_acceptance_data(extra, text, version, None, mechanism,
