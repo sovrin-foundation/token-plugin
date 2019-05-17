@@ -21,6 +21,7 @@ from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
+from sovtokenfees.fees_authorizer import FeesAuthorizer
 from stp_core.loop.eventually import eventually
 
 from indy_node.server.config_req_handler import ConfigReqHandler
@@ -74,9 +75,15 @@ def reset_token_handler(fee_handler):
     # TODO: this is a function fixture. Do we need this revert there?
     # fee_handler.onBatchRejected()
 
+@pytest.fixture()
+def fees_authorizer(fee_handler):
+    return FeesAuthorizer(fees_req_handler=fee_handler,
+                          config_state=fee_handler.state,
+                          utxo_cache=fee_handler.utxo_cache)
+
 
 def test_non_existent_input_xfer(helpers,
-                                 fee_handler):
+                                 fees_authorizer):
     """
     Expect an InvalidFundsError on a xfer request with inputs which don't
     contain a valid utxo.
@@ -97,12 +104,13 @@ def test_non_existent_input_xfer(helpers,
 
     request = helpers.request.transfer(inputs, outputs)
 
-    with pytest.raises(InvalidFundsError) as e:
-        fee_handler.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    assert not authorized
+    assert 'was not found' in error
 
 
 def test_non_existent_input_non_xfer(helpers,
-                                     fee_handler):
+                                     fees_authorizer):
     """
     Expect an InvalidFundsError on a nym request with inputs which don't
     contain a valid utxo.
@@ -121,8 +129,9 @@ def test_non_existent_input_non_xfer(helpers,
     request = helpers.sdk.sdk_json_to_request_object(request)
     setattr(request, FEES, fees)
 
-    with pytest.raises(InvalidFundsError):
-        fee_handler.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    assert not authorized
+    assert 'was not found' in error
 
 
 class TestStaticValidation:
@@ -376,50 +385,56 @@ class TestCanPayFees():
     def test_xfer_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_xfer_fees
     ):
         """
         Transfer request with valid fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC])
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC])
+        assert authorized
+        assert not error
 
     def test_xfer_set_without_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_xfer,
     ):
         """
         Transfer request without fees and fees are set.
         """
-        with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC])
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC])
+        assert not authorized
+        assert 'Insufficient funds, sum of inputs' in error
 
     def test_xfer_not_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             request_xfer_fees
     ):
         """
         Transfer request with fees and fees are not set.
         """
-        with pytest.raises(ExtraFundsError):
-            fee_handler.can_pay_fees(request_xfer_fees, required_fees=0)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, required_fees=0)
+        assert not authorized
+        assert 'Extra funds, sum of inputs' in error
 
-    def test_xfer_not_set_without_fees(self, helpers, fee_handler, request_xfer):
+    def test_xfer_not_set_without_fees(self, helpers, fees_authorizer, request_xfer):
         """
         Transfer request without fees and fees are not set.
         """
-        fee_handler.can_pay_fees(request_xfer, required_fees=0)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer, required_fees=0)
+        assert authorized
+        assert not error
 
     def test_xfer_set_with_additional_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             request_xfer_fees,
             inputs_outputs_manual,
             fees_set
@@ -433,24 +448,28 @@ class TestCanPayFees():
             inputs,
             outputs
         )
-        fee_handler.can_pay_fees(request, required_fees=VALID_FEES.get(XFER_PUBLIC))
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(XFER_PUBLIC))
+        assert authorized
+        assert not error
 
     def test_nym_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_nym_fees
     ):
         """
         Nym request with fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_nym_fees, required_fees=VALID_FEES.get(NYM))
+        authorized, error = fees_authorizer.can_pay_fees(request_nym_fees, required_fees=VALID_FEES.get(NYM))
+        assert authorized
+        assert not error
 
     def test_nym_set_with_invalid_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             inputs_outputs_manual
     ):
@@ -465,8 +484,9 @@ class TestCanPayFees():
             outputs
         )
 
-        with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+        assert not authorized
+        assert 'Insufficient funds, sum of inputs' in error
 
 
 # - Static Fee Request Handler (apply)

@@ -83,10 +83,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         return hasattr(request, FEES) and request.fees is not None
 
     @staticmethod
-    def get_change_for_fees(request) -> list:
-        return request.fees[1] if len(request.fees) >= 2 else []
-
-    @staticmethod
     def get_ref_for_txn_fees(ledger_id, seq_no):
         return '{}:{}'.format(ledger_id, seq_no)
 
@@ -96,8 +92,9 @@ class StaticFeesReqHandler(FeeReqHandler):
             return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, alias])
         return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, FEES_KEY_FOR_ALL])
 
-    def get_txn_fees(self, request) -> int:
-        return self.fees.get(request.operation[TXN_TYPE], 0)
+    @staticmethod
+    def get_change_for_fees(request) -> list:
+        return request.fees[1] if len(request.fees) >= 2 else []
 
     def calculate_fees_from_req(self, request):
         inputs = request.fees[0]
@@ -111,18 +108,8 @@ class StaticFeesReqHandler(FeeReqHandler):
         sum_outputs = sum([a[AMOUNT] for a in outputs])
         return sum_inputs - sum_outputs
 
-    def can_pay_fees(self, request, required_fees):
-
-        if request.operation[TXN_TYPE] == XFER_PUBLIC:
-            # Fees in XFER_PUBLIC is part of operation[INPUTS]
-            inputs = request.operation[INPUTS]
-            outputs = request.operation[OUTPUTS]
-            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
-            self.deducted_fees_xfer[request.key] = required_fees
-        else:
-            inputs = request.fees[0]
-            outputs = self.get_change_for_fees(request)
-            self._validate_fees_can_pay(request, inputs, outputs, required_fees)
+    def get_txn_fees(self, request) -> int:
+        return self.fees.get(request.operation[TXN_TYPE], 0)
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -259,35 +246,6 @@ class StaticFeesReqHandler(FeeReqHandler):
                     txn[FEES] = r[i]
                     i += 1
             self.fee_txns_in_current_batch = 0
-
-    def _validate_fees_can_pay(self, request, inputs, outputs, required_fees):
-        """
-        Calculate and verify that inputs and outputs for fees can both be paid and change is properly specified
-
-        This function ASSUMES that validation of the fees for the request has already been done.
-
-        :param request:
-        :param required_fees:
-        :return:
-        """
-
-        try:
-            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
-        except UTXOError as ex:
-            raise InvalidFundsError(request.identifier, request.reqId, "{}".format(ex))
-        except Exception as ex:
-            error = 'Exception {} while processing inputs/outputs'.format(ex)
-            raise UnauthorizedClientRequest(request.identifier, request.reqId, error)
-        else:
-            change_amount = sum([a[AMOUNT] for a in outputs])
-            expected_amount = change_amount + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(
-                sum_inputs,
-                change_amount,
-                expected_amount,
-                request,
-                'fees: {}'.format(required_fees)
-            )
 
     def _get_fees(self, is_committed=False, with_proof=False):
         result = self._get_fee_from_state(is_committed=is_committed,
