@@ -3,7 +3,7 @@ import time
 
 from indy.ledger import build_nym_request, build_schema_request, \
     build_acceptance_mechanism_request, build_txn_author_agreement_request, \
-    build_get_txn_author_agreement_request
+    build_get_txn_author_agreement_request, append_txn_author_agreement_acceptance_to_request
 from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req, \
     prepare_payment_extra_with_acceptance_data
 from sovtoken.test.constants import VALID_IDENTIFIER
@@ -80,6 +80,12 @@ class HelperRequest():
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 
+    def add_transaction_author_agreement_to_request(self, request, text, mechanism, version):
+        extra_future = append_txn_author_agreement_acceptance_to_request(request, text, version, None, mechanism,
+                                                                         round(time.time()))
+        extra = self._looper.loop.run_until_complete(extra_future)
+        return extra
+
     def mint(self, outputs):
         """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
@@ -101,6 +107,10 @@ class HelperRequest():
         dest=None,
         verkey=None,
         sdk_wallet=None,
+        taa=False,
+        mechanism=None,
+        text=None,
+        version=None
     ):
         """
         Builds a nym request.
@@ -130,6 +140,8 @@ class HelperRequest():
         )
 
         nym_request = self._looper.loop.run_until_complete(nym_request_future)
+        if taa:
+            nym_request = self.add_transaction_author_agreement_to_request(nym_request, text, mechanism, version)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
@@ -148,7 +160,7 @@ class HelperRequest():
         return request
 
     def acceptance_mechanism(self, sdk_trustee_wallet, aml, aml_context=None):
-        acceptance_mechanism_future = build_acceptance_mechanism_request(sdk_trustee_wallet[1], aml, aml_context)
+        acceptance_mechanism_future = build_acceptance_mechanism_request(sdk_trustee_wallet[1], aml, "0.0.1", aml_context)
         acceptance_mechanism_request = self._looper.loop.run_until_complete(acceptance_mechanism_future)
         acceptance_mechanism_request = self._sdk.sdk_json_to_request_object(json.loads(acceptance_mechanism_request))
         acceptance_mechanism_request = self._sign_sdk(acceptance_mechanism_request, sdk_trustee_wallet)

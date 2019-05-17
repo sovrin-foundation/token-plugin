@@ -86,7 +86,6 @@ class TokenAuthNr(CoreAuthNr):
             except Exception as ex:
                 raise InvalidSignatureFormat from ex
 
-            # TODO: Account for `extra` field
             new_data = [inp, outputs]
             new_data.extend(extra_fields_for_signing)
             idr = inp[ADDRESS]
