@@ -45,7 +45,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def __init__(self, ledger, state, token_ledger, token_state, utxo_cache,
                  domain_state, bls_store, node, write_req_validator, ts_store=None):
 
-        super().__init__(ledger, state,
+        super().__init__(ledger, state, domain_state,
                          idrCache=node.idrCache,
                          upgrader=node.upgrader,
                          poolManager=node.poolManager,
