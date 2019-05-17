@@ -34,9 +34,9 @@ class HelperGeneral():
         utxos = [json.loads(self._request._looper.loop.run_until_complete(utxo_future)) for utxo_future in utxos]
         return utxos
 
-    def do_mint(self, outputs, no_wait=False):
+    def do_mint(self, outputs, no_wait=False, text=None, mechanism=None, version=None):
         """ Build and send a mint request. """
-        request = self._request.mint(outputs)
+        request = self._request.mint(outputs, text, mechanism, version)
         if no_wait:
             return self._send_without_waiting(request)
         return self._send_get_first_result(request)

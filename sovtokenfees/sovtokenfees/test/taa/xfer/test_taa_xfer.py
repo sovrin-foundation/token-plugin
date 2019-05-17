@@ -8,39 +8,37 @@ from plenum.common.exceptions import RequestNackedException, RequestRejectedExce
 
 
 def test_taa_xfer_positive_no_extra(helpers,
-                                    address_main,
                                     addresses,
                                     mint_tokens,
                                     set_acceptance_mechanism,
                                     set_transaction_author_agreement):
+    time.sleep(5)
     text, version = set_transaction_author_agreement
-    inputs = helpers.general.get_utxo_addresses([address_main])[0]
+    inputs = helpers.general.get_utxo_addresses([addresses[0]])[0]
     outputs = [{"address": addresses[1], "amount": 1000}]
     helpers.general.do_transfer(inputs, outputs, text=text, mechanism=set_acceptance_mechanism, version=version)
 
 
 def test_taa_xfer_positive_with_extra(helpers,
-                                      address_main,
                                       addresses,
                                       mint_tokens,
                                       set_acceptance_mechanism,
                                       set_transaction_author_agreement):
     text, version = set_transaction_author_agreement
-    inputs = helpers.general.get_utxo_addresses([address_main])[0]
+    inputs = helpers.general.get_utxo_addresses([addresses[0]])[0]
     outputs = [{"address": addresses[1], "amount": 1000}]
     helpers.general.do_transfer(inputs, outputs, extra=json.dumps({"aaa": "bbb"}), text=text,
                                 mechanism=set_acceptance_mechanism, version=version)
 
 
 def test_taa_xfer_negative_not_signed(helpers,
-                                      address_main,
                                       addresses,
                                       mint_tokens,
                                       set_acceptance_mechanism,
                                       set_transaction_author_agreement,
                                       looper):
     text, version = set_transaction_author_agreement
-    inputs = helpers.general.get_utxo_addresses([address_main])[0]
+    inputs = helpers.general.get_utxo_addresses([addresses[0]])[0]
     outputs = [{"address": addresses[1], "amount": 1000}]
     request = helpers.request.transfer(inputs, outputs)
     request = json.dumps(request.as_dict)

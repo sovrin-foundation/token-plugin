@@ -86,12 +86,14 @@ class HelperRequest():
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 
-    def mint(self, outputs):
+    def mint(self, outputs, text=None, mechanism=None, version=None):
         """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
 
         mint_request_future = build_mint_req(self._client_wallet_handle, self._wallet._trustees[0], json.dumps(outputs_ready), None)
         mint_request = self._looper.loop.run_until_complete(mint_request_future)[0]
+        if text and mechanism and version:
+            mint_request = self.add_transaction_author_agreement_to_request(mint_request, text, mechanism, version)
         mint_request = self._wallet.sign_request_trustees(mint_request, number_signers=3)
         mint_request = json.loads(mint_request)
         signatures = mint_request["signatures"]
