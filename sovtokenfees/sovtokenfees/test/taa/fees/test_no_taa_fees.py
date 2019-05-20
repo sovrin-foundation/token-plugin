@@ -5,7 +5,7 @@ from plenum.common.constants import NYM
 
 def test_nym_with_fees_with_taa(helpers,
                                 addresses,
-                                mint_tokens,
+                                mint_tokens_no_taa,
                                 fees_set):
     text, version = "test taa", "abc"
     request = helpers.request.nym(taa=True, text=text, version=version, mechanism="aaa")
@@ -21,7 +21,7 @@ def test_nym_with_fees_with_taa(helpers,
 
 def test_nym_with_fees_no_taa(helpers,
                               addresses,
-                              mint_tokens,
+                              mint_tokens_no_taa,
                               fees_set, ):
     request = helpers.request.nym()
     utxos = helpers.general.get_utxo_addresses(addresses[:1])[0]
