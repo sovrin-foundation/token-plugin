@@ -26,6 +26,7 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
 
+fee_0 = ("0", 0)
 fee_1 = ("1", 1)
 fee_2 = ("2", 2)
 fee_3 = ("3", 3)
@@ -34,6 +35,7 @@ fee_6 = ("6", 6)
 fee_100 = ("100", 100)
 
 set_fees = dict([
+    fee_0,
     fee_1,
     fee_2,
     fee_3,
@@ -153,7 +155,8 @@ input_params_map = [
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 3,
                                                                 metadata={FEES_FIELD_NAME: fee_1[0]}),
                                                  AuthConstraintAnd([
-                                                     AuthConstraint(TRUSTEE, 1),
+                                                     AuthConstraint(TRUSTEE, 1,
+                                                                    metadata={FEES_FIELD_NAME: fee_0[0]}),
                                                      AuthConstraint(STEWARD, 1)])
                                                  ]),
                valid_requests=[
@@ -227,7 +230,8 @@ input_params_map = [
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint("*", 1,
                                                                 metadata={FEES_FIELD_NAME: fee_5[0]}),
                                                  AuthConstraint(TRUSTEE, 1),
-                                                 AuthConstraint(STEWARD, 1),
+                                                 AuthConstraint(STEWARD, 1,
+                                                                metadata={FEES_FIELD_NAME: fee_0[0]}),
                                                  AuthConstraint(TRUST_ANCHOR, 1),
                                                  ]),
                valid_requests=[
@@ -253,7 +257,8 @@ input_params_map = [
                                  wallets={IDENTITY_OWNER: 1})
                ]),
     # 8
-    InputParam(auth_constraint=AuthConstraint(TRUSTEE, 3),
+    InputParam(auth_constraint=AuthConstraint(TRUSTEE, 3,
+                                              metadata={FEES_FIELD_NAME: fee_0[0]}),
                valid_requests=[
                    RequestParams(wallets={TRUSTEE: 3}),
                    RequestParams(fees=0,
@@ -383,8 +388,8 @@ def sdk_wallet_stewards(looper,
 
 @pytest.fixture(scope='module')
 def sdk_wallet_trust_anchors(looper,
-                        sdk_wallet_trustee,
-                        sdk_pool_handle):
+                             sdk_wallet_trustee,
+                             sdk_pool_handle):
     sdk_wallet_stewards = []
     for i in range(3):
         wallet = sdk_add_new_nym(looper,
@@ -477,9 +482,9 @@ def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wall
     request.signatures = None
     # add fees
     request = add_fees_request_with_address(helpers,
-                                                   fees,
-                                                   request,
-                                                   address)
+                                            fees,
+                                            request,
+                                            address)
     # sign request
     request = sdk_multi_sign_request_objects(looper, wallets, [request])
 
@@ -487,7 +492,7 @@ def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wall
 
 
 def add_attribute(looper, sdk_wallet_handle, attrib,
-                                dest=None, xhash=None, enc=None):
+                  dest=None, xhash=None, enc=None):
     _, s_did = sdk_wallet_handle
     t_did = dest or s_did
     attrib_req = looper.loop.run_until_complete(
