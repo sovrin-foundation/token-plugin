@@ -50,18 +50,11 @@ def fees_constraint():
 
 
 @pytest.fixture()
-def fees_req_handler(fees):
-    handler = FakeSomething(deducted_fees_xfer={},
-                            has_fees=StaticFeesReqHandler.has_fees,
-                            calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM))
-    return handler
-
-
-
-@pytest.fixture()
-def fees_authorizer():
-    return FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
+def fees_authorizer(fees):
+    authorizer = FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
                           utxo_cache=UTXOCache(KeyValueStorageInMemory()))
+    authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM)
+    return authorizer
 
 
 def test_get_fees_from_constraint(fees_authorizer,

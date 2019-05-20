@@ -25,10 +25,10 @@ def write_auth_req_validator(warv, helpers):
                                      utxo_cache=fee_handler.utxo_cache)
     def _mocked_cpf(self, req, required_fees):
         return req.fees == required_fees, ''
-    def _mocked_cffr(self, request):
+    def _mocked_cffr(self, utxo_cache, request):
         return request.fees
     fees_authorizer.can_pay_fees = functools.partial(_mocked_cpf, fees_authorizer)
-    fees_authorizer._calculate_fees_from_req = functools.partial(_mocked_cffr, fees_authorizer)
+    fees_authorizer.calculate_fees_from_req = functools.partial(_mocked_cffr, fees_authorizer)
     warv.register_authorizer(fees_authorizer)
     return warv
 
