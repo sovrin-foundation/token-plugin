@@ -83,47 +83,36 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_txn_fees(self, request) -> int:
         return self.fees.get(request.operation[TXN_TYPE], 0)
 
-    def deduct_fees_xfer(self, request):
-        if request.operation[TXN_TYPE] == XFER_PUBLIC:
-            xfer_fees = FeesAuthorizer.calculate_fees_from_req(utxo_cache=self.utxo_cache,
-                                                               request=request)
-            if xfer_fees > 0:
-                self.deducted_fees_xfer[request.key] = xfer_fees
-
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
     def deduct_fees(self, request, cons_time, ledger_id, seq_no, txn):
         txn_type = request.operation[TXN_TYPE]
         fees_key = "{}#{}".format(txn_type, seq_no)
-        if txn_type == XFER_PUBLIC:
-            if request.key in self.deducted_fees_xfer:
-                self.deducted_fees[fees_key] = self.deducted_fees_xfer.pop(request.key)
-        else:
-            if FeesAuthorizer.has_fees(request):
-                inputs, outputs, signatures = getattr(request, f.FEES.nm)
-                # This is correct since FEES is changed from config ledger whose
-                # transactions have no fees
-                fees = FeesAuthorizer.calculate_fees_from_req(self.utxo_cache, request)
-                sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
-                txn = {
-                    OPERATION: {
-                        TXN_TYPE: FEE_TXN,
-                        INPUTS: inputs,
-                        OUTPUTS: outputs,
-                        REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
-                        FEES: fees,
-                    },
-                    f.SIGS.nm: sigs,
-                    f.REQ_ID.nm: get_req_id(txn),
-                    f.PROTOCOL_VERSION.nm: 2,
-                }
-                txn = reqToTxn(txn)
-                self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
-                _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
-                self.updateState(txns)
-                self.fee_txns_in_current_batch += 1
-                self.deducted_fees[fees_key] = fees
-                return txn
+        if FeesAuthorizer.has_fees(request):
+            inputs, outputs, signatures = getattr(request, f.FEES.nm)
+            # This is correct since FEES is changed from config ledger whose
+            # transactions have no fees
+            fees = FeesAuthorizer.calculate_fees_from_req(self.utxo_cache, request)
+            sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
+            txn = {
+                OPERATION: {
+                    TXN_TYPE: FEE_TXN,
+                    INPUTS: inputs,
+                    OUTPUTS: outputs,
+                    REF: self.get_ref_for_txn_fees(ledger_id, seq_no),
+                    FEES: fees,
+                },
+                f.SIGS.nm: sigs,
+                f.REQ_ID.nm: get_req_id(txn),
+                f.PROTOCOL_VERSION.nm: 2,
+            }
+            txn = reqToTxn(txn)
+            self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
+            _, txns = self.token_ledger.appendTxns([TokenReqHandler.transform_txn_for_ledger(txn)])
+            self.updateState(txns)
+            self.fee_txns_in_current_batch += 1
+            self.deducted_fees[fees_key] = fees
+            return txn
 
     def doStaticValidation(self, request: Request):
         operation = request.operation
