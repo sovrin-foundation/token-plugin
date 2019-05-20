@@ -26,18 +26,12 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
 
-# fee_1 = ("fee_1", 1)
-# fee_2 = ("fee_2", 2)
-# fee_3 = ("fee_3", 3)
-# fee_5 = ("fee_5", 5)
-# fee_6 = ("fee_6", 6)
-# fee_100 = ("fee_100", 100)
-fee_1 = (NODE, 1)
-fee_2 = (POOL_UPGRADE, 2)
-fee_3 = (POOL_RESTART, 3)
-fee_5 = (NYM, 5)
-fee_6 = (VALIDATOR_INFO, 6)
-fee_100 = (GET_SCHEMA, 100)
+fee_1 = ("1", 1)
+fee_2 = ("2", 2)
+fee_3 = ("3", 3)
+fee_5 = ("5", 5)
+fee_6 = ("6", 6)
+fee_100 = ("100", 100)
 
 set_fees = dict([
     fee_1,
@@ -151,6 +145,8 @@ input_params_map = [
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 2}),
                    RequestParams(fees=fee_100[1],
+                                 wallets={TRUST_ANCHOR: 1}),
+                   RequestParams(fees=fee_100[1],
                                  wallets={TRUSTEE: 1})
                ]),
     # 4
@@ -173,6 +169,8 @@ input_params_map = [
                invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 1}),
+                   RequestParams(fees=fee_1[1],
+                                 wallets={TRUST_ANCHOR: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1})
                ]),
