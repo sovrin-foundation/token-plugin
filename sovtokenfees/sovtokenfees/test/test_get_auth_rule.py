@@ -41,7 +41,7 @@ def generate_key(auth_action=ADD_PREFIX, auth_type=NYM,
         key[OLD_VALUE] = old_value
     return key
 
-
+@pytest.mark.skip()
 def test_fail_get_auth_rule_with_incorrect_key(looper,
                                                sdk_wallet_trustee,
                                                sdk_pool_handle):
