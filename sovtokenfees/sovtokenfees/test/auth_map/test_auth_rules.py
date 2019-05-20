@@ -46,7 +46,7 @@ RequestParams = NamedTuple("RequestParams", [("fees", int),
                                              ("owner", str),
                                              ("wallets", Dict[str, int])]
                            )
-RequestParams.__new__.__defaults__ = (0, "-1", {})
+RequestParams.__new__.__defaults__ = (None, "-1", {})
 
 InputParam = NamedTuple("InputParam", [
     ("auth_constraint", AbstractAuthConstraint),
@@ -162,8 +162,7 @@ input_params_map = [
                                           TRUSTEE: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 3}),
-                   RequestParams(fees=0,
-                                 wallets={STEWARD: 1,
+                   RequestParams(wallets={STEWARD: 1,
                                           TRUSTEE: 1})
                ],
                invalid_requests=[
@@ -232,8 +231,7 @@ input_params_map = [
                                                  AuthConstraint(TRUST_ANCHOR, 1),
                                                  ]),
                valid_requests=[
-                   RequestParams(fees=0,
-                                 wallets={TRUSTEE: 1}),
+                   RequestParams(wallets={TRUSTEE: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
@@ -257,8 +255,7 @@ input_params_map = [
     # 8
     InputParam(auth_constraint=AuthConstraint(TRUSTEE, 3),
                valid_requests=[
-                   RequestParams(fees=0,
-                                 wallets={TRUSTEE: 3}),
+                   RequestParams(wallets={TRUSTEE: 3}),
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 4})
                ],
@@ -434,6 +431,8 @@ def address(helpers):
 
 
 def add_fees_request_with_address(helpers, fee_amount, request, address):
+    if fee_amount is None:
+        return request
     utxos_found = helpers.general.get_utxo_addresses([address])[0]
     request_with_fees = helpers.request.add_fees(
         request,
