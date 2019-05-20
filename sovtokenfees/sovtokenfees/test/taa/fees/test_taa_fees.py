@@ -23,7 +23,7 @@ def test_nym_with_fees_with_taa(helpers,
     helpers.sdk.sdk_send_and_check([request])
 
 
-@pytest.mark.skip(reason="Will work when validation of TAA is enabled")
+
 def test_nym_with_fees_no_taa(helpers,
                               addresses,
                               mint_tokens,
@@ -31,7 +31,7 @@ def test_nym_with_fees_no_taa(helpers,
                               set_acceptance_mechanism,
                               set_transaction_author_agreement):
     request = helpers.request.nym()
-    utxos = helpers.general.get_utxo_addresses([addresses[:1]])[0]
+    utxos = helpers.general.get_utxo_addresses(addresses[:1])[0]
     request = helpers.request.add_fees(
         request,
         utxos,

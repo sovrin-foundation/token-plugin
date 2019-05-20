@@ -53,14 +53,12 @@ def test_taa_xfer_negative_not_signed(helpers,
         helpers.sdk.sdk_send_and_check([request])
 
 
-@pytest.mark.skip(reason="Will work when validation of TAA is enabled")
 def test_taa_set_xfer_not_accepted(helpers,
-                                      address_main,
-                                      addresses,
-                                      mint_tokens,
-                                      set_acceptance_mechanism,
-                                      set_transaction_author_agreement):
-    inputs = helpers.general.get_utxo_addresses([address_main])[0]
+                                   addresses,
+                                   mint_tokens,
+                                   set_acceptance_mechanism,
+                                   set_transaction_author_agreement):
+    inputs = helpers.general.get_utxo_addresses(addresses[:1])[0]
     outputs = [{"address": addresses[1], "amount": 1000}]
     with pytest.raises(RequestRejectedException):
         helpers.general.do_transfer(inputs, outputs)
