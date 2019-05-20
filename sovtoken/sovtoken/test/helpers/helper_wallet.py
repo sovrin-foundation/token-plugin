@@ -35,9 +35,11 @@ class HelperWallet():
         self._trustees = sdk_trustees
         self._stewards = sdk_stewards
 
-    def create_address(self):
+    def create_address(self, wallet=None):
         """ Create a new address and add it to the address_map """
-        address = create_payment_address(self._client_wallet[0], "sov", "{}")
+        if wallet is None:
+            wallet = self._client_wallet[0]
+        address = create_payment_address(wallet, "sov", "{}")
         address = self._looper.loop.run_until_complete(address)
         addr = Address()
         addr.address = address
