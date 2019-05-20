@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import NamedTuple, Dict
+from typing import NamedTuple, Dict, List
 
 import pytest
 from indy.did import replace_keys_start
@@ -52,8 +52,8 @@ RequestParams.__new__.__defaults__ = (None, "-1", {})
 
 InputParam = NamedTuple("InputParam", [
     ("auth_constraint", AbstractAuthConstraint),
-    ("valid_requests", [RequestParams]),
-    ("invalid_requests", [RequestParams])])
+    ("valid_requests", List[RequestParams]),
+    ("invalid_requests", List[RequestParams])])
 
 steward_address = ""
 trustee_address = ""
@@ -507,7 +507,7 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
     helpers.general.do_set_fees(set_fees)
     sdk_send_and_check_auth_rule_request(looper, sdk_wallet_trustee,
                                          sdk_pool_handle, auth_action=ADD_PREFIX,
-                                         auth_type=ATTRIB, field="*", new_value="*", old_value="*",
+                                         auth_type=ATTRIB, field="*", new_value="*",
                                          constraint=input_param.auth_constraint.as_dict)
     for req in input_param.valid_requests:
         _send_request(looper, helpers, req.fees, req.wallets, address,
