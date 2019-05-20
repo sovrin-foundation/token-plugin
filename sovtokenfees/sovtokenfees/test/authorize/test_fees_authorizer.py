@@ -6,6 +6,7 @@ from sovtoken.constants import AMOUNT
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtoken.utxo_cache import UTXOCache
 from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from sovtokenfees.test.helper import add_fees_request_with_address
@@ -20,7 +21,7 @@ from storage.kv_in_memory import KeyValueStorageInMemory
 
 def _set_fees(authorizer, fees=None):
     fees = fees or {"1": 4}
-    authorizer.config_state.set(StaticFeesReqHandler.build_path_for_set_fees().encode(),
+    authorizer.config_state.set(build_path_for_set_fees().encode(),
                                 json.dumps(fees).encode())
 
 
@@ -58,9 +59,8 @@ def fees_req_handler(fees):
 
 
 @pytest.fixture()
-def fees_authorizer(fees_req_handler):
-    return FeesAuthorizer(fees_req_handler,
-                          config_state=PruningState(KeyValueStorageInMemory()),
+def fees_authorizer():
+    return FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
                           utxo_cache=UTXOCache(KeyValueStorageInMemory()))
 
 

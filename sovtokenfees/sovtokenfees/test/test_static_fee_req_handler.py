@@ -77,8 +77,7 @@ def reset_token_handler(fee_handler):
 
 @pytest.fixture()
 def fees_authorizer(fee_handler):
-    return FeesAuthorizer(fees_req_handler=fee_handler,
-                          config_state=fee_handler.state,
+    return FeesAuthorizer(config_state=fee_handler.state,
                           utxo_cache=fee_handler.utxo_cache)
 
 

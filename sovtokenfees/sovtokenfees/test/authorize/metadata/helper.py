@@ -8,6 +8,7 @@ from indy_common.types import Request
 from plenum.common.constants import TYPE
 from plenum.test.helper import randomOperation
 from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 
 PLUGIN_FIELD = FEES_FIELD_NAME
@@ -22,10 +23,10 @@ def set_auth_constraint(validator, auth_constraint):
             fees_alias = constraint.metadata.get(PLUGIN_FIELD, None)
             if fees_alias:
                 fees_value = int(fees_alias)
-                current_fees = state.get(StaticFeesReqHandler.build_path_for_set_fees(), isCommitted=False) or b'{}'
+                current_fees = state.get(build_path_for_set_fees(), isCommitted=False) or b'{}'
                 current_fees = json.loads(current_fees.decode())
                 current_fees.update({fees_alias: fees_value})
-                state.set(StaticFeesReqHandler.build_path_for_set_fees().encode(),
+                state.set(build_path_for_set_fees().encode(),
                           json.dumps(current_fees).encode())
     if auth_constraint:
         _set_to_state(validator.config_state, auth_constraint)

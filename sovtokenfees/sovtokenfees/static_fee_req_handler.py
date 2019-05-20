@@ -3,8 +3,9 @@ from common.serializers.serialization import proof_nodes_serializer, \
 from common.serializers.base58_serializer import Base58Serializer
 
 from indy_common.authorize.auth_actions import AuthActionEdit
+from sovtokenfees.domain import build_path_for_set_fees
+from sovtokenfees.fees_authorizer import FeesAuthorizer
 from stp_core.common.log import getlogger
-from plenum.server.node import Node
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 
 txn_root_serializer = Base58Serializer()
@@ -18,17 +19,14 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEES_KEY_DELIMITER, \
-    FEES_STATE_PREFIX, \
-    FEES_KEY_FOR_ALL, FEE
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEE
 from sovtokenfees.fee_req_handler import FeeReqHandler
-from sovtokenfees.messages.fields import TxnFeesField, FEES_ALIAS, FEES_VALUE, SetFeesMsg, GetFeeMsg
+from sovtokenfees.messages.fields import SetFeesMsg, GetFeeMsg
 from sovtoken.constants import INPUTS, OUTPUTS, \
     XFER_PUBLIC, AMOUNT, ADDRESS, SEQNO, TOKEN_LEDGER_ID
 from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
-from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, \
-    UTXOError, InvalidFundsError
+from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError
 from state.trie.pruning_trie import rlp_decode
 
 
@@ -79,37 +77,18 @@ class StaticFeesReqHandler(FeeReqHandler):
         return self._get_fees(is_committed=False)
 
     @staticmethod
-    def has_fees(request) -> bool:
-        return hasattr(request, FEES) and request.fees is not None
-
-    @staticmethod
     def get_ref_for_txn_fees(ledger_id, seq_no):
         return '{}:{}'.format(ledger_id, seq_no)
 
-    @staticmethod
-    def build_path_for_set_fees(alias=None):
-        if alias:
-            return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, alias])
-        return FEES_KEY_DELIMITER.join([FEES_STATE_PREFIX, FEES_KEY_FOR_ALL])
-
-    @staticmethod
-    def get_change_for_fees(request) -> list:
-        return request.fees[1] if len(request.fees) >= 2 else []
-
-    def calculate_fees_from_req(self, request):
-        inputs = request.fees[0]
-        outputs = self.get_change_for_fees(request)
-        try:
-            sum_inputs = self.utxo_cache.sum_inputs(inputs, is_committed=False)
-        except Exception as e:
-            logger.error("Unexpected exception while sum_inputs calculating: {}".format(e))
-            return 0
-
-        sum_outputs = sum([a[AMOUNT] for a in outputs])
-        return sum_inputs - sum_outputs
-
     def get_txn_fees(self, request) -> int:
         return self.fees.get(request.operation[TXN_TYPE], 0)
+
+    def deduct_fees_xfer(self, request):
+        if request.operation[TXN_TYPE] == XFER_PUBLIC:
+            xfer_fees = FeesAuthorizer.calculate_fees_from_req(utxo_cache=self.utxo_cache,
+                                                               request=request)
+            if xfer_fees > 0:
+                self.deducted_fees_xfer[request.key] = xfer_fees
 
     # TODO: Fix this to match signature of `FeeReqHandler` and extract
     # the params from `kwargs`
@@ -120,11 +99,11 @@ class StaticFeesReqHandler(FeeReqHandler):
             if request.key in self.deducted_fees_xfer:
                 self.deducted_fees[fees_key] = self.deducted_fees_xfer.pop(request.key)
         else:
-            if self.has_fees(request):
+            if FeesAuthorizer.has_fees(request):
                 inputs, outputs, signatures = getattr(request, f.FEES.nm)
                 # This is correct since FEES is changed from config ledger whose
                 # transactions have no fees
-                fees = self.calculate_fees_from_req(request)
+                fees = FeesAuthorizer.calculate_fees_from_req(self.utxo_cache, request)
                 sigs = {i[ADDRESS]: s for i, s in zip(inputs, signatures)}
                 txn = {
                     OPERATION: {
@@ -265,7 +244,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         fees = None
         proof = None
         try:
-            fees_key = self.build_path_for_set_fees(alias=fees_alias)
+            fees_key = build_path_for_set_fees(alias=fees_alias)
             if with_proof:
                 proof, serz = self.state.generate_state_proof(fees_key,
                                                               serialize=True,
@@ -308,8 +287,8 @@ class StaticFeesReqHandler(FeeReqHandler):
             current_fees = self._get_fees()
             current_fees.update(fees_from_req)
             for fees_alias, fees_value in fees_from_req.items():
-                self._set_to_state(self.build_path_for_set_fees(alias=fees_alias), fees_value)
-            self._set_to_state(self.build_path_for_set_fees(), current_fees)
+                self._set_to_state(build_path_for_set_fees(alias=fees_alias), fees_value)
+            self._set_to_state(build_path_for_set_fees(), current_fees)
 
         elif typ == FEE_TXN:
             for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
