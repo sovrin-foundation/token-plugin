@@ -1,10 +1,10 @@
 import pytest
-from plenum.common.constants import NYM
 from plenum.common.txn_util import get_payload_data, get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
 from sovtoken.test.demo.demo_helpers import demo_logger
 
+from indy_common.constants import NYM
 
 MINT_TOKEN_AMOUNT = 100
 
@@ -133,6 +133,8 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
         assert fee_data[FEES] == TXN_FEES[NYM]
         assert get_seq_no(fee_txn) == 2
 
+    nym_seq_no = get_seq_no(nym_result)
+    helpers.node.assert_deducted_fees(NYM, nym_seq_no, TXN_FEES[NYM])
 
     formatted_txn = demo_logger.format_json(transactions[0])
     demo_logger.log_header(step7_info)

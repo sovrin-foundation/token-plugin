@@ -1,7 +1,10 @@
 from sovtoken.constants import ADDRESS, AMOUNT
 
-
-PROD_ATOM_COUNT = 8000000000 * 100000
+sovatom = 1
+sovatoms_in_token = 10 ** 8 * sovatom
+# 1 billion
+TOKENS_COUNT = 10 ** 9
+PROD_ATOM_COUNT = 8 * TOKENS_COUNT * sovatoms_in_token
 
 
 def test_prod_minting(helpers,
