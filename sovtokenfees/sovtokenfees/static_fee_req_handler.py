@@ -141,8 +141,10 @@ class StaticFeesReqHandler(FeeReqHandler):
         if len(wrong_aliases) > 0:
             raise InvalidClientMessageException(request.identifier,
                                                 request.reqId,
-                                                "Fees alias(es) {} does not exist in current fees {}".format(", ".join(wrong_aliases),
-                                                                                                             current_fees))
+                                                "Fees alias(es) {} does not exist in current fees {}"
+                                                "Please add the alias(es) via SET_FEES transaction first.".
+                                                format(", ".join(wrong_aliases),
+                                                       current_fees))
 
     def _validate_metadata(self, current_fees, constraint: AuthConstraint, wrong_aliases):
         if constraint.constraint_id != ConstraintsEnum.ROLE_CONSTRAINT_ID:
