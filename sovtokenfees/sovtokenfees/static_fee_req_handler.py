@@ -49,6 +49,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                          poolManager=node.poolManager,
                          poolCfg=node.poolCfg,
                          write_req_validator=node.write_req_validator,
+                         bls_store=bls_store,
                          ts_store=ts_store)
 
         self.token_ledger = token_ledger
