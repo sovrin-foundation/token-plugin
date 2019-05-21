@@ -205,7 +205,7 @@ Example:
     "operation": {
         "type": "20000",
         "fees": {
-            "add_new_steward": 42,
+            <str: feesAlias>: <int: amount>,
         }
     },
 }
@@ -390,7 +390,7 @@ Example:
     "operation": {
         "type": "20000",
         "fees": {
-            <str: feesAlias>: <int: amount>,
+            "add_new_steward": 42,,
         }
     },
 }
@@ -430,13 +430,13 @@ The pool performs the following validation for the given example:
         
 ### Notes:
 * The order of previous steps is very important. First of all SET_FEES is required, then - AUTH_RULE.
-* SET_FEES it's "updating" cmd. For example, if current fees is {A: 1, B: 2} then after sending SET_FEES cmd with {A: 42} map resulted fees will be looked as {A: 42, B: 2} 
+* SET_FEES is "updating" transaction, so that it appends new aliases to the existing FEEs map (either adding or overriding aliases). For example, if current fees are {A: 1, B: 2} then after sending SET_FEES transaction with {A: 42, C:3}, the resulted map will look like {A: 42, B: 2, C:3}. 
 * Setting fees without adding or changing metadata in corresponded auth_rule does not make sense. 
         
 ## How to setup fees for whole pool
 For setting fees for whole we need to make the following steps:
 * Define all the actions which we would like to set fees for
-* Repeat all the steps from [How to set fees for an action](#How to set fees for an action) for each action
+* Repeat all the steps from [How to set fees for an action](#how-to-set-fees-for-an-action) for each action
 
 ## Recommendation for setting fees.
 * **If you want to set an alias for `AND` constraint, then make sure, that all of constraints will have the same fees alias.**
