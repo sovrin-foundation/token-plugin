@@ -92,8 +92,6 @@ def test_xfer_with_sufficient_fees(
     assert address_receiver_utxos[0][PAYMENT_ADDRESS] == address_receiver
     assert address_receiver_utxos[0][AMOUNT] == 100
 
-    helpers.node.assert_deducted_fees(XFER_PUBLIC, transfer_seq_no, fee_amount)
-
 
 def test_xfer_fees_with_empty_output(helpers, address_main_inner, fees):
     """
@@ -165,13 +163,6 @@ def test_xfer_with_additional_fees_attached(
 
     result = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(result)
-
-    xfer_seq_no = get_seq_no(result)
-    key = "{}#{}".format(XFER_PUBLIC, xfer_seq_no)
-    fees_req_handler = helpers.node.get_fees_req_handler()
-
-    assert fees[XFER_PUBLIC] == fees_req_handler.deducted_fees[key]
-    assert key not in fees_req_handler.deducted_fees_xfer
 
 
 # Mint after a transfer transaction with fees

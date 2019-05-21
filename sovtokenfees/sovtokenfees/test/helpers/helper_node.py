@@ -7,6 +7,7 @@ from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, ED
 
 from indy_common.authorize.auth_cons_strategies import AbstractAuthStrategy
 from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.domain import build_path_for_set_fees
 
 
 class HelperNode(sovtoken_helper_node.HelperNode):
@@ -52,7 +53,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)
         empty_fees = req_handler.state_serializer.serialize({})
-        req_handler.state.set(req_handler.build_path_for_set_fees().encode(), empty_fees)
+        req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
         return node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
