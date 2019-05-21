@@ -24,6 +24,7 @@ def test_nym_without_fees_but_required(fees,
     1. Send auth_rule txn with fees in metadata
     2. Send nym without fees and check, that it will be rejected
     """
+    helpers.general.do_set_fees(fees, fill_auth_map=False)
     original_action = add_new_identity_owner
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
     original_constraint.set_metadata({'fees': NYM})
@@ -33,7 +34,6 @@ def test_nym_without_fees_but_required(fees,
                                          auth_action=ADD_PREFIX, auth_type=NYM,
                                          field=original_action.field, new_value=original_action.value,
                                          old_value=None, constraint=original_constraint.as_dict)
-    helpers.general.do_set_fees(fees, fill_auth_map=False)
 
     with pytest.raises(RequestRejectedException, match="Fees are required for this txn type"):
         helpers.general.do_nym()
