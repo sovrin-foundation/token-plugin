@@ -66,8 +66,6 @@ class StaticFeesReqHandler(FeeReqHandler):
         self.fee_txns_in_current_batch = 0
         # Tracks amount of deducted sovtokenfees for a transaction
         self.deducted_fees = {}
-        # Since inputs are spent in XFER. FIND A BETTER SOLUTION
-        self.deducted_fees_xfer = {}
         self.token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
                                                       token_ledger.uncommitted_root_hash,
                                                       token_ledger.size)
@@ -88,7 +86,7 @@ class StaticFeesReqHandler(FeeReqHandler):
     def deduct_fees(self, request, cons_time, ledger_id, seq_no, txn):
         txn_type = request.operation[TXN_TYPE]
         fees_key = "{}#{}".format(txn_type, seq_no)
-        if FeesAuthorizer.has_fees(request):
+        if txn_type != XFER_PUBLIC and FeesAuthorizer.has_fees(request):
             inputs, outputs, signatures = getattr(request, f.FEES.nm)
             # This is correct since FEES is changed from config ledger whose
             # transactions have no fees
@@ -194,13 +192,12 @@ class StaticFeesReqHandler(FeeReqHandler):
 
     def post_batch_committed(self, ledger_id, pp_time, committed_txns,
                              state_root, txn_root):
-        # All changes will be tracked on TokenReqHandler side
         token_state_root, token_txn_root, _ = self.token_tracker.commit_batch()
         if ledger_id == TOKEN_LEDGER_ID:
             return
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
-                                       if "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
-                                       and get_type(t) != XFER_PUBLIC
+                                       if get_type(t) != XFER_PUBLIC
+                                       and "{}#{}".format(get_type(t), get_seq_no(t)) in self.deducted_fees
                                        ]
         if len(committed_seq_nos_with_fees) > 0:
             r = TokenReqHandler.__commit__(self.utxo_cache, self.token_ledger,

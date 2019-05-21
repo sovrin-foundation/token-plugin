@@ -133,8 +133,6 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
         assert fee_data[FEES] == TXN_FEES[NYM]
         assert get_seq_no(fee_txn) == 2
 
-    nym_seq_no = get_seq_no(nym_result)
-    helpers.node.assert_deducted_fees(NYM, nym_seq_no, TXN_FEES[NYM])
 
     formatted_txn = demo_logger.format_json(transactions[0])
     demo_logger.log_header(step7_info)
