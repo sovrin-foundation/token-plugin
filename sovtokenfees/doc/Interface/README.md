@@ -377,3 +377,71 @@ Example:
     }
 }
 ```
+
+## How to set fees for pool.
+ For setting fees into pool we need to making the next steps:
+ * Send a SET_FEES txn with appropriate amount for required alias. 
+ For example, we have an alias, like "add_new_steward" (and we want to set fees for adding new nym action). For setting fees for this alias, we need to send a SET_FEES transaction with map {"add_new_steward": 42}.
+ Txn will be looked as:
+ ```
+{
+    "reqId": <int>,             //random identifier
+    "protocolVersion": <int>,   // the version of the client/node communication protocol
+    "operation": {
+        "type": "20000",
+        "fees": {
+            <str: feesAlias>: <int: amount>,
+        }
+    },
+}
+```
+ * After that, we need to add metadata into default auth constraint for action "add new nym".
+ For this example, txn for changing metadata for default auth_rule will be looked as:
+ ```
+{
+    'operation': {
+           'type':'120',
+           'constraint':{
+                    'constraint_id': 'ROLE', 
+                    'role': '0',
+                    'sig_count': 1, 
+                    'need_to_be_owner': False, 
+                    'metadata': {'fees': 'add_new_steward'}
+           }, 
+           'field' :'role',
+           'auth_type': '1', 
+           'auth_action': 'ADD',
+           'new_value': '2'
+    },
+    
+    'identifier': <str: some identifier>,
+    'reqId': <int: timestamp>,
+    'protocolVersion': 1,
+    'signature': <str: signature>
+}
+```
+
+Validation steps for this example:
+* doDynamicValidation for "adding new steward" nym (_`from indy-node's side`_);
+    * making general role's authorization (_`from indy-node's side`_)
+    * making fees specific validation, using metadata field (_`from plugin's side`_)
+        * lookup through config state for getting amount of "add_new_steward" alias (_`from plugin's side`_)
+        * making can_pay_fees validation (_`from plugin's side`_)
+        
+## Recommendation for setting fees.
+* **If you want to set an alias for `AND` constraint, then make sure, that all of constraints will have the same fees alias.**
+For example, there is a constraint:
+```
+(TRUSTEE, 1) and (STEWARD, 3)    - it means, that 1 trustee's and 3 steward's signatures are required
+```
+And we want to setup fees, like:
+```
+(TRUSTEE, 1, {'fees': 'trustees_fees'}) and (STEWARD, 3, {'fees': 'steward_fees'})
+```
+And after all setup's action we will try to send a request with fees, related to 'trustees_fees' alias and signatures from 1 TRUSTEE and 3 STEWARD.
+In this case, UnauthorizedError will raised, because amount of 'trustees_fees' alias doesn't equal to 'steward_fees'.
+* **Either do not set FEEs for NODE txn, or set equal amount of Fees for all fields (except service)**
+Now, for request we can add only 1 fees field, but Node txn can contains several actions and validation process (also fees validation too) would be called for each action. 
+For example we can change ip address, port and alias into 1 txn, but 1 fees field would be used for each action validation.
+If each of this action will be cost 5 tokens, then Node request with 15 token will be rejected, because we don't summarize all action's tokens during validation process.
+But Node request with 5 tokens will be ordered. 
