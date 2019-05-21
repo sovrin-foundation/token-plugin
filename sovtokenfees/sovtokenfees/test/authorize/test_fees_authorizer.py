@@ -4,7 +4,9 @@ import functools
 import pytest
 from sovtoken.constants import AMOUNT
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+from sovtoken.utxo_cache import UTXOCache
 from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from sovtokenfees.test.helper import add_fees_request_with_address
@@ -19,7 +21,7 @@ from storage.kv_in_memory import KeyValueStorageInMemory
 
 def _set_fees(authorizer, fees=None):
     fees = fees or {"1": 4}
-    authorizer.config_state.set(StaticFeesReqHandler.build_path_for_set_fees().encode(),
+    authorizer.config_state.set(build_path_for_set_fees().encode(),
                                 json.dumps(fees).encode())
 
 
@@ -48,18 +50,11 @@ def fees_constraint():
 
 
 @pytest.fixture()
-def fees_req_handler(fees):
-    handler = FakeSomething(deducted_fees_xfer={},
-                            has_fees=StaticFeesReqHandler.has_fees,
-                            calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM))
-    return handler
-
-
-
-@pytest.fixture()
-def fees_authorizer(fees_req_handler):
-    return FeesAuthorizer(fees_req_handler,
-                          config_state=PruningState(KeyValueStorageInMemory()))
+def fees_authorizer(fees):
+    authorizer = FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
+                          utxo_cache=UTXOCache(KeyValueStorageInMemory()))
+    authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM)
+    return authorizer
 
 
 def test_get_fees_from_constraint(fees_authorizer,
@@ -115,7 +110,7 @@ def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
                                         "bla bla bla")
 
     _set_fees(fees_authorizer)
-    fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: raise_some_exp()
+    fees_authorizer._can_pay_fees = lambda *args, **kwargs: raise_some_exp()
     authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                 auth_constraint=fees_constraint)
     assert not authorized
@@ -126,7 +121,7 @@ def test_success_authorization(fees_authorizer,
                                req_with_fees,
                                fees_constraint):
     _set_fees(fees_authorizer)
-    fees_authorizer.fees_req_handler.can_pay_fees = lambda *args, **kwargs: True
+    fees_authorizer._can_pay_fees = lambda *args, **kwargs: True
     authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                 auth_constraint=fees_constraint)
     assert authorized and not msg
