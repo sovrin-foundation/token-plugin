@@ -485,14 +485,14 @@ Also, trustee's part of constraint can contains 'fees' field with different fees
 In the other words, fees aliases can be different, but amount should be the same.
 For example, there is a constraint:
 ```
-(TRUSTEE, 2) and (STEWARD, 3)    - it means, that 1 trustee's and 3 steward's signatures are required
+(TRUSTEE, 1) and (STEWARD, 3)    - it means, that 1 trustee's and 3 steward's signatures are required
 ```
 And we want to setup fees, like:
 ```
-(TRUSTEE, 2, {'fees': 'trustees_fees'}) and (STEWARD, 3, {'fees': 'steward_fees'})
+(TRUSTEE, 1, {'fees': 'trustees_fees'}) and (STEWARD, 3, {'fees': 'steward_fees'})
 ```
 And after all setup actions we try to send a request with fees, related to 'trustees_fees' alias and signatures from 1 TRUSTEE and 3 STEWARD.
-In this case, if amount of 'trustees_fees' doesn't equal to amount of 'steward_fees' then RequestRejectedException will be raised.
+In this case, if amount of 'trustees_fees' doesn't equal to amount of 'steward_fees' then RequestRejectedException will be raised (`AND` constraint and the second part will be failed).
 * **Either do not set FEEs for NODE txn, or set equal amount of Fees for all fields (except service)**
 For now, we can add only 1 fees field per request, but Node txn can contain several actions so that validation process (including fees validation) will be called for each action. 
 For example we can change ip address, port and alias in 1 txn, but 1 fees field would be used for each action validation.
