@@ -2,13 +2,13 @@
 The next authorization rules extend default auth_map from indy-node ([auth_map](https://github.com/hyperledger/indy-node/blob/master/docs/source/add-node.md))
 <table class="tg">
   <tr>
-    <td>Transaction type</td>
-    <td>Action</td>
-    <td>Field</td>
-    <td>Previous value</td>
-    <td>New value</td>
-    <td>Who can</td>
-    <td>Description</td>
+    <th>Transaction type</th>
+    <th>Action</th>
+    <th>Field</th>
+    <th>Previous value</th>
+    <th>New value</th>
+    <th>Who can</th>
+    <th>Description</th>
   </tr>
 
   <tr>
