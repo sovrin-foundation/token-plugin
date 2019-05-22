@@ -8,6 +8,10 @@ from sovtokenfees.fees_authorizer import FeesAuthorizer
 from stp_core.common.log import getlogger
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 
+from indy_common.constants import AUTH_RULE
+
+from indy_common.authorize.auth_constraints import AuthConstraint, ConstraintsEnum
+
 txn_root_serializer = Base58Serializer()
 
 from common.serializers.json_serializer import JsonSerializer
@@ -19,7 +23,7 @@ from plenum.common.request import Request
 from plenum.common.txn_util import reqToTxn, get_type, get_payload_data, get_seq_no, \
     get_req_id
 from plenum.common.types import f, OPERATION
-from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEE
+from sovtokenfees.constants import SET_FEES, GET_FEES, GET_FEE, FEES, REF, FEE_TXN, FEE, FEES_FIELD_NAME
 from sovtokenfees.fee_req_handler import FeeReqHandler
 from sovtokenfees.messages.fields import SetFeesMsg, GetFeeMsg
 from sovtoken.constants import INPUTS, OUTPUTS, \
@@ -128,6 +132,29 @@ class StaticFeesReqHandler(FeeReqHandler):
         else:
             super().doStaticValidation(request)
 
+    def _fees_specific_validation(self, request: Request):
+        operation = request.operation
+        current_fees = self._get_fees()
+        constraint = self.get_auth_constraint(operation)
+        wrong_aliases = []
+        self._validate_metadata(self.fees, constraint, wrong_aliases)
+        if len(wrong_aliases) > 0:
+            raise InvalidClientMessageException(request.identifier,
+                                                request.reqId,
+                                                "Fees alias(es) {} does not exist in current fees {}. "
+                                                "Please add the alias(es) via SET_FEES transaction first.".
+                                                format(", ".join(wrong_aliases),
+                                                       current_fees))
+
+    def _validate_metadata(self, current_fees, constraint: AuthConstraint, wrong_aliases):
+        if constraint.constraint_id != ConstraintsEnum.ROLE_CONSTRAINT_ID:
+            for constr in constraint.auth_constraints:
+                self._validate_metadata(current_fees, constr, wrong_aliases)
+        else:
+            meta_alias = constraint.metadata.get(FEES_FIELD_NAME, None)
+            if meta_alias and meta_alias not in current_fees:
+                wrong_aliases.append(meta_alias)
+
     def validate(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] == SET_FEES:
@@ -138,6 +165,9 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                                      new_value="*")])
         else:
             super().validate(request)
+        if operation[TXN_TYPE] == AUTH_RULE:
+            # metadata validation
+            self._fees_specific_validation(request)
 
     def updateState(self, txns, isCommitted=False):
         for txn in txns:
