@@ -141,7 +141,7 @@ class StaticFeesReqHandler(FeeReqHandler):
         if len(wrong_aliases) > 0:
             raise InvalidClientMessageException(request.identifier,
                                                 request.reqId,
-                                                "Fees alias(es) {} does not exist in current fees {}"
+                                                "Fees alias(es) {} does not exist in current fees {}. "
                                                 "Please add the alias(es) via SET_FEES transaction first.".
                                                 format(", ".join(wrong_aliases),
                                                        current_fees))
