@@ -1,13 +1,18 @@
+from collections import OrderedDict
+
 import pytest
 
 from indy_common.state import config
+from sovtoken.sovtoken_auth_map import sovtoken_auth_map
+from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
+
 from plenum.common.types import OPERATION
 
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
 from indy_common.authorize.auth_constraints import ROLE
 from indy_common.authorize.auth_map import auth_map
 from indy_common.constants import NYM, TRUST_ANCHOR, AUTH_ACTION, AUTH_TYPE, FIELD, NEW_VALUE, \
-    OLD_VALUE, GET_AUTH_RULE, SCHEMA
+    OLD_VALUE, GET_AUTH_RULE, SCHEMA, CONSTRAINT
 from indy_node.server.config_req_handler import ConfigReqHandler
 from indy_node.test.auth_rule.helper import generate_constraint_list, generate_constraint_entity, \
     sdk_send_and_check_auth_rule_request
@@ -94,11 +99,18 @@ def test_get_all_auth_rule_transactions(looper,
     resp = sdk_get_auth_rule_request(looper,
                                      sdk_wallet_trustee,
                                      sdk_pool_handle)
-
-    expect = {key: constraint.as_dict if constraint is not None else {}
-              for key, constraint in auth_map.items()}
     result = resp[0][1]["result"][DATA]
-    assert result == expect
+    full_auth_map = OrderedDict(auth_map)
+    full_auth_map.update(sovtoken_auth_map)
+    full_auth_map.update(sovtokenfees_auth_map)
+
+    for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
+        rule = result[i]
+        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        if constraint is None:
+            assert {} == rule[CONSTRAINT]
+        else:
+            assert constraint.as_dict == rule[CONSTRAINT]
 
 
 def test_get_one_auth_rule_transaction_after_write(looper,
