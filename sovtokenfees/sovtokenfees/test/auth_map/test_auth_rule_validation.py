@@ -5,7 +5,7 @@ from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
 from indy_common.authorize.auth_actions import ADD_PREFIX
 
-from indy_common.constants import NYM, ROLE, TRUST_ANCHOR
+from indy_common.constants import NYM, ROLE, TRUST_ANCHOR, CONSTRAINT
 
 from plenum.common.constants import STEWARD
 
@@ -83,9 +83,8 @@ def test_add_metadata_with_existed_fees_alias(looper,
 
     key = generate_key(auth_action=ADD_PREFIX, auth_type=NYM,
                        field=ROLE, new_value=STEWARD,)
-    str_key = ConfigReqHandler.get_auth_key(key)
     auth_rule = sdk_get_auth_rule_request(looper,
                                           sdk_wallet_trustee,
                                           sdk_pool_handle,
                                           key)[0][1]
-    assert auth_rule['result']['data'][str_key]['metadata'][FEES_FIELD_NAME] == fees_alias
+    assert auth_rule['result']['data'][0][CONSTRAINT]['metadata'][FEES_FIELD_NAME] == fees_alias
