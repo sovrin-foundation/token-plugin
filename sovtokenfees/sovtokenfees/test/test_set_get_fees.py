@@ -3,7 +3,7 @@ import json
 import pytest
 
 from common.serializers.serialization import state_roots_serializer
-from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF
+from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF, AUDIT_LEDGER_ID
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException, PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
@@ -19,11 +19,11 @@ from state.db.persistent_db import PersistentDB
 from state.trie.pruning_trie import Trie, rlp_encode
 from storage.kv_in_memory import KeyValueStorageInMemory
 
+from indy_common.constants import CONFIG_LEDGER_ID
 
-def test_get_fees_when_no_fees_set(helpers):
-    ledger_fees = helpers.general.do_get_fees()[FEES]
-    assert ledger_fees == {}
-    helpers.node.assert_set_fees_in_memory({})
+from stp_core.loop.eventually import eventually
+
+from plenum.test.txn_author_agreement.helper import check_state_proof
 
 
 def test_set_fees_invalid_numeric(helpers):
