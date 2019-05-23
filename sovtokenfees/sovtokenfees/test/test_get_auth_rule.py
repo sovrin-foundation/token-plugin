@@ -1,13 +1,18 @@
+from collections import OrderedDict
+
 import pytest
 
 from indy_common.state import config
+from sovtoken.sovtoken_auth_map import sovtoken_auth_map
+from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
+
 from plenum.common.types import OPERATION
 
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
-from indy_common.authorize.auth_constraints import ROLE
+from indy_common.authorize.auth_constraints import ROLE, ConstraintCreator
 from indy_common.authorize.auth_map import auth_map
 from indy_common.constants import NYM, TRUST_ANCHOR, AUTH_ACTION, AUTH_TYPE, FIELD, NEW_VALUE, \
-    OLD_VALUE, GET_AUTH_RULE, SCHEMA
+    OLD_VALUE, GET_AUTH_RULE, SCHEMA, CONSTRAINT
 from indy_node.server.config_req_handler import ConfigReqHandler
 from indy_node.test.auth_rule.helper import generate_constraint_list, generate_constraint_entity, \
     sdk_send_and_check_auth_rule_request
@@ -71,8 +76,11 @@ def test_get_one_auth_rule_transaction(looper,
                                           sdk_wallet_trustee,
                                           sdk_pool_handle,
                                           key)[0]
-    assert auth_map.get(str_key).as_dict == \
-           resp["result"][DATA][str_key]
+
+    result = resp["result"][DATA][0]
+    assert len(resp["result"][DATA]) == 1
+    _check_key(key, result)
+    assert result[CONSTRAINT] == auth_map.get(str_key).as_dict
 
 
 def test_get_one_disabled_auth_rule_transaction(looper,
@@ -80,12 +88,14 @@ def test_get_one_disabled_auth_rule_transaction(looper,
                                                 sdk_pool_handle):
     key = generate_key(auth_action=EDIT_PREFIX, auth_type=SCHEMA,
                        field='*', old_value='*', new_value='*')
-    str_key = ConfigReqHandler.get_auth_key(key)
     req, resp = sdk_get_auth_rule_request(looper,
                                           sdk_wallet_trustee,
                                           sdk_pool_handle,
                                           key)[0]
-    assert {} == resp["result"][DATA][str_key]
+    result = resp["result"][DATA]
+    assert len(result) == 1
+    _check_key(key, result[0])
+    assert result[0][CONSTRAINT] == {}
 
 
 def test_get_all_auth_rule_transactions(looper,
@@ -94,11 +104,18 @@ def test_get_all_auth_rule_transactions(looper,
     resp = sdk_get_auth_rule_request(looper,
                                      sdk_wallet_trustee,
                                      sdk_pool_handle)
-
-    expect = {key: constraint.as_dict if constraint is not None else {}
-              for key, constraint in auth_map.items()}
     result = resp[0][1]["result"][DATA]
-    assert result == expect
+    full_auth_map = OrderedDict(auth_map)
+    full_auth_map.update(sovtoken_auth_map)
+    full_auth_map.update(sovtokenfees_auth_map)
+
+    for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
+        rule = result[i]
+        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        if constraint is None:
+            assert {} == rule[CONSTRAINT]
+        else:
+            assert constraint.as_dict == rule[CONSTRAINT]
 
 
 def test_get_one_auth_rule_transaction_after_write(looper,
@@ -118,13 +135,14 @@ def test_get_one_auth_rule_transaction_after_write(looper,
                                                 constraint=constraint)
     dict_auth_key = generate_key(auth_action=auth_action, auth_type=auth_type,
                                  field=field, new_value=new_value)
-    str_key = ConfigReqHandler.get_auth_key(dict_auth_key)
     resp = sdk_get_auth_rule_request(looper,
                                      sdk_wallet_trustee,
                                      sdk_pool_handle,
                                      dict_auth_key)
-    result = resp[0][1]["result"][DATA][str_key]
-    assert result == constraint
+    result = resp[0][1]["result"][DATA][0]
+    assert len(resp[0][1]["result"][DATA]) == 1
+    _check_key(dict_auth_key, result)
+    assert result[CONSTRAINT] == constraint
     assert resp[0][1]["result"][STATE_PROOF]
 
 
@@ -135,20 +153,39 @@ def test_get_all_auth_rule_transactions_after_write(looper,
     auth_type = NYM
     field = ROLE
     new_value = TRUST_ANCHOR
-    constraint = generate_constraint_list(auth_constraints=[generate_constraint_entity(role=TRUSTEE),
+    auth_constraint = generate_constraint_list(auth_constraints=[generate_constraint_entity(role=TRUSTEE),
                                                             generate_constraint_entity(role=STEWARD)])
     resp = sdk_send_and_check_auth_rule_request(looper,
                                                 sdk_wallet_trustee,
                                                 sdk_pool_handle,
                                                 auth_action=auth_action, auth_type=auth_type,
                                                 field=field, new_value=new_value,
-                                                constraint=constraint)
+                                                constraint=auth_constraint)
     auth_key = ConfigReqHandler.get_auth_key(resp[0][0][OPERATION])
     resp = sdk_get_auth_rule_request(looper,
                                      sdk_wallet_trustee,
                                      sdk_pool_handle)
-    expect = {key: constraint.as_dict if constraint is not None else {}
-              for key, constraint in auth_map.items()}
-    expect[auth_key] = constraint
     result = resp[0][1]["result"][DATA]
-    assert result == expect
+    full_auth_map = OrderedDict(auth_map)
+    full_auth_map.update(sovtoken_auth_map)
+    full_auth_map.update(sovtokenfees_auth_map)
+    full_auth_map[auth_key] = ConstraintCreator.create_constraint(auth_constraint)
+
+    for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
+        rule = result[i]
+        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        if constraint is None:
+            assert {} == rule[CONSTRAINT]
+        else:
+            assert constraint.as_dict == rule[CONSTRAINT]
+
+
+def _check_key(key, resp_key):
+    assert key[AUTH_ACTION] in resp_key[AUTH_ACTION]
+    assert key[AUTH_TYPE] in resp_key[AUTH_TYPE]
+    assert key[FIELD] in resp_key[FIELD]
+    assert key[NEW_VALUE] in resp_key[NEW_VALUE]
+    if key[AUTH_ACTION] == EDIT_PREFIX:
+        assert key[OLD_VALUE] in resp_key[OLD_VALUE]
+    else:
+        assert OLD_VALUE not in resp_key
