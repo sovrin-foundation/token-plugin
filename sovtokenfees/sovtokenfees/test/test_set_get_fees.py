@@ -10,6 +10,7 @@ from plenum.common.txn_util import get_seq_no
 from sovtoken.constants import OUTPUTS, XFER_PUBLIC, ADDRESS, SEQNO, AMOUNT, MINT_PUBLIC, PAYMENT_ADDRESS
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES, FEE
+from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 
 from plenum.test.delayers import req_delay
@@ -114,7 +115,10 @@ def test_set_fees_with_stewards(helpers):
     """
     fees = {NYM: 1}
     fees_request = helpers.request.set_fees(fees)
-    fees_request.signatures.popitem()
+    sigs = [(k, v) for k, v in fees_request.signatures.items()]
+    sigs.sort()
+    sigs.pop(0)
+    fees_request.signatures = {k: v for k, v in sigs}
     assert len(fees_request.signatures) == 2
 
     fees_request = helpers.wallet.sign_request_stewards(
@@ -251,7 +255,7 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
     fees = rlp_encode([StaticFeesReqHandler.state_serializer.serialize(fees)])
     assert client_trie.verify_spv_proof(
         state_roots_serializer.deserialize(result[STATE_PROOF][ROOT_HASH]),
-        StaticFeesReqHandler.build_path_for_set_fees(), fees, proof_nodes)
+        build_path_for_set_fees(), fees, proof_nodes)
 
 
 def test_mint_after_set_fees(helpers, fees_set):

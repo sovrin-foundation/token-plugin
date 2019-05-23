@@ -38,6 +38,8 @@ def test_validation_nym_with_fees_more_than_required(fees,
         current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, {FEES: fees}, seq_no, looper, [address_main],
                                                                  current_amount)
 
+
+    helpers.general.do_set_fees(fees, fill_auth_map=False)
     original_action = add_new_identity_owner
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
     original_constraint.set_metadata({'fees': NYM})
@@ -47,7 +49,6 @@ def test_validation_nym_with_fees_more_than_required(fees,
                                          auth_action=ADD_PREFIX, auth_type=NYM,
                                          field=original_action.field, new_value=original_action.value,
                                          old_value=None, constraint=original_constraint.as_dict)
-    helpers.general.do_set_fees(fees, fill_auth_map=False)
     with pytest.raises(RequestRejectedException, match="ExtraFundsError"):
         current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, {FEES: {NYM: fees[NYM] + 1}}, seq_no, looper, [address_main],
                                                                  current_amount)

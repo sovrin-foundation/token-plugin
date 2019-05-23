@@ -1,10 +1,10 @@
 import pytest
-from plenum.common.constants import NYM
 from plenum.common.txn_util import get_payload_data, get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
 from sovtoken.test.demo.demo_helpers import demo_logger
 
+from indy_common.constants import NYM
 
 MINT_TOKEN_AMOUNT = 100
 
