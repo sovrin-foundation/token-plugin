@@ -14,6 +14,11 @@ class HelperNode():
     def __init__(self, nodes):
         self._nodes = nodes
 
+    def get_primary_node(self):
+        for n in self._nodes:
+            if n.master_replica.isPrimary:
+                return n
+
     def get_last_ledger_transaction_on_nodes(self, ledger_id):
         """ Return last transaction stored on ledger from each node. """
         transactions = []
