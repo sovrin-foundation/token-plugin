@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from sovtoken.constants import MINT_PUBLIC, XFER_PUBLIC
 from indy_common.authorize.auth_actions import AuthActionEdit, AuthActionAdd
 from indy_common.authorize.auth_constraints import ROLE, accepted_roles, AuthConstraint
@@ -18,7 +20,7 @@ anyone_constraint = AuthConstraint(role='*',
 # Three Trustee constraint
 three_trustee_constraint = AuthConstraint(TRUSTEE, 3)
 
-sovtoken_auth_map = {
-    add_mint.get_action_id(): three_trustee_constraint,
-    add_xfer.get_action_id(): anyone_constraint,
-}
+sovtoken_auth_map = OrderedDict([
+    (add_mint.get_action_id(), three_trustee_constraint),
+    (add_xfer.get_action_id(), anyone_constraint),
+])

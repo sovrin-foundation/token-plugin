@@ -1,13 +1,19 @@
 import json
+from collections import OrderedDict
 
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
-from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
+from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request, sdk_get_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX
 from indy_common.authorize.auth_constraints import AuthConstraint
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map, add_mint
 
-from plenum.common.constants import STEWARD, TXN_TYPE
+from indy_node.server.config_req_handler import ConfigReqHandler
+
+from indy_common.constants import CONSTRAINT
+
+from indy_common.authorize.auth_map import auth_map
+from plenum.common.constants import STEWARD, TXN_TYPE, DATA
 from plenum.common.exceptions import RequestRejectedException
 
 
@@ -75,3 +81,17 @@ def test_auth_mint(helpers,
                                          constraint=sovtoken_auth_map[add_mint.get_action_id()].as_dict)
 
     helpers.general.do_mint(outputs)
+    resp = sdk_get_auth_rule_request(looper,
+                                     sdk_wallet_trustee,
+                                     sdk_pool_handle)
+    full_auth_map = OrderedDict(auth_map)
+    full_auth_map.update(sovtoken_auth_map)
+
+    result = resp[0][1]["result"][DATA]
+    for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
+        rule = result[i]
+        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        if constraint is None:
+            assert {} == rule[CONSTRAINT]
+        else:
+            assert constraint.as_dict == rule[CONSTRAINT]
