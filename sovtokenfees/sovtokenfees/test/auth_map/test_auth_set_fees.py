@@ -1,14 +1,20 @@
 import json
+from collections import OrderedDict
 
 import pytest
-from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
+from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request, sdk_get_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
-from indy_common.authorize.auth_constraints import AuthConstraint
+from indy_common.authorize.auth_constraints import AuthConstraint, METADATA
+from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from sovtokenfees.constants import SET_FEES, FEES
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map, edit_fees
 
-from indy_common.constants import NODE, NYM
-from plenum.common.constants import STEWARD, TXN_TYPE
+from indy_common.constants import NODE, NYM, CONSTRAINT
+
+from indy_common.authorize.auth_map import auth_map
+
+from indy_node.server.config_req_handler import ConfigReqHandler
+from plenum.common.constants import STEWARD, TXN_TYPE, DATA
 from plenum.common.exceptions import RequestRejectedException
 
 
@@ -81,4 +87,16 @@ def test_set_fees(helpers,
                                          old_value='*',
                                          new_value='*',
                                          constraint=sovtokenfees_auth_map[edit_fees.get_action_id()].as_dict)
+    resp = sdk_get_auth_rule_request(looper,
+                                     sdk_wallet_trustee,
+                                     sdk_pool_handle)
+    full_auth_map = OrderedDict(auth_map)
+    full_auth_map.update(sovtoken_auth_map)
+    full_auth_map.update(sovtokenfees_auth_map)
+
+    result = resp[0][1]["result"][DATA]
+    for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
+        rule = result[i]
+        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+
     set_fees(helpers, fees)
