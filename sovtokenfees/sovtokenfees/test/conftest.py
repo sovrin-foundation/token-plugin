@@ -170,7 +170,7 @@ def helpers(
     )
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def reset_fees(helpers):
     helpers.node.reset_fees()
 
