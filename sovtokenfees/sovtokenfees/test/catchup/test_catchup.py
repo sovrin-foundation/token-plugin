@@ -12,6 +12,7 @@ from sovtoken.main import \
 from sovtoken.test.helper import user1_token_wallet
 from sovtokenfees.main import \
     integrate_plugin_in_node as integrate_fees_plugin_in_node
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 from sovtokenfees.test.helper import pay_fees
 
 from indy_node.test.helper import TestNode
@@ -21,8 +22,8 @@ from indy_common.config_helper import NodeConfigHelper
 TestRunningTimeLimitSec = 250
 
 TXN_FEES = {
-    NYM: 1,
-    XFER_PUBLIC: 1
+    NYM_FEES_ALIAS: 1,
+    XFER_PUBLIC_FEES_ALIAS: 1
 }
 
 

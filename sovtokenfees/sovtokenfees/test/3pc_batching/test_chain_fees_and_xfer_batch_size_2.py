@@ -2,6 +2,7 @@ import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS
 
 from indy_common.constants import NYM
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 
@@ -42,12 +43,12 @@ def mint_tokens(helpers, addresses):
 
 @pytest.fixture()
 def fees():
-    return {NYM: 4}
+    return {NYM_FEES_ALIAS: 4}
 
 
 @pytest.fixture()
 def fees_set(helpers, fees):
-    fees2 = {NYM: 2}
+    fees2 = {NYM_FEES_ALIAS: 2}
     fees4 = fees
     helpers.general.set_fees_without_waiting(fees2)
     helpers.general.set_fees_without_waiting(fees4)
@@ -124,7 +125,7 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
 
     sdk_get_and_check_replies(looper, c_nym)
     c_nym_get = helpers.general.do_get_utxo(C)
-    assert c_nym_get[OUTPUTS][0][AMOUNT] == c_nym_amount == transfer_summ - fees.get(NYM, 0)
+    assert c_nym_get[OUTPUTS][0][AMOUNT] == c_nym_amount == transfer_summ - fees.get(NYM_FEES_ALIAS, 0)
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
 

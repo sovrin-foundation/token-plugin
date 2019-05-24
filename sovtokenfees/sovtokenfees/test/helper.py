@@ -4,6 +4,7 @@ from enum import Enum, unique
 
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtoken.utxo_cache import UTXOAmounts
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, txn_type_to_alias, XFER_PUBLIC_FEES_ALIAS
 from stp_core.loop.eventually import eventually
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
@@ -62,7 +63,8 @@ def check_uncommitted_txn(node, expected_length, ledger_id):
 
 def add_fees_request_with_address_inner(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
     utxos = utxos if utxos else helpers.inner.general.get_utxo_addresses([address])[0]
-    fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
+    txn_type = request.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]]
     helpers.inner.request.add_fees(
         request,
         utxos,
@@ -74,7 +76,8 @@ def add_fees_request_with_address_inner(helpers, fees_set, request, address, utx
 
 def add_fees_request_with_address(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
     utxos_found = utxos if utxos else helpers.general.get_utxo_addresses([address])[0]
-    fee_amount = fees_set[FEES][request.operation[TXN_TYPE]]
+    txn_type = request.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]]
     request_with_fees = helpers.request.add_fees(
         request,
         utxos_found,
@@ -181,7 +184,7 @@ def nyms_with_fees(req_count,
                    init_seq_no):
     amount = all_amount
     seq_no = init_seq_no
-    fee_amount = fees_set[FEES].get(NYM, 0)
+    fee_amount = fees_set[FEES].get(NYM_FEES_ALIAS, 0)
     reqs = []
     for i in range(req_count):
         req = helpers.request.nym()
@@ -215,8 +218,8 @@ def send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses, c
     if check_reply:
         sdk_get_and_check_replies(looper, resp)
 
-    current_amount -= fees_set[FEES].get(NYM, 0)
-    seq_no += 1 if fees_set[FEES].get(NYM, 0) else 0
+    current_amount -= fees_set[FEES].get(NYM_FEES_ALIAS, 0)
+    seq_no += 1 if fees_set[FEES].get(NYM_FEES_ALIAS, 0) else 0
     return current_amount, seq_no, resp
 
 
@@ -224,12 +227,12 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
                             seq_no, check_reply=True, transfer_summ=20):
     [address_giver, address_receiver] = addresses
     if transfer_summ == current_amount:
-        outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ - fees.get(XFER_PUBLIC, 0)}]
-        new_amount = transfer_summ - fees.get(XFER_PUBLIC, 0)
+        outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)}]
+        new_amount = transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)
     else:
         outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ},
-                   {ADDRESS: address_giver, AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC, 0)}]
-        new_amount = current_amount - (fees.get(XFER_PUBLIC, 0) + transfer_summ)
+                   {ADDRESS: address_giver, AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)}]
+        new_amount = current_amount - (fees.get(XFER_PUBLIC_FEES_ALIAS, 0) + transfer_summ)
 
     inputs = [{"source": utxo_from_addr_and_seq_no(address_giver, seq_no)}]
     transfer_req = helpers.request.transfer(inputs, outputs)

@@ -1,4 +1,5 @@
 import pytest
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import add_fees_request_with_address
 
 from indy_common.constants import NYM
@@ -14,7 +15,7 @@ def send_nym_with_fees(helpers, address, change_address, fees_set, adjust_fees=0
 
 
 def test_fees_chain(addresses, helpers, mint_tokens, fees_set, looper):
-    helpers.general.do_set_fees({NYM: 4})
+    helpers.general.do_set_fees({NYM_FEES_ALIAS: 4})
     send_nym_with_fees(helpers, addresses[0], addresses[1], fees_set)
     send_nym_with_fees(helpers, addresses[1], addresses[2], fees_set)
     send_nym_with_fees(helpers, addresses[2], addresses[3], fees_set)
@@ -25,7 +26,7 @@ def test_fees_chain(addresses, helpers, mint_tokens, fees_set, looper):
 
 
 def test_fees_chain_negative(addresses, helpers, mint_tokens, fees_set, looper):
-    helpers.general.do_set_fees({NYM: 4})
+    helpers.general.do_set_fees({NYM_FEES_ALIAS: 4})
     send_nym_with_fees(helpers, addresses[0], addresses[1], fees_set)
     with pytest.raises(RequestRejectedException):
         send_nym_with_fees(helpers, addresses[1], addresses[2], fees_set, 1)
@@ -37,7 +38,7 @@ def test_fees_chain_negative(addresses, helpers, mint_tokens, fees_set, looper):
 
 
 def test_fees_chain_positive(addresses, helpers, mint_tokens, fees_set, looper):
-    helpers.general.do_set_fees({NYM: 4})
+    helpers.general.do_set_fees({NYM_FEES_ALIAS: 4})
     send_nym_with_fees(helpers, addresses[0], addresses[1], fees_set)
     with pytest.raises(RequestRejectedException):
         send_nym_with_fees(helpers, addresses[1], addresses[2], fees_set, -1)
