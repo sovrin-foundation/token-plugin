@@ -26,13 +26,13 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
 
-fee_0 = ("0", 0)
-fee_1 = ("1", 1)
-fee_2 = ("2", 2)
-fee_3 = ("3", 3)
-fee_5 = ("5", 5)
-fee_6 = ("6", 6)
-fee_100 = ("100", 100)
+fee_0 = ("fee_0", 0)
+fee_1 = ("fee_1", 1)
+fee_2 = ("fee_2", 2)
+fee_3 = ("fee_3", 3)
+fee_5 = ("fee_5", 5)
+fee_6 = ("fee_6", 6)
+fee_100 = ("fee_100", 100)
 
 set_fees = dict([
     fee_0,
