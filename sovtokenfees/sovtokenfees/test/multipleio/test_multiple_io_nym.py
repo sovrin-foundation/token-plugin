@@ -1,13 +1,14 @@
 import pytest
 
 from indy_common.constants import NYM
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 
 
 @pytest.fixture(
     scope='module',
     params=[
-        {NYM: 4},  # with fees
-    ], ids=lambda x: 'fees' if x[NYM] else 'nofees'
+        {NYM_FEES_ALIAS: 4},  # with fees
+    ], ids=lambda x: 'fees' if x[NYM_FEES_ALIAS] else 'nofees'
 )
 def fees(request):
     return request.param

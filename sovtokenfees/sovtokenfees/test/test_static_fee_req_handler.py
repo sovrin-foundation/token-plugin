@@ -22,18 +22,14 @@ from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
 from sovtokenfees.fees_authorizer import FeesAuthorizer
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 from stp_core.loop.eventually import eventually
 
 from indy_node.server.config_req_handler import ConfigReqHandler
 
 VALID_FEES = {
-    NYM: 1,
-    "100": 1,
-    "101": 1,
-    "102": 1,
-    "113": 1,
-    "114": 1,
-    XFER_PUBLIC: 1
+    NYM_FEES_ALIAS: 1,
+    XFER_PUBLIC_FEES_ALIAS: 1
 }
 
 CONS_TIME = 1518541344
@@ -103,7 +99,7 @@ def test_non_existent_input_xfer(helpers,
 
     request = helpers.request.transfer(inputs, outputs)
 
-    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
     assert not authorized
     assert 'was not found' in error
 
@@ -128,7 +124,7 @@ def test_non_existent_input_non_xfer(helpers,
     request = helpers.sdk.sdk_json_to_request_object(request)
     setattr(request, FEES, fees)
 
-    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
     assert not authorized
     assert 'was not found' in error
 
@@ -351,7 +347,7 @@ class TestCanPayFees():
     @pytest.fixture
     def inputs_outputs_fees(self, inputs_outputs):
         inputs, outputs = inputs_outputs
-        outputs[0][AMOUNT] -= VALID_FEES[XFER_PUBLIC]
+        outputs[0][AMOUNT] -= VALID_FEES[XFER_PUBLIC_FEES_ALIAS]
 
         return (inputs, outputs)
 
@@ -391,7 +387,7 @@ class TestCanPayFees():
         """
         Transfer request with valid fees and fees are set.
         """
-        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC])
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC_FEES_ALIAS])
         assert authorized
         assert not error
 
@@ -405,7 +401,7 @@ class TestCanPayFees():
         """
         Transfer request without fees and fees are set.
         """
-        authorized, error = fees_authorizer.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC])
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC_FEES_ALIAS])
         assert not authorized
         assert 'Insufficient funds, sum of inputs' in error
 
@@ -447,7 +443,7 @@ class TestCanPayFees():
             inputs,
             outputs
         )
-        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(XFER_PUBLIC))
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(XFER_PUBLIC_FEES_ALIAS))
         assert authorized
         assert not error
 
@@ -461,7 +457,7 @@ class TestCanPayFees():
         """
         Nym request with fees and fees are set.
         """
-        authorized, error = fees_authorizer.can_pay_fees(request_nym_fees, required_fees=VALID_FEES.get(NYM))
+        authorized, error = fees_authorizer.can_pay_fees(request_nym_fees, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
         assert authorized
         assert not error
 
@@ -483,7 +479,7 @@ class TestCanPayFees():
             outputs
         )
 
-        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM))
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
         assert not authorized
         assert 'Insufficient funds, sum of inputs' in error
 

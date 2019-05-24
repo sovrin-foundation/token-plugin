@@ -504,7 +504,7 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                        sdk_pool_handle, helpers, input_param, address,
                        sdk_wallet_trustees, sdk_wallet_stewards, sdk_wallet_clients,
                        sdk_wallet_trust_anchors):
-    helpers.general.do_set_fees(set_fees)
+    helpers.general.do_set_fees(set_fees, fill_auth_map=False)
     sdk_send_and_check_auth_rule_request(looper, sdk_wallet_trustee,
                                          sdk_pool_handle, auth_action=ADD_PREFIX,
                                          auth_type=ATTRIB, field="*", new_value="*",

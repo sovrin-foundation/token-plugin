@@ -9,6 +9,7 @@ from sovtokenfees.constants import FEES_FIELD_NAME
 from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import add_fees_request_with_address
 from indy_common.authorize.auth_constraints import AuthConstraint
 from indy_common.constants import NYM
@@ -20,7 +21,7 @@ from storage.kv_in_memory import KeyValueStorageInMemory
 
 
 def _set_fees(authorizer, fees=None):
-    fees = fees or {"1": 4}
+    fees = fees or {NYM_FEES_ALIAS: 4}
     authorizer.config_state.set(build_path_for_set_fees().encode(),
                                 json.dumps(fees).encode())
 
@@ -32,7 +33,7 @@ def req_with_fees(helpers,
                   fees):
     request = helpers.request.nym()
     utxos = [{"source": utxo_from_addr_and_seq_no(address_main, 1),
-              AMOUNT: fees.get(NYM)}]
+              AMOUNT: fees.get(NYM_FEES_ALIAS)}]
     return add_fees_request_with_address(
         helpers,
         fees_set,
@@ -46,21 +47,21 @@ def fees_constraint():
     return AuthConstraint(role='*',
                           sig_count=1,
                           need_to_be_owner=True,
-                          metadata={FEES_FIELD_NAME: NYM})
+                          metadata={FEES_FIELD_NAME: NYM_FEES_ALIAS})
 
 
 @pytest.fixture()
 def fees_authorizer(fees):
     authorizer = FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
                           utxo_cache=UTXOCache(KeyValueStorageInMemory()))
-    authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM)
+    authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM_FEES_ALIAS)
     return authorizer
 
 
 def test_get_fees_from_constraint(fees_authorizer,
                                   fees_constraint,
                                   fees):
-    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) == NYM
+    assert fees_authorizer._get_fees_alias_from_constraint(fees_constraint) == NYM_FEES_ALIAS
 
 
 def test_get_fees_from_constraint_None_if_empty(fees_authorizer,
@@ -82,8 +83,8 @@ def test_fail_on_req_with_fees_but_fees_not_required(fees_authorizer,
 def test_fail_on_req_with_fees_but_fees_have_zero_amount(fees_authorizer,
                                                          req_with_fees,
                                                          fees_constraint):
-    fees_constraint.metadata = {FEES_FIELD_NAME: NYM}
-    _set_fees(fees_authorizer, {NYM: 0})
+    fees_constraint.metadata = {FEES_FIELD_NAME: NYM_FEES_ALIAS}
+    _set_fees(fees_authorizer, {NYM_FEES_ALIAS: 0})
     authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                 auth_constraint=fees_constraint)
     assert not authorized

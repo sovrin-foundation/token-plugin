@@ -67,7 +67,7 @@ def test_add_metadata_with_existed_fees_alias(looper,
     current_fees = helpers.general.do_get_fees()
     assert fees_alias not in current_fees[FEES]
 
-    helpers.general.do_set_fees({fees_alias: 42})
+    helpers.general.do_set_fees({fees_alias: 42}, fill_auth_map=False)
 
     current_fees = helpers.general.do_get_fees()
     assert fees_alias in current_fees[FEES]
