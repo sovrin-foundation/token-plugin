@@ -45,8 +45,8 @@ def test_validation_nym_with_fees_more_than_required(fees,
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
     original_constraint.set_metadata({'fees': NYM_FEES_ALIAS})
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX, auth_type=NYM,
                                          field=original_action.field, new_value=original_action.value,
                                          old_value=None, constraint=original_constraint.as_dict)
