@@ -21,19 +21,6 @@ from plenum.common.constants import TXN_TYPE, TRUSTEE, STEWARD, DATA, STATE_PROO
 from plenum.common.exceptions import RequestNackedException
 
 
-# def sdk_get_auth_rule_request(looper, sdk_wallet_trustee, sdk_pool_handle, key=None):
-#     op = {TXN_TYPE: GET_AUTH_RULE}
-#     if key:
-#         op.update(key)
-#     req_obj = sdk_gen_request(op, identifier=sdk_wallet_trustee[1])
-#     req = sdk_sign_and_submit_req_obj(looper,
-#                                       sdk_pool_handle,
-#                                       sdk_wallet_trustee,
-#                                       req_obj)
-#     resp = sdk_get_and_check_replies(looper, [req])
-#     return resp
-
-
 def generate_key(auth_action=ADD_PREFIX, auth_type=NYM,
                  field=ROLE, new_value=TRUST_ANCHOR,
                  old_value=None):
