@@ -123,7 +123,7 @@ pipelineWrapper({
 
                          onArtifacts = {
                              this.stage("$osname:$proj: Archive logs") {
-                                 utils.archiveArtifacts("logs/*.out*") {
+                                 utils.archiveArtifacts("logs/*.log*") {
                                      truncate = true
                                      allowEmptyArchive = true
                                  }
