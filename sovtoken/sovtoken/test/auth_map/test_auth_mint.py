@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, MINT_PUBLIC, OUTPUTS
-from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request, sdk_get_auth_rule_request
+from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request, sdk_send_and_check_get_auth_rule_request
 from indy_common.authorize.auth_actions import ADD_PREFIX
 from indy_common.authorize.auth_constraints import AuthConstraint
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map, add_mint
@@ -56,8 +56,8 @@ def test_auth_mint(helpers,
     helpers.general.do_mint(outputs)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX,
                                          auth_type=MINT_PUBLIC,
                                          field='*',
@@ -72,8 +72,8 @@ def test_auth_mint(helpers,
     steward_do_mint(helpers, outputs)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX,
                                          auth_type=MINT_PUBLIC,
                                          field='*',
@@ -81,9 +81,9 @@ def test_auth_mint(helpers,
                                          constraint=sovtoken_auth_map[add_mint.get_action_id()].as_dict)
 
     helpers.general.do_mint(outputs)
-    resp = sdk_get_auth_rule_request(looper,
-                                     sdk_wallet_trustee,
-                                     sdk_pool_handle)
+    resp = sdk_send_and_check_get_auth_rule_request(looper,
+                                                    sdk_pool_handle,
+                                                    sdk_wallet_trustee)
     full_auth_map = OrderedDict(auth_map)
     full_auth_map.update(sovtoken_auth_map)
 

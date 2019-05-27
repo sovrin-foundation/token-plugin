@@ -59,8 +59,8 @@ def test_set_fees(helpers,
     set_fees(helpers, fees)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=EDIT_PREFIX,
                                          auth_type=SET_FEES,
                                          field='*',
@@ -74,8 +74,8 @@ def test_set_fees(helpers,
     set_fees(helpers, fees, trustee=False)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=EDIT_PREFIX,
                                          auth_type=SET_FEES,
                                          field='*',

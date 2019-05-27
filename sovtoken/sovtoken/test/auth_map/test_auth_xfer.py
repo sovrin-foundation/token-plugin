@@ -62,8 +62,8 @@ def test_auth_xfer(helpers,
     do_transfer(txnPoolNodeSet, sdk_pool_handle, helpers, looper, client_wallet, addresses[:2], transfer_count)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX,
                                          auth_type=XFER_PUBLIC,
                                          field='*',
@@ -78,8 +78,8 @@ def test_auth_xfer(helpers,
                 sdk_wallet_steward, addresses[:2], transfer_count, sign=True)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX,
                                          auth_type=XFER_PUBLIC,
                                          field='*',

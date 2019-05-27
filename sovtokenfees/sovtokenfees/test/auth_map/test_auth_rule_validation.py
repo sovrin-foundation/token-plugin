@@ -14,7 +14,7 @@ from sovtokenfees.constants import FEES_FIELD_NAME, FEES
 
 from plenum.common.exceptions import RequestRejectedException
 
-from indy_node.test.auth_rule.test_get_auth_rule import sdk_get_auth_rule_request, generate_key
+from indy_node.test.auth_rule.test_get_auth_rule import sdk_send_and_check_get_auth_rule_request, generate_key
 from indy_node.server.config_req_handler import ConfigReqHandler
 from indy_common.authorize.auth_constraints import IDENTITY_OWNER
 
@@ -31,8 +31,8 @@ def test_add_metadata_with_not_existed_alias(looper,
     constraint.set_metadata({FEES_FIELD_NAME: fees_alias})
     with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):
         sdk_send_and_check_auth_rule_request(looper,
-                                             sdk_wallet_trustee,
                                              sdk_pool_handle,
+                                             sdk_wallet_trustee,
                                              auth_action=ADD_PREFIX, auth_type=NYM,
                                              field=ROLE, new_value=STEWARD,
                                              old_value=None, constraint=constraint.as_dict)
@@ -51,8 +51,8 @@ def test_add_metadata_with_complex_constraint(looper,
     constraint.auth_constraints[-1].set_metadata({FEES_FIELD_NAME: fees_alias})
     with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):
         sdk_send_and_check_auth_rule_request(looper,
-                                             sdk_wallet_trustee,
                                              sdk_pool_handle,
+                                             sdk_wallet_trustee,
                                              auth_action=ADD_PREFIX, auth_type=NYM,
                                              field=ROLE, new_value=IDENTITY_OWNER,
                                              old_value=None, constraint=constraint.as_dict)
@@ -75,16 +75,16 @@ def test_add_metadata_with_existed_fees_alias(looper,
     constraint = copy.deepcopy(auth_map.one_trustee_constraint)
     constraint.set_metadata({FEES_FIELD_NAME: fees_alias})
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX, auth_type=NYM,
                                          field=ROLE, new_value=STEWARD,
                                          old_value=None, constraint=constraint.as_dict)
 
     key = generate_key(auth_action=ADD_PREFIX, auth_type=NYM,
                        field=ROLE, new_value=STEWARD,)
-    auth_rule = sdk_get_auth_rule_request(looper,
-                                          sdk_wallet_trustee,
-                                          sdk_pool_handle,
-                                          key)[0][1]
+    auth_rule = sdk_send_and_check_get_auth_rule_request(looper,
+                                                         sdk_pool_handle,
+                                                         sdk_wallet_trustee,
+                                                         **key)[0][1]
     assert auth_rule['result']['data'][0][CONSTRAINT]['metadata'][FEES_FIELD_NAME] == fees_alias
