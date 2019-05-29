@@ -1,5 +1,14 @@
+import copy
+
 import sovtoken.test.helpers.helper_node as sovtoken_helper_node
 from plenum.common.constants import CONFIG_LEDGER_ID
+
+from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, EDIT_PREFIX
+
+from indy_common.authorize.auth_cons_strategies import AbstractAuthStrategy
+from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.domain import build_path_for_set_fees
+from sovtokenfees.test.constants import txn_type_to_alias, alias_to_txn_type
 
 
 class HelperNode(sovtoken_helper_node.HelperNode):
@@ -45,8 +54,32 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)
         empty_fees = req_handler.state_serializer.serialize({})
-        req_handler.state.set(req_handler.fees_state_key, empty_fees)
-        req_handler.fees = {}
+        req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
         return node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
+
+    @staticmethod
+    def fill_auth_map_for_node(node, txn_type):
+        validator = node.write_req_validator
+        for rule_id, constraint in validator.auth_map.items():
+            add_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
+                                            prefix=ADD_PREFIX)
+            edit_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
+                                             prefix=EDIT_PREFIX)
+            if AbstractAuthStrategy.is_accepted_action_id(add_rule_id,
+                                                          rule_id) or AbstractAuthStrategy.is_accepted_action_id(
+                    edit_rule_id, rule_id):
+                constraint = copy.deepcopy(constraint)
+                if constraint:
+                    constraint.set_metadata({FEES_FIELD_NAME: txn_type_to_alias[txn_type]})
+                    validator.auth_map[rule_id] = constraint
+
+    def _fill_auth_map(self, txn_type):
+        for node in self._nodes:
+            self.fill_auth_map_for_node(node, txn_type)
+
+    def set_fees_directly(self, fees):
+        for fees_alias, fee in fees.items():
+            txn_type = alias_to_txn_type[fees_alias]
+            self._fill_auth_map(txn_type)

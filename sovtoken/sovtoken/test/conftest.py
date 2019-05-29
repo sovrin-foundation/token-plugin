@@ -1,19 +1,19 @@
-import pytest
+import json
 
-from ledger.util import F
 from plenum.client.wallet import Wallet
 from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY
 from plenum.common.txn_util import get_seq_no
-from plenum.common.util import randomString
 from sovtoken.main import integrate_plugin_in_node
 from sovtoken.util import \
-    register_token_wallet_with_client, update_token_wallet_with_result
+    update_token_wallet_with_result
 from sovtoken.constants import RESULT
 from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
-from sovtoken.test.helpers import form_helpers
+from sovtoken.test.helpers import form_helpers, libloader
 from indy_node.test.conftest import *
+from indy.did import create_and_store_my_did
+from indy.ledger import build_nym_request, sign_and_submit_request
 
 total_mint = 100
 seller_gets = 40
@@ -97,8 +97,8 @@ def public_minting(
     address_seller = seller_token_wallet.addresses[seller_address]
 
     outputs = [
-        {"address": address_sf.address, "amount": total_mint - seller_gets},
-        {"address": address_seller.address, "amount": seller_gets}
+        {"address": "pay:sov:" + address_sf.address, "amount": total_mint - seller_gets},
+        {"address": "pay:sov:" + address_seller.address, "amount": seller_gets}
     ]
 
     return helpers.general.do_mint(outputs)
@@ -133,6 +133,42 @@ def tokens_distributed(public_minting, seller_token_wallet, seller_address,
     return seq_no
 
 
+@pytest.fixture(scope="module")
+def libsovtoken():
+    libloader.load_libsovtoken()
+
+
+@pytest.fixture(scope="module")
+def sdk_trustees(looper, sdk_wallet_handle, trustee_data):
+    trustees = []
+    for _, trustee_seed in trustee_data:
+        did_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({"seed": trustee_seed}))
+        did, _ = looper.loop.run_until_complete(did_future)
+        trustees.append(did)
+    return trustees
+
+
+@pytest.fixture(scope="module")
+def sdk_wallet_trustee(sdk_wallet_handle, sdk_trustees):
+    return sdk_wallet_handle, sdk_trustees[0]
+
+
+@pytest.fixture(scope="module")
+def sdk_stewards(looper, sdk_wallet_handle, poolTxnData):
+    stewards = []
+    pool_txn_stewards_data = get_data_for_role(poolTxnData, STEWARD)
+    for _, steward_seed in pool_txn_stewards_data:
+        did_future = create_and_store_my_did(sdk_wallet_handle, json.dumps({"seed": steward_seed}))
+        did, _ = looper.loop.run_until_complete(did_future)
+        stewards.append(did)
+    return stewards
+
+
+@pytest.fixture(scope="module")
+def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):
+    return sdk_wallet_handle, sdk_stewards[0]
+
+
 @pytest.fixture(scope='module')
 def helpers(
     nodeSetWithIntegratedTokenPlugin,
@@ -141,7 +177,10 @@ def helpers(
     trustee_wallets,
     steward_wallets,
     sdk_wallet_client,
-    sdk_wallet_steward,
+    libsovtoken,
+    sdk_wallet_handle,
+    sdk_trustees,
+    sdk_stewards
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -150,13 +189,17 @@ def helpers(
         trustee_wallets,
         steward_wallets,
         sdk_wallet_client,
-        sdk_wallet_steward
+        (sdk_wallet_handle, sdk_stewards[0]),
+        sdk_wallet_handle,
+        sdk_trustees,
+        sdk_stewards
     )
 
 
 @pytest.fixture()
-def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
-    wallets = [helpers.wallet.create_client_wallet() for _ in range(3)]
+def increased_trustees(helpers, trustee_wallets, sdk_trustees, sdk_wallet_handle):
+    sdk_wallet_trustee = (sdk_wallet_handle, sdk_trustees[0])
+    wallets = [helpers.inner.wallet.create_client_wallet() for _ in range(3)]
 
     def _nym_request_from_client_wallet(wallet):
         identifier = wallet.defaultId
@@ -168,9 +211,9 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
             sdk_wallet=sdk_wallet_trustee
         )
 
-    requests = map(_nym_request_from_client_wallet, wallets)
+    requests = [_nym_request_from_client_wallet(wallet) for wallet in wallets]
 
-    responses = helpers.sdk.send_and_check_request_objects(requests)
+    responses = helpers.sdk.send_and_check_request_objects(requests, sdk_wallet_trustee)
 
     yield trustee_wallets + wallets
 
@@ -188,4 +231,4 @@ def increased_trustees(helpers, trustee_wallets, sdk_wallet_trustee):
         for _, response in responses
     ]
 
-    helpers.sdk.send_and_check_request_objects(requests)
+    helpers.sdk.send_and_check_request_objects(requests, sdk_wallet_trustee)

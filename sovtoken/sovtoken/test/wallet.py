@@ -22,7 +22,11 @@ class Address:
     def __init__(self, seed=None):
         self.signer = SimpleSigner(seed=seed)
         self.address = base58.b58encode_check(self.signer.naclSigner.verraw).decode()
-        self.outputs = [{}, {}]  # Unspent and Spent
+        self.outputs = [OrderedDict(), OrderedDict()]  # Unspent and Spent
+
+    # TODO ST-525 test
+    def amount(self, seq_no):
+        return self.outputs[0].get(seq_no, self.outputs[1].get(seq_no))
 
     def is_unspent(self, seq_no):
         return seq_no in self.outputs[0]
@@ -39,9 +43,15 @@ class Address:
     def verkey(self) -> str:
         return self.signer.verkey
 
+    # TODO ST-525 test
     @property
     def all_utxos(self):
-        return [(seq_no, val) for seq_no, val in self.outputs[0].items()]
+        return list(self.outputs[0].items())
+
+    # TODO ST-525 test
+    @property
+    def all_seq_nos(self):
+        return list(self.outputs[0])
 
     @property
     def total_amount(self):

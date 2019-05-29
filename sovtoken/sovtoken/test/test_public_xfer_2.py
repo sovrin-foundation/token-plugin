@@ -2,11 +2,13 @@ import pytest
 import json
 
 from base58 import b58encode_check
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+
 from plenum.common.exceptions import RequestNackedException, \
     RequestRejectedException
 from plenum.common.txn_util import get_seq_no
 from plenum.common.util import lxor, randomString
-from sovtoken.constants import OUTPUTS, ADDRESS, SEQNO, AMOUNT
+from sovtoken.constants import OUTPUTS, ADDRESS, SEQNO, AMOUNT, PAYMENT_ADDRESS
 from sovtoken.test.helper import check_output_val_on_all_nodes, \
     xfer_request, send_get_utxo
 from sovtoken.test.conftest import seller_gets
@@ -17,8 +19,13 @@ from sovtoken.test.helper import user1_token_wallet, user2_token_wallet, \
 
 
 @pytest.fixture
-def addresses(helpers, user1_token_wallet):
-    return helpers.wallet.add_new_addresses(user1_token_wallet, 2)
+def addresses_inner(helpers, user1_token_wallet):
+    return helpers.inner.wallet.create_new_addresses(2)
+
+
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(2)
 
 
 @pytest.fixture
@@ -26,17 +33,22 @@ def initial_mint(helpers, addresses):
     outputs = [{"address": address, "amount": 100} for address in addresses]
     return helpers.general.do_mint(outputs)
 
+@pytest.fixture
+def initial_mint_inner(helpers, addresses_inner):
+    outputs = [{"address": "pay:sov:" + address, "amount": 100} for address in addresses_inner]
+    return helpers.general.do_mint(outputs)
+
 
 def test_seller_xfer_outputs_repeat_address(
     helpers,
-    initial_mint,
-    addresses,
+    initial_mint_inner,
+    addresses_inner,
 ):
     """
     Address repeats in the output of transaction, hence it will be rejected
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [{"address": seller_address, "seqNo": seq_no}]
     outputs = [
@@ -46,20 +58,20 @@ def test_seller_xfer_outputs_repeat_address(
     ]
 
     with pytest.raises(RequestNackedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_float_amount(
     helpers,
-    initial_mint,
-    addresses,
+    initial_mint_inner,
+    addresses_inner,
 ):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is a floating point.
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [{"address": seller_address, "seqNo": seq_no}]
     outputs = [
@@ -68,20 +80,20 @@ def test_seller_xfer_float_amount(
     ]
 
     with pytest.raises(RequestNackedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_negative_amount(
     helpers,
-    initial_mint,
-    addresses
+    initial_mint_inner,
+    addresses_inner
 ):
     """
     Amount used in outputs equal to the amount held by inputs,
     but rejected because one of the outputs is negative.
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [{"address": seller_address, "seqNo": seq_no}]
     outputs = [
@@ -90,20 +102,20 @@ def test_seller_xfer_negative_amount(
     ]
 
     with pytest.raises(RequestNackedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_sum_of_outputs_greater_than_inputs(
     helpers,
-    initial_mint,
-    addresses
+    initial_mint_inner,
+    addresses_inner
 ):
     """
     Amount used in outputs greater than the amount held by inputs,
     hence it will be rejected
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [{"address": seller_address, "seqNo": seq_no}]
     outputs = [
@@ -112,20 +124,20 @@ def test_seller_xfer_sum_of_outputs_greater_than_inputs(
     ]
 
     with pytest.raises(RequestRejectedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_sum_of_outputs_less_than_inputs(
     helpers,
-    initial_mint,
-    addresses
+    initial_mint_inner,
+    addresses_inner
 ):
     """
     Amount used in outputs lesser than the amount held by inputs,
     hence it will be rejected
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [{"address": seller_address, "seqNo": seq_no}]
     outputs = [
@@ -134,19 +146,19 @@ def test_seller_xfer_sum_of_outputs_less_than_inputs(
     ]
 
     with pytest.raises(RequestRejectedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
 def test_seller_xfer_invalid_inputs(
     helpers,
-    initial_mint,
-    addresses
+    initial_mint_inner,
+    addresses_inner
 ):
     """
     Address+seq_no repeats in the inputs of transaction, hence it will be rejected
     """
-    seq_no = get_seq_no(initial_mint)
-    [seller_address, user1_address] = addresses
+    seq_no = get_seq_no(initial_mint_inner)
+    [seller_address, user1_address] = addresses_inner
 
     inputs = [
         {"address": seller_address, "seqNo": seq_no},
@@ -158,10 +170,10 @@ def test_seller_xfer_invalid_inputs(
     ]
 
     with pytest.raises(RequestNackedException):
-        helpers.general.do_transfer(inputs, outputs)
+        helpers.inner.general.do_transfer(inputs, outputs)
 
 
-def test_invalid_address(helpers, addresses, initial_mint):
+def test_invalid_address(helpers, addresses_inner, initial_mint_inner):
     """
     Transfer with invalid address.
     """
@@ -170,13 +182,13 @@ def test_invalid_address(helpers, addresses, initial_mint):
         return s[:index] + func(s[index]) + s[index + 1:]
 
     def _test_invalid_address(address):
-        inputs = [{ADDRESS: addresses[0], SEQNO: get_seq_no(initial_mint)}]
+        inputs = [{ADDRESS: addresses_inner[0], SEQNO: get_seq_no(initial_mint_inner)}]
         outputs = [{ADDRESS: address, AMOUNT: 100}]
 
         with pytest.raises(RequestNackedException):
-            helpers.general.do_mint(outputs)
+            helpers.inner.general.do_transfer(inputs, outputs)
 
-    valid_address = addresses[1]
+    valid_address = addresses_inner[1]
     invalid_address_length = b58encode_check(randomString(33).encode()).decode()
     invalid_address_character = _update_char(valid_address, 2, lambda _: '!')
     invalid_address_checksum = _update_char(
@@ -289,7 +301,7 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     # =============
 
     amount = 50
-    first_address = helpers.wallet.add_new_addresses(seller_token_wallet, 1)[0]
+    first_address = helpers.wallet.create_address()
     outputs = [{"address": first_address, "amount": amount}]
     mint_result = helpers.general.do_mint(outputs)
     seq_no = get_seq_no(mint_result)
@@ -299,10 +311,10 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     # =============
 
     # Add 3 new addresses
-    new_addresses = helpers.wallet.add_new_addresses(seller_token_wallet, 3)
+    new_addresses = [helpers.wallet.create_address() for _i in [1, 2, 3]]
 
     # Distribute an existing UTXO among 3 address
-    inputs = [{"address": first_address, "seqNo": seq_no}]
+    inputs = helpers.general.get_utxo_addresses([first_address])[0]
     outputs = [{"address": address, "amount": amount // 3} for address in new_addresses]
     outputs[-1]["amount"] += amount % 3
     xfer_result = helpers.general.do_transfer(inputs, outputs)
@@ -314,15 +326,19 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     xfer_seq_no = get_seq_no(xfer_result)
     new_address_utxos = helpers.general.get_utxo_addresses(new_addresses)
 
-    assert new_address_utxos[0] == [{"address": new_addresses[0], "seqNo": xfer_seq_no, "amount": 16}]
-    assert new_address_utxos[1] == [{"address": new_addresses[1], "seqNo": xfer_seq_no, "amount": 16}]
-    assert new_address_utxos[2] == [{"address": new_addresses[2], "seqNo": xfer_seq_no, "amount": 18}]
+    assert new_address_utxos[0][0][PAYMENT_ADDRESS] == new_addresses[0]
+    assert new_address_utxos[0][0][AMOUNT] == 16
+    assert new_address_utxos[1][0][PAYMENT_ADDRESS] == new_addresses[1]
+    assert new_address_utxos[1][0][AMOUNT] == 16
+    assert new_address_utxos[2][0][PAYMENT_ADDRESS] == new_addresses[2]
+    assert new_address_utxos[2][0][AMOUNT] == 18
 
     # =============
     # Transfer tokens from 3 addresses back to a single address
     # =============
 
-    inputs = [{"address": address, "seqNo": xfer_seq_no} for address in new_addresses]
+    inputs = helpers.general.get_utxo_addresses(new_addresses)
+    inputs = [utxo for utxos in inputs for utxo in utxos]
     outputs = [{"address": first_address, "amount": amount}]
     xfer_result = helpers.general.do_transfer(inputs, outputs)
 
@@ -333,7 +349,8 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
         new_address3_utxos,
     ] = helpers.general.get_utxo_addresses([first_address] + new_addresses)
 
-    assert first_address_utxos == [{"address": first_address, "seqNo": xfer_seq_no + 1, "amount": amount}]
+    assert first_address_utxos[0][PAYMENT_ADDRESS] == first_address
+    assert first_address_utxos[0][AMOUNT] == amount
     assert new_address1_utxos == []
     assert new_address2_utxos == []
     assert new_address3_utxos == []
@@ -354,7 +371,7 @@ def test_xfer_breakdown_and_consolidate(helpers, addresses):
     xfer_seq_no = seq_no + 1
 
     for change in range(0, amount):
-        inputs = [{ADDRESS: address1, SEQNO: seq_no}]
+        inputs = [{"source": utxo_from_addr_and_seq_no(address1, seq_no)}]
         outputs = [
             {ADDRESS: address2, AMOUNT: 1},
             {ADDRESS: address1, AMOUNT: amount - change}
@@ -364,12 +381,14 @@ def test_xfer_breakdown_and_consolidate(helpers, addresses):
 
     utxos = helpers.general.get_utxo_addresses([address2])[0]
 
+    for seq_no in range(xfer_seq_no, xfer_seq_no + amount):
+        assert utxos[seq_no - xfer_seq_no][PAYMENT_ADDRESS] == address2
+        assert utxos[seq_no - xfer_seq_no][AMOUNT] == 1
+
     expected_utxos = [
-        {ADDRESS: address2, SEQNO: seq_no, AMOUNT: 1}
+        {"source": utxo_from_addr_and_seq_no(address2, seq_no)}
         for seq_no in range(xfer_seq_no, xfer_seq_no + amount)
     ]
-
-    assert utxos == expected_utxos
 
     outputs = [{ADDRESS: address2, AMOUNT: amount}]
 
@@ -377,6 +396,5 @@ def test_xfer_breakdown_and_consolidate(helpers, addresses):
 
     utxos = helpers.general.get_utxo_addresses([address2])[0]
 
-    assert utxos == [
-        {ADDRESS: address2, SEQNO: get_seq_no(result), AMOUNT: amount}
-    ]
+    assert utxos[0][PAYMENT_ADDRESS] == address2
+    assert utxos[0][AMOUNT] == amount

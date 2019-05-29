@@ -1,12 +1,17 @@
 import json
+import time
 
-from indy.ledger import build_nym_request, build_schema_request
+from indy.ledger import build_nym_request, build_schema_request, \
+    build_acceptance_mechanism_request, build_txn_author_agreement_request, \
+    build_get_txn_author_agreement_request, append_txn_author_agreement_acceptance_to_request
+from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req, \
+    prepare_payment_extra_with_acceptance_data
+from sovtoken.test.constants import VALID_IDENTIFIER
+
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, SIGS, XFER_PUBLIC, \
-    MINT_PUBLIC, GET_UTXO, ADDRESS, SEQNO, AMOUNT
-from sovtoken.util import address_to_verkey
+from sovtoken.constants import ADDRESS, AMOUNT
 
 
 class HelperRequest():
@@ -39,14 +44,12 @@ class HelperRequest():
 
     def get_utxo(self, address):
         """ Builds a get_utxo request. """
-        payload = {
-            TXN_TYPE: GET_UTXO,
-            ADDRESS: address
-        }
 
-        request = self._create_request(payload, self._client_did)
+        get_utxo_request_future = build_get_payment_sources_request(self._client_wallet_handle, VALID_IDENTIFIER, address)
+        get_utxo_request = self._looper.loop.run_until_complete(get_utxo_request_future)[0]
+        get_utxo_request = self._sdk.sdk_json_to_request_object(json.loads(get_utxo_request))
 
-        return request
+        return get_utxo_request
 
     def get_txn(self, ledger_id, seq_no):
         """ Builds a get_txn request. """
@@ -61,39 +64,42 @@ class HelperRequest():
 
     def transfer(self, inputs, outputs, extra=None, identifier=None):
         """ Builds a transfer request. """
-        payment_signatures = self.payment_signatures(inputs, outputs)
 
-        outputs_ready = self._prepare_outputs(outputs)
-        inputs_ready = self._prepare_inputs(inputs)
+        outputs_ready = json.dumps(self._prepare_outputs(outputs))
+        inputs_ready = json.dumps(self._prepare_inputs(inputs))
 
-        payload = {
-            TXN_TYPE: XFER_PUBLIC,
-            OUTPUTS: outputs_ready,
-            INPUTS: inputs_ready,
-            EXTRA: extra,
-            SIGS: payment_signatures
-        }
+        payment_request_future = build_payment_req(
+            self._client_wallet_handle, None, inputs_ready, outputs_ready, extra)
+        payment_request = self._looper.loop.run_until_complete(payment_request_future)[0]
 
-        if not identifier:
-            first_address = inputs_ready[0][ADDRESS]
-            identifier = address_to_verkey(first_address)
+        return self._sdk.sdk_json_to_request_object(json.loads(payment_request))
 
-        request = self._create_request(payload, identifier)
+    def add_transaction_author_agreement_to_extra(self, extra, text, mechanism, version):
+        extra_future = prepare_payment_extra_with_acceptance_data(extra, text, version, None, mechanism,
+                                                                  round(time.time()))
+        extra = self._looper.loop.run_until_complete(extra_future)
+        return extra
 
-        return request
+    def add_transaction_author_agreement_to_request(self, request, text, mechanism, version):
+        extra_future = append_txn_author_agreement_acceptance_to_request(request, text, version, None, mechanism,
+                                                                         round(time.time()))
+        extra = self._looper.loop.run_until_complete(extra_future)
+        return extra
 
-    def mint(self, outputs):
+    def mint(self, outputs, text=None, mechanism=None, version=None):
         """ Builds a mint request. """
         outputs_ready = self._prepare_outputs(outputs)
 
-        payload = {
-            TXN_TYPE: MINT_PUBLIC,
-            OUTPUTS: outputs_ready,
-        }
-
-        request = self._create_request(payload)
-        request = self._wallet.sign_request_trustees(request, number_signers=3)
-        return request
+        mint_request_future = build_mint_req(self._client_wallet_handle, self._wallet._trustees[0], json.dumps(outputs_ready), None)
+        mint_request = self._looper.loop.run_until_complete(mint_request_future)[0]
+        if text and mechanism and version:
+            mint_request = self.add_transaction_author_agreement_to_request(mint_request, text, mechanism, version)
+        mint_request = self._wallet.sign_request_trustees(mint_request, number_signers=3)
+        mint_request = json.loads(mint_request)
+        signatures = mint_request["signatures"]
+        mint_request = self._sdk.sdk_json_to_request_object(mint_request)
+        setattr(mint_request, "signatures", signatures)
+        return mint_request
 
     def nym(
         self,
@@ -103,6 +109,10 @@ class HelperRequest():
         dest=None,
         verkey=None,
         sdk_wallet=None,
+        taa=False,
+        mechanism=None,
+        text=None,
+        version=None
     ):
         """
         Builds a nym request.
@@ -132,6 +142,8 @@ class HelperRequest():
         )
 
         nym_request = self._looper.loop.run_until_complete(nym_request_future)
+        if taa:
+            nym_request = self.add_transaction_author_agreement_to_request(nym_request, text, mechanism, version)
         request = self._sdk.sdk_json_to_request_object(json.loads(nym_request))
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
 
@@ -149,36 +161,46 @@ class HelperRequest():
         request = self._sign_sdk(request, sdk_wallet=sdk_wallet)
         return request
 
+    def acceptance_mechanism(self, sdk_trustee_wallet, aml, aml_context=None):
+        acceptance_mechanism_future = build_acceptance_mechanism_request(sdk_trustee_wallet[1], aml, "0.0.1", aml_context)
+        acceptance_mechanism_request = self._looper.loop.run_until_complete(acceptance_mechanism_future)
+        acceptance_mechanism_request = self._sdk.sdk_json_to_request_object(json.loads(acceptance_mechanism_request))
+        acceptance_mechanism_request = self._sign_sdk(acceptance_mechanism_request, sdk_trustee_wallet)
+        return acceptance_mechanism_request
+
+    def transaction_author_agreement(self, sdk_trustee_wallet, text, version):
+        txn_author_agreement_future = build_txn_author_agreement_request(sdk_trustee_wallet[1], text, version)
+        txn_author_agreement_request = self._looper.loop.run_until_complete(txn_author_agreement_future)
+        txn_author_agreement_request = self._sdk.sdk_json_to_request_object(json.loads(txn_author_agreement_request))
+        txn_author_agreement_request = self._sign_sdk(txn_author_agreement_request, sdk_trustee_wallet)
+        return txn_author_agreement_request
+
+    def get_transaction_author_agreement(self):
+        get_txn_author_agreement_future = build_get_txn_author_agreement_request(None, None)
+        get_txn_author_agreement_request = self._looper.loop.run_until_complete(get_txn_author_agreement_future)
+        get_txn_author_agreement_request = self._sdk.sdk_json_to_request_object(
+            json.loads(get_txn_author_agreement_request)
+        )
+        return get_txn_author_agreement_request
+
     def _find_wallet_did(self, sdk_wallet):
         sdk_wallet = sdk_wallet or self._steward_wallet
         _, sdk_wallet_did = sdk_wallet
         return sdk_wallet_did
 
-    def payment_signatures(self, inputs, outputs):
-        """ Generate a list of payment signatures from inptus and outputs. """
-        signatures = []
-        inputs = self._prepare_inputs(inputs)
-        outputs = self._prepare_outputs(outputs)
-
-        for utxo in inputs:
-            to_sign = [[utxo], outputs]
-            signer = self._wallet.get_address_instance(utxo[ADDRESS]).signer
-            signature = signer.sign(to_sign)
-            signatures.append(signature)
-
-        return signatures
-
     def _prepare_outputs(self, outputs):
         return [
-            {ADDRESS: output[ADDRESS], AMOUNT: output[AMOUNT]}
+            {"recipient": output[ADDRESS], AMOUNT: output[AMOUNT]}
             for output in outputs
         ]
 
     def _prepare_inputs(self, inputs):
-        return [
-            {ADDRESS: utxo[ADDRESS], SEQNO: utxo[SEQNO]}
+        inps = [
+            utxo["source"]
             for utxo in inputs
         ]
+
+        return inps
 
     def _create_request(self, payload, identifier=None):
         return Request(
@@ -199,9 +221,5 @@ class HelperRequest():
 
         if request.signatures is None:
             request.signatures = {}
-
-        request.signatures[request._identifier] = request.signature
-        request.signature = None
-        request._identifier = None
 
         return request

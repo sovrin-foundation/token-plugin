@@ -8,7 +8,8 @@ from plenum.test.stasher import delay_rules
 
 from plenum.test.delayers import cDelay
 
-from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp
+from plenum.test.helper import sdk_send_signed_requests, sdk_get_and_check_replies, assertExp, \
+    sdk_sign_and_submit_req_obj
 
 from stp_core.loop.eventually import eventually
 
@@ -43,8 +44,8 @@ def test_last_committed_after_catchup(looper, helpers,
         """
         Send NYM with FEES and wait for reply. 
         """
-        r = sdk_send_signed_requests(sdk_pool_handle, [json.dumps(request_1.as_dict)])
-        sdk_get_and_check_replies(looper, r)
+        r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_1)
+        sdk_get_and_check_replies(looper, [r])
         """
         Start catchup. Uncommitted batch for reverted_node should be rejected and it will get 
         NYM with FEES during catchup procedure. 

@@ -9,7 +9,7 @@ __long_description__ = ''
 __maintainer__ = 'Sovrin'
 __title__ = 'sovtokenfees'
 __url__ = 'https://github.com/sovrin-foundation/token-plugin/tree/master/sovtokenfees'
-__version_info__ = (0, 9, 11)
+__version_info__ = (0, 9, 12)
 __version__ = '.'.join(map(str, __version_info__))
 
 __all__ = ['__title__',

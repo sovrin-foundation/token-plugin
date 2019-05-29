@@ -19,7 +19,7 @@ metadata = {}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.8.2']
+tests_require = ['pytest', 'pytest-xdist', 'mock', 'python3-indy==1.8.3-dev-1099']
 
 setup(
     name=metadata['__title__'],
@@ -38,7 +38,7 @@ setup(
              '*.css', '*.ico', '*.png', 'LICENSE', 'LEGAL', 'sovtoken']},
     include_package_data=True,
 
-    install_requires=['indy-node==1.7.1'],
+    install_requires=['indy-node==1.8.0.dev975'],
 
     setup_requires=['pytest-runner'],
     extras_require={
