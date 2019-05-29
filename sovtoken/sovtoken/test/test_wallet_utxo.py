@@ -5,7 +5,7 @@ from sovtoken.constants import OUTPUTS
 
 @pytest.fixture
 def addresses(helpers, wallet):
-    addresses = helpers.wallet.add_new_addresses(wallet, 3)
+    addresses = helpers.inner.wallet.add_new_addresses(wallet, 3)
     return [address for address in addresses]
 
 

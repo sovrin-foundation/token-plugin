@@ -43,14 +43,31 @@ pipelineWrapper({
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
-        stage('Upload source to S3') {
-            awsCBHelper.uploadSourceToS3()
+        Map builds = [
+            "s3-upload": {  // performs on the current jenkins node
+                stage('Upload source to S3') {
+                    awsCBHelper.uploadSourceToS3()
+                }
+             },
+            "ecr-create": [
+                nodeLabel: "${nodeLabels.codeBuild}",
+                build: {
+                    stage('Prepare AWS ECR repo') {
+                        awsCBHelper.createECRRepo()
+                    }
+                }
+            ]
+        ]
+
+        stage("Prepare common env") {
+            builds.failFast = false
+            utils.parallel builds
         }
 
-        Map builds = projects.collectEntries { proj ->
+        builds = projects.collectEntries { proj ->
             ["$osname:$proj": [
-                 "nodeLabel": "$nodeLabels.codeBuild",
-                 "build": {
+                 nodeLabel: "${nodeLabels.codeBuild}",
+                 build: {
 
                      def packageName = proj
                      def prTag = "ci-$osname-$proj" // use ci project
@@ -123,7 +140,7 @@ pipelineWrapper({
 
                          onArtifacts = {
                              this.stage("$osname:$proj: Archive logs") {
-                                 utils.archiveArtifacts("logs/*.out*") {
+                                 utils.archiveArtifacts("logs/*.log*") {
                                      truncate = true
                                      allowEmptyArchive = true
                                  }

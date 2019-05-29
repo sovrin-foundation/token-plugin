@@ -1,7 +1,8 @@
 import pytest
-from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO, XFER_PUBLIC, TOKEN_LEDGER_ID
+from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO
 
 from indy_common.constants import NYM, CONFIG_LEDGER_ID
+from sovtokenfees.test.constants import XFER_PUBLIC_FEES_ALIAS
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 
@@ -15,7 +16,7 @@ from indy_node.test.pool_config.helper import sdk_pool_config_sent
 
 TXN_IN_BATCH = 2
 
-#
+
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
@@ -65,7 +66,8 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
     transfer_summ = 20
 
     # Set fees and some config txn
-    fees_xfer_2 = {XFER_PUBLIC: 2}
+    helpers.node.set_fees_directly({XFER_PUBLIC_FEES_ALIAS: 42})
+    fees_xfer_2 = {XFER_PUBLIC_FEES_ALIAS: 2}
     fees_2_rsp = helpers.general.set_fees_without_waiting(fees_xfer_2)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
@@ -81,7 +83,7 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
                                                    transfer_summ=transfer_summ,
                                                    check_reply=False)
     # Set fees for XFER to 3
-    fees_xfer_3 = {XFER_PUBLIC: 3}
+    fees_xfer_3 = {XFER_PUBLIC_FEES_ALIAS: 3}
     fees_3_rsp = helpers.general.set_fees_without_waiting(fees_xfer_3)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
@@ -99,7 +101,6 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
     for n in nodeSetWithIntegratedTokenPlugin:
         fee_rq = n.ledger_to_req_handler[CONFIG_LEDGER_ID]
         assert fee_rq.fees == fees_xfer_3
-
 
     with pytest.raises(RequestRejectedException):
         sdk_get_and_check_replies(looper, a_b_transfer_2)

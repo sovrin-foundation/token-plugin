@@ -1,5 +1,3 @@
-import pytest
-from sovtoken.constants import ADDRESS, SEQNO, AMOUNT, XFER_PUBLIC
 from sovtokenfees.test.helper import ensure_all_nodes_have_same_data, get_amount_from_token_txn, \
     send_and_check_nym_with_fees, send_and_check_transfer, check_state
 

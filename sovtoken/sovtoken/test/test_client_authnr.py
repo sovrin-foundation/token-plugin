@@ -1,5 +1,10 @@
+import json
+import time
+
 import pytest
 import mock
+from indy.ledger import append_txn_author_agreement_acceptance_to_request
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
@@ -145,7 +150,7 @@ def test_authenticate_success_3_sigs(helpers, node, addresses):
 def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
-    inputs = [{"address": SF_address, "seqNo": 1}]
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
     req_data = request.as_dict
@@ -194,6 +199,58 @@ def test_authenticate_xfer_insufficient_correct_signatures(node, user2_token_wal
     with pytest.raises(InsufficientCorrectSignatures):
         token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
 
+
+def test_authenticate_xfer_with_extra(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
+    request = helpers.request.transfer(inputs, outputs, extra=json.dumps({"aaa": "bbb"}))
+    req_data = request.as_dict
+
+    token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
+
+
+def test_authenticate_xfer_with_extra_not_signed(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
+    request = helpers.request.transfer(inputs, outputs)
+    req_data = request.as_dict
+    token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
+    req_data[OPERATION][EXTRA] = {"aaa": "bbb"}
+    with pytest.raises(InsufficientCorrectSignatures):
+        token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
+
+
+def test_authenticate_xfer_with_taa(helpers, node, addresses):
+    [SF_address, user1_address] = addresses
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
+    extra = helpers.request.add_transaction_author_agreement_to_extra(None, "text", "mechanism", "version")
+    request = helpers.request.transfer(inputs, outputs, extra)
+    req_data = request.as_dict
+    token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
+
+
+def test_authenticate_xfer_with_taa_not_signed(helpers, node, addresses, looper):
+    [SF_address, user1_address] = addresses
+    token_authnr = TokenAuthNr(node[0].states[DOMAIN_LEDGER_ID])
+    inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
+    outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
+    request = helpers.request.transfer(inputs, outputs)
+    request_future = append_txn_author_agreement_acceptance_to_request(json.dumps(request.as_dict),
+                                                                       "text",
+                                                                       "version",
+                                                                       None,
+                                                                       "mechanism",
+                                                                       round(time.time()))
+    request = looper.loop.run_until_complete(request_future)
+    req_data = json.loads(request)
+    with pytest.raises(InsufficientCorrectSignatures):
+        token_authnr.authenticate_xfer(req_data, AddressSigVerifier)
 
 # -------------------------Test serializeForSig method------------------------------------------------------------------
 

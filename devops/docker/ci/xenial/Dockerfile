@@ -22,10 +22,11 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
 
 # libindy and libindy-crypto
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
-RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial stable" \
+RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
         libindy-crypto=0.4.5 \
-        libindy=1.8.2 \
+        libindy=1.8.3~1099 \
+        libsovtoken=0.9.7~66 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
@@ -43,4 +44,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.11.0
+ENV CI_ENV_VERSION=0.17.0

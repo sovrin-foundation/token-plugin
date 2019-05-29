@@ -3,6 +3,7 @@ from typing import List, Optional
 import base58
 from common.serializers.serialization import proof_nodes_serializer, \
     state_roots_serializer
+from indy_common.authorize.auth_actions import AuthActionAdd
 from plenum.common.txn_util import get_type, get_payload_data, get_seq_no, reqToTxn
 from sovtoken.messages.validation import static_req_validation
 
@@ -15,10 +16,10 @@ from plenum.common.exceptions import InvalidClientMessageException, OperationErr
 from plenum.common.request import Request
 from plenum.common.types import f
 from sovtoken.constants import XFER_PUBLIC, MINT_PUBLIC, \
-    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS
+    OUTPUTS, INPUTS, GET_UTXO, ADDRESS, SIGS, TOKEN_LEDGER_ID
 from sovtoken.txn_util import add_sigs_to_txn
 from sovtoken.types import Output
-from sovtoken.util import SortedItems, validate_multi_sig_txn
+from sovtoken.util import SortedItems
 from sovtoken.utxo_cache import UTXOCache
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError, InvalidFundsError, UTXOError, TokenValueError
 from state.trie.pruning_trie import rlp_decode
@@ -30,20 +31,20 @@ class TokenReqHandler(LedgerRequestHandler):
     write_types = {MINT_PUBLIC, XFER_PUBLIC}
     query_types = {GET_UTXO, }
 
-    MinSendersForPublicMint = 3
-
-    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache, domain_state, bls_store):
-        super().__init__(ledger, state)
+    def __init__(self, ledger, state: PruningState, utxo_cache: UTXOCache,
+                 domain_state, bls_store, write_req_validator):
+        super().__init__(TOKEN_LEDGER_ID, ledger, state)
         self.utxo_cache = utxo_cache
         self.domain_state = domain_state
         self.bls_store = bls_store
+        self.write_req_validator = write_req_validator
         self.query_handlers = {
             GET_UTXO: self.get_all_utxo,
         }
 
     def handle_xfer_public_txn(self, request):
         # Currently only sum of inputs is matched with sum of outputs. If anything more is
-            # needed then a new function should be created.
+        # needed then a new function should be created.
         try:
             sum_inputs = TokenReqHandler.sum_inputs(self.utxo_cache,
                                                     request,
@@ -68,7 +69,7 @@ class TokenReqHandler(LedgerRequestHandler):
 
     @staticmethod
     def validate_given_inputs_outputs(inputs_sum, outputs_sum, required_amount, request,
-                                      error_msg_suffix: Optional[str]=None):
+                                      error_msg_suffix: Optional[str] = None):
         """
         Checks three sum values against simple set of rules. inputs_sum must be equal to required_amount. Exceptions
         are raise if it is not equal. The outputs_sum is pass not for checks but to be included in error messages.
@@ -95,7 +96,7 @@ class TokenReqHandler(LedgerRequestHandler):
                                   error)
 
         elif inputs_sum < required_amount:
-            error = 'Insufficient funds, sum of inputs is {}' \
+            error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix
@@ -113,10 +114,17 @@ class TokenReqHandler(LedgerRequestHandler):
     def validate(self, request: Request):
         req_type = request.operation[TXN_TYPE]
         if req_type == MINT_PUBLIC:
-            return validate_multi_sig_txn(request, TRUSTEE, self.domain_state, self.MinSendersForPublicMint)
+            return self.write_req_validator.validate(request,
+                                                     [AuthActionAdd(txn_type=MINT_PUBLIC,
+                                                                    field="*",
+                                                                    value="*")])
 
         elif req_type == XFER_PUBLIC:
-            return self.handle_xfer_public_txn(request)
+            self.handle_xfer_public_txn(request)
+            return self.write_req_validator.validate(request,
+                                                     [AuthActionAdd(txn_type=XFER_PUBLIC,
+                                                                    field="*",
+                                                                    value="*")])
 
         raise InvalidClientMessageException(request.identifier,
                                             getattr(request, 'reqId', None),
@@ -281,7 +289,7 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def __commit__(utxo_cache, ledger, state, txnCount, stateRoot, txnRoot,
                    ppTime, ts_store=None):
-        r = LedgerRequestHandler._commit(ledger, state, txnCount, stateRoot,
+        r = LedgerRequestHandler._commit(TOKEN_LEDGER_ID, ledger, state, txnCount, stateRoot,
                                          txnRoot, ppTime, ts_store=ts_store)
         TokenReqHandler._commit_to_utxo_cache(utxo_cache, stateRoot)
         return r

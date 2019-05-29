@@ -90,12 +90,14 @@ pipelineWrapper({
                                 [name: 'OSNAME', value: osname],
                                 [name: 'MAKE_GOALS', value: goals.join(' ')],
                                 [name: 'SRC_DIR_NAME', value: proj],
-                                [name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
+                                // ST-548
+                                //[name: 'PYTEST_ARGS', value: "-l --junit-xml=/tmp/artifacts/logs/test.${proj}.xml"],
+                                [name: 'PYTEST_ARGS', value: "-l"],
                             ]
 
                             onArtifacts = {
                                 this.stage("$osname:$proj: Archive artifacts") {
-                                    utils.archiveArtifacts("logs/*.out*") {
+                                    utils.archiveArtifacts("logs/*.log*") {
                                         truncate = true
                                         allowEmptyArchive = true
                                     }

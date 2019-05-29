@@ -1,19 +1,15 @@
 import json
 
 import pytest
+from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
-from plenum.common.constants import (CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID, NYM,
-                                     TXN_TYPE, TRUSTEE_STRING)
+from plenum.common.constants import NYM, TXN_TYPE
 from plenum.common.exceptions import (InvalidClientRequest,
                                       InvalidClientMessageException,
                                       UnauthorizedClientRequest)
+from plenum.common.request import Request
+from plenum.common.txn_util import get_seq_no
 from plenum.common.util import randomString
-from plenum.common.startable import Mode
-from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
-from plenum.test.delayers import cDelay
-from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_get_and_check_replies
-from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
-from plenum.test.node_request.helper import sdk_ensure_pool_functional
 from plenum.test.pool_transactions.helper import sdk_add_new_nym, prepare_nym_request, \
     sdk_sign_and_send_prepared_request
 
@@ -25,18 +21,15 @@ from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
 from sovtoken.exceptions import (ExtraFundsError, InsufficientFundsError,
                                  InvalidFundsError)
 from sovtokenfees.constants import FEES, SET_FEES
+from sovtokenfees.fees_authorizer import FeesAuthorizer
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 from stp_core.loop.eventually import eventually
 
 from indy_node.server.config_req_handler import ConfigReqHandler
 
 VALID_FEES = {
-    NYM: 1,
-    "100": 1,
-    "101": 1,
-    "102": 1,
-    "113": 1,
-    "114": 1,
-    XFER_PUBLIC: 1
+    NYM_FEES_ALIAS: 1,
+    XFER_PUBLIC_FEES_ALIAS: 1
 }
 
 CONS_TIME = 1518541344
@@ -78,8 +71,14 @@ def reset_token_handler(fee_handler):
     # TODO: this is a function fixture. Do we need this revert there?
     # fee_handler.onBatchRejected()
 
+@pytest.fixture()
+def fees_authorizer(fee_handler):
+    return FeesAuthorizer(config_state=fee_handler.state,
+                          utxo_cache=fee_handler.utxo_cache)
 
-def test_non_existent_input_xfer(helpers):
+
+def test_non_existent_input_xfer(helpers,
+                                 fees_authorizer):
     """
     Expect an InvalidFundsError on a xfer request with inputs which don't
     contain a valid utxo.
@@ -92,16 +91,21 @@ def test_non_existent_input_xfer(helpers):
         address2
     ] = helpers.wallet.create_new_addresses(2)
 
-    inputs = [{ADDRESS: address1, SEQNO: 1}]
+    inputs = [{
+        "source": utxo_from_addr_and_seq_no(address1, 1),
+        AMOUNT: 291
+    }]
     outputs = [{ADDRESS: address2, AMOUNT: 290}]
 
     request = helpers.request.transfer(inputs, outputs)
 
-    with pytest.raises(InvalidFundsError) as e:
-        helpers.node.fee_handler_can_pay_fees(request)
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
+    assert not authorized
+    assert 'was not found' in error
 
 
-def test_non_existent_input_non_xfer(helpers):
+def test_non_existent_input_non_xfer(helpers,
+                                     fees_authorizer):
     """
     Expect an InvalidFundsError on a nym request with inputs which don't
     contain a valid utxo.
@@ -109,16 +113,20 @@ def test_non_existent_input_non_xfer(helpers):
     helpers.general.do_set_fees(VALID_FEES)
 
     utxos = [{
-        ADDRESS: helpers.wallet.create_address(),
-        SEQNO: 1,
-        AMOUNT: 10
+        "source": utxo_from_addr_and_seq_no(helpers.wallet.create_address(), 1),
+        AMOUNT: 291
     }]
 
     request = helpers.request.nym()
-    request = helpers.request.add_fees(request, utxos, 10)
+    request = helpers.request.add_fees(request, utxos, 10)[0]
+    request = json.loads(request)
+    fees = request[FEES]
+    request = helpers.sdk.sdk_json_to_request_object(request)
+    setattr(request, FEES, fees)
 
-    with pytest.raises(InvalidFundsError):
-        helpers.node.fee_handler_can_pay_fees(request)
+    authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
+    assert not authorized
+    assert 'was not found' in error
 
 
 class TestStaticValidation:
@@ -126,6 +134,25 @@ class TestStaticValidation:
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
     # - Static Fee Request Handler (doStaticValidation)
+    def test_get_fee_valid_alias(self, helpers, fee_handler):
+        """
+        StaticValidation of a get fee request with all of the whitelisted txn
+        types.
+        """
+        request = helpers.request.get_fee("test_alias")
+        result = fee_handler.doStaticValidation(request)
+
+        assert result is None
+
+    def test_get_fee_invalid_alias(self, helpers, fee_handler):
+        """
+        StaticValidation of a get fee request with all of the whitelisted txn
+        types.
+        """
+        request = helpers.request.get_fee("")
+        with pytest.raises(InvalidClientRequest, match="empty string"):
+            fee_handler.doStaticValidation(request)
+
     def test_set_fees_valid_txn_types(self, helpers, fee_handler):
         """
         StaticValidation of a set fees request with all of the whitelisted txn
@@ -138,19 +165,6 @@ class TestStaticValidation:
 
         assert result is None
 
-    def test_set_fees_invalid_txn_types(self, helpers, fee_handler):
-        """
-        StaticValidation of a set fees request that contains a txn type that
-        is not whitelisted.
-        """
-
-        fees = {SET_FEES: 1}
-
-        request = helpers.request.set_fees(fees)
-
-        with pytest.raises(InvalidClientRequest, match="set_fees -- Fees are not allowed for txn ") as e:
-            fee_handler.doStaticValidation(request)
-            assert e.contain()
 
     def test_set_fees_missing_fees(self, helpers, fee_handler):
         """
@@ -160,7 +174,7 @@ class TestStaticValidation:
         request = helpers.request.set_fees(VALID_FEES)
         request.operation.pop(FEES)
 
-        with pytest.raises(InvalidClientRequest, match="expected types 'dict', got"):
+        with pytest.raises(InvalidClientRequest, match="missed fields - fees"):
             fee_handler.doStaticValidation(request)
 
     def test_get_fees(self, helpers, fee_handler):
@@ -178,7 +192,11 @@ class TestStaticValidation:
 
         payload = {TXN_TYPE: '300'}
         request = helpers.request._create_request(payload)
-        request = helpers.wallet.sign_request_trustees(request, 1)
+        request = helpers.wallet.sign_request_trustees(json.dumps(request.as_dict), 1)
+        request = json.loads(request)
+        sigs = request["signatures"]
+        request = helpers.sdk.sdk_json_to_request_object(request)
+        setattr(request, "signatures", sigs)
 
         fee_handler.doStaticValidation(request)
 
@@ -241,9 +259,7 @@ class TestValidation():
         request = helpers.wallet.sign_request(request, increased_trustees)
         assert len(request.signatures) == 7
 
-        valid = fee_handler.validate(request)
-
-        assert valid is None
+        assert fee_handler.validate(request)
 
     def test_get_fees_invalid_identifier(self, helpers, fee_handler):
         """
@@ -274,6 +290,10 @@ class TestCanPayFees():
         return helpers.wallet.create_new_addresses(3)
 
     @pytest.fixture(scope="module")
+    def addresses_manual(self, helpers):
+        return helpers.inner.wallet.create_new_addresses(3)
+
+    @pytest.fixture(scope="module")
     def mint(self, helpers, addresses):
         mint_outputs = [
             {ADDRESS: addresses[0], AMOUNT: 100},
@@ -282,18 +302,42 @@ class TestCanPayFees():
 
         return helpers.general.do_mint(mint_outputs)
 
+    @pytest.fixture()
+    def mint_manual(self, helpers, addresses_manual):
+        mint_outputs = [
+            {ADDRESS: "pay:sov:" + addresses_manual[0], AMOUNT: 100},
+            {ADDRESS: "pay:sov:" + addresses_manual[1], AMOUNT: 50},
+        ]
+
+        return helpers.general.do_mint(mint_outputs)
+
     @pytest.fixture
-    def inputs_outputs(self, helpers, addresses):
+    def inputs_outputs_manual(self, helpers, addresses_manual, mint_manual):
+        [
+            address1,
+            address2,
+            address3,
+        ] = addresses_manual
+
+        inputs = [
+            {ADDRESS: address1, SEQNO: get_seq_no(mint_manual)},
+            {ADDRESS: address2, SEQNO: get_seq_no(mint_manual)}
+        ]
+        outputs = [
+            {ADDRESS: address3, AMOUNT: 150},
+        ]
+
+        return (inputs, outputs)
+
+    @pytest.fixture
+    def inputs_outputs(self, helpers, addresses, mint):
         [
             address1,
             address2,
             address3,
         ] = addresses
-
-        inputs = [
-            {ADDRESS: address1, SEQNO: 1},
-            {ADDRESS: address2, SEQNO: 1}
-        ]
+        inputs = helpers.general.get_utxo_addresses([address1, address2])
+        inputs = [utxo for utxos in inputs for utxo in utxos]
         outputs = [
             {ADDRESS: address3, AMOUNT: 150},
         ]
@@ -303,7 +347,7 @@ class TestCanPayFees():
     @pytest.fixture
     def inputs_outputs_fees(self, inputs_outputs):
         inputs, outputs = inputs_outputs
-        outputs[0][AMOUNT] -= VALID_FEES[XFER_PUBLIC]
+        outputs[0][AMOUNT] -= VALID_FEES[XFER_PUBLIC_FEES_ALIAS]
 
         return (inputs, outputs)
 
@@ -325,133 +369,119 @@ class TestCanPayFees():
             request,
             inputs,
             outputs
-        )
+        )[0]
+        request = json.loads(request)
+        fees = request[FEES]
+        request = Request(**request)
+        setattr(request, FEES, fees)
 
         return request
 
     def test_xfer_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_xfer_fees
     ):
         """
         Transfer request with valid fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_xfer_fees)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, VALID_FEES[XFER_PUBLIC_FEES_ALIAS])
+        assert authorized
+        assert not error
 
     def test_xfer_set_without_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_xfer,
     ):
         """
         Transfer request without fees and fees are set.
         """
-        with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request_xfer)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer, VALID_FEES[XFER_PUBLIC_FEES_ALIAS])
+        assert not authorized
+        assert 'Insufficient funds, sum of inputs' in error
 
     def test_xfer_not_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             request_xfer_fees
     ):
         """
         Transfer request with fees and fees are not set.
         """
-        with pytest.raises(ExtraFundsError):
-            fee_handler.can_pay_fees(request_xfer_fees)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer_fees, required_fees=0)
+        assert not authorized
+        assert 'Extra funds, sum of inputs' in error
 
-    def test_xfer_not_set_without_fees(self, helpers, fee_handler, request_xfer):
+    def test_xfer_not_set_without_fees(self, helpers, fees_authorizer, request_xfer):
         """
         Transfer request without fees and fees are not set.
         """
-        fee_handler.can_pay_fees(request_xfer)
+        authorized, error = fees_authorizer.can_pay_fees(request_xfer, required_fees=0)
+        assert authorized
+        assert not error
 
     def test_xfer_set_with_additional_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             request_xfer_fees,
-            inputs_outputs,
+            inputs_outputs_manual,
             fees_set
     ):
         """
         Transfer request with extra set of fees, and fees are set.
         """
-        inputs, outputs = inputs_outputs
-        request = helpers.request.add_fees_specific(
+        inputs, outputs = inputs_outputs_manual
+        request = helpers.inner.request.add_fees_specific(
             request_xfer_fees,
             inputs,
             outputs
         )
-        fee_handler.can_pay_fees(request)
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(XFER_PUBLIC_FEES_ALIAS))
+        assert authorized
+        assert not error
 
     def test_nym_set_with_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
             request_nym_fees
     ):
         """
         Nym request with fees and fees are set.
         """
-        fee_handler.can_pay_fees(request_nym_fees)
+        authorized, error = fees_authorizer.can_pay_fees(request_nym_fees, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
+        assert authorized
+        assert not error
 
     def test_nym_set_with_invalid_fees(
             self,
             helpers,
-            fee_handler,
+            fees_authorizer,
             fees_set,
-            inputs_outputs
+            inputs_outputs_manual
     ):
         """
         Nym request with invalid fees and fees are set.
         """
-        inputs, outputs = inputs_outputs
+        inputs, outputs = inputs_outputs_manual
         request = helpers.request.nym()
-        request = helpers.request.add_fees_specific(
+        request = helpers.inner.request.add_fees_specific(
             request,
             inputs,
             outputs
         )
 
-        with pytest.raises(InsufficientFundsError):
-            fee_handler.can_pay_fees(request)
-
-    def test_nym_set_without_fees(self, helpers, fee_handler, fees_set):
-        """
-        Nym request without fees and fees are set.
-        """
-        request = helpers.request.nym()
-
-        with pytest.raises(
-                InvalidClientMessageException,
-                message='Fees are required for this txn type'
-        ):
-            fee_handler.can_pay_fees(request)
-
-    def test_nym_unset_with_fees(self, helpers, fee_handler, request_nym_fees):
-        """
-        Nym request with fees, and fees are not set
-        """
-        with pytest.raises(
-                InvalidClientMessageException,
-                message='Fees are not allowed for this txn type'
-        ):
-            fee_handler.can_pay_fees(request_nym_fees)
-
-    def test_nym_unset_without_fees(self, helpers, fee_handler):
-        """
-        Nym request without fees and fees are not set.
-        """
-        request = helpers.request.nym()
-        fee_handler.can_pay_fees(request)
+        authorized, error = fees_authorizer.can_pay_fees(request, required_fees=VALID_FEES.get(NYM_FEES_ALIAS))
+        assert not authorized
+        assert 'Insufficient funds, sum of inputs' in error
 
 
 # - Static Fee Request Handler (apply)
