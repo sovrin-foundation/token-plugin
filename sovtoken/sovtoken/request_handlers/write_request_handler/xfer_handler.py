@@ -1,0 +1,71 @@
+from sovtoken.exceptions import UTXOError
+
+from indy_common.authorize.auth_actions import AuthActionAdd
+from sovtoken.constants import INPUTS, OUTPUTS, XFER_PUBLIC
+from sovtoken.messages.txn_validator import txn_xfer_public_validate
+from sovtoken.request_handlers.token_utils import spend_input, add_new_output, sum_inputs, sum_outputs, \
+    validate_given_inputs_outputs
+from sovtoken.types import Output
+
+from plenum.common.exceptions import InvalidClientMessageException, InvalidClientRequest, OperationError
+from plenum.common.request import Request
+from plenum.common.txn_util import get_payload_data, get_seq_no
+from plenum.server.database_manager import DatabaseManager
+from plenum.server.request_handlers.handler_interfaces.write_request_handler import WriteRequestHandler
+
+
+class XferHandler(WriteRequestHandler):
+
+    # it is not really clear what should be returned here for MINT
+    def gen_state_key(self, txn):
+        pass
+
+    def __init__(self, database_manager: DatabaseManager, txn_type, ledger_id, utxo_cache, token_state,
+                 write_req_validator):
+        super().__init__(database_manager, txn_type, ledger_id)
+        self._utxo_cache = utxo_cache
+        self._token_state = token_state
+        self._write_req_validator = write_req_validator
+
+    def static_validation(self, request: Request):
+        error = txn_xfer_public_validate(request)
+        if error:
+            raise InvalidClientRequest(request.identifier,
+                                       request.reqId,
+                                       error)
+
+    def dynamic_validation(self, request: Request):
+        self.handle_xfer(request)
+        return self._write_req_validator.validate(request, [AuthActionAdd(txn_type=XFER_PUBLIC,
+                                                                          field="*",
+                                                                          value="*")])
+
+    def update_state(self, txn, prev_result, is_committed=False):
+        try:
+            payload = get_payload_data(txn)
+            for inp in payload[INPUTS]:
+                spend_input(self._token_state, self._utxo_cache, inp["address"], inp["seqNo"], is_committed=is_committed)
+            for output in payload[OUTPUTS]:
+                seq_no = get_seq_no(txn)
+                add_new_output(self._token_state, self._utxo_cache, Output(output["address"], seq_no, output["amount"]),
+                               is_committed=is_committed)
+        except UTXOError as ex:
+            error = 'Exception {} while updating state'.format(ex)
+            raise OperationError(error)
+
+    def handle_xfer(self, request):
+        try:
+            sum_in = sum_inputs(self._utxo_cache,
+                                request,
+                                is_committed=False)
+
+            sum_out = sum_outputs(request)
+        except Exception as ex:
+            if isinstance(ex, InvalidClientMessageException):
+                raise ex
+            error = 'Exception {} while processing inputs/outputs'.format(ex)
+            raise InvalidClientMessageException(request.identifier,
+                                                getattr(request, 'reqId', None),
+                                                error)
+        else:
+            return validate_given_inputs_outputs(sum_in, sum_out, sum_out, request)
