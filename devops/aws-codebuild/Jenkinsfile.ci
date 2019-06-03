@@ -101,8 +101,12 @@ pipelineWrapper({
                                         truncate = true
                                         allowEmptyArchive = true
                                     }
-                                    // ST-548
-                                    // this.junit "logs/test.${proj}.xml"
+
+                                    try {
+                                        this.junit "logs/test.${proj}.xml"
+                                    } catch (ex) {
+                                        logger.warn("Failed to create jUnit report: $ciImageTag")
+                                    }
                                 }
                             }
                         }
