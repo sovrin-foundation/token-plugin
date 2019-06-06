@@ -2,7 +2,7 @@ import json
 import time
 
 from indy.ledger import build_nym_request, build_schema_request, \
-    build_acceptance_mechanism_request, build_txn_author_agreement_request, \
+    build_acceptance_mechanisms_request, build_txn_author_agreement_request, \
     build_get_txn_author_agreement_request, append_txn_author_agreement_acceptance_to_request
 from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req, \
     prepare_payment_extra_with_acceptance_data
@@ -162,7 +162,7 @@ class HelperRequest():
         return request
 
     def acceptance_mechanism(self, sdk_trustee_wallet, aml, aml_context=None):
-        acceptance_mechanism_future = build_acceptance_mechanism_request(sdk_trustee_wallet[1], aml, "0.0.1", aml_context)
+        acceptance_mechanism_future = build_acceptance_mechanisms_request(sdk_trustee_wallet[1], aml, "0.0.1", aml_context)
         acceptance_mechanism_request = self._looper.loop.run_until_complete(acceptance_mechanism_future)
         acceptance_mechanism_request = self._sdk.sdk_json_to_request_object(json.loads(acceptance_mechanism_request))
         acceptance_mechanism_request = self._sign_sdk(acceptance_mechanism_request, sdk_trustee_wallet)
