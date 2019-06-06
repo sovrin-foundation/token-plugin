@@ -1,5 +1,5 @@
 from sovtoken import TokenTransactions
-from sovtoken.constants import MINT_PUBLIC, OUTPUTS, TOKEN_LEDGER_ID
+from sovtoken.constants import MINT_PUBLIC, OUTPUTS, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
 from sovtoken.exceptions import UTXOError
 from sovtoken.messages.txn_validator import txn_mint_public_validate
 from sovtoken.request_handlers.token_utils import add_new_output
@@ -44,7 +44,7 @@ class MintHandler(WriteRequestHandler):
             seq_no = get_seq_no(txn)
             for output in payload[OUTPUTS]:
                 add_new_output(self.state,
-                               self.database_manager.get_store("utxo_cache"),
+                               self.database_manager.get_store(UTXO_CACHE_LABEL),
                                Output(output["address"], seq_no, output["amount"]),
                                is_committed=is_committed)
         except UTXOError as ex:

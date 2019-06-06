@@ -2,7 +2,7 @@ from sovtoken import TokenTransactions
 from sovtoken.exceptions import UTXOError
 
 from indy_common.authorize.auth_actions import AuthActionAdd
-from sovtoken.constants import INPUTS, OUTPUTS, XFER_PUBLIC, TOKEN_LEDGER_ID
+from sovtoken.constants import INPUTS, OUTPUTS, XFER_PUBLIC, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
 from sovtoken.messages.txn_validator import txn_xfer_public_validate
 from sovtoken.request_handlers.token_utils import spend_input, add_new_output, sum_inputs, sum_outputs, \
     validate_given_inputs_outputs
@@ -38,15 +38,19 @@ class XferHandler(WriteRequestHandler):
                                                                           field="*",
                                                                           value="*")])
 
+    @property
+    def utxo_cache(self):
+        return self.database_manager.get_store(UTXO_CACHE_LABEL)
+
     def update_state(self, txn, prev_result, is_committed=False):
         try:
             payload = get_payload_data(txn)
             for inp in payload[INPUTS]:
-                spend_input(self.state, self.database_manager.get_store("utxo_cache"), inp["address"], inp["seqNo"],
+                spend_input(self.state, self.utxo_cache, inp["address"], inp["seqNo"],
                             is_committed=is_committed)
             for output in payload[OUTPUTS]:
                 seq_no = get_seq_no(txn)
-                add_new_output(self.state, self.database_manager.get_store("utxo_cache"),
+                add_new_output(self.state, self.utxo_cache,
                                Output(output["address"], seq_no, output["amount"]),
                                is_committed=is_committed)
         except UTXOError as ex:
@@ -55,7 +59,7 @@ class XferHandler(WriteRequestHandler):
 
     def _do_validate_inputs_ouputs(self, request):
         try:
-            sum_in = sum_inputs(self.database_manager.get_store("utxo_cache"),
+            sum_in = sum_inputs(self.utxo_cache,
                                 request,
                                 is_committed=False)
 
