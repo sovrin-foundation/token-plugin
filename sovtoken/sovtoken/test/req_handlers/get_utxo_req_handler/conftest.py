@@ -12,8 +12,7 @@ from indy.payment import build_get_payment_sources_request
 
 @pytest.fixture(scope="module")
 def get_utxo_handler(db_manager, bls_store):
-    return GetUtxoHandler(ledger_id=TOKEN_LEDGER_ID, txn_type=TokenTransactions.GET_UTXO.value,
-                          bls_store=bls_store, database_manager=db_manager)
+    return GetUtxoHandler(bls_store=bls_store, database_manager=db_manager)
 
 
 @pytest.fixture()

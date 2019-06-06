@@ -20,11 +20,7 @@ from plenum.test.testing_utils import FakeSomething
 def mint_handler(utxo_cache, db_manager, write_auth_req_validator):
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return MintHandler(database_manager=db_manager,
-                       txn_type=TokenTransactions.MINT_PUBLIC.value,
-                       ledger_id=TOKEN_LEDGER_ID,
-                       write_req_validator=write_auth_req_validator,
-                       state=db_manager.get_state(TOKEN_LEDGER_ID),
-                       utxo_cache=utxo_cache)
+                       write_req_validator=write_auth_req_validator)
 
 
 @pytest.fixture(scope="module")

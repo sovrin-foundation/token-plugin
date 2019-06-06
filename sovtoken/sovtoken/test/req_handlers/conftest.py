@@ -39,9 +39,10 @@ def db_manager(tconf):
 
 
 @pytest.yield_fixture(scope="module")
-def utxo_cache():
+def utxo_cache(db_manager):
     cache = UTXOCache(initKeyValueStorage(
         KeyValueStorageType.Memory, None, "utxoInMemoryStore"))
+    db_manager.register_new_store("utxo_cache", cache)
     yield cache
     if cache.un_committed:
         cache.reject_batch()

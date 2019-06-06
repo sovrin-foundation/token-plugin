@@ -15,10 +15,6 @@ from plenum.test.helper import sdk_json_to_request_object
 def xfer_handler(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return XferHandler(db_manager,
-                       txn_type=TokenTransactions.XFER_PUBLIC.value,
-                       ledger_id=TOKEN_LEDGER_ID,
-                       utxo_cache=utxo_cache,
-                       token_state=db_manager.get_state(TOKEN_LEDGER_ID),
                        write_req_validator=write_auth_req_validator)
 
 

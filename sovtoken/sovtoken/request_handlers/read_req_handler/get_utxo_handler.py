@@ -1,4 +1,5 @@
-from sovtoken.constants import ADDRESS, OUTPUTS
+from sovtoken import TokenTransactions
+from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
 from sovtoken.request_handlers.token_utils import parse_state_key
 from sovtoken.types import Output
@@ -15,8 +16,8 @@ from state.trie.pruning_trie import rlp_decode
 
 
 class GetUtxoHandler(ReadRequestHandler):
-    def __init__(self, database_manager: DatabaseManager, txn_type, ledger_id, bls_store):
-        super().__init__(database_manager, txn_type, ledger_id)
+    def __init__(self, database_manager: DatabaseManager, bls_store):
+        super().__init__(database_manager, TokenTransactions.GET_UTXO.value, TOKEN_LEDGER_ID)
         self._bls_store = bls_store
 
     def static_validation(self, request: Request):
@@ -26,9 +27,6 @@ class GetUtxoHandler(ReadRequestHandler):
             raise InvalidClientRequest(request.identifier,
                                        request.reqId,
                                        error)
-
-    def dynamic_validation(self, request: Request):
-        pass
 
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]

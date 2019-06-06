@@ -1,4 +1,5 @@
-from sovtoken.constants import MINT_PUBLIC, OUTPUTS
+from sovtoken import TokenTransactions
+from sovtoken.constants import MINT_PUBLIC, OUTPUTS, TOKEN_LEDGER_ID
 from sovtoken.exceptions import UTXOError
 from sovtoken.messages.txn_validator import txn_mint_public_validate
 from sovtoken.request_handlers.token_utils import add_new_output
@@ -19,11 +20,9 @@ class MintHandler(WriteRequestHandler):
     def gen_state_key(self, txn):
         pass
 
-    def __init__(self, database_manager: DatabaseManager, txn_type, ledger_id, write_req_validator, state, utxo_cache):
-        super().__init__(database_manager, txn_type, ledger_id)
+    def __init__(self, database_manager: DatabaseManager, write_req_validator):
+        super().__init__(database_manager, TokenTransactions.MINT_PUBLIC.value, TOKEN_LEDGER_ID)
         self._write_req_validator = write_req_validator
-        self._state = state
-        self._utxo_cache = utxo_cache
 
     def static_validation(self, request: Request):
         error = txn_mint_public_validate(request)
@@ -44,7 +43,9 @@ class MintHandler(WriteRequestHandler):
             payload = get_payload_data(txn)
             seq_no = get_seq_no(txn)
             for output in payload[OUTPUTS]:
-                add_new_output(self._state, self._utxo_cache, Output(output["address"], seq_no, output["amount"]),
+                add_new_output(self.state,
+                               self.database_manager.get_store("utxo_cache"),
+                               Output(output["address"], seq_no, output["amount"]),
                                is_committed=is_committed)
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)

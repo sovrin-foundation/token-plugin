@@ -42,4 +42,5 @@ def integrate_plugin_in_node(node):
     node.db_manager.register_new_database(lid=TOKEN_LEDGER_ID,
                                           ledger=ledger,
                                           state=state)
+    node.db_manager.register_new_store(label="utxo_cache", store=utxo_cache)
     return node
