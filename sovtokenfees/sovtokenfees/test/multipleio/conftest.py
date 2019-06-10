@@ -1,6 +1,6 @@
 import pytest
 
-from sovtokenfees.test.conftest import MintStrategy
+from sovtokenfees.test.conftest import MintStrategy, IOAddressesStatic
 from sovtokenfees.test.helper import InputsStrategy, OutputsStrategy
 
 
@@ -39,26 +39,6 @@ def transfer_amount():
     return 10
 
 
-class IOAddresses:
-    def __init__(self, i_addrs, o_addrs):
-        self._iaddrs = i_addrs
-        self._oaddrs = o_addrs
-
-    def rotate(self):
-        self._iaddrs, self._oaddrs = self._oaddrs, self._iaddrs
-
-    @property
-    def iaddrs(self):
-        return self._iaddrs
-
-    @property
-    def oaddrs(self):
-        return self._oaddrs
-
-    def __call__(self):
-        return (self._iaddrs, self._oaddrs)
-
-
 @pytest.fixture(
     params=[
         ([0], [0]),
@@ -73,7 +53,7 @@ class IOAddresses:
     )
 )
 def io_addresses(request, addresses):
-    return IOAddresses(
+    return IOAddressesStatic(
         [addresses[i] for i in request.param[0]],
         [addresses[i] for i in request.param[1]]
     )

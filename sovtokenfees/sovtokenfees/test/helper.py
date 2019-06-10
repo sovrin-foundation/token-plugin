@@ -25,7 +25,6 @@ from sovtokenfees.constants import FEES
 class InputsStrategy(Enum):
     all_utxos = 1           # use all utxos from each input address
     first_utxo_only = 2     # use only single (first) from each input address
-                            # (TODO just to have some other one for now)
 
 
 @unique
@@ -251,7 +250,7 @@ def prepare_inputs(
     assert strategy in InputsStrategy, "Unknown input strategy {}".format(strategy)
 
     inputs = []
-    addresses = [helpers.wallet.address_map[addr.replace("pay:sov:", "")] for addr in addresses]
+    addresses = [helpers.wallet.address_map[addr] for addr in addresses]
     for addr in addresses:
         if not addr.all_seq_nos:
             raise ValueError("no seq_nos for {}".format(addr.address))
@@ -277,7 +276,7 @@ def prepare_outputs(
     assert strategy in OutputsStrategy, "Unknown output strategy {}".format(strategy)
 
     total_input_amount = sum(
-        (helpers.wallet.address_map[i[ADDRESS].replace("pay:sov:", "")].amount(i[SEQNO]) for i in inputs)
+        (helpers.wallet.address_map[i[ADDRESS]].amount(i[SEQNO]) for i in inputs)
     )
 
     # apply fee

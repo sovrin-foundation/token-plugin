@@ -1,3 +1,5 @@
+from abc import ABCMeta, abstractmethod
+
 from sovtoken.test.conftest import build_wallets_from_data
 
 from plenum.common.constants import NYM, STEWARD, TARGET_NYM, TRUSTEE_STRING
@@ -23,6 +25,7 @@ from sovtoken.main import integrate_plugin_in_node as enable_token
 
 
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
+from sovtokenfees.constants import MAX_FEE_OUTPUTS
 from sovtokenfees import CLIENT_REQUEST_FIELDS
 from sovtokenfees.test.constants import (
     NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS, txn_type_to_alias
@@ -43,8 +46,44 @@ from plenum.test.conftest import get_data_for_role
 
 @unique
 class MintStrategy(Enum):
-    single_first = 1  # mint only for the first address
+    first_only = 1  # mint only for the first address
     all_equal = 2  # mint equal values for all addresses
+
+
+class IOAddresses(metaclass=ABCMeta):
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        pass
+
+
+class IOAddressesDynamic(IOAddresses):
+    def __init__(self, helpers, addresses):
+        self._addresses = [helpers.wallet.address_map[addr] for addr in addresses]
+
+    def __call__(self, txn_type=None):
+        with_utxos = [addr.address for addr in self._addresses if addr.total_amount]
+        no_utxos = [addr.address for addr in self._addresses if not addr.total_amount]
+        assert with_utxos
+
+        if txn_type == XFER_PUBLIC:
+            # try to make them near equal
+            border = len(self._addresses) // 2 or 1
+            return (with_utxos[:border], with_utxos[border:] + no_utxos)
+        else:
+            return (with_utxos, with_utxos[:MAX_FEE_OUTPUTS])
+
+
+class IOAddressesStatic(IOAddresses):
+    def __init__(self, i_addrs=None, o_addrs=None):
+        self._iaddrs = i_addrs
+        self._oaddrs = o_addrs
+
+    def rotate(self):
+        self._iaddrs, self._oaddrs = self._oaddrs, self._iaddrs
+
+    def __call__(self, *args, **kwargs):
+        return (self._iaddrs, self._oaddrs)
+
 
 # ######################
 # configuration fixtures
@@ -68,7 +107,7 @@ def addresses_num(request):
 
 @pytest.fixture
 def mint_strategy(request):
-    return getValueFromModule(request, "MINT_STRATEGY", MintStrategy.single_first)
+    return getValueFromModule(request, "MINT_STRATEGY", MintStrategy.first_only)
 
 
 @pytest.fixture
@@ -236,7 +275,7 @@ def addresses(helpers, addresses_num):
 def mint_amount_spec(request, addresses, mint_strategy, mint_amount):
     amounts = {addr: 0 for addr in addresses}
 
-    if mint_strategy == MintStrategy.single_first:
+    if mint_strategy == MintStrategy.first_only:
         amounts[addresses[0]] = mint_amount
     elif mint_strategy == MintStrategy.all_equal:
         amounts = {addr: mint_amount for addr in addresses}
@@ -279,27 +318,15 @@ def mint_multiple_tokens(helpers, addresses, mint_utxos_num_spec, mint_amount_sp
 
 @pytest.fixture
 def io_addresses(helpers, addresses):
-    _addresses = [helpers.wallet.address_map[addr.replace("pay:sov:", "")] for addr in addresses]
-
-    def wrapped():
-        with_utxos = [addr.address for addr in _addresses if addr.total_amount]
-        no_utxos = [addr.address for addr in _addresses if not addr.total_amount]
-        assert with_utxos
-
-        # try to make them near equal
-        border = len(_addresses) // 2 or 1
-
-        return (with_utxos[:border], with_utxos[border:] + no_utxos)
-
-    return wrapped
+    return IOAddressesDynamic(helpers, addresses)
 
 
 @pytest.fixture
 def prepare_inputs(helpers, inputs_strategy, io_addresses):
     _inputs_strategy = inputs_strategy
 
-    def wrapped(addresses=None, inputs_strategy=None):
-        addresses = io_addresses()[0] if addresses is None else addresses
+    def wrapped(addresses=None, inputs_strategy=None, txn_type=None):
+        addresses = io_addresses(txn_type)[0] if addresses is None else addresses
         inputs_strategy = (
             _inputs_strategy if inputs_strategy is None else inputs_strategy
         )
@@ -320,8 +347,8 @@ def prepare_outputs(
         if txn_type is not None:
             fee = fees.get(txn_type_to_alias[txn_type], 0)
 
-        inputs = prepare_inputs() if inputs is None else inputs
-        addresses = io_addresses()[1] if addresses is None else addresses
+        inputs = prepare_inputs(txn_type=txn_type) if inputs is None else inputs
+        addresses = io_addresses(txn_type)[1] if addresses is None else addresses
         outputs_strategy = (
             _outputs_strategy if outputs_strategy is None else outputs_strategy
         )
@@ -339,7 +366,7 @@ def send_and_check_xfer(
     looper, helpers, prepare_inputs, prepare_outputs, fees,
 ):
     def wrapped(inputs=None, outputs=None):
-        inputs = prepare_inputs() if inputs is None else inputs
+        inputs = prepare_inputs(txn_type=XFER_PUBLIC) if inputs is None else inputs
         outputs = prepare_outputs(txn_type=XFER_PUBLIC, inputs=inputs) if outputs is None else outputs
         res = send_and_check_xfer_h(looper, helpers, inputs, outputs)
         return res
@@ -352,7 +379,7 @@ def send_and_check_nym(
     looper, helpers, prepare_inputs, prepare_outputs, fees,
 ):
     def wrapped(inputs=None, outputs=None):
-        inputs = prepare_inputs() if inputs is None else inputs
+        inputs = prepare_inputs(txn_type=NYM) if inputs is None else inputs
         outputs = prepare_outputs(txn_type=NYM, inputs=inputs) if outputs is None else outputs
         res = send_and_check_nym_h(looper, helpers, inputs, outputs)
         return res
@@ -369,60 +396,6 @@ def xfer_addresses(addresses):
 @pytest.fixture
 def xfer_mint_tokens(mint_multiple_tokens):
     return mint_multiple_tokens[0]
-
-
-@pytest.fixture
-def curr_seq_no(xfer_mint_tokens):
-    return get_seq_no(xfer_mint_tokens)
-
-
-@pytest.fixture
-def curr_amount(xfer_mint_tokens):
-    return get_amount_from_token_txn(xfer_mint_tokens)
-
-
-@pytest.fixture
-def curr_utxo(curr_seq_no, curr_amount):
-    return {
-        'amount': curr_amount,
-        'seq_no': curr_seq_no
-    }
-
-
-@pytest.fixture
-def send_and_check_nym_with_fees_curr_utxo(looper, helpers, fees_set, xfer_addresses, curr_utxo):
-    _addresses = xfer_addresses
-
-    def wrapped(addresses=None, check_reply=True, nym_with_fees=None):
-        addresses = _addresses if addresses is None else addresses
-
-        curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_nym_with_fees(
-            helpers, fees_set, curr_utxo['seq_no'],
-            looper, addresses, curr_utxo['amount'],
-            check_reply=check_reply, nym_with_fees=nym_with_fees
-        )
-
-        return curr_utxo, resp
-
-    return wrapped
-
-
-@pytest.fixture
-def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, curr_utxo):
-    _addresses = xfer_addresses
-
-    def wrapped(addresses=None, check_reply=True, transfer_summ=20):
-        addresses = _addresses if addresses is None else addresses
-
-        curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_transfer(
-            helpers, addresses, fees, looper,
-            curr_utxo['amount'], curr_utxo['seq_no'],
-            check_reply=check_reply, transfer_summ=transfer_summ - fees[XFER_PUBLIC_FEES_ALIAS]
-        )
-
-        return curr_utxo, resp
-
-    return wrapped
 
 
 @pytest.fixture(scope="module")

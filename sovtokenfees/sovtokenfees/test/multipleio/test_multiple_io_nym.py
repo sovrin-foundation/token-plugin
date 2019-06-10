@@ -28,7 +28,7 @@ def test_nym_with_multiple_io(
     send_and_check_nym,
 ):
     def _check():
-        inputs = prepare_inputs()
+        inputs = prepare_inputs(txn_type=NYM)
         outputs = prepare_outputs(txn_type=NYM, inputs=inputs)
 
         if len(outputs) > MAX_FEE_OUTPUTS:
