@@ -15,7 +15,6 @@ from sovtoken.test.conftest import sdk_trustees, sdk_stewards
 
 # fixtures, do not remove
 from indy_node.test.conftest import *
-from indy_common.constants import NYM
 
 from sovtoken.constants import (
     XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO, OUTPUTS
@@ -25,7 +24,9 @@ from sovtoken.main import integrate_plugin_in_node as enable_token
 
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 from sovtokenfees import CLIENT_REQUEST_FIELDS
-from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
+from sovtokenfees.test.constants import (
+    NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS, txn_type_to_alias
+)
 from sovtokenfees.test.helper import (
     get_amount_from_token_txn,
     send_and_check_nym_with_fees, send_and_check_transfer,
@@ -43,7 +44,7 @@ from plenum.test.conftest import get_data_for_role
 @unique
 class MintStrategy(Enum):
     single_first = 1  # mint only for the first address
-    multiple_equal = 2  # mint equal values for all addresses
+    all_equal = 2  # mint equal values for all addresses
 
 # ######################
 # configuration fixtures
@@ -87,7 +88,7 @@ def inputs_strategy(request):
 
 @pytest.fixture
 def outputs_strategy(request):
-    return getValueFromModule(request, "OUTPUTS_STRATEGY", OutputsStrategy.transfer_equal)
+    return getValueFromModule(request, "OUTPUTS_STRATEGY", OutputsStrategy.transfer_some_equal)
 
 
 # makes sense not for all outputs strategies
@@ -237,7 +238,7 @@ def mint_amount_spec(request, addresses, mint_strategy, mint_amount):
 
     if mint_strategy == MintStrategy.single_first:
         amounts[addresses[0]] = mint_amount
-    elif mint_strategy == MintStrategy.multiple_equal:
+    elif mint_strategy == MintStrategy.all_equal:
         amounts = {addr: mint_amount for addr in addresses}
     else:
         raise ValueError("unexpected mint strategy: {}".format(mint_strategy))
@@ -309,10 +310,15 @@ def prepare_inputs(helpers, inputs_strategy, io_addresses):
 
 
 @pytest.fixture
-def prepare_outputs(helpers, outputs_strategy, transfer_amount, io_addresses, prepare_inputs):
+def prepare_outputs(
+    helpers, outputs_strategy, transfer_amount,
+    io_addresses, prepare_inputs, fees
+):
     _outputs_strategy = outputs_strategy
 
-    def wrapped(fee, inputs=None, addresses=None, outputs_strategy=None):
+    def wrapped(fee=None, txn_type=None, inputs=None, addresses=None, outputs_strategy=None):
+        if txn_type is not None:
+            fee = fees.get(txn_type_to_alias[txn_type], 0)
 
         inputs = prepare_inputs() if inputs is None else inputs
         addresses = io_addresses()[1] if addresses is None else addresses
@@ -334,7 +340,7 @@ def send_and_check_xfer(
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs() if inputs is None else inputs
-        outputs = prepare_outputs(fees.get(XFER_PUBLIC_FEES_ALIAS, 0), inputs) if outputs is None else outputs
+        outputs = prepare_outputs(txn_type=XFER_PUBLIC, inputs=inputs) if outputs is None else outputs
         res = send_and_check_xfer_h(looper, helpers, inputs, outputs)
         return res
 
@@ -347,7 +353,7 @@ def send_and_check_nym(
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs() if inputs is None else inputs
-        outputs = prepare_outputs(fees.get(NYM_FEES_ALIAS, 0), inputs) if outputs is None else outputs
+        outputs = prepare_outputs(txn_type=NYM, inputs=inputs) if outputs is None else outputs
         res = send_and_check_nym_h(looper, helpers, inputs, outputs)
         return res
 

@@ -6,7 +6,7 @@ from sovtokenfees.test.constants import XFER_PUBLIC_FEES_ALIAS
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change_new
 
 ADDRESSES_NUM = 4
-MINT_STRATEGY = MintStrategy.multiple_equal
+MINT_STRATEGY = MintStrategy.all_equal
 MINT_UTXOS_NUM = 3
 
 

@@ -11,7 +11,7 @@ def addresses_num():
 
 @pytest.fixture
 def mint_strategy():
-    return MintStrategy.multiple_equal
+    return MintStrategy.all_equal
 
 
 @pytest.fixture
