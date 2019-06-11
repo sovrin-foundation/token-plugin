@@ -38,7 +38,7 @@ class MintHandler(WriteRequestHandler):
                                                                  field="*",
                                                                  value="*")])
 
-    def update_state(self, txn, prev_result, is_committed=False):
+    def update_state(self, txn, prev_result, request, is_committed=False):
         try:
             payload = get_payload_data(txn)
             seq_no = get_seq_no(txn)

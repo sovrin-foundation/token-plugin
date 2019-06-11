@@ -42,7 +42,7 @@ class XferHandler(WriteRequestHandler):
     def utxo_cache(self):
         return self.database_manager.get_store(UTXO_CACHE_LABEL)
 
-    def update_state(self, txn, prev_result, is_committed=False):
+    def update_state(self, txn, prev_result, request, is_committed=False):
         try:
             payload = get_payload_data(txn)
             for inp in payload[INPUTS]:

@@ -2,6 +2,7 @@ import json
 
 import pytest
 from sovtoken.constants import UTXO_CACHE_LABEL
+from sovtokenfees.static_fee_req_handler import txn_root_serializer
 
 from indy_node.test.request_handlers.helper import get_fake_ledger
 from sovtoken import TOKEN_LEDGER_ID
@@ -11,6 +12,7 @@ from indy.wallet import create_wallet, open_wallet, close_wallet, delete_wallet
 
 from common.serializers import serialization
 from plenum.common.constants import KeyValueStorageType, BLS_LABEL
+from plenum.common.txn_util import append_txn_metadata
 from plenum.common.util import randomString
 from plenum.server.database_manager import DatabaseManager
 from plenum.test.testing_utils import FakeSomething
@@ -36,8 +38,15 @@ def db_manager(tconf):
                                   "tokenInMemoryStore",
                                   txn_serializer=serialization.multi_sig_store_serializer)
     ledger = get_fake_ledger()
-    ledger.commitTxns = lambda x: (None, [])
-    ledger.root_hash = 1
+    ledger.commitTxns = lambda x: (None, [1])
+    ledger.root_hash = txn_root_serializer.serialize("1")
+    ledger.uncommitted_root_hash = "1"
+    ledger.uncommitted_size = 1
+    ledger.size = 0
+    ledger.discardTxns = lambda x: None
+    ledger.committed_root_hash = "-1"
+    ledger.append_txns_metadata = lambda txns, txn_time: [append_txn_metadata(txn, 2, txn_time, 2) for txn in txns]
+    ledger.appendTxns = lambda x: (None, x)
     db_manager.register_new_database(TOKEN_LEDGER_ID, ledger, PruningState(storage))
     return db_manager
 

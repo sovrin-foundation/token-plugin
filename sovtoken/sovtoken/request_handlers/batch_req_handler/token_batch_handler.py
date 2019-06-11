@@ -2,6 +2,7 @@ import base58
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import UTXO_CACHE_LABEL
 from sovtoken.exceptions import TokenValueError
+from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
 
 from plenum.server.batch_handlers.batch_request_handler import BatchRequestHandler
 from plenum.server.database_manager import DatabaseManager
@@ -24,13 +25,4 @@ class TokenBatchHandler(BatchRequestHandler):
 
     def commit_batch(self, three_pc_batch, prev_handler_result=None):
         super().commit_batch(three_pc_batch, prev_handler_result)
-        state_root = base58.b58decode(three_pc_batch.state_root.encode()) if isinstance(
-            three_pc_batch.state_root, str) else three_pc_batch.state_root
-        if self.utxo_cache.first_batch_idr != state_root:
-            raise TokenValueError(
-                'state_root', state_root,
-                ("equal to utxo_cache.first_batch_idr hash {}"
-                 .format(self.utxo_cache.first_batch_idr))
-            )
-        self.utxo_cache.commit_batch()
-
+        commit_to_utxo_cache(self.utxo_cache, three_pc_batch.state_root)

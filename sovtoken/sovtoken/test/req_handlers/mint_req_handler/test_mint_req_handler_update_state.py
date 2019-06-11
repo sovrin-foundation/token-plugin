@@ -1,6 +1,6 @@
 
 def test_mint_handler_update_state_valid_txn(mint_txn, mint_handler, payment_address):
-    mint_handler.update_state(mint_txn, None, is_committed=True)
+    mint_handler.update_state(mint_txn, None, None, is_committed=True)
 
     token_state = mint_handler.state
     utxo_cache = mint_handler.database_manager.get_store("utxo_cache")
