@@ -1,14 +1,14 @@
 import pytest
 
-from sovtoken.constants import XFER_PUBLIC
+from sovtokenfees.test.constants import XFER_PUBLIC_FEES_ALIAS
 
 
 @pytest.fixture(
     scope='module',
     params=[
-        {XFER_PUBLIC: 0},  # no fees
-        {XFER_PUBLIC: 4},  # with fees
-    ], ids=lambda x: 'fees' if x[XFER_PUBLIC] else 'nofees'
+        {XFER_PUBLIC_FEES_ALIAS: 0},  # no fees
+        {XFER_PUBLIC_FEES_ALIAS: 4},  # with fees
+    ], ids=lambda x: 'fees' if x[XFER_PUBLIC_FEES_ALIAS] else 'nofees'
 )
 def fees(request):
     return request.param

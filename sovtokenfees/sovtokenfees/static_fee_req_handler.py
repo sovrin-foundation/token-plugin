@@ -177,7 +177,8 @@ class StaticFeesReqHandler(FeeReqHandler):
     def get_fees(self, request: Request):
         fees, proof = self._get_fees(is_committed=True, with_proof=True)
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, FEES: fees}
+                  f.REQ_ID.nm: request.reqId,
+                  FEES: fees}
         if proof:
             result[STATE_PROOF] = proof
         result.update(request.operation)
@@ -248,7 +249,7 @@ class StaticFeesReqHandler(FeeReqHandler):
                                           with_proof=with_proof)
         if with_proof:
             fees, proof = result
-            return fees, proof if fees is not None else ({}, None)
+            return (fees, proof) if fees is not None else ({}, proof)
         else:
             return result if result is not None else {}
 

@@ -2,6 +2,7 @@ import json
 
 import pytest
 from sovtokenfees.constants import FEES
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import add_fees_request_with_address, ensure_all_nodes_have_same_data, nyms_with_fees, \
     get_amount_from_token_txn, send_and_check_nym_with_fees
 
@@ -36,7 +37,7 @@ def test_validation_nym_with_zero_fees(helpers,
     """
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = 1
-    fees = {NYM: 0}
+    fees = {NYM_FEES_ALIAS: 0}
     helpers.general.do_set_fees(fees, fill_auth_map=False)
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, {FEES: fees}, seq_no, looper, [address_main],
                                                              current_amount)
@@ -44,10 +45,10 @@ def test_validation_nym_with_zero_fees(helpers,
 
     original_action = add_new_identity_owner
     original_constraint = auth_map.get(add_new_identity_owner.get_action_id())
-    original_constraint.set_metadata({'fees': NYM})
+    original_constraint.set_metadata({'fees': NYM_FEES_ALIAS})
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX, auth_type=NYM,
                                          field=original_action.field, new_value=original_action.value,
                                          old_value=None, constraint=original_constraint.as_dict)

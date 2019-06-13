@@ -17,3 +17,5 @@ XFER_PUBLIC = TokenTransactions.XFER_PUBLIC.value
 GET_UTXO = TokenTransactions.GET_UTXO.value
 
 ACCEPTABLE_TXN_TYPES = (MINT_PUBLIC, XFER_PUBLIC, GET_UTXO)
+
+UTXO_CACHE_LABEL = "utxo_cache"

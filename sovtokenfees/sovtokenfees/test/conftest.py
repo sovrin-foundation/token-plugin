@@ -1,19 +1,14 @@
 from sovtoken.test.conftest import build_wallets_from_data
 
-from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
-from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.constants import NYM, STEWARD, TARGET_NYM, TRUSTEE_STRING
 from sovtoken.test.helpers import libloader
 
 
 import pytest
 from enum import Enum, unique
-from collections import defaultdict
 
 from plenum import PLUGIN_CLIENT_REQUEST_FIELDS
 from plenum.common.txn_util import get_seq_no, get_payload_data
-from plenum.common.types import f
-from plenum.common.constants import DATA
 from plenum.test.helper import sdk_get_and_check_replies
 from plenum.test.conftest import getValueFromModule, sdk_wallet_handle
 from sovtoken.test.conftest import sdk_trustees, sdk_stewards
@@ -30,6 +25,7 @@ from sovtoken.main import integrate_plugin_in_node as enable_token
 
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 from sovtokenfees import CLIENT_REQUEST_FIELDS
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 from sovtokenfees.test.helper import (
     get_amount_from_token_txn,
     send_and_check_nym_with_fees, send_and_check_transfer,
@@ -52,13 +48,13 @@ class MintStrategy(Enum):
 # ######################
 # configuration fixtures
 # ######################
-
+8
 
 @pytest.fixture(scope="module")
 def fees(request):
     default_fees = {
-        NYM: 4,
-        XFER_PUBLIC: 8
+        NYM_FEES_ALIAS: 4,
+        XFER_PUBLIC_FEES_ALIAS: 8
     }
     fees = getValueFromModule(request, "TXN_FEES", default_fees)
     return fees
@@ -338,7 +334,7 @@ def send_and_check_xfer(
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs() if inputs is None else inputs
-        outputs = prepare_outputs(fees.get(XFER_PUBLIC, 0), inputs) if outputs is None else outputs
+        outputs = prepare_outputs(fees.get(XFER_PUBLIC_FEES_ALIAS, 0), inputs) if outputs is None else outputs
         res = send_and_check_xfer_h(looper, helpers, inputs, outputs)
         return res
 
@@ -351,7 +347,7 @@ def send_and_check_nym(
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs() if inputs is None else inputs
-        outputs = prepare_outputs(fees.get(NYM, 0), inputs) if outputs is None else outputs
+        outputs = prepare_outputs(fees.get(NYM_FEES_ALIAS, 0), inputs) if outputs is None else outputs
         res = send_and_check_nym_h(looper, helpers, inputs, outputs)
         return res
 
@@ -415,7 +411,7 @@ def send_and_check_transfer_curr_utxo(looper, helpers, fees, xfer_addresses, cur
         curr_utxo['amount'], curr_utxo['seq_no'], resp = send_and_check_transfer(
             helpers, addresses, fees, looper,
             curr_utxo['amount'], curr_utxo['seq_no'],
-            check_reply=check_reply, transfer_summ=transfer_summ - fees[XFER_PUBLIC]
+            check_reply=check_reply, transfer_summ=transfer_summ - fees[XFER_PUBLIC_FEES_ALIAS]
         )
 
         return curr_utxo, resp

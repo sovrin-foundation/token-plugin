@@ -8,6 +8,7 @@ from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, ED
 from indy_common.authorize.auth_cons_strategies import AbstractAuthStrategy
 from sovtokenfees.constants import FEES_FIELD_NAME
 from sovtokenfees.domain import build_path_for_set_fees
+from sovtokenfees.test.constants import txn_type_to_alias, alias_to_txn_type
 
 
 class HelperNode(sovtoken_helper_node.HelperNode):
@@ -61,7 +62,6 @@ class HelperNode(sovtoken_helper_node.HelperNode):
     @staticmethod
     def fill_auth_map_for_node(node, txn_type):
         validator = node.write_req_validator
-        keys = list()
         for rule_id, constraint in validator.auth_map.items():
             add_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
                                             prefix=ADD_PREFIX)
@@ -72,7 +72,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
                     edit_rule_id, rule_id):
                 constraint = copy.deepcopy(constraint)
                 if constraint:
-                    constraint.set_metadata({FEES_FIELD_NAME: txn_type})
+                    constraint.set_metadata({FEES_FIELD_NAME: txn_type_to_alias[txn_type]})
                     validator.auth_map[rule_id] = constraint
 
     def _fill_auth_map(self, txn_type):
@@ -80,5 +80,6 @@ class HelperNode(sovtoken_helper_node.HelperNode):
             self.fill_auth_map_for_node(node, txn_type)
 
     def set_fees_directly(self, fees):
-        for txn_type, fee in fees.items():
+        for fees_alias, fee in fees.items():
+            txn_type = alias_to_txn_type[fees_alias]
             self._fill_auth_map(txn_type)

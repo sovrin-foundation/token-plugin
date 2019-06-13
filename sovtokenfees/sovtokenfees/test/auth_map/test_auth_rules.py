@@ -26,13 +26,13 @@ from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
 
-fee_0 = ("0", 0)
-fee_1 = ("1", 1)
-fee_2 = ("2", 2)
-fee_3 = ("3", 3)
-fee_5 = ("5", 5)
-fee_6 = ("6", 6)
-fee_100 = ("100", 100)
+fee_0 = ("fee_0", 0)
+fee_1 = ("fee_1", 1)
+fee_2 = ("fee_2", 2)
+fee_3 = ("fee_3", 3)
+fee_5 = ("fee_5", 5)
+fee_6 = ("fee_6", 6)
+fee_100 = ("fee_100", 100)
 
 set_fees = dict([
     fee_0,
@@ -504,9 +504,9 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                        sdk_pool_handle, helpers, input_param, address,
                        sdk_wallet_trustees, sdk_wallet_stewards, sdk_wallet_clients,
                        sdk_wallet_trust_anchors):
-    helpers.general.do_set_fees(set_fees)
-    sdk_send_and_check_auth_rule_request(looper, sdk_wallet_trustee,
-                                         sdk_pool_handle, auth_action=ADD_PREFIX,
+    helpers.general.do_set_fees(set_fees, fill_auth_map=False)
+    sdk_send_and_check_auth_rule_request(looper, sdk_pool_handle, sdk_wallet_trustee,
+                                         auth_action=ADD_PREFIX,
                                          auth_type=ATTRIB, field="*", new_value="*",
                                          constraint=input_param.auth_constraint.as_dict)
     for req in input_param.valid_requests:

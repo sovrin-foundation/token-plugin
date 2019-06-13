@@ -96,7 +96,7 @@ class TokenReqHandler(LedgerRequestHandler):
                                   error)
 
         elif inputs_sum < required_amount:
-            error = 'Insufficient funds, sum of inputs is {}' \
+            error = 'Insufficient funds, sum of inputs is {} ' \
                     'but required amount is {}. sum of outputs: {}'.format(inputs_sum, required_amount, outputs_sum)
             if error_msg_suffix and isinstance(error_msg_suffix, str):
                 error += ' ' + error_msg_suffix

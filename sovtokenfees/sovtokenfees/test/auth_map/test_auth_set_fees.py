@@ -10,6 +10,7 @@ from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map, edit_fees
 from indy_common.constants import NODE, NYM
 from plenum.common.constants import STEWARD, TXN_TYPE
 from plenum.common.exceptions import RequestRejectedException
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 
 
 @pytest.fixture()
@@ -32,7 +33,7 @@ def steward_do_set_fees(helpers, fees):
 
 def set_fees(helpers, fees, trustee=True):
     new_fees = dict(fees)
-    new_fees[NYM] += 1
+    new_fees[NYM_FEES_ALIAS] += 1
     if trustee:
         helpers.general.do_set_fees(new_fees)
     else:
@@ -58,8 +59,8 @@ def test_set_fees(helpers,
     set_fees(helpers, fees)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=EDIT_PREFIX,
                                          auth_type=SET_FEES,
                                          field='*',
@@ -73,8 +74,8 @@ def test_set_fees(helpers,
     set_fees(helpers, fees, trustee=False)
 
     sdk_send_and_check_auth_rule_request(looper,
-                                         sdk_wallet_trustee,
                                          sdk_pool_handle,
+                                         sdk_wallet_trustee,
                                          auth_action=EDIT_PREFIX,
                                          auth_type=SET_FEES,
                                          field='*',

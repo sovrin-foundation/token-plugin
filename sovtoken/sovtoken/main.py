@@ -3,7 +3,7 @@ from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks
 from sovtoken.client_authnr import TokenAuthNr
 from sovtoken.config import get_config
-from sovtoken.constants import TOKEN_LEDGER_ID
+from sovtoken.constants import TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
 from sovtoken.storage import get_token_hash_store, \
     get_token_ledger, get_token_state, get_utxo_cache
 from sovtoken.token_req_handler import TokenReqHandler
@@ -42,4 +42,5 @@ def integrate_plugin_in_node(node):
     node.db_manager.register_new_database(lid=TOKEN_LEDGER_ID,
                                           ledger=ledger,
                                           state=state)
+    node.db_manager.register_new_store(label=UTXO_CACHE_LABEL, store=utxo_cache)
     return node

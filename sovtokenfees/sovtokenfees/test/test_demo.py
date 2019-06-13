@@ -5,11 +5,12 @@ from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO,
 from sovtoken.test.demo.demo_helpers import demo_logger
 
 from indy_common.constants import NYM
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 
 MINT_TOKEN_AMOUNT = 100
 
 TXN_FEES = {
-    NYM: 5
+    NYM_FEES_ALIAS: 5
 }
 
 
@@ -30,7 +31,7 @@ step2_info = """
 """
 def set_fee_for_nym_transactions(helpers):
     result = helpers.general.do_set_fees(TXN_FEES)
-    assert get_payload_data(result)[FEES][NYM] == TXN_FEES[NYM]
+    assert get_payload_data(result)[FEES][NYM_FEES_ALIAS] == TXN_FEES[NYM_FEES_ALIAS]
 
     demo_logger.log_header(step2_info)
     demo_logger.log_blue("Set sovtokenfees equal to:")
@@ -43,7 +44,7 @@ step3_info = """
 """
 def check_fee_set_for_nym_transactions(helpers):
     fees = helpers.general.do_get_fees()[FEES]
-    assert fees[NYM] == TXN_FEES[NYM]
+    assert fees[NYM_FEES_ALIAS] == TXN_FEES[NYM_FEES_ALIAS]
 
     demo_logger.log_header(step3_info)
     demo_logger.log_blue("Ledger's fees equaled:")
@@ -85,7 +86,7 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
     nym_request = helpers.request.add_fees(
         nym_request,
         client_utxos,
-        fee_amount=TXN_FEES[NYM],
+        fee_amount=TXN_FEES[NYM_FEES_ALIAS],
         change_address=client_address
     )[0]
 
@@ -109,7 +110,7 @@ step6_info = """
 """
 def check_tokens_at_address(helpers, client_address):
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
-    expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
+    expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM_FEES_ALIAS]
     assert client_utxos[0][PAYMENT_ADDRESS] == client_address
     assert client_utxos[0][AMOUNT] == expected_amount
 
@@ -128,13 +129,13 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
         fee_data = get_payload_data(fee_txn)
         assert fee_data[OUTPUTS] == [{
             ADDRESS: client_address.replace("pay:sov:", ""),
-            AMOUNT: MINT_TOKEN_AMOUNT - TXN_FEES[NYM]
+            AMOUNT: MINT_TOKEN_AMOUNT - TXN_FEES[NYM_FEES_ALIAS]
         }]
-        assert fee_data[FEES] == TXN_FEES[NYM]
+        assert fee_data[FEES] == TXN_FEES[NYM_FEES_ALIAS]
         assert get_seq_no(fee_txn) == 2
 
     nym_seq_no = get_seq_no(nym_result)
-    helpers.node.assert_deducted_fees(NYM, nym_seq_no, TXN_FEES[NYM])
+    helpers.node.assert_deducted_fees(NYM, nym_seq_no, TXN_FEES[NYM_FEES_ALIAS])
 
     formatted_txn = demo_logger.format_json(transactions[0])
     demo_logger.log_header(step7_info)

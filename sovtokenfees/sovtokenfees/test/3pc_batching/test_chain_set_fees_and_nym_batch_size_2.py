@@ -2,6 +2,7 @@ import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO
 
 from indy_common.constants import NYM
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
 
@@ -64,7 +65,7 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
     seq_no = get_seq_no(mint_tokens)
 
     # Set fees and some config txn
-    fees_nym_2 = {NYM: 2}
+    fees_nym_2 = {NYM_FEES_ALIAS: 2}
     fees_2_resp = helpers.general.set_fees_without_waiting(fees_nym_2)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)
@@ -79,7 +80,7 @@ def test_chain_set_fees_and_nym_batch_size_2(looper, helpers,
                                                  current_amount,
                                                  check_reply=False)
     # Set fees for NYM to 3
-    fees_nym_3 = {NYM: 3}
+    fees_nym_3 = {NYM_FEES_ALIAS: 3}
     fees_3_resp = helpers.general.set_fees_without_waiting(fees_nym_3)
     sdk_pool_config_sent(looper, sdk_pool_handle,
                          sdk_wallet_trustee, poolConfigWTFF)

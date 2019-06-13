@@ -1,14 +1,8 @@
-import json
-
-from plenum.common.constants import NYM
-from plenum.common.txn_util import get_seq_no
-from sovtoken.constants import XFER_PUBLIC, ADDRESS, AMOUNT, SEQNO
-from sovtokenfees.constants import FEES
-
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 
 TXN_FEES = {
-    NYM: 0,
-    XFER_PUBLIC: 8
+    NYM_FEES_ALIAS: 0,
+    XFER_PUBLIC_FEES_ALIAS: 8
 }
 
 

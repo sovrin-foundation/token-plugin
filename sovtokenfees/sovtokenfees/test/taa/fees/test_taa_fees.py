@@ -3,6 +3,7 @@ from sovtokenfees.constants import FEES
 
 from plenum.common.constants import NYM
 from plenum.common.exceptions import RequestRejectedException
+from sovtokenfees.test.constants import NYM_FEES_ALIAS
 
 
 def test_nym_with_fees_with_taa(helpers,
@@ -17,7 +18,7 @@ def test_nym_with_fees_with_taa(helpers,
     request = helpers.request.add_fees(
         request,
         utxos,
-        fees_set[FEES][NYM],
+        fees_set[FEES][NYM_FEES_ALIAS],
         change_address=addresses[0]
     )[0]
     helpers.sdk.sdk_send_and_check([request])
@@ -35,7 +36,7 @@ def test_nym_with_fees_no_taa(helpers,
     request = helpers.request.add_fees(
         request,
         utxos,
-        fees_set[FEES][NYM],
+        fees_set[FEES][NYM_FEES_ALIAS],
         change_address=addresses[0]
     )[0]
     with pytest.raises(RequestRejectedException):

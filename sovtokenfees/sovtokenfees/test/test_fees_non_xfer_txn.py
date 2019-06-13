@@ -14,6 +14,7 @@ from sovtoken.test.wallet import Address
 from sovtokenfees.constants import FEES, REF
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import INPUTS, OUTPUTS, AMOUNT, ADDRESS, SEQNO, PAYMENT_ADDRESS
+from sovtokenfees.test.constants import NYM_FEES_ALIAS, txn_type_to_alias
 from sovtokenfees.test.helper import pay_fees, add_fees_request_with_address, pay_fees_inner
 
 
@@ -62,7 +63,7 @@ def test_invalid_fees_numeric(helpers, mint_tokens):
     def _test_invalid_fees(amount, fees=False):
         if fees:
             fees_amount = {
-                NYM: fees
+                NYM_FEES_ALIAS: fees
             }
             helpers.general.do_set_fees(fees_amount)
 
@@ -100,7 +101,7 @@ def test_zero_fees(
     The fee amount is zero
     """
 
-    helpers.general.do_set_fees({NYM: 0})
+    helpers.general.do_set_fees({NYM_FEES_ALIAS: 0})
 
     req = helpers.request.nym()
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
@@ -124,7 +125,8 @@ def test_insufficient_fees(
     The fee amount is less than required
     """
     req = helpers.request.nym()
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]] - 1
+    txn_type = req.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]] - 1
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     helpers.request.add_fees(
         req,
@@ -147,7 +149,8 @@ def test_fees_larger(
     The fee amount is more than required
     """
     req = helpers.request.nym()
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]] + 1
+    txn_type = req.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]] + 1
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     helpers.request.add_fees(
         req,
@@ -174,7 +177,7 @@ def test_invalid_address(helpers, address_main_inner, mint_tokens_inner, fees, f
         request = helpers.inner.request.add_fees(
             request,
             utxos,
-            fees[NYM],
+            fees[NYM_FEES_ALIAS],
             change_address=[address]
         )
 
@@ -205,7 +208,8 @@ def test_fees_too_many_outputs(
     More than one output address
     """
     req = helpers.request.nym()
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
+    txn_type = req.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]]
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
     req = helpers.request.add_fees(
         req,
@@ -226,7 +230,7 @@ def test_fees_output_with_zero_tokens(
     """
     A fee output can't be set to zero tokens.
     """
-    outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM])}]
+    outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM_FEES_ALIAS])}]
     result = helpers.general.do_mint(outputs)
     seqno = get_seq_no(result)
 
@@ -250,7 +254,8 @@ def test_no_fees_when_required(
     No fees, both null fee field and no fee field
     """
     req = helpers.request.nym()
-    fee_amount = fees_set[FEES][req.operation[TXN_TYPE]]
+    txn_type = req.operation[TXN_TYPE]
+    fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]]
     assert(fee_amount != 0)
 
     with pytest.raises(RequestRejectedException):
@@ -437,7 +442,7 @@ def test_fees_utxo_reuse(
     nym_fees_data = get_payload_data(fees_paid_manually[FEES])
     inputs = nym_fees_data[INPUTS]
     outputs = nym_fees_data[OUTPUTS]
-    fee_amount = fees_set[FEES][NYM]
+    fee_amount = fees_set[FEES][NYM_FEES_ALIAS]
 
     req = helpers.request.nym()
     fee_sigs = helpers.inner.request.fees_signatures(
@@ -453,7 +458,7 @@ def test_fees_utxo_reuse(
 
 
 def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens):
-    fees = {NYM: 1}
+    fees = {NYM_FEES_ALIAS: 1}
     helpers.general.do_set_fees(fees)
     utxos = helpers.general.get_utxo_addresses([address_main])[0]
 
@@ -461,7 +466,7 @@ def test_append_fees_to_different_transaction(helpers, address_main, mint_tokens
     request = helpers.request.add_fees(
         request,
         utxos,
-        fees[NYM],
+        fees[NYM_FEES_ALIAS],
         change_address=address_main
     )[0]
 
