@@ -6,8 +6,6 @@ from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
 from indy_common.authorize.auth_constraints import AuthConstraint, AuthConstraintForbidden
 from sovtokenfees.constants import SET_FEES, FEES
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map, edit_fees
-
-from indy_common.constants import NODE, NYM
 from plenum.common.constants import STEWARD, TXN_TYPE
 from plenum.common.exceptions import RequestRejectedException
 from sovtokenfees.test.constants import NYM_FEES_ALIAS
