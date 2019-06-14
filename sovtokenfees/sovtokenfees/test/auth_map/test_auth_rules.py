@@ -6,7 +6,7 @@ import pytest
 from indy.did import replace_keys_start
 from indy.ledger import build_attrib_request
 from indy_common.authorize.auth_constraints import AuthConstraint, ROLE, AuthConstraintOr, AbstractAuthConstraint, \
-    IDENTITY_OWNER, AuthConstraintAnd
+    IDENTITY_OWNER, AuthConstraintAnd, AuthConstraintForbidden
 
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
@@ -354,6 +354,32 @@ input_params_map = [
                                  wallets={STEWARD: 1})
                ],
                invalid_requests=[
+                   RequestParams(fees=0,
+                                 wallets={IDENTITY_OWNER: 2})
+               ]),
+    # 14
+    InputParam(auth_constraint=AuthConstraintForbidden(),
+               valid_requests=[
+               ],
+               invalid_requests=[
+                   RequestParams(fees=0,
+                                 wallets={IDENTITY_OWNER: 2}),
+                   RequestParams(fees=fee_5[1],
+                                 wallets={STEWARD: 1}),
+                   RequestParams(fees=0,
+                                 wallets={STEWARD: 1})
+               ]),
+    # 15
+    InputParam(auth_constraint=AuthConstraintAnd([AuthConstraintForbidden(),
+                                                 AuthConstraint(STEWARD, 1),
+                                                 ]),
+               valid_requests=[
+               ],
+               invalid_requests=[
+                   RequestParams(fees=fee_5[1],
+                                 wallets={STEWARD: 1}),
+                   RequestParams(fees=0,
+                                 wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 2})
                ]),
