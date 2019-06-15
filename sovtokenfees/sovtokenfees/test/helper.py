@@ -267,6 +267,7 @@ def prepare_outputs(
     strategy=OutputsStrategy.transfer_some_equal, transfer_amount=20
 ):
     def divide_equal(output_addresses, amount):
+        assert output_addresses
         output_amount = amount // len(output_addresses)
         assert output_amount > 0
         res = {addr: output_amount for addr in output_addresses}
@@ -284,7 +285,6 @@ def prepare_outputs(
 
     if strategy == OutputsStrategy.transfer_all_equal:
         transfer_amount = total_output_amount
-        strategy = OutputsStrategy.transfer_some_equal
 
     assert transfer_amount >= 0
 

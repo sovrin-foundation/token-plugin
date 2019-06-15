@@ -330,7 +330,6 @@ def prepare_inputs(helpers, inputs_strategy, io_addresses):
         inputs_strategy = (
             _inputs_strategy if inputs_strategy is None else inputs_strategy
         )
-
         return prepare_inputs_h(helpers, addresses, strategy=inputs_strategy)
 
     return wrapped

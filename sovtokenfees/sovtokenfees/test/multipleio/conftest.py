@@ -1,27 +1,28 @@
 import pytest
 
+from plenum.test.conftest import getValueFromModule
+
 from sovtokenfees.test.conftest import MintStrategy, IOAddressesStatic
 from sovtokenfees.test.helper import InputsStrategy, OutputsStrategy
 
 
+def pytest_configure(config):
+    config.addinivalue_line(
+       "markers", "io_border(int): mark test to use specific inputs/outputs addresses division"
+    )
+    config.addinivalue_line(
+       "markers", "nym_fee(int): mark test to use specific nym fee value"
+    )
+
+
 @pytest.fixture
-def addresses_num():
-    return 4
+def addresses_num(request):
+    return getValueFromModule(request, "ADDRESSES_NUM", 4)
 
 
 @pytest.fixture
 def mint_strategy():
     return MintStrategy.all_equal
-
-
-@pytest.fixture
-def mint_utxos_num():
-    return 3
-
-
-@pytest.fixture
-def mint_amount():
-    return 1000
 
 
 @pytest.fixture(params=InputsStrategy, ids=lambda x: x.name)
