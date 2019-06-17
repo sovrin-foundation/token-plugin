@@ -1,9 +1,10 @@
 import json
 
 import pytest
+from common.serializers.json_serializer import JsonSerializer
 from sovtoken.constants import UTXO_CACHE_LABEL
 from sovtoken.utxo_cache import UTXOCache
-from sovtokenfees.req_handlers.fees_utils import BatchController
+from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
 from indy_common.constants import CONFIG_LEDGER_ID
 
@@ -16,6 +17,8 @@ from plenum.test.testing_utils import FakeSomething
 from state.pruning_state import PruningState
 from storage.helper import initKeyValueStorage
 
+in_memory_serializer = JsonSerializer()
+
 
 @pytest.fixture(scope="module")
 def db_manager(tconf):
@@ -23,7 +26,7 @@ def db_manager(tconf):
     storage = initKeyValueStorage(KeyValueStorageType.Memory,
                                   None,
                                   "configInMemoryStore",
-                                  txn_serializer=serialization.multi_sig_store_serializer)
+                                  txn_serializer=in_memory_serializer)
     ledger = get_fake_ledger()
     _db_manager.register_new_database(CONFIG_LEDGER_ID, ledger, PruningState(storage))
     return _db_manager
@@ -43,6 +46,7 @@ def bls_store(db_manager):
 def fees():
     return json.dumps({"nym_alias": 1, "attrib_alias": 2})
 
+
 @pytest.fixture(scope="module")
-def batch_controller():
-    return BatchController()
+def fees_tracker():
+    return BatchFeesTracker()

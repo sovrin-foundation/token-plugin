@@ -32,12 +32,12 @@ def integrate_plugin_in_node(node):
 
     token_authnr = node.clientAuthNr.get_authnr_by_type(TokenAuthNr)
     if not token_authnr:
-        raise ImportError('sovtoken plugin should be loaded, ' # noqa
-                                  'authenticator not found')
+        raise ImportError('sovtoken plugin should be loaded, '  # noqa
+                          'authenticator not found')
     token_req_handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
     if not token_req_handler:
-        raise ImportError('sovtoken plugin should be loaded, request ' # noqa
-                                  'handler not found')
+        raise ImportError('sovtoken plugin should be loaded, request '  # noqa
+                          'handler not found')
 
     # `handle_xfer_public_txn` in `TokenReqHandler` checks if the sum of inputs match
     # exactly the sum of outputs. Since the check to match inputs and outputs is done
@@ -96,5 +96,27 @@ def integrate_plugin_in_node(node):
                                       three_pc_handler.add_to_ordered)
     node.master_replica.register_hook(ReplicaHooks.APPLY_PPR,
                                       three_pc_handler.check_recvd_pre_prepare)
+
+    # Pluggable request handlers initialization
+
+    # Firstly registered handlers must be txn main purposed
+    # node.write_request_manager.register_req_handler(SetFeesHandler(node.db_manager,
+    #                                                   node.write_req_validator))
+    # Replace XFER handler
+    # del node.write_request_manager.request_handlers[XFER_PUBLIC][-1]
+    # node.write_request_manager.register_req_handler(XferFeeHandler(
+    #                                node.db_manager, node.write_req_validator))
+
+    # Then common for many txns hadnlers
+    # node.write_request_manager.register_req_handler(DomainFeeHandler(
+    #                                node.db_manager, node.write_req_validator))
+    # node.write_request_manager.register_req_handler(UTXOFeeHandler(
+    #                                node.db_manager, node.write_req_validator))
+
+    # node.write_request_manager.register_batch_handler(DomainFeeBatchHandler(
+    #                            node.db_manager, node.fees_tracker, node.token_tracker))
+
+    # node.read_request_manager.register_req_handler(GetFeeHandler(node.db_manager))
+    # node.read_request_manager.register_req_handler(GetFeesHandler(node.db_manager))
 
     return node

@@ -10,7 +10,6 @@ from sovtoken.token_req_handler import TokenReqHandler
 
 
 def integrate_plugin_in_node(node):
-
     node.config = get_config(node.config)
     node.write_req_validator.auth_map.update(sovtoken_auth_map)
 
@@ -43,4 +42,16 @@ def integrate_plugin_in_node(node):
                                           ledger=ledger,
                                           state=state)
     node.db_manager.register_new_store(label=UTXO_CACHE_LABEL, store=utxo_cache)
+
+    # Pluggable request handlers initialization
+    # node.write_request_manager.register_batch_handler(TokenBatchHandler(node.db_manager))
+    # node.write_request_manager.register_batch_handler(UTXOBatchHandler(node.db_manager))
+
+    # node.write_request_manager.register_req_handler(XferHandler(node.db_manager,
+    #                                                   node.write_req_validator))
+    # node.write_request_manager.register_req_handler(MintHandler(node.db_manager,
+    #                                                   node.write_req_validator))
+
+    # node.read_request_manager.register_req_handler(GetUtxoHandler(node.db_manager))
+
     return node

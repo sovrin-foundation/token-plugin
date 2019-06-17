@@ -9,5 +9,5 @@ def test_domain_fee_handler_update_state(domain_fee_handler, nym_request_with_fe
 
     assert int(token_state.get((payment_address[8:] + ":2").encode(), isCommitted=False)) == 9
     assert utxo_cache.get(payment_address[8:]) == '2:9'
-    assert domain_fee_handler._batch_controller.fees_in_current_batch == 1
-    assert domain_fee_handler._batch_controller.has_deducted_fees(NYM, 1)
+    assert domain_fee_handler._fees_tracker.fees_in_current_batch == 1
+    assert domain_fee_handler._fees_tracker.has_deducted_fees(NYM, 1)

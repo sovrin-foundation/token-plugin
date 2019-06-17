@@ -2,7 +2,7 @@ from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import UTXO_CACHE_LABEL
 from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
 from sovtokenfees.constants import FEES
-from sovtokenfees.req_handlers.fees_utils import BatchController
+from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
 from common.serializers.serialization import txn_root_serializer
 from plenum.common.constants import DOMAIN_LEDGER_ID
@@ -14,10 +14,10 @@ from stp_core.common.log import getlogger
 logger = getlogger()
 
 
-class FeeBatchHandler(BatchRequestHandler):
-    def __init__(self, database_manager, batch_controller: BatchController, token_tracker):
+class DomainFeeBatchHandler(BatchRequestHandler):
+    def __init__(self, database_manager, fees_tracker: BatchFeesTracker, token_tracker):
         super().__init__(database_manager, DOMAIN_LEDGER_ID)
-        self._batch_controller = batch_controller
+        self._fees_tracker = fees_tracker
         self._token_tracker = token_tracker
 
     @property
@@ -36,10 +36,10 @@ class FeeBatchHandler(BatchRequestHandler):
         self._token_tracker.apply_batch(self.token_state.headHash,
                                         self.token_ledger.uncommitted_root_hash,
                                         self.token_ledger.uncommitted_size)
-        if self._batch_controller.fees_in_current_batch > 0:
+        if self._fees_tracker.fees_in_current_batch > 0:
             state_root = self.token_state.headHash
             self.utxo_cache.create_batch_from_current(state_root)
-            self._batch_controller.fees_in_current_batch = 0
+            self._fees_tracker.fees_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id, prev_handler_result=None):
         uncommitted_hash, uncommitted_txn_root, txn_count = self._token_tracker.reject_batch()
@@ -55,8 +55,7 @@ class FeeBatchHandler(BatchRequestHandler):
         committed_txns = prev_handler_result
         token_state_root, token_txn_root, _ = self._token_tracker.commit_batch()
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
-                                       if self._batch_controller.has_deducted_fees(get_type(t), get_seq_no(t))
-                                       ]
+                                       if self._fees_tracker.has_deducted_fees(get_type(t), get_seq_no(t))]
         if len(committed_seq_nos_with_fees) > 0:
             # This is a fake txn only for commit to token ledger
             token_fake_three_pc_batch = ThreePcBatch(ledger_id=TOKEN_LEDGER_ID,
@@ -68,14 +67,13 @@ class FeeBatchHandler(BatchRequestHandler):
                                                      txn_root=txn_root_serializer.serialize(token_txn_root),
                                                      primaries=three_pc_batch.primaries,
                                                      valid_digests=[i for i in range(len(committed_seq_nos_with_fees))])
-            r = super()._commit(self.token_ledger, self.token_state, token_fake_three_pc_batch)
+            committed_token_txns = super()._commit(self.token_ledger, self.token_state, token_fake_three_pc_batch)
             commit_to_utxo_cache(self.utxo_cache, token_state_root)
             i = 0
+            # We are adding fees txn to the reply, so that client could get information about token transition
             for txn in committed_txns:
                 if get_seq_no(txn) in committed_seq_nos_with_fees:
-                    txn[FEES] = r[i]
+                    txn[FEES] = committed_token_txns[i]
                     i += 1
-            self._batch_controller.fees_in_current_batch = 0
+            self._fees_tracker.fees_in_current_batch = 0
         return committed_txns
-
-
