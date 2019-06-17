@@ -43,7 +43,7 @@ class HelperWallet():
         address = self._looper.loop.run_until_complete(address)
         addr = Address()
         addr.address = address
-        self.address_map[address.replace("pay:sov:", "")] = addr
+        self.address_map[address] = addr
         return address
 
     def create_new_addresses(self, n):
@@ -99,7 +99,7 @@ class HelperWallet():
 
     def _update_inputs(self, inputs):
         for inp in inputs:
-            addr = inp["address"]
+            addr = "pay:sov:{}".format(inp["address"])
             seq_no = inp["seqNo"]
             if addr in self.address_map:
                 self.address_map[addr].spent(seq_no)
@@ -107,7 +107,7 @@ class HelperWallet():
     def _update_outputs(self, outputs, txn_seq_no=None):
         for output in outputs:
             try:
-                addr = output["address"]
+                addr = "pay:sov:{}".format(output["address"])
                 val = output["amount"]
                 try:
                     seq_no = output["seqNo"]

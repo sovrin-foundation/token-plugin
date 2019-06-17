@@ -9,7 +9,7 @@ from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
 from plenum.common.types import OPERATION
 
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
-from indy_common.authorize.auth_constraints import ROLE, ConstraintCreator
+from indy_common.authorize.auth_constraints import ROLE, ConstraintCreator, AuthConstraintForbidden
 from indy_common.authorize.auth_map import auth_map
 from indy_common.constants import NYM, TRUST_ANCHOR, AUTH_ACTION, AUTH_TYPE, FIELD, NEW_VALUE, \
     OLD_VALUE, GET_AUTH_RULE, SCHEMA, CONSTRAINT
@@ -70,7 +70,6 @@ def test_get_one_auth_rule_transaction(looper,
     assert result[CONSTRAINT] == auth_map.get(str_key).as_dict
 
 
-@pytest.mark.skip(reason="INDY-2077")
 def test_get_one_disabled_auth_rule_transaction(looper,
                                                 sdk_wallet_trustee,
                                                 sdk_pool_handle):
@@ -83,7 +82,7 @@ def test_get_one_disabled_auth_rule_transaction(looper,
     result = resp["result"][DATA]
     assert len(result) == 1
     _check_key(key, result[0])
-    assert result[0][CONSTRAINT] == {}
+    assert result[0][CONSTRAINT] == AuthConstraintForbidden().as_dict
 
 
 def test_get_all_auth_rule_transactions(looper,

@@ -147,6 +147,8 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                        current_fees))
 
     def _validate_metadata(self, current_fees, constraint: AuthConstraint, wrong_aliases):
+        if constraint.constraint_id == ConstraintsEnum.FORBIDDEN_CONSTRAINT_ID:
+            return
         if constraint.constraint_id != ConstraintsEnum.ROLE_CONSTRAINT_ID:
             for constr in constraint.auth_constraints:
                 self._validate_metadata(current_fees, constr, wrong_aliases)
