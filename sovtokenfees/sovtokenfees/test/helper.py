@@ -269,7 +269,6 @@ def prepare_outputs(
     def divide_equal(output_addresses, amount):
         assert output_addresses
         output_amount = amount // len(output_addresses)
-        assert output_amount > 0
         res = {addr: output_amount for addr in output_addresses}
         res[output_addresses[-1]] += amount % len(output_addresses)
         return res
@@ -293,10 +292,9 @@ def prepare_outputs(
     assert change >= 0
 
     # transfer is divided among outputs
-    if transfer_amount:
+    outputs = {}
+    if addresses:
         outputs = divide_equal(addresses, transfer_amount)
-    else:
-        outputs = {}
 
     # change goes to any input presented in outputs as well or first input address
     if change:
