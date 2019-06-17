@@ -8,9 +8,11 @@ from sovtokenfees.test.constants import NYM_FEES_ALIAS
 
 from sovtokenfees.test.view_change.helper import scenario_txns_during_view_change
 
+from sovtokenfees.test.helper import InputsStrategy
 
-ADDRESSES_NUM = 2
-MINT_UTXOS_NUM = 1
+
+MINT_UTXOS_NUM = 6
+INPUTS_STRATEGY = InputsStrategy.first_utxo_only
 
 
 @pytest.fixture(
@@ -26,12 +28,15 @@ def fees(request):
 
 def test_nym_during_view_change(
         looper,
+        helpers,
         nodeSetWithIntegratedTokenPlugin,
-        sdk_pool_handle, sdk_wallet_client,
         fees,
         fees_set,
-        curr_utxo,
-        send_and_check_nym_with_fees_curr_utxo
+        mint_multiple_tokens,
+        send_and_check_nym,
+        io_addresses,
+        sdk_pool_handle,
+        sdk_wallet_client
 ):
     def send_txns_invalid():
         with pytest.raises(RequestRejectedException, match='Rule for this action is'):
@@ -39,8 +44,9 @@ def test_nym_during_view_change(
 
     scenario_txns_during_view_change(
         looper,
+        helpers,
         nodeSetWithIntegratedTokenPlugin,
-        curr_utxo,
-        send_and_check_nym_with_fees_curr_utxo,
+        io_addresses,
+        send_and_check_nym,
         send_txns_invalid=(None if fees[NYM_FEES_ALIAS] else send_txns_invalid)
     )
