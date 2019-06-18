@@ -20,6 +20,7 @@ def prepare_fees(db_manager, fees):
     config_state = db_manager.get_state(CONFIG_LEDGER_ID)
     path = build_path_for_set_fees()
     config_state.set(path.encode(), fees)
+    config_state.commit()
 
 
 @pytest.fixture()
