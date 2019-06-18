@@ -10,8 +10,8 @@ from indy_common.authorize.auth_constraints import AuthConstraint, ROLE, AuthCon
 
 from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
-from indy_common.constants import NYM, TRUST_ANCHOR, NODE, POOL_UPGRADE, POOL_RESTART, VALIDATOR_INFO, GET_SCHEMA, \
-    ATTRIB, TRUST_ANCHOR_STRING
+from indy_common.constants import NYM, ENDORSER, NODE, POOL_UPGRADE, POOL_RESTART, VALIDATOR_INFO, GET_SCHEMA, \
+    ATTRIB, ENDORSER_STRING
 
 from indy_common.authorize.auth_actions import EDIT_PREFIX, ADD_PREFIX
 from libnacl.secret import SecretBox
@@ -147,7 +147,7 @@ input_params_map = [
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 2}),
                    RequestParams(fees=fee_100[1],
-                                 wallets={TRUST_ANCHOR: 1}),
+                                 wallets={ENDORSER: 1}),
                    RequestParams(fees=fee_100[1],
                                  wallets={TRUSTEE: 1})
                ]),
@@ -172,7 +172,7 @@ input_params_map = [
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=fee_1[1],
-                                 wallets={TRUST_ANCHOR: 1}),
+                                 wallets={ENDORSER: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1})
                ]),
@@ -232,14 +232,14 @@ input_params_map = [
                                                  AuthConstraint(TRUSTEE, 1),
                                                  AuthConstraint(STEWARD, 1,
                                                                 metadata={FEES_FIELD_NAME: fee_0[0]}),
-                                                 AuthConstraint(TRUST_ANCHOR, 1),
+                                                 AuthConstraint(ENDORSER, 1),
                                                  ]),
                valid_requests=[
                    RequestParams(wallets={TRUSTEE: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
-                                 wallets={TRUST_ANCHOR: 1}),
+                                 wallets={ENDORSER: 1}),
                    RequestParams(fees=fee_5[1],
                                  wallets={IDENTITY_OWNER: 1}),
                    RequestParams(fees=0,
@@ -413,7 +413,7 @@ def sdk_wallet_stewards(looper,
 
 
 @pytest.fixture(scope='module')
-def sdk_wallet_trust_anchors(looper,
+def sdk_wallet_endorsers(looper,
                              sdk_wallet_trustee,
                              sdk_pool_handle):
     sdk_wallet_stewards = []
@@ -421,8 +421,8 @@ def sdk_wallet_trust_anchors(looper,
         wallet = sdk_add_new_nym(looper,
                                  sdk_pool_handle,
                                  sdk_wallet_trustee,
-                                 alias='trust_anchors{}'.format(i),
-                                 role=TRUST_ANCHOR_STRING)
+                                 alias='endorsers{}'.format(i),
+                                 role=ENDORSER_STRING)
         sdk_wallet_stewards.append(wallet)
     return sdk_wallet_stewards
 
@@ -478,12 +478,12 @@ def add_fees_request_with_address(helpers, fee_amount, request, address):
 
 def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wallet_trustee,
                   sdk_wallet_trustees, sdk_wallet_stewards,
-                  sdk_wallet_clients, sdk_wallet_trust_anchors):
+                  sdk_wallet_clients, sdk_wallet_endorsers):
     print(wallets_count)
     wallets = sdk_wallet_trustees[:wallets_count.get(TRUSTEE, 0)] + \
               sdk_wallet_stewards[:wallets_count.get(STEWARD, 0)] + \
               sdk_wallet_clients[:wallets_count.get(IDENTITY_OWNER, 0)] + \
-              sdk_wallet_trust_anchors[:wallets_count.get(TRUST_ANCHOR, 0)]
+              sdk_wallet_endorsers[:wallets_count.get(ENDORSER, 0)]
     # prepare owner parameter
     if owner == TRUSTEE:
         sender_wallet = sdk_wallet_trustees[0]
@@ -491,8 +491,8 @@ def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wall
         sender_wallet = sdk_wallet_stewards[0]
     elif owner == IDENTITY_OWNER:
         sender_wallet = sdk_wallet_clients[0]
-    elif owner == TRUST_ANCHOR:
-        sender_wallet = sdk_wallet_trust_anchors[0]
+    elif owner == ENDORSER:
+        sender_wallet = sdk_wallet_endorsers[0]
     else:
         sender_wallet = wallets[0]
     target_dest = sdk_wallet_trustee[1] if owner == "-1" else sender_wallet[1]
@@ -529,7 +529,7 @@ def add_attribute(looper, sdk_wallet_handle, attrib,
 def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                        sdk_pool_handle, helpers, input_param, address,
                        sdk_wallet_trustees, sdk_wallet_stewards, sdk_wallet_clients,
-                       sdk_wallet_trust_anchors):
+                       sdk_wallet_endorsers):
     helpers.general.do_set_fees(set_fees, fill_auth_map=False)
     sdk_send_and_check_auth_rule_request(looper, sdk_pool_handle, sdk_wallet_trustee,
                                          auth_action=ADD_PREFIX,
@@ -539,11 +539,11 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
         _send_request(looper, helpers, req.fees, req.wallets, address,
                       req.owner, sdk_wallet_trustee,
                       sdk_wallet_trustees, sdk_wallet_stewards,
-                      sdk_wallet_clients, sdk_wallet_trust_anchors)
+                      sdk_wallet_clients, sdk_wallet_endorsers)
 
     for req in input_param.invalid_requests:
         with pytest.raises(RequestRejectedException, match="UnauthorizedClientRequest"):
             _send_request(looper, helpers, req.fees, req.wallets, address,
                           req.owner, sdk_wallet_trustee,
                           sdk_wallet_trustees, sdk_wallet_stewards,
-                          sdk_wallet_clients, sdk_wallet_trust_anchors)
+                          sdk_wallet_clients, sdk_wallet_endorsers)
