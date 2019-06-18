@@ -50,9 +50,10 @@ class DomainFeeHandler(WriteRequestHandler):
             txn = reqToTxn(txn)
             self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
             _, txns = self.token_ledger.appendTxns([txn])
+            self._update_state(txns, is_committed)
             self._fees_tracker.fees_in_current_batch += 1
             self._fees_tracker.add_deducted_fees(txn_type, seq_no, fees)
-            return txns
+            return txn
 
     @property
     def utxo_cache(self):
@@ -71,3 +72,27 @@ class DomainFeeHandler(WriteRequestHandler):
 
     def _get_ref_for_txn_fees(self, seq_no):
         return '{}:{}'.format(self.ledger_id, seq_no)
+
+    def _update_state(self, txns, isCommitted=False):
+        for txn in txns:
+            self._update_state_with_single_txn(txn, is_committed=isCommitted)
+
+    def _update_state_with_single_txn(self, txn, is_committed=False):
+        for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
+            spend_input(
+                state=self.token_state,
+                utxo_cache=self.utxo_cache,
+                address=utxo[ADDRESS],
+                seq_no=utxo[SEQNO],
+                is_committed=is_committed
+            )
+        seq_no = get_seq_no(txn)
+        for output in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
+            add_new_output(
+                state=self.token_state,
+                utxo_cache=self.utxo_cache,
+                output=Output(
+                    output[ADDRESS],
+                    seq_no,
+                    output[AMOUNT]),
+                is_committed=is_committed)
