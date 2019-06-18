@@ -15,8 +15,6 @@ from plenum.server.request_handlers.handler_interfaces.write_request_handler imp
 
 from sovtokenfees.domain import build_path_for_set_fees
 
-from state.trie.pruning_trie import rlp_decode
-
 
 class SetFeesHandler(WriteRequestHandler):
     set_fees_validator_cls = SetFeesMsg
@@ -54,4 +52,3 @@ class SetFeesHandler(WriteRequestHandler):
         val = config_state_serializer.serialize(val)
         key = key.encode()
         self.state.set(key, val)
-

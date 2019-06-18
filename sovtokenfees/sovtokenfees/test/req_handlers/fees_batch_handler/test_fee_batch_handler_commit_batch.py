@@ -4,14 +4,14 @@ from plenum.common.constants import NYM, TXN_METADATA_SEQ_NO, TXN_METADATA, TXN_
 from plenum.server.batch_handlers.three_pc_batch import ThreePcBatch
 
 
-def test_fee_batch_handler_commit_batch(fee_batch_handler, batch_controller):
+def test_fee_batch_handler_commit_batch(fee_batch_handler, fees_tracker):
     utxo_cache = fee_batch_handler.database_manager.get_store(UTXO_CACHE_LABEL)
     utxo_cache.set('1', '2')
     fee_batch_handler.database_manager.get_state(TOKEN_LEDGER_ID).set('1'.encode(), '2'.encode())
-    batch_controller.fees_in_current_batch = 1
+    fees_tracker.fees_in_current_batch = 1
     fee_batch_handler.post_batch_applied(None, None)
 
-    batch_controller.add_deducted_fees(NYM, 1, 1)
+    fees_tracker.add_deducted_fees(NYM, 1, 1)
     prev_res = [{
         TXN_METADATA: {
             TXN_METADATA_SEQ_NO: 1
@@ -22,7 +22,7 @@ def test_fee_batch_handler_commit_batch(fee_batch_handler, batch_controller):
     }]
 
     three_pc_batch = ThreePcBatch(0, 0, 0, 3, 1, 'state', 'txn',
-                      ['a', 'b', 'c'], ['a'])
+                                  ['a', 'b', 'c'], ['a'])
 
     fee_batch_handler.commit_batch(three_pc_batch, prev_res)
     assert not len(utxo_cache.current_batch_ops)

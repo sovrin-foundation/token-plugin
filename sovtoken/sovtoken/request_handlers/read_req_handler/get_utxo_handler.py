@@ -16,9 +16,8 @@ from state.trie.pruning_trie import rlp_decode
 
 
 class GetUtxoHandler(ReadRequestHandler):
-    def __init__(self, database_manager: DatabaseManager, bls_store):
+    def __init__(self, database_manager: DatabaseManager):
         super().__init__(database_manager, TokenTransactions.GET_UTXO.value, TOKEN_LEDGER_ID)
-        self._bls_store = bls_store
 
     def static_validation(self, request: Request):
         error = txt_get_utxo_validate(request)
@@ -35,7 +34,7 @@ class GetUtxoHandler(ReadRequestHandler):
         proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
                                                                          serialize=True,
                                                                          get_value=True)
-        multi_sig = self._bls_store.get(encoded_root_hash)
+        multi_sig = self.database_manager.bls_store.get(encoded_root_hash)
         if multi_sig:
             encoded_proof = proof_nodes_serializer.serialize(proof)
             proof = {
@@ -64,4 +63,3 @@ class GetUtxoHandler(ReadRequestHandler):
 
         result.update(request.operation)
         return result
-

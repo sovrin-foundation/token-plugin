@@ -4,7 +4,7 @@
 
 1) POOL_UPGRADE with the `indy-node` package version 1.6.70 to support `sovrin` package in POOL_UPGRADE txn
 2) Upgrade the CLI (locally) to 1.6.6 libindy, indy-CLI
-3) POOL_UPGRADE with the `sovrin` package version `1.1.20` to have TDE-ready version of plugins installed. **TODO:  This version is still a stub. Define first version with plugins and with trust anchor restriction**
+3) POOL_UPGRADE with the `sovrin` package version `1.1.20` to have TDE-ready version of plugins installed. **TODO:  This version is still a stub. Define first version with plugins and with endorser restriction**
 It might be done with [POOL_UPGRADE](https://github.com/hyperledger/indy-node/blob/master/docs/pool-upgrade.md) transaction. You can do it from `indy-cli` with this command:
 ```
 Command:
@@ -131,8 +131,8 @@ Tokens can be distributed via `XFER_PUBLIC`. To make it we need to go through th
 
 Setting fees process is similar to minting -- you need the build transaction, get the approval (signature) of trustees and to send it to the ledger. Details of this process are described in [setting fees guide](https://github.com/sovrin-foundation/libsovtoken/blob/master/doc/set_fees_process.md)
 
-## Configure the ledger to remove the need for trust anchors
+## Configure the ledger to remove the need for endorsers
 
-When fees are set for the transactions, we can allow to write to the ledger from DIDs that are not a trust anchor (of course if the have tokens to pay the fee). For this we need to make a POOL_UPGRADE once again for a `sovrin` package of version `1.1.21`. **TODO:  This version is still a stub yoo. Define first version with plugins and without trust anchor restriction**
+When fees are set for the transactions, we can allow to write to the ledger from DIDs that are not a endorser (of course if the have tokens to pay the fee). For this we need to make a POOL_UPGRADE once again for a `sovrin` package of version `1.1.21`. **TODO:  This version is still a stub yoo. Define first version with plugins and without endorser restriction**
  
     

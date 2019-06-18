@@ -5,7 +5,7 @@ from plenum.common.constants import BLS_LABEL, MULTI_SIGNATURE, ROOT_HASH, PROOF
 from state.trie.pruning_trie import rlp_decode
 
 
-class BatchController:
+class BatchFeesTracker:
     def __init__(self):
         self.fees_in_current_batch = 0
         self._deducted_fees = {}
@@ -24,12 +24,13 @@ def get_fee_from_state(state, fees_alias=None, is_committed=False, with_proof=Fa
     try:
         fees_key = build_path_for_set_fees(alias=fees_alias)
         if with_proof:
+            root_hash = state.committedHeadHash if is_committed else state.headHash
             proof, serz = state.generate_state_proof(fees_key,
+                                                     root=state.get_head_by_hash(root_hash),
                                                      serialize=True,
                                                      get_value=True)
             if serz:
-                serz = rlp_decode(serz)[0]
-            root_hash = state.committedHeadHash if is_committed else state.headHash
+                serz = state.get_decoded(serz)
             encoded_root_hash = state_roots_serializer.serialize(bytes(root_hash))
             multi_sig = bls_store.get(encoded_root_hash)
             if multi_sig:

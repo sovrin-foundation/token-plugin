@@ -3,7 +3,7 @@ from sovtoken.request_handlers.token_utils import spend_input, add_new_output
 from sovtoken.types import Output
 from sovtokenfees.constants import FEE_TXN, REF, FEES
 from sovtokenfees.fees_authorizer import FeesAuthorizer
-from sovtokenfees.req_handlers.fees_utils import BatchController
+from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, TXN_PAYLOAD, TXN_PAYLOAD_DATA
 from plenum.common.request import Request
@@ -15,9 +15,9 @@ from plenum.server.request_handlers.handler_interfaces.write_request_handler imp
 
 class DomainFeeHandler(WriteRequestHandler):
 
-    def __init__(self, db_manager: DatabaseManager, txn_id, batch_controller: BatchController):
+    def __init__(self, db_manager: DatabaseManager, txn_id, fees_tracker: BatchFeesTracker):
         super().__init__(db_manager, txn_id, DOMAIN_LEDGER_ID)
-        self._batch_controller = batch_controller
+        self._fees_tracker = fees_tracker
 
     def static_validation(self, request: Request):
         pass
@@ -51,8 +51,8 @@ class DomainFeeHandler(WriteRequestHandler):
             self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
             _, txns = self.token_ledger.appendTxns([txn])
             self._update_state(txns, is_committed)
-            self._batch_controller.fees_in_current_batch += 1
-            self._batch_controller.add_deducted_fees(txn_type, seq_no, fees)
+            self._fees_tracker.fees_in_current_batch += 1
+            self._fees_tracker.add_deducted_fees(txn_type, seq_no, fees)
             return txn
 
     @property

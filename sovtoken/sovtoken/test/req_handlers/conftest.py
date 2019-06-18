@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from base58 import b58decode
 from sovtoken.constants import UTXO_CACHE_LABEL
 from sovtokenfees.static_fee_req_handler import txn_root_serializer
 
@@ -18,6 +19,9 @@ from plenum.server.database_manager import DatabaseManager
 from plenum.test.testing_utils import FakeSomething
 from state.pruning_state import PruningState
 from storage.helper import initKeyValueStorage
+
+FAKE_UNCOMMITTED_ROOT_HASH = b58decode("1".encode())
+FAKE_COMMITTED_ROOT_HASH = b58decode("1".encode())
 
 
 @pytest.fixture(scope="module")
@@ -92,4 +96,3 @@ def wallet(looper):
 
     delete_wallet_future = delete_wallet(json.dumps({"id": wallet_name}), json.dumps({"key": "1"}))
     looper.loop.run_until_complete(delete_wallet_future)
-
