@@ -9,7 +9,7 @@ from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 from indy_common.constants import CONFIG_LEDGER_ID
 
 from indy_node.test.request_handlers.helper import get_fake_ledger
-from sovtoken.test.req_handlers.conftest import db_manager as dbm
+from sovtoken.test.req_handlers.conftest import db_manager
 
 from common.serializers import serialization
 from plenum.common.constants import KeyValueStorageType, BLS_LABEL
@@ -21,24 +21,23 @@ in_memory_serializer = JsonSerializer()
 
 
 @pytest.fixture(scope="module")
-def db_manager(tconf):
-    _db_manager = dbm(tconf)
+def db_manager_with_config(db_manager):
     storage = initKeyValueStorage(KeyValueStorageType.Memory,
                                   None,
                                   "configInMemoryStore",
                                   txn_serializer=in_memory_serializer)
     ledger = get_fake_ledger()
-    _db_manager.register_new_database(CONFIG_LEDGER_ID, ledger, PruningState(storage))
-    return _db_manager
+    db_manager.register_new_database(CONFIG_LEDGER_ID, ledger, PruningState(storage))
+    return db_manager
 
 
 @pytest.fixture(scope="module")
-def bls_store(db_manager):
+def bls_store(db_manager_with_config):
     multi_sigs = FakeSomething()
     multi_sigs.as_dict = lambda: {"a": "b"}
     bls = FakeSomething()
     bls.get = lambda _: multi_sigs
-    db_manager.register_new_store(BLS_LABEL, bls)
+    db_manager_with_config.register_new_store(BLS_LABEL, bls)
     return bls
 
 

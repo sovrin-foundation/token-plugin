@@ -11,13 +11,13 @@ from sovtoken.test.req_handlers.conftest import wallet
 
 
 @pytest.fixture(scope="module")
-def get_fees_handler(db_manager, bls_store):
-    return GetFeesHandler(db_manager)
+def get_fees_handler(db_manager_with_config, bls_store):
+    return GetFeesHandler(db_manager_with_config)
 
 
 @pytest.fixture(scope="module")
-def prepare_fees(db_manager, fees):
-    config_state = db_manager.get_state(CONFIG_LEDGER_ID)
+def prepare_fees(db_manager_with_config, fees):
+    config_state = db_manager_with_config.get_state(CONFIG_LEDGER_ID)
     path = build_path_for_set_fees()
     config_state.set(path.encode(), fees)
     config_state.commit()
