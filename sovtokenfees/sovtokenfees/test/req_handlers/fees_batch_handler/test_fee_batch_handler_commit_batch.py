@@ -27,3 +27,5 @@ def test_fee_batch_handler_commit_batch(fee_batch_handler, fees_tracker):
     fee_batch_handler.commit_batch(three_pc_batch, prev_res)
     assert not len(utxo_cache.current_batch_ops)
     assert not len(utxo_cache.un_committed)
+    assert fee_batch_handler.token_ledger.committed_root_hash == fee_batch_handler.token_ledger.uncommitted_root_hash
+    assert fee_batch_handler.token_state.headHash == fee_batch_handler.token_state.committedHeadHash

@@ -42,7 +42,12 @@ def db_manager(tconf):
                                   "tokenInMemoryStore",
                                   txn_serializer=serialization.multi_sig_store_serializer)
     ledger = get_fake_ledger()
-    ledger.commitTxns = lambda x: (None, [1])
+
+    def commit_txns(count):
+        ledger.committed_root_hash = ledger.uncommitted_root_hash
+        return None, [1]
+
+    ledger.commitTxns = commit_txns
     ledger.root_hash = txn_root_serializer.serialize("1")
     ledger.uncommitted_root_hash = "1"
     ledger.uncommitted_size = 1

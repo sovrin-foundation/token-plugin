@@ -103,7 +103,7 @@ def integrate_plugin_in_node(node):
     # node.write_request_manager.register_req_handler(SetFeesHandler(node.db_manager,
     #                                                   node.write_req_validator))
     # Replace XFER handler
-    # del node.write_request_manager.request_handlers[XFER_PUBLIC][-1]
+    # del node.write_request_manager.remove_req_handlers(XFER_PUBLIC)
     # node.write_request_manager.register_req_handler(XferFeeHandler(
     #                                node.db_manager, node.write_req_validator))
 
