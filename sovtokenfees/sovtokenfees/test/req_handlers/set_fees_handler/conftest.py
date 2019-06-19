@@ -15,9 +15,9 @@ from plenum.test.testing_utils import FakeSomething
 
 
 @pytest.fixture(scope="module")
-def set_fees_handler(db_manager, write_auth_req_validator):
+def set_fees_handler(db_manager_with_config, write_auth_req_validator):
     write_auth_req_validator.auth_map.update(sovtokenfees_auth_map)
-    return SetFeesHandler(db_manager, write_auth_req_validator)
+    return SetFeesHandler(db_manager_with_config, write_auth_req_validator)
 
 
 @pytest.fixture(scope="module")
