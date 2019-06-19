@@ -1,5 +1,5 @@
 from indy_common.authorize.auth_constraints import AuthConstraint, IDENTITY_OWNER, AuthConstraintOr, AuthConstraintAnd
-from indy_common.constants import TRUST_ANCHOR
+from indy_common.constants import ENDORSER
 from plenum.common.constants import TRUSTEE, STEWARD
 from sovtokenfees.test.authorize.metadata.helper import validate, PLUGIN_FIELD
 

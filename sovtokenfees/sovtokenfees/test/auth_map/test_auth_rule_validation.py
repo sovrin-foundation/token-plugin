@@ -5,7 +5,7 @@ from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 
 from indy_common.authorize.auth_actions import ADD_PREFIX
 
-from indy_common.constants import NYM, ROLE, TRUST_ANCHOR, CONSTRAINT
+from indy_common.constants import NYM, ROLE, ENDORSER, CONSTRAINT
 
 from plenum.common.constants import STEWARD
 
@@ -46,7 +46,7 @@ def test_add_metadata_with_complex_constraint(looper,
     current_fees = helpers.general.do_get_fees()
     assert fees_alias not in current_fees[FEES]
 
-    constraint = copy.deepcopy(auth_map.trust_anchor_or_steward_or_trustee_constraint)
+    constraint = copy.deepcopy(auth_map.endorser_or_steward_or_trustee_constraint)
     # set metadata only for the last constraint in OrAuthConstraint
     constraint.auth_constraints[-1].set_metadata({FEES_FIELD_NAME: fees_alias})
     with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):

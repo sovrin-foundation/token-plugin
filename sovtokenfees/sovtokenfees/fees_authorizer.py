@@ -1,3 +1,5 @@
+from sovtoken.request_handlers.token_utils import validate_given_inputs_outputs
+
 from indy_common.authorize.authorizer import AbstractAuthorizer
 
 from indy_common.authorize.auth_constraints import AuthConstraint
@@ -5,7 +7,6 @@ from indy_common.authorize.auth_constraints import AuthConstraint
 from indy_common.authorize.auth_actions import AbstractAuthAction
 from sovtoken.constants import XFER_PUBLIC, AMOUNT, INPUTS, OUTPUTS
 from sovtoken.exceptions import UTXOError, InvalidFundsError, ExtraFundsError, InsufficientFundsError
-from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.utxo_cache import UTXOCache
 from sovtokenfees.constants import FEES_FIELD_NAME, FEES
 from sovtokenfees.domain import build_path_for_set_fees
@@ -98,7 +99,7 @@ class FeesAuthorizer(AbstractAuthorizer):
         else:
             change_amount = sum([a[AMOUNT] for a in outputs])
             expected_amount = change_amount + required_fees
-            TokenReqHandler.validate_given_inputs_outputs(
+            validate_given_inputs_outputs(
                 sum_inputs,
                 change_amount,
                 expected_amount,

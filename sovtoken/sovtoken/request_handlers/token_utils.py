@@ -1,7 +1,8 @@
 from typing import Optional, List
 
+import base58
 from sovtoken.constants import INPUTS, OUTPUTS
-from sovtoken.exceptions import UTXOError, InvalidFundsError, ExtraFundsError, InsufficientFundsError
+from sovtoken.exceptions import UTXOError, InvalidFundsError, ExtraFundsError, InsufficientFundsError, TokenValueError
 from sovtoken.types import Output
 from sovtoken.utxo_cache import UTXOCache
 
@@ -85,3 +86,15 @@ def validate_given_inputs_outputs(inputs_sum, outputs_sum, required_amount, requ
     raise InvalidClientMessageException(getattr(request, f.IDENTIFIER.nm, None),
                                         getattr(request, f.REQ_ID.nm, None),
                                         'Request to not meet minimum requirements')
+
+
+def commit_to_utxo_cache(utxo_cache, state_root):
+    state_root = base58.b58decode(state_root.encode()) if isinstance(
+        state_root, str) else state_root
+    if utxo_cache.first_batch_idr != state_root:
+        raise TokenValueError(
+            'state_root', state_root,
+            ("equal to utxo_cache.first_batch_idr hash {}"
+             .format(utxo_cache.first_batch_idr))
+        )
+    utxo_cache.commit_batch()
