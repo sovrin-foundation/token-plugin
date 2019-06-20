@@ -15,8 +15,8 @@ from plenum.server.request_handlers.handler_interfaces.write_request_handler imp
 
 class DomainFeeHandler(WriteRequestHandler):
 
-    def __init__(self, db_manager: DatabaseManager, txn_id, fees_tracker: BatchFeesTracker):
-        super().__init__(db_manager, txn_id, DOMAIN_LEDGER_ID)
+    def __init__(self, db_manager: DatabaseManager, fees_tracker: BatchFeesTracker):
+        super().__init__(db_manager, None, DOMAIN_LEDGER_ID)
         self._fees_tracker = fees_tracker
 
     def static_validation(self, request: Request):
