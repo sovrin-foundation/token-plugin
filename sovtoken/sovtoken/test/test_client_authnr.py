@@ -4,6 +4,7 @@ import time
 import pytest
 import mock
 from indy.ledger import append_txn_author_agreement_acceptance_to_request
+from sovtoken import AcceptableWriteTypes, AcceptableQueryTypes
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.constants import DOMAIN_LEDGER_ID
@@ -112,9 +113,9 @@ def test_verify_fail():
 # This test is used to check that invalid signatures are throwing an InsufficientCorrectSignatures exception
 def test_authenticate_invalid_signatures_format(helpers, node, addresses):
     [SF_address, user1_address] = addresses
-    token_authnr = TokenAuthNr(node.write_manager.txn_types,
-                               node.read_manager.txn_types,
-                               node.action_manager.txn_types,
+    token_authnr = TokenAuthNr(AcceptableWriteTypes,
+                               AcceptableQueryTypes,
+                               {},
                                node[0].states[DOMAIN_LEDGER_ID])
     outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)

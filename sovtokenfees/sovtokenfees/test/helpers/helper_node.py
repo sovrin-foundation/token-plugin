@@ -57,7 +57,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
-        return node.get_req_handler(ledger_id=CONFIG_LEDGER_ID)
+        return node.write_manager.request_handlers[GET_BUY]
 
     @staticmethod
     def fill_auth_map_for_node(node, txn_type):

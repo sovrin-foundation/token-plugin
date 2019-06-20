@@ -137,7 +137,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_success(
     outputs = [{"address": address1, "amount": 40}, {"address": address2, "amount": 20}]
     request = helpers.request.transfer(inputs, outputs)
     try:
-        token_handler_a.validate(request)
+        token_handler_a.dynamic_validation(request)
     except Exception:
         pytest.fail("This test failed to validate")
 
@@ -153,7 +153,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(
     request = helpers.request.transfer(inputs, outputs)
     # This test should raise an issue because the inputs are not on the ledger
     with pytest.raises(InvalidClientMessageException):
-        token_handler_a.validate(request)
+        token_handler_a.dynamic_validation(request)
 
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(
@@ -167,7 +167,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(
     request = helpers.request.transfer(inputs, outputs)
     # This test is expected to fail because
     with pytest.raises(InsufficientFundsError):
-        token_handler_a.validate(request)
+        token_handler_a.dynamic_validation(request)
 
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
@@ -181,7 +181,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
     request = helpers.request.transfer(inputs, outputs)
     # This test is expected to fail because
     with pytest.raises(ExtraFundsError):
-        token_handler_a.validate(request)
+        token_handler_a.dynamic_validation(request)
 
 
 def test_token_req_handler_apply_xfer_public_success(
@@ -293,7 +293,7 @@ def test_token_req_handler_updateState_XFER_PUBLIC_success(
     txn = reqToTxn(request)
     append_txn_metadata(txn, seq_no=seq_no)
 
-    token_handler_a.validate(request)
+    token_handler_a.dynamic_validation(request)
     token_handler_a.updateState([txn])
 
     state_key = TokenReqHandler.create_state_key(address1.replace("pay:sov:", ""), seq_no)
@@ -497,7 +497,7 @@ class TestValidateMintPublic():
     def test_less_than_min_trustees(self, helpers, mint_request):
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.validate(mint_request)
+            self.handler.dynamic_validation(mint_request)
 
     def test_steward_with_trustees(
         self,
@@ -511,10 +511,10 @@ class TestValidateMintPublic():
             steward_wallets[0:1]
         )
         with pytest.raises(UnauthorizedClientRequest):
-            self.handler.validate(mint_request)
+            self.handler.dynamic_validation(mint_request)
 
     def test_valid_request(self, helpers, mint_request):
-        assert self.handler.validate(mint_request)
+        assert self.handler.dynamic_validation(mint_request)
 
     @pytest.mark.skip
     def test_quorum_trustees(self, helpers, mint_request, trustee_wallets):
@@ -523,7 +523,7 @@ class TestValidateMintPublic():
             mint_request,
             trustee_wallets
         )
-        assert self.handler.validate(mint_request)
+        assert self.handler.dynamic_validation(mint_request)
 
     @pytest.mark.skip
     def test_no_quorum_trustees(self, helpers, mint_request, trustee_wallets):
@@ -534,7 +534,7 @@ class TestValidateMintPublic():
         )
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.validate(mint_request)
+            self.handler.dynamic_validation(mint_request)
 
     @pytest.mark.skip
     def test_quorum_increased_trustees(
@@ -548,7 +548,7 @@ class TestValidateMintPublic():
             mint_request,
             increased_trustees
         )
-        assert self.handler.validate(mint_request)
+        assert self.handler.dynamic_validation(mint_request)
 
     @pytest.mark.skip
     def test_no_quorum_increased_trustees(
@@ -564,4 +564,4 @@ class TestValidateMintPublic():
         )
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.validate(mint_request)
+            self.handler.dynamic_validation(mint_request)
