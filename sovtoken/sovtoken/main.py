@@ -15,7 +15,7 @@ from ledger.compact_merkle_tree import CompactMerkleTree
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from plenum.common.constants import DOMAIN_LEDGER_ID, KeyValueStorageType
 from sovtoken.client_authnr import TokenAuthNr
-from sovtoken.constants import TOKEN_LEDGER_ID
+from sovtoken.constants import TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
 
 
 def integrate_plugin_in_node(node):
@@ -54,11 +54,11 @@ def init_storages(node):
     init_token_database(node)
 
     # UTXO store init
-    node.db_manager.register_new_store(
-        UTXOCache(initKeyValueStorage(
-            node.config.utxoCacheStorage,
-            node.dataLocation,
-            node.config.utxoCacheDbName)))
+    node.db_manager.register_new_store(UTXO_CACHE_LABEL,
+                                       UTXOCache(initKeyValueStorage(
+                                           node.config.utxoCacheStorage,
+                                           node.dataLocation,
+                                           node.config.utxoCacheDbName)))
 
 
 def init_token_ledger(node):
@@ -86,24 +86,16 @@ def init_token_database(node):
     node.on_new_ledger_added(TOKEN_LEDGER_ID)
 
 
-def init_utxo_cache(node):
-    node.db_manager.register_new_store(
-        UTXOCache(initKeyValueStorage(
-            node.config.utxoCacheStorage,
-            node.dataLocation,
-            node.config.utxoCacheDbName)))
-
-
 def register_req_handlers(node):
-    node.write_request_manager.register_req_handler(XferHandler(node.db_manager,
-                                                                node.write_req_validator))
-    node.write_request_manager.register_req_handler(MintHandler(node.db_manager,
-                                                                node.write_req_validator))
-    node.read_request_manager.register_req_handler(GetUtxoHandler(node.db_manager))
+    node.write_manager.register_req_handler(XferHandler(node.db_manager,
+                                                        node.write_req_validator))
+    node.write_manager.register_req_handler(MintHandler(node.db_manager,
+                                                        node.write_req_validator))
+    node.read_manager.register_req_handler(GetUtxoHandler(node.db_manager))
 
 
 def register_batch_hanlders(node):
-    node.write_request_manager.register_batch_handler(TokenBatchHandler(node.db_manager))
-    node.write_request_manager.register_batch_handler(UTXOBatchHandler(node.db_manager))
-    node.write_request_manager.register_batch_handler(node.write_request_manager.audit_b_handler,
-                                                      ledger_id=TOKEN_LEDGER_ID)
+    node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager))
+    node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager))
+    node.write_manager.register_batch_handler(node.write_manager.audit_b_handler,
+                                              ledger_id=TOKEN_LEDGER_ID)
