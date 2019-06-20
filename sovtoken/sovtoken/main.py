@@ -15,7 +15,8 @@ from ledger.compact_merkle_tree import CompactMerkleTree
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from plenum.common.constants import DOMAIN_LEDGER_ID, KeyValueStorageType
 from sovtoken.client_authnr import TokenAuthNr
-from sovtoken.constants import TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
+from sovtoken.constants import TOKEN_LEDGER_ID, UTXO_CACHE_LABEL, ACCEPTABLE_WRITE_TYPES, ACCEPTABLE_QUERY_TYPES, \
+    ACCEPTABLE_ACTION_TYPES
 
 
 def integrate_plugin_in_node(node):
@@ -26,9 +27,9 @@ def integrate_plugin_in_node(node):
     register_req_handlers(node)
     register_batch_hanlders(node)
 
-    token_authnr = TokenAuthNr(node.write_manager.txn_types,
-                               node.read_manager.txn_types,
-                               node.action_manager.txn_types,
+    token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
+                               ACCEPTABLE_QUERY_TYPES,
+                               ACCEPTABLE_ACTION_TYPES,
                                node.states[DOMAIN_LEDGER_ID])
     node.clientAuthNr.register_authenticator(token_authnr)
 
