@@ -1,6 +1,10 @@
 import copy
 
 import sovtoken.test.helpers.helper_node as sovtoken_helper_node
+
+from indy_common.constants import NYM
+
+from common.serializers.serialization import domain_state_serializer
 from plenum.common.constants import CONFIG_LEDGER_ID
 
 from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, EDIT_PREFIX
@@ -53,11 +57,11 @@ class HelperNode(sovtoken_helper_node.HelperNode):
 
     def _reset_fees(self, node):
         req_handler = self._get_fees_req_handler(node)
-        empty_fees = req_handler.state_serializer.serialize({})
+        empty_fees = domain_state_serializer.serialize({})
         req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
-        return node.write_manager.request_handlers[GET_BUY]
+        return node.write_manager.request_handlers[NYM][-1]
 
     @staticmethod
     def fill_auth_map_for_node(node, txn_type):

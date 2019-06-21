@@ -88,7 +88,7 @@ def register_req_handlers(node):
     node.read_manager.register_req_handler(GetUtxoHandler(node.db_manager))
 
 
-def register_batch_hanlders(node):
+def register_batch_handlers(node):
     node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager), add_to_begin=True)
     node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager), add_to_begin=True)
     node.write_manager.register_batch_handler(node.write_manager.audit_b_handler,
