@@ -1,6 +1,6 @@
 from indy_common.constants import NYM, AUTH_RULE
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
-from sovtoken.constants import TOKEN_LEDGER_ID, XFER_PUBLIC
+from sovtoken.constants import TOKEN_LEDGER_ID, XFER_PUBLIC, GET_UTXO, MINT_PUBLIC
 
 
 class HelperNode():
@@ -30,10 +30,21 @@ class HelperNode():
 
         return transactions
 
-    def get_token_req_handler(self):
-        """ Get the token request handler of the first node. """
+    @property
+    def xfer_handler(self):
+        """ Get the xfer request handler of the first node. """
         return self._nodes[0].write_manager.request_handlers[XFER_PUBLIC][0]
 
-    def get_nym_req_handler(self):
+    @property
+    def mint_handler(self):
+        """ Get the xfer request handler of the first node. """
+        return self._nodes[0].write_manager.request_handlers[MINT_PUBLIC][0]
+
+    @property
+    def nym_handler(self):
         """ Get the NYM request handler of the first node. """
         return self._nodes[0].write_manager.request_handlers[NYM][0]
+
+    @property
+    def get_utxo_handler(self):
+        return self._nodes[0].read_manager.request_handlers[GET_UTXO]

@@ -133,14 +133,14 @@ class TestStaticValidation:
     # Method returns None if it was successful -
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
-    # - Static Fee Request Handler (doStaticValidation)
+    # - Static Fee Request Handler (static_validation)
     def test_get_fee_valid_alias(self, helpers, fee_handler):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
         """
         request = helpers.request.get_fee("test_alias")
-        result = fee_handler.doStaticValidation(request)
+        result = fee_handler.static_validation(request)
 
         assert result is None
 
@@ -151,7 +151,7 @@ class TestStaticValidation:
         """
         request = helpers.request.get_fee("")
         with pytest.raises(InvalidClientRequest, match="empty string"):
-            fee_handler.doStaticValidation(request)
+            fee_handler.static_validation(request)
 
     def test_set_fees_valid_txn_types(self, helpers, fee_handler):
         """
@@ -161,7 +161,7 @@ class TestStaticValidation:
 
         request = helpers.request.set_fees(VALID_FEES)
 
-        result = fee_handler.doStaticValidation(request)
+        result = fee_handler.static_validation(request)
 
         assert result is None
 
@@ -175,7 +175,7 @@ class TestStaticValidation:
         request.operation.pop(FEES)
 
         with pytest.raises(InvalidClientRequest, match="missed fields - fees"):
-            fee_handler.doStaticValidation(request)
+            fee_handler.static_validation(request)
 
     def test_get_fees(self, helpers, fee_handler):
         """
@@ -183,7 +183,7 @@ class TestStaticValidation:
         """
 
         request = helpers.request.get_fees()
-        fee_handler.doStaticValidation(request)
+        fee_handler.static_validation(request)
 
     def test_unkown_type(self, helpers, fee_handler):
         """
@@ -198,7 +198,7 @@ class TestStaticValidation:
         request = helpers.sdk.sdk_json_to_request_object(request)
         setattr(request, "signatures", sigs)
 
-        fee_handler.doStaticValidation(request)
+        fee_handler.static_validation(request)
 
 
 class TestValidation():
@@ -491,13 +491,3 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     prev_size = fee_handler.ledger.uncommitted_size
     ret_value = fee_handler.apply(request, 10)
     assert ret_value[0] == prev_size + 1
-
-
-def test_txn_types_are_united(fee_handler):
-    w_types_fees = fee_handler.write_types
-    q_types_fees = fee_handler.query_types
-    assert w_types_fees.intersection(ConfigReqHandler.write_types) == ConfigReqHandler.write_types
-    assert q_types_fees.intersection(ConfigReqHandler.query_types) == ConfigReqHandler.query_types
-
-    assert w_types_fees.difference(ConfigReqHandler.write_types)
-    assert q_types_fees.difference(ConfigReqHandler.write_types)

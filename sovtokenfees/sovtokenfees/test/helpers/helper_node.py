@@ -10,7 +10,7 @@ from plenum.common.constants import CONFIG_LEDGER_ID
 from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, EDIT_PREFIX
 
 from indy_common.authorize.auth_cons_strategies import AbstractAuthStrategy
-from sovtokenfees.constants import FEES_FIELD_NAME
+from sovtokenfees.constants import FEES_FIELD_NAME, SET_FEES
 from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.test.constants import txn_type_to_alias, alias_to_txn_type
 
@@ -61,7 +61,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
-        return node.write_manager.request_handlers[NYM][-1]
+        return node.write_manager.request_handlers[SET_FEES][0]
 
     @staticmethod
     def fill_auth_map_for_node(node, txn_type):
