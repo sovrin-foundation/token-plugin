@@ -6,22 +6,22 @@ from sovtoken import TOKEN_LEDGER_ID
 
 class ThreePhaseCommitHandler:
     def __init__(self, master_replica, token_ledger, token_state,
-                 fees_req_handler):
+                 fees_tracker):
         self.master_replica = master_replica
         self.token_ledger = token_ledger
         self.token_state = token_state
-        self.fees_req_handler = fees_req_handler
+        self.fees_tracker = fees_tracker
 
     # adds a pre_prepare message to be sent that includes the fee transaction info in
     # the "plugins_fields" member
     def add_to_pre_prepare(self, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID and \
-                self.fees_req_handler.fee_txns_in_current_batch > 0:
+                self.fees_tracker.fees_in_current_batch > 0:
             # Make sovtoken ledger and state root part of pre-prepare
             extra = {
                 f.PLUGIN_FIELDS.nm: {
                     FEES: {
-                        FEE_TXNS_IN_BATCH: self.fees_req_handler.fee_txns_in_current_batch,
+                        FEE_TXNS_IN_BATCH: self.fees_tracker.fees_in_current_batch,
                         f.STATE_ROOT.nm: self.master_replica.stateRootHash(
                             TOKEN_LEDGER_ID),
                         f.TXN_ROOT.nm: self.master_replica.txnRootHash(
@@ -78,7 +78,7 @@ class ThreePhaseCommitHandler:
     # Checks to make sure the pre_prepare message was properly appended and formatted with fee info
     def check_recvd_pre_prepare(self, pre_prepare):
         if pre_prepare.ledgerId != TOKEN_LEDGER_ID:
-            fee_txn_count = self.fees_req_handler.fee_txns_in_current_batch
+            fee_txn_count = self.fees_tracker.fees_in_current_batch
             if fee_txn_count > 0:
                 if not self._has_plugin_fields(pre_prepare):
                     raise Exception('Expected {} in PRE-PREPARE'.format(f.PLUGIN_FIELDS.nm))
@@ -90,26 +90,26 @@ class ThreePhaseCommitHandler:
                 if fees.get(FEE_TXNS_IN_BATCH) != fee_txn_count:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                                                                FEE_TXNS_IN_BATCH,
-                                                                fee_txn_count,
-                                                                fees.get(FEE_TXNS_IN_BATCH)))
+                        FEE_TXNS_IN_BATCH,
+                        fee_txn_count,
+                        fees.get(FEE_TXNS_IN_BATCH)))
 
                 recvd_state_root = self.master_replica._state_root_serializer.deserialize(
-                        fees.get(f.STATE_ROOT.nm, '').encode())
-                if recvd_state_root != self.fees_req_handler.token_state.headHash:
+                    fees.get(f.STATE_ROOT.nm, '').encode())
+                if recvd_state_root != self.token_state.headHash:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                                                                f.STATE_ROOT.nm,
-                                                                self.fees_req_handler.token_state.headHash,
-                                                                recvd_state_root))
+                        f.STATE_ROOT.nm,
+                        self.token_state.headHash,
+                        recvd_state_root))
 
                 recvd_txn_root = self.token_ledger.strToHash(fees.get(f.TXN_ROOT.nm, ''))
-                if recvd_txn_root != self.fees_req_handler.token_ledger.uncommittedRootHash:
+                if recvd_txn_root != self.token_ledger.uncommittedRootHash:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                                                                f.TXN_ROOT.nm,
-                                                                self.fees_req_handler.token_ledger.uncommittedRootHash,
-                                                                recvd_txn_root))
+                        f.TXN_ROOT.nm,
+                        self.token_ledger.uncommittedRootHash,
+                        recvd_txn_root))
 
     # Makes sure that the "plugins_fields" member is contained in a message. This field is what distinguishes normal
     # messages from messages that support the sovrin plugin
