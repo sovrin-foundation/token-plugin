@@ -97,7 +97,7 @@ def register_req_handlers(node, fees_tracker):
                                                            node.write_req_validator))
 
     domain_fee_r_h = DomainFeeHandler(node.db_manager, fees_tracker)
-    for typ in node.write_manager.ledger_id_to_types[DOMAIN_LEDGER_ID]:
+    for typ in list(node.write_manager.ledger_id_to_types[DOMAIN_LEDGER_ID]):
         # Ugly hack, replace it with expanding register_req_handler method
         domain_fee_r_h.txn_type = typ
         node.write_manager.register_req_handler(domain_fee_r_h)

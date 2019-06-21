@@ -89,8 +89,8 @@ def register_req_handlers(node):
 
 
 def register_batch_handlers(node):
-    node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager))
-    node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager))
+    node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager), add_to_begin=True)
+    node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager), add_to_begin=True)
     node.write_manager.register_batch_handler(node.write_manager.audit_b_handler,
                                               ledger_id=TOKEN_LEDGER_ID)
 

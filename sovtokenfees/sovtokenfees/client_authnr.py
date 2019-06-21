@@ -3,7 +3,7 @@ from plenum.common.exceptions import InvalidClientRequest
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import DidVerifier
 from plenum.server.client_authn import CoreAuthNr
-from sovtokenfees.constants import SET_FEES
+from sovtokenfees.constants import SET_FEES, GET_FEE, GET_FEES
 from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 
 
@@ -11,7 +11,7 @@ class FeesAuthNr(CoreAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
 
     def __init__(self, state, token_authnr):
-        super().__init__(state)
+        super().__init__({SET_FEES}, {GET_FEES, GET_FEE}, {}, state)
         self.token_authnr = token_authnr
 
     def authenticate(self, req_data, identifier: str = None,
