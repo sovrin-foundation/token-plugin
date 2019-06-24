@@ -63,6 +63,11 @@ def fee_handler(helpers):
     return helpers.node.get_fees_req_handler()
 
 
+@pytest.fixture
+def write_manager(helpers):
+    return helpers.node.get_write_manager()
+
+
 @pytest.fixture(scope="function", autouse=True)
 def reset_token_handler(fee_handler):
     old_head = fee_handler.state.committedHead
@@ -133,14 +138,14 @@ class TestStaticValidation:
     # Method returns None if it was successful -
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
-    # - Static Fee Request Handler (doStaticValidation)
-    def test_get_fee_valid_alias(self, helpers, fee_handler):
+    # - Static Fee Request Handler (static_validation)
+    def test_get_fee_valid_alias(self, helpers, write_manager):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
         """
         request = helpers.request.get_fee("test_alias")
-        result = fee_handler.doStaticValidation(request)
+        result = write_manager.static_validation(request)
 
         assert result is None
 
@@ -151,9 +156,9 @@ class TestStaticValidation:
         """
         request = helpers.request.get_fee("")
         with pytest.raises(InvalidClientRequest, match="empty string"):
-            fee_handler.doStaticValidation(request)
+            write_manager.static_validation(request)
 
-    def test_set_fees_valid_txn_types(self, helpers, fee_handler):
+    def test_set_fees_valid_txn_types(self, helpers, write_manager):
         """
         StaticValidation of a set fees request with all of the whitelisted txn
         types.
@@ -161,12 +166,12 @@ class TestStaticValidation:
 
         request = helpers.request.set_fees(VALID_FEES)
 
-        result = fee_handler.doStaticValidation(request)
+        result = write_manager.static_validation(request)
 
         assert result is None
 
 
-    def test_set_fees_missing_fees(self, helpers, fee_handler):
+    def test_set_fees_missing_fees(self, helpers, write_manager):
         """
         StaticValidation of a set fees request where 'fees' is not a dict.
         """
@@ -175,17 +180,17 @@ class TestStaticValidation:
         request.operation.pop(FEES)
 
         with pytest.raises(InvalidClientRequest, match="missed fields - fees"):
-            fee_handler.doStaticValidation(request)
+            write_manager.static_validation(request)
 
-    def test_get_fees(self, helpers, fee_handler):
+    def test_get_fees(self, helpers, write_manager):
         """
         StaticValidation of a get fees request does nothing.
         """
 
         request = helpers.request.get_fees()
-        fee_handler.doStaticValidation(request)
+        write_manager.static_validation(request)
 
-    def test_unkown_type(self, helpers, fee_handler):
+    def test_unkown_type(self, helpers, write_manager):
         """
         StaticValidation of an unknown request does nothing.
         """
@@ -198,11 +203,11 @@ class TestStaticValidation:
         request = helpers.sdk.sdk_json_to_request_object(request)
         setattr(request, "signatures", sigs)
 
-        fee_handler.doStaticValidation(request)
+        write_manager.static_validation(request)
 
 
 class TestValidation():
-    def test_set_fees_invalid_signee(self, helpers, fee_handler):
+    def test_set_fees_invalid_signee(self, helpers, write_manager):
         """
         Validation of a set_fees request where one of the signees doesn't
         exist.
@@ -214,9 +219,9 @@ class TestValidation():
         request.signatures[reversed_did] = sig
 
         with pytest.raises(UnauthorizedClientRequest):
-            fee_handler.dynamic_validation(request)
+            write_manager.dynamic_validation(request)
 
-    def test_set_fees_invalid_signature(self, helpers, fee_handler):
+    def test_set_fees_invalid_signature(self, helpers, write_manager):
         """
         Validation of a set_fees request with an invalid signatures still
         passes.
@@ -230,9 +235,9 @@ class TestValidation():
         reversed_sig = sig[::-1]
         request.signatures[did] = reversed_sig
 
-        fee_handler.dynamic_validation(request)
+        write_manager.dynamic_validation(request)
 
-    def test_set_fees_test_missing_signee(self, helpers, fee_handler):
+    def test_set_fees_test_missing_signee(self, helpers, write_manager):
         """
         Validation of a set_fees request without the minimum number of
         trustees.
@@ -242,7 +247,7 @@ class TestValidation():
         (did, sig) = request.signatures.popitem()
 
         with pytest.raises(UnauthorizedClientRequest):
-            fee_handler.dynamic_validation(request)
+            write_manager.dynamic_validation(request)
 
     def test_set_fees_test_extra_signees(
             self,
