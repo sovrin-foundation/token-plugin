@@ -1,5 +1,8 @@
 #!groovy
 
+env.SOVRIN_CORE_REPO_NAME = 'test'
+env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
+
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
@@ -30,6 +33,10 @@ pipelineWrapper({
 //    env.SOVRIN_REPO_HOST = '192.168.11.115'
 
     nodeWrapper(nodeLabels.codeBuild) {
+
+        sh "env"
+        return
+
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
         List debsList = []
