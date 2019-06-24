@@ -10,8 +10,8 @@ from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 class FeesAuthNr(CoreAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
 
-    def __init__(self, state, token_authnr):
-        super().__init__({SET_FEES}, {GET_FEES, GET_FEE}, {}, state)
+    def __init__(self, write_types, query_types, action_types, state, token_authnr):
+        super().__init__(write_types, query_types, action_types, state)
         self.token_authnr = token_authnr
 
     def authenticate(self, req_data, identifier: str = None,

@@ -3,9 +3,9 @@ import copy
 import sovtoken.test.helpers.helper_node as sovtoken_helper_node
 
 from indy_common.constants import NYM
+from sovtokenfees.req_handlers.write_handlers.domain_fee_handler import DomainFeeHandler
 
 from common.serializers.serialization import domain_state_serializer
-from plenum.common.constants import CONFIG_LEDGER_ID
 
 from indy_common.authorize.auth_actions import compile_action_id, ADD_PREFIX, EDIT_PREFIX
 
@@ -61,7 +61,7 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         req_handler.state.set(build_path_for_set_fees().encode(), empty_fees)
 
     def _get_fees_req_handler(self, node):
-        return node.write_manager.request_handlers[NYM][-1]
+        return next(h for h in node.write_manager.request_handlers[NYM] if isinstance(h, DomainFeeHandler))
 
     @staticmethod
     def fill_auth_map_for_node(node, txn_type):
@@ -71,9 +71,8 @@ class HelperNode(sovtoken_helper_node.HelperNode):
                                             prefix=ADD_PREFIX)
             edit_rule_id = compile_action_id(txn_type=txn_type, field='*', old_value='*', new_value='*',
                                              prefix=EDIT_PREFIX)
-            if AbstractAuthStrategy.is_accepted_action_id(add_rule_id,
-                                                          rule_id) or AbstractAuthStrategy.is_accepted_action_id(
-                    edit_rule_id, rule_id):
+            if AbstractAuthStrategy.is_accepted_action_id(add_rule_id, rule_id) or \
+                    AbstractAuthStrategy.is_accepted_action_id(edit_rule_id, rule_id):
                 constraint = copy.deepcopy(constraint)
                 if constraint:
                     constraint.set_metadata({FEES_FIELD_NAME: txn_type_to_alias[txn_type]})
