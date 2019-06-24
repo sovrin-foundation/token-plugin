@@ -34,13 +34,11 @@ pipelineWrapper({
 
     nodeWrapper(nodeLabels.codeBuild) {
 
-        sh "env"
-        return
-
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
         List debsList = []
         List stashedArtifacts = []
+        String indyNodeVersion
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -51,6 +49,16 @@ pipelineWrapper({
         def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
+
+        stage('Get indy-node version') {
+            indyNodeVersion = utils.shStdout("""
+                sed -n "s/.*indy-node==\\([^\\"\\']\\+\\).*/\\1/p" sovtoken/setup.py
+            """)
+            if (!indyNodeVersion) {
+                throw new Exception('indy-node version is not found')
+            }
+            logger.info("Detected indy-node version: '$indyNodeVersion'")
+        }
 
         Map builds = [
             "s3-upload": {  // performs on the current jenkins node
@@ -173,13 +181,8 @@ pipelineWrapper({
             String repoComponent = env.BRANCH_NAME
             String debsDir = 'debs'
 
-            if (env.BRANCH_NAME == 'stable') {
-                String indyNodeVersion = shStdout("""
-                    sed -n "s/.*indy-nodfe==\\([^\\"\\']\\+\\).*/\\1/p" sovtoken/setup.py
-                """)
-                if (indyNodeVersion.find(/[^0-9\.]/)) {
-                    repoComponent = 'rc'
-                }
+            if ((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/)) {
+                repoComponent = 'rc'
             }
             logger.info("Debian repo component is set to: '$repoComponent'")
 
