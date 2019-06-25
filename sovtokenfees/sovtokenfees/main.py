@@ -4,6 +4,7 @@ from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_
 from sovtokenfees.req_handlers.batch_handlers.fee_batch_handler import DomainFeeBatchHandler
 from sovtokenfees.req_handlers.read_handlers.get_fee_handler import GetFeeHandler
 from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHandler
+from sovtokenfees.req_handlers.write_handlers.auth_rule_fee_handler import AuthRuleFeeHandler
 from sovtokenfees.req_handlers.write_handlers.set_fees_handler import SetFeesHandler
 from sovtokenfees.req_handlers.write_handlers.xfer_fee_handler import XferFeeHandler
 from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
@@ -22,7 +23,7 @@ from sovtokenfees.fees_authorizer import FeesAuthorizer
 
 from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks, ReplicaHooks
 
-from indy_common.constants import CONFIG_LEDGER_ID
+from indy_common.constants import CONFIG_LEDGER_ID, AUTH_RULES, AUTH_RULE
 
 from plenum.common.txn_util import get_type
 from sovtokenfees.client_authnr import FeesAuthNr
@@ -33,6 +34,7 @@ from sovtoken.client_authnr import TokenAuthNr
 
 from plenum.server.batch_handlers.audit_batch_handler import AuditBatchHandler
 from plenum.server.batch_handlers.ts_store_batch_handler import TsStoreBatchHandler
+from sovtokenfees.req_handlers.write_handlers.auth_rules_fee_handler import AuthRulesFeeHandler
 
 
 def integrate_plugin_in_node(node):
@@ -68,7 +70,18 @@ def register_req_handlers(node, fees_tracker):
         node.write_manager.register_req_handler(domain_fee_r_h)
 
     node.read_manager.register_req_handler(GetFeeHandler(node.db_manager))
-    node.read_manager.register_req_handler(GetFeesHandler(node.db_manager))
+    gfs_handler = GetFeesHandler(node.db_manager)
+    node.read_manager.register_req_handler(gfs_handler)
+
+    node.write_manager.remove_req_handler(AUTH_RULE)
+    node.write_manager.register_req_handler(AuthRuleFeeHandler(node.db_manager,
+                                                               node.write_req_validator,
+                                                               gfs_handler))
+
+    node.write_manager.remove_req_handler(AUTH_RULES)
+    node.write_manager.register_req_handler(AuthRulesFeeHandler(node.db_manager,
+                                                                node.write_req_validator,
+                                                                gfs_handler))
 
 
 def register_batch_handlers(node, fees_tracker, token_tracker):

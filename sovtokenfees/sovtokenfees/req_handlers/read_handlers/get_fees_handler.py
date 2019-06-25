@@ -24,7 +24,7 @@ class GetFeesHandler(ReadRequestHandler):
         result.update(request.operation)
         return result
 
-    def get_fees(self, is_committed, with_proof):
+    def get_fees(self, is_committed=False, with_proof=False):
         result = get_fee_from_state(self.state, is_committed=is_committed, with_proof=with_proof,
                                     bls_store=self.database_manager.get_store(BLS_LABEL))
         if with_proof:
