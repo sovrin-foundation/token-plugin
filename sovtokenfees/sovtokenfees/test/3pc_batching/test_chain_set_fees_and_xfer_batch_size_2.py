@@ -2,6 +2,8 @@ import pytest
 from sovtoken.constants import ADDRESS, AMOUNT, OUTPUTS, SEQNO
 
 from indy_common.constants import NYM, CONFIG_LEDGER_ID
+from sovtokenfees import FeesTransactions
+from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHandler
 from sovtokenfees.test.constants import XFER_PUBLIC_FEES_ALIAS
 from sovtokenfees.test.helper import get_amount_from_token_txn, send_and_check_nym_with_fees, send_and_check_transfer, \
     ensure_all_nodes_have_same_data
@@ -99,8 +101,9 @@ def test_chain_set_fees_and_xfer_batch_size_2(looper, helpers,
                                                                transfer_summ=transfer_summ,
                                                                check_reply=False)
     for n in nodeSetWithIntegratedTokenPlugin:
-        fee_rq = n.ledger_to_req_handler[CONFIG_LEDGER_ID]
-        assert fee_rq.fees == fees_xfer_3
+        fee_rq = n.read_manager.request_handlers[FeesTransactions.GET_FEES.value]
+        assert fee_rq
+        assert fee_rq.get_fees(is_committed=True, with_proof=False) == fees_xfer_3
 
     with pytest.raises(RequestRejectedException):
         sdk_get_and_check_replies(looper, a_b_transfer_2)
