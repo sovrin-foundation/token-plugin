@@ -496,13 +496,3 @@ def test_static_fee_req_handler_apply(helpers, fee_handler):
     prev_size = fee_handler.ledger.uncommitted_size
     ret_value = fee_handler.apply(request, 10)
     assert ret_value[0] == prev_size + 1
-
-
-def test_txn_types_are_united(fee_handler):
-    w_types_fees = fee_handler.write_types
-    q_types_fees = fee_handler.query_types
-    assert w_types_fees.intersection(ConfigReqHandler.write_types) == ConfigReqHandler.write_types
-    assert q_types_fees.intersection(ConfigReqHandler.query_types) == ConfigReqHandler.query_types
-
-    assert w_types_fees.difference(ConfigReqHandler.write_types)
-    assert q_types_fees.difference(ConfigReqHandler.write_types)
