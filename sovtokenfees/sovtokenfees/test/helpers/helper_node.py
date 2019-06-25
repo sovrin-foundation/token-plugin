@@ -69,7 +69,6 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         return self._nodes[0].write_manager
 
     def _reset_fees(self, node):
-        req_handler = self._get_fees_req_handler(node)
         empty_fees = domain_state_serializer.serialize({})
         node.db_manager.get_state(CONFIG_LEDGER_ID).set(build_path_for_set_fees().encode(), empty_fees)
 

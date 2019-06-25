@@ -1,10 +1,12 @@
 from sovtoken.request_handlers.batch_req_handler.token_batch_handler import TokenBatchHandler
+from sovtoken.request_handlers.batch_req_handler.tracker_batch_handler import TrackerBatchHandler
 from sovtoken.request_handlers.batch_req_handler.utxo_batch_handler import UTXOBatchHandler
 from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
 from sovtoken.request_handlers.write_request_handler.mint_handler import MintHandler
 from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
 from sovtoken.utxo_cache import UTXOCache
 
+from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
 from state.pruning_state import PruningState
 
 from storage.helper import initKeyValueStorage
@@ -42,9 +44,11 @@ def init_storages(node):
     # Token ledger and state init
     if TOKEN_LEDGER_ID not in node.ledger_ids:
         node.ledger_ids.append(TOKEN_LEDGER_ID)
+    token_state = init_token_state(node)
+    token_ledger = init_token_ledger(node)
     node.db_manager.register_new_database(TOKEN_LEDGER_ID,
-                                          init_token_ledger(node),
-                                          init_token_state(node))
+                                          token_ledger,
+                                          token_state)
     init_token_database(node)
 
     # UTXO store init
@@ -53,6 +57,10 @@ def init_storages(node):
                                            node.config.utxoCacheStorage,
                                            node.dataLocation,
                                            node.config.utxoCacheDbName)))
+    token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
+                                             token_ledger.uncommitted_root_hash,
+                                             token_ledger.size)
+    node.db_manager.register_new_tracker(TOKEN_LEDGER_ID, token_tracker)
 
 
 def init_token_ledger(node):
@@ -75,8 +83,7 @@ def init_token_state(node):
 def init_token_database(node):
     node.ledgerManager.addLedger(TOKEN_LEDGER_ID,
                                  node.db_manager.get_ledger(TOKEN_LEDGER_ID),
-                                 postTxnAddedToLedgerClbk=
-                                 node.postTxnFromCatchupAddedToLedger)
+                                 postTxnAddedToLedgerClbk=node.postTxnFromCatchupAddedToLedger)
     node.on_new_ledger_added(TOKEN_LEDGER_ID)
 
 
@@ -91,6 +98,7 @@ def register_req_handlers(node):
 def register_batch_handlers(node):
     node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager), add_to_begin=True)
     node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager), add_to_begin=True)
+    node.write_manager.register_batch_handler(TrackerBatchHandler(node.db_manager))
     node.write_manager.register_batch_handler(node.write_manager.audit_b_handler,
                                               ledger_id=TOKEN_LEDGER_ID)
 

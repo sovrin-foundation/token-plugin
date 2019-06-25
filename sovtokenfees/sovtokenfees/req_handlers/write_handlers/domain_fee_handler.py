@@ -7,7 +7,7 @@ from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
 from plenum.common.constants import TXN_TYPE, DOMAIN_LEDGER_ID, TXN_PAYLOAD, TXN_PAYLOAD_DATA
 from plenum.common.request import Request
-from plenum.common.txn_util import get_req_id, reqToTxn, get_seq_no, get_txn_time
+from plenum.common.txn_util import get_req_id, reqToTxn, get_seq_no, get_txn_time, get_type
 from plenum.common.types import f, OPERATION
 from plenum.server.database_manager import DatabaseManager
 from plenum.server.request_handlers.handler_interfaces.write_request_handler import WriteRequestHandler
@@ -51,12 +51,15 @@ class DomainFeeHandler(WriteRequestHandler):
             txn = reqToTxn(txn)
             self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
             _, txns = self.token_ledger.appendTxns([txn])
-            self.update_state(txn, prev_result, request)
+            self.update_token_state(txn, request)
             self._fees_tracker.fees_in_current_batch += 1
             self._fees_tracker.add_deducted_fees(txn_type, seq_no, fees)
         return None, None, prev_result
 
     def update_state(self, txn, prev_result, request, is_committed=False):
+        pass
+
+    def update_token_state(self, txn, request, is_committed=False):
         for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
             spend_input(
                 state=self.token_state,
