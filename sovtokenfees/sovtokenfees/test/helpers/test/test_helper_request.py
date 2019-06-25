@@ -8,7 +8,7 @@ from sovtoken.constants import ADDRESS, AMOUNT
 
 
 def get_nym_details(helpers, dest):
-    nym_req_handler = helpers.node.get_nym_req_handler()
+    nym_req_handler = helpers.node.nym_handler
     return nym_req_handler.get_nym_details(nym_req_handler.state, dest, False)
 
 
