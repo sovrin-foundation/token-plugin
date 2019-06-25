@@ -1,5 +1,9 @@
 #!groovy
 
+env.BRANCH_NAME = 'master'
+env.SOVRIN_CORE_REPO_NAME = 'test'
+env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
+
 String projectName = 'token-plugin'
 
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
