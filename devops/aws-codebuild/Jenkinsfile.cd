@@ -202,7 +202,7 @@ pipelineWrapper({
             }
 
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                sh "./sovrin-packaging/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
+                println "./sovrin-packaging/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
             }
 
             notifier.email {
