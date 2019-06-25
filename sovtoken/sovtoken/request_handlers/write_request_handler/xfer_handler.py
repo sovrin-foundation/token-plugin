@@ -46,12 +46,18 @@ class XferHandler(WriteRequestHandler):
         try:
             payload = get_payload_data(txn)
             for inp in payload[INPUTS]:
-                spend_input(self.state, self.utxo_cache, inp["address"], inp["seqNo"],
+                spend_input(self.state,
+                            self.utxo_cache,
+                            inp["address"],
+                            inp["seqNo"],
                             is_committed=is_committed)
             for output in payload[OUTPUTS]:
                 seq_no = get_seq_no(txn)
-                add_new_output(self.state, self.utxo_cache,
-                               Output(output["address"], seq_no, output["amount"]),
+                add_new_output(self.state,
+                               self.utxo_cache,
+                               Output(output["address"],
+                                      seq_no,
+                                      output["amount"]),
                                is_committed=is_committed)
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)

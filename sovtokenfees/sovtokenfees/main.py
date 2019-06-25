@@ -1,10 +1,13 @@
 import functools
 
-from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE
+from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
+from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE, \
+    FEE_TXN
 from sovtokenfees.req_handlers.batch_handlers.fee_batch_handler import DomainFeeBatchHandler
 from sovtokenfees.req_handlers.read_handlers.get_fee_handler import GetFeeHandler
 from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHandler
 from sovtokenfees.req_handlers.write_handlers.auth_rule_fee_handler import AuthRuleFeeHandler
+from sovtokenfees.req_handlers.write_handlers.fee_txn_handler import FeeTxnCatchupHandler
 from sovtokenfees.req_handlers.write_handlers.set_fees_handler import SetFeesHandler
 from sovtokenfees.req_handlers.write_handlers.xfer_fee_handler import XferFeeHandler
 from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
@@ -41,11 +44,11 @@ def integrate_plugin_in_node(node):
     token_ledger = node.db_manager.get_ledger(TOKEN_LEDGER_ID)
     token_state = node.db_manager.get_state(TOKEN_LEDGER_ID)
 
-    fees_tracker, token_tracker = register_trackers(token_state, token_ledger)
+    fees_tracker = register_trackers()
     node.write_req_validator.auth_map.update(sovtokenfees_auth_map)
     register_req_handlers(node, fees_tracker)
-    register_batch_handlers(node, fees_tracker, token_tracker)
-    set_callbacks(node, token_tracker)
+    register_batch_handlers(node, fees_tracker)
+    set_callbacks(node)
     fees_authnr = register_authentication(node)
     register_hooks(node, fees_authnr, token_ledger, token_state, fees_tracker)
     return node
@@ -69,6 +72,7 @@ def register_req_handlers(node, fees_tracker):
         domain_fee_r_h.txn_type = typ
         node.write_manager.register_req_handler(domain_fee_r_h)
 
+    node.write_manager.register_req_handler(FeeTxnCatchupHandler(node.db_manager))
     node.read_manager.register_req_handler(GetFeeHandler(node.db_manager))
     gfs_handler = GetFeesHandler(node.db_manager)
     node.read_manager.register_req_handler(gfs_handler)
@@ -84,7 +88,7 @@ def register_req_handlers(node, fees_tracker):
                                                                 gfs_handler))
 
 
-def register_batch_handlers(node, fees_tracker, token_tracker):
+def register_batch_handlers(node, fees_tracker):
     handlers = node.write_manager.batch_handlers[DOMAIN_LEDGER_ID]
     node.write_manager.remove_batch_handler(DOMAIN_LEDGER_ID)
 
@@ -94,7 +98,7 @@ def register_batch_handlers(node, fees_tracker, token_tracker):
         raise LogicError
 
     handlers.insert(handlers.index(handlers[-2]),
-                    DomainFeeBatchHandler(node.db_manager, fees_tracker, token_tracker))
+                    DomainFeeBatchHandler(node.db_manager, fees_tracker))
 
     for h in handlers:
         if isinstance(h, (AuditBatchHandler, TsStoreBatchHandler)):
@@ -103,16 +107,17 @@ def register_batch_handlers(node, fees_tracker, token_tracker):
     # TODO: Additional functionality to request_manager ^^^
 
 
-def set_callbacks(node, token_tracker):
-    set_post_catchup_callback(node, token_tracker)
+def set_callbacks(node):
+    set_post_catchup_callback(node)
     set_post_added_txn_callback(node)
 
 
-def set_post_catchup_callback(node, token_tracker):
-    token_ledger = node.db_manager.get_ledger(TOKEN_LEDGER_ID)
-    token_state = node.db_manager.get_state(TOKEN_LEDGER_ID)
+def set_post_catchup_callback(node):
 
-    def postCatchupCompleteClbk():
+    def postCatchupCompleteClbk(node):
+        token_tracker = node.db_manager.get_tracker(TOKEN_LEDGER_ID)
+        token_state = node.db_manager.get_state(TOKEN_LEDGER_ID)
+        token_ledger = node.db_manager.get_ledger(TOKEN_LEDGER_ID)
         token_tracker.set_last_committed(token_state.committedHeadHash,
                                          token_ledger.uncommitted_root_hash,
                                          token_ledger.size)
@@ -122,7 +127,7 @@ def set_post_catchup_callback(node, token_tracker):
     def postCatchupCompleteClb(origin_clb):
         if origin_clb:
             origin_clb()
-        postCatchupCompleteClbk()
+        postCatchupCompleteClbk(node)
 
     node.ledgerManager.ledgerRegistry[TOKEN_LEDGER_ID].postCatchupCompleteClbk = \
         functools.partial(postCatchupCompleteClb, origin_token_clb)
@@ -176,10 +181,7 @@ def register_three_pc_hooks(node, token_ledger, token_state, fees_tracker):
                                       three_pc_handler.check_recvd_pre_prepare)
 
 
-def register_trackers(token_state, token_ledger):
+def register_trackers():
     # TODO: move trackers into write_manager
     fees_tracker = BatchFeesTracker()
-    token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
-                                             token_ledger.uncommitted_root_hash,
-                                             token_ledger.size)
-    return fees_tracker, token_tracker
+    return fees_tracker
