@@ -3,6 +3,8 @@
 env.SOVRIN_CORE_REPO_NAME = 'test'
 env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
 
+String projectName = 'token-plugin'
+
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
@@ -36,8 +38,7 @@ pipelineWrapper({
 
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
-        List debsList = []
-        List stashedArtifacts = []
+        List pkgsList = []
         String indyNodeVersion
 
         stage('Checkout sources from SCM') {
@@ -82,9 +83,9 @@ pipelineWrapper({
         }
 
         builds = projects.collectEntries { proj ->
-            String projLabel = "$osname:$proj"
+            String projLabel = "$osname-$proj"
 
-            [projLabel: [
+            ["$projLabel": [
                 nodeLabel: "${nodeLabels.codeBuild}",
                 build: {
                     def packageName = proj
@@ -163,8 +164,10 @@ pipelineWrapper({
                                     allowEmptyArchive = true
                                 }
 
-                                this.stash includes: utils.shStdout("ls $packageName*$debPVersion*.deb"), name: projLabel
-                                stashedArtifacts += projLabel
+                                String pkgBaseName = "$packageName_$debPVersion"
+
+                                this.stash includes: utils.shStdout("ls $pkgBaseName_*.deb"), name: pkgBaseName
+                                pkgsList += pkgBaseName
                             }
                         }
                     }
@@ -178,6 +181,7 @@ pipelineWrapper({
         }
 
         stage('Release artifacts') {
+            String repoName = env.SOVRIN_CORE_REPO_NAME
             String repoComponent = env.BRANCH_NAME
             String debsDir = 'debs'
 
@@ -187,26 +191,33 @@ pipelineWrapper({
             logger.info("Debian repo component is set to: '$repoComponent'")
 
             dir(debsDir) {
-                stashedArtifacts.collectEntries {
+                pkgsList.each {
                     unstash name: it
                 }
             }
-            debsList = utils.shStdout("ls $debsDir").tokenize()
-            logger.info("Uploading debian packages to sovrin repo '$repoComponent': $debsList")
+            logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
 
             dir("sovrin-packaging") {
                 downloadPackagingUtils()
             }
 
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                sh "./sovrin-packaging/upload_debs.py $debsDir $env.SOVRIN_CORE_REPO_NAME $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
+                sh "./sovrin-packaging/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
             }
 
             notifier.email {
                 to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
-                subject = '$PROJECT_NAME - Build # $BUILD_NUMBER: ' + "new packages '${debsList.join(' ')}' were published"
-                body = ("New debian packages '${debsList.join(' ')}' were built and published" +
-                        '\n\nCheck console output at $BUILD_URL to view the results.')
+                subject = "[projectName] new packages ${pkgsList.join(' ')} were published"
+                body = """
+                    |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
+                    |
+                    |Build:
+                    |   Project: \$PROJECT_NAME
+                    |   Url: ${this.env.BUILD_URL}
+                    |   Number: ${this.env.BUILD_NUMBER}
+                    |
+                    |Check console output at ${this.env.BUILD_URL}console to view the details.
+                """.stripMargin()
             }
         }
     }
