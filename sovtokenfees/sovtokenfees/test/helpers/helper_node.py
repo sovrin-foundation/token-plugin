@@ -59,7 +59,13 @@ class HelperNode(sovtoken_helper_node.HelperNode):
         """ Get the fees request handler of the first node """
         return self._get_fees_req_handler(self._nodes[0])
 
-    def get_write_manager(self):
+    def get_db_manager(self):
+        return self._nodes[0].db_manager
+
+    def get_write_req_validator(self):
+        return self._nodes[0].write_req_validator
+
+    def get_write_req_manager(self):
         return self._nodes[0].write_manager
 
     def _reset_fees(self, node):

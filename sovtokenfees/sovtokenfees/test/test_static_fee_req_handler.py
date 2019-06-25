@@ -1,7 +1,11 @@
 import json
 
 import pytest
+from common.exceptions import LogicError
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+from sovtokenfees.req_handlers.read_handlers.get_fee_handler import GetFeeHandler
+from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHandler
+from sovtokenfees.req_handlers.write_handlers.set_fees_handler import SetFeesHandler
 
 from plenum.common.constants import NYM, TXN_TYPE
 from plenum.common.exceptions import (InvalidClientRequest,
@@ -64,8 +68,23 @@ def fee_handler(helpers):
 
 
 @pytest.fixture
+def get_fee_handler(helpers):
+    return GetFeeHandler(helpers.node.get_db_manager())
+
+
+@pytest.fixture
+def get_fees_handler(helpers):
+    return GetFeesHandler(helpers.node.get_db_manager())
+
+
+@pytest.fixture
+def set_fees_handler(helpers):
+    return SetFeesHandler(helpers.node.get_db_manager(), helpers.node.get_write_req_validator())
+
+
+@pytest.fixture
 def write_manager(helpers):
-    return helpers.node.get_write_manager()
+    return helpers.node.get_write_req_manager()
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -75,6 +94,7 @@ def reset_token_handler(fee_handler):
     fee_handler.state.revertToHead(old_head)
     # TODO: this is a function fixture. Do we need this revert there?
     # fee_handler.onBatchRejected()
+
 
 @pytest.fixture()
 def fees_authorizer(fee_handler):
@@ -139,26 +159,26 @@ class TestStaticValidation:
     # TODO: Refactoring should be looked at to return a boolean
     # Instead of assuming that everything is good when the return value is None.
     # - Static Fee Request Handler (static_validation)
-    def test_get_fee_valid_alias(self, helpers, write_manager):
+    def test_get_fee_valid_alias(self, helpers, get_fee_handler):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
         """
         request = helpers.request.get_fee("test_alias")
-        result = write_manager.static_validation(request)
+        result = get_fee_handler.static_validation(request)
 
         assert result is None
 
-    def test_get_fee_invalid_alias(self, helpers, fee_handler):
+    def test_get_fee_invalid_alias(self, helpers, get_fee_handler):
         """
         StaticValidation of a get fee request with all of the whitelisted txn
         types.
         """
         request = helpers.request.get_fee("")
         with pytest.raises(InvalidClientRequest, match="empty string"):
-            write_manager.static_validation(request)
+            get_fee_handler.static_validation(request)
 
-    def test_set_fees_valid_txn_types(self, helpers, write_manager):
+    def test_set_fees_valid_txn_types(self, helpers, set_fees_handler):
         """
         StaticValidation of a set fees request with all of the whitelisted txn
         types.
@@ -166,12 +186,11 @@ class TestStaticValidation:
 
         request = helpers.request.set_fees(VALID_FEES)
 
-        result = write_manager.static_validation(request)
+        result = set_fees_handler.static_validation(request)
 
         assert result is None
 
-
-    def test_set_fees_missing_fees(self, helpers, write_manager):
+    def test_set_fees_missing_fees(self, helpers, set_fees_handler):
         """
         StaticValidation of a set fees request where 'fees' is not a dict.
         """
@@ -180,15 +199,15 @@ class TestStaticValidation:
         request.operation.pop(FEES)
 
         with pytest.raises(InvalidClientRequest, match="missed fields - fees"):
-            write_manager.static_validation(request)
+            set_fees_handler.static_validation(request)
 
-    def test_get_fees(self, helpers, write_manager):
+    def test_get_fees(self, helpers, get_fees_handler):
         """
         StaticValidation of a get fees request does nothing.
         """
 
         request = helpers.request.get_fees()
-        write_manager.static_validation(request)
+        get_fees_handler.static_validation(request)
 
     def test_unkown_type(self, helpers, write_manager):
         """
@@ -202,12 +221,12 @@ class TestStaticValidation:
         sigs = request["signatures"]
         request = helpers.sdk.sdk_json_to_request_object(request)
         setattr(request, "signatures", sigs)
-
-        write_manager.static_validation(request)
+        with pytest.raises(LogicError):
+            write_manager.static_validation(request)
 
 
 class TestValidation():
-    def test_set_fees_invalid_signee(self, helpers, write_manager):
+    def test_set_fees_invalid_signee(self, helpers, set_fees_handler):
         """
         Validation of a set_fees request where one of the signees doesn't
         exist.
@@ -219,9 +238,9 @@ class TestValidation():
         request.signatures[reversed_did] = sig
 
         with pytest.raises(UnauthorizedClientRequest):
-            write_manager.dynamic_validation(request)
+            set_fees_handler.dynamic_validation(request)
 
-    def test_set_fees_invalid_signature(self, helpers, write_manager):
+    def test_set_fees_invalid_signature(self, helpers, set_fees_handler):
         """
         Validation of a set_fees request with an invalid signatures still
         passes.
@@ -235,9 +254,9 @@ class TestValidation():
         reversed_sig = sig[::-1]
         request.signatures[did] = reversed_sig
 
-        write_manager.dynamic_validation(request)
+        set_fees_handler.dynamic_validation(request)
 
-    def test_set_fees_test_missing_signee(self, helpers, write_manager):
+    def test_set_fees_test_missing_signee(self, helpers, set_fees_handler):
         """
         Validation of a set_fees request without the minimum number of
         trustees.
@@ -247,12 +266,12 @@ class TestValidation():
         (did, sig) = request.signatures.popitem()
 
         with pytest.raises(UnauthorizedClientRequest):
-            write_manager.dynamic_validation(request)
+            set_fees_handler.dynamic_validation(request)
 
     def test_set_fees_test_extra_signees(
             self,
             helpers,
-            fee_handler,
+            set_fees_handler,
             increased_trustees
     ):
         """
@@ -264,16 +283,7 @@ class TestValidation():
         request = helpers.wallet.sign_request(request, increased_trustees)
         assert len(request.signatures) == 7
 
-        assert fee_handler.dynamic_validation(request)
-
-    def test_get_fees_invalid_identifier(self, helpers, fee_handler):
-        """
-        Validation of a get_fees request does nothing.
-        """
-
-        request = helpers.request.get_fees()
-        request._identifier = None
-        fee_handler.dynamic_validation(request)
+        assert set_fees_handler.dynamic_validation(request)
 
     def test_validate_unknown_type(self, helpers, fee_handler):
         """
@@ -490,9 +500,9 @@ class TestCanPayFees():
 
 
 # - Static Fee Request Handler (apply)
-def test_static_fee_req_handler_apply(helpers, fee_handler):
+def test_static_fee_req_handler_apply(helpers, set_fees_handler):
     request = helpers.request.set_fees(VALID_FEES)
 
-    prev_size = fee_handler.ledger.uncommitted_size
-    ret_value = fee_handler.apply(request, 10)
+    prev_size = set_fees_handler.ledger.uncommitted_size
+    ret_value = set_fees_handler.apply_request(request, 10, None)
     assert ret_value[0] == prev_size + 1
