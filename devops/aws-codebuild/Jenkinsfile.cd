@@ -1,8 +1,5 @@
 #!groovy
 
-env.SOVRIN_CORE_REPO_NAME = 'test'
-env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
-
 String projectName = 'token-plugin'
 
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
@@ -28,14 +25,12 @@ def nodeLabels = [
 ]
 
 pipelineWrapper({
-
     //put code build containers inside a vpc under our dev account
     env.USE_VPC_CONFIG = true
     //this IP is outdated, should use the one from env
 //    env.SOVRIN_REPO_HOST = '192.168.11.115'
 
     nodeWrapper(nodeLabels.codeBuild) {
-
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
         List pkgsList = []
