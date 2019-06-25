@@ -1,6 +1,6 @@
 #!groovy
 
-env.BRANCH_NAME = 'master'
+env.BRANCH_NAME = 'stable'
 env.SOVRIN_CORE_REPO_NAME = 'test'
 env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
 
