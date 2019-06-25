@@ -208,7 +208,7 @@ pipelineWrapper({
 
             notifier.email {
                 to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
-                subject = "[$projectName] new packages ${pkgsList.join(' ')} were published"
+                subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
                 body = """
                     |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
                     |
