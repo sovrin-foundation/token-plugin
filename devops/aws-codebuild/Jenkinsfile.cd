@@ -153,7 +153,7 @@ pipelineWrapper({
                                 [name: 'OSNAME', value: osname],
                                 [name: 'MAKE_GOALS', value: 'package'],
                                 [name: 'SRC_DIR_NAME', value: proj],
-                                [name: 'ARTIFACTS', value: "devops/_build/$proj/*$packageName*.*"], // TODO more accurate here
+                                [name: 'ARTIFACTS', value: "devops/_build/${proj}/*${packageName}*.*"], // TODO more accurate here
                                 [name: 'FPM_P_VERSION', value: debPVersion],
                         ]
 
@@ -164,9 +164,9 @@ pipelineWrapper({
                                     allowEmptyArchive = true
                                 }
 
-                                String pkgBaseName = "$packageName_$debPVersion"
+                                String pkgBaseName = "${packageName}_${debPVersion}"
 
-                                this.stash includes: utils.shStdout("ls $pkgBaseName_*.deb"), name: pkgBaseName
+                                this.stash includes: utils.shStdout("ls ${pkgBaseName}_*.deb"), name: pkgBaseName
                                 pkgsList += pkgBaseName
                             }
                         }
