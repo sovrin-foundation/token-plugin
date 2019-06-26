@@ -10,6 +10,8 @@ from sovtokenfees.test.view_change.helper import scenario_txns_during_view_chang
 
 from sovtokenfees.test.helper import InputsStrategy
 
+from plenum.test.test_node import ensureElectionsDone
+from plenum.test.view_change.helper import ensure_view_change
 
 MINT_UTXOS_NUM = 6
 INPUTS_STRATEGY = InputsStrategy.first_utxo_only

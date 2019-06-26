@@ -9,7 +9,7 @@ from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 from indy_common.constants import CONFIG_LEDGER_ID
 
 from indy_node.test.request_handlers.helper import get_fake_ledger
-from sovtoken.test.req_handlers.conftest import db_manager
+from sovtoken.test.req_handlers.conftest import db_manager, utxo_cache
 
 from common.serializers import serialization
 from plenum.common.constants import KeyValueStorageType, BLS_LABEL
@@ -21,7 +21,7 @@ in_memory_serializer = JsonSerializer()
 
 
 @pytest.fixture(scope="module")
-def db_manager_with_config(db_manager):
+def db_manager_with_config(db_manager, utxo_cache):
     storage = initKeyValueStorage(KeyValueStorageType.Memory,
                                   None,
                                   "configInMemoryStore",

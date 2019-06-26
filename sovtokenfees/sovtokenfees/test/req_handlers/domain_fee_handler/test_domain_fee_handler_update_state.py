@@ -2,7 +2,7 @@ from indy_common.constants import NYM
 
 
 def test_domain_fee_handler_update_state(domain_fee_handler, nym_request_with_fees, nym_txn, payment_address):
-    domain_fee_handler.update_state(nym_txn, None, nym_request_with_fees)
+    domain_fee_handler.apply_request(nym_request_with_fees, None, nym_txn)
 
     token_state = domain_fee_handler.token_state
     utxo_cache = domain_fee_handler.utxo_cache
