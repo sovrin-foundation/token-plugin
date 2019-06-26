@@ -112,3 +112,5 @@ class HelperSdk():
             wallet_handle, identifier, schema_json, "some_tag", "CL", json.dumps({"support_revocation": True})))
         request = self._looper.loop.run_until_complete(build_cred_def_request(identifier, definition_json))
         return request
+
+    def sdk_build_revoc_reg_def(self, claim_def_id, identifier=None):

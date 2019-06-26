@@ -59,6 +59,9 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
     def claim_def(self, schema_json, identifier=None, sdk_wallet=None):
         return self._sdk.sdk_build_claim_def(schema_json, identifier=identifier, sdk_wallet=sdk_wallet)
 
+    def revoc_reg_def(self, claim_def_id, identifier=None, sdk_wallet=None):
+        return self._sdk.sdk_build_revoc_reg_def()
+
     def add_fees_to_req(self, request, inputs, outputs):
         request_with_fees_future = add_request_fees(self._client_wallet_handle, None, json.dumps(request.as_dict),
                                                     json.dumps(inputs), json.dumps(outputs), None)

@@ -7,6 +7,8 @@ NODE_FEES_ALIAS = 'node_fees_alias'
 ATTRIB_FEES_ALIAS = 'attrib_fees_alias'
 SCHEMA_FEES_ALIAS = 'schema_fees_alias'
 CLAIM_DEF_FEES_ALIAS = 'claim_def_fees_alias'
+REVOC_REG_DEF_FEES_ALIAS = "revoc_reg_def_fees_alias"
+REVOC_REG_ENTRY_FEES_ALIAS = "revoc_reg_entry_fees_alias"
 
 
 txn_type_to_alias = {
