@@ -17,6 +17,7 @@ from sovtoken.constants import AMOUNT, ADDRESS
 from sovtokenfees.constants import FEES, FEES_FIELD_NAME
 from sovtokenfees.test.helper import add_fees_request_with_address
 
+from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
 from plenum.common.constants import TRUSTEE, STEWARD, STEWARD_STRING, TRUSTEE_STRING, VERKEY, DATA
 from plenum.common.exceptions import RequestRejectedException
 from plenum.test.helper import sdk_multi_sign_request_objects, sdk_json_to_request_object
@@ -545,4 +546,3 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                           req.owner, sdk_wallet_trustee,
                           sdk_wallet_trustees, sdk_wallet_stewards,
                           sdk_wallet_clients, sdk_wallet_endorsers)
-
