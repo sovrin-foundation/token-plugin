@@ -8,8 +8,6 @@ from indy.ledger import build_attrib_request
 from indy_common.authorize.auth_constraints import AuthConstraint, ROLE, AuthConstraintOr, AbstractAuthConstraint, \
     IDENTITY_OWNER, AuthConstraintAnd, AuthConstraintForbidden
 
-from indy_node.test.auth_rule.helper import sdk_send_and_check_auth_rule_request
-
 from indy_common.constants import NYM, ENDORSER, NODE, POOL_UPGRADE, POOL_RESTART, VALIDATOR_INFO, GET_SCHEMA, \
     ATTRIB, ENDORSER_STRING
 
@@ -19,9 +17,9 @@ from sovtoken.constants import AMOUNT, ADDRESS
 from sovtokenfees.constants import FEES, FEES_FIELD_NAME
 from sovtokenfees.test.helper import add_fees_request_with_address
 
-from plenum.common.constants import TRUSTEE, STEWARD, STEWARD_STRING, TRUSTEE_STRING, VERKEY
+from plenum.common.constants import TRUSTEE, STEWARD, STEWARD_STRING, TRUSTEE_STRING, VERKEY, DATA
 from plenum.common.exceptions import RequestRejectedException
-from plenum.test.helper import sdk_multisign_request_object, sdk_multi_sign_request_objects, sdk_json_to_request_object
+from plenum.test.helper import sdk_multi_sign_request_objects, sdk_json_to_request_object
 from plenum.test.pool_transactions.helper import sdk_add_new_nym
 
 auth_constraint = AuthConstraint(role=TRUSTEE, sig_count=1, need_to_be_owner=False)
@@ -371,8 +369,8 @@ input_params_map = [
                ]),
     # 15
     InputParam(auth_constraint=AuthConstraintAnd([AuthConstraintForbidden(),
-                                                 AuthConstraint(STEWARD, 1),
-                                                 ]),
+                                                  AuthConstraint(STEWARD, 1),
+                                                  ]),
                valid_requests=[
                ],
                invalid_requests=[
@@ -414,8 +412,8 @@ def sdk_wallet_stewards(looper,
 
 @pytest.fixture(scope='module')
 def sdk_wallet_endorsers(looper,
-                             sdk_wallet_trustee,
-                             sdk_pool_handle):
+                         sdk_wallet_trustee,
+                         sdk_pool_handle):
     sdk_wallet_stewards = []
     for i in range(3):
         wallet = sdk_add_new_nym(looper,
@@ -547,3 +545,4 @@ def test_authorization(looper, mint_tokens, sdk_wallet_trustee,
                           req.owner, sdk_wallet_trustee,
                           sdk_wallet_trustees, sdk_wallet_stewards,
                           sdk_wallet_clients, sdk_wallet_endorsers)
+

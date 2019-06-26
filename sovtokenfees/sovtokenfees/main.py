@@ -77,15 +77,8 @@ def register_req_handlers(node, fees_tracker):
     gfs_handler = GetFeesHandler(node.db_manager)
     node.read_manager.register_req_handler(gfs_handler)
 
-    node.write_manager.remove_req_handler(AUTH_RULE)
-    node.write_manager.register_req_handler(AuthRuleFeeHandler(node.db_manager,
-                                                               node.write_req_validator,
-                                                               gfs_handler))
-
-    node.write_manager.remove_req_handler(AUTH_RULES)
-    node.write_manager.register_req_handler(AuthRulesFeeHandler(node.db_manager,
-                                                                node.write_req_validator,
-                                                                gfs_handler))
+    node.write_manager.register_req_handler(AuthRuleFeeHandler(node.db_manager, gfs_handler))
+    node.write_manager.register_req_handler(AuthRulesFeeHandler(node.db_manager, gfs_handler))
 
 
 def register_batch_handlers(node, fees_tracker):
@@ -113,7 +106,6 @@ def set_callbacks(node):
 
 
 def set_post_catchup_callback(node):
-
     def postCatchupCompleteClbk(node):
         token_tracker = node.db_manager.get_tracker(TOKEN_LEDGER_ID)
         token_state = node.db_manager.get_state(TOKEN_LEDGER_ID)
