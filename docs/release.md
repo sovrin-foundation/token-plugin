@@ -24,6 +24,31 @@ There are several types of releases:
         - `master` commits are published to `master`, debian packages include unique pipeline build number as part of their versions.
         - `stable` commits are published to `rc` if `indy-node` version is *non stable* (e.g. `1.8.0~rc1`) and to `stable` otherwise. These artifacts' versions match ones from the source code.
 
+## Release Workflow
+
+1. Release candidate preparation
+    1. [**Contributor**]
+        - Creates a branch from `stable`.
+        - Merges necessary changes from `master`;
+        - Waits for `indy-node` release candidate is released and set its versions in [sovtoken/setup.py](../sovtoken/setup.py) and [devops/Makefile](../devops/Makefile).
+        - Creates a pull request to `stable`.
+    2. [**Maintainer**] once CI testing is passed reviews, approves and merges the PR.
+    3. [**build server**]
+        - Once PR is merged starts the [release pipeline](#release-pipeline) which publishes debian packages to `rc` repo component.
+2. Release candidate acceptance
+    1. [**QA**]
+        - Waits for `sovrin` release candidate and performs acceptance of the coming release verifying a full software stack: `indy-node`, `token-plugin` and `sovrin`.
+        - If QA rejects new release new candidates are prepared repeating steps described above.
+3. Releasing
+    1. [**Contributor**]
+        - Once QA accepts and `indy-node` is released creates a branch from `stable`.
+        - Sets `indy-node` dependency version to stable one.
+        - Creates new PR to `stable`.
+    2. [**Maintainer**] once CI testing is passed, reviews, approves and merges that PR.
+    3. [**build server**]
+        - Once PR is merged starts the [release pipeline](#release-pipeline) which publishes debian packages to `stable` repo component.
+
+
 ### Important Note
 
 Commits to `stable` with plugins versions and `indy-node` version that were already published can't be published again since release logic detects duplicates in the debian repository and skips publishing for such cases.
