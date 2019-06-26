@@ -39,7 +39,7 @@ def send_xfer(looper, inputs, outputs, sdk_pool_handle, extra_data=None):
 
 def check_output_val_on_all_nodes(nodes, address, amount):
     for node in nodes:
-        handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
+        handler = node.write_manager.request_handlers[XFER_PUBLIC][0]
         assert int(amount) in [out.amount for out in
                                handler.utxo_cache.get_unspent_outputs(
                                    address, is_committed=True)]

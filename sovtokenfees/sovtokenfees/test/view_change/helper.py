@@ -52,7 +52,7 @@ def scenario_txns_during_view_change(
 
         # Initiate view change
         # Wait until view change is finished and check that needed transactions are written.
-        ensure_view_change(looper, nodes)
+        ensure_view_change(looper, nodes, custom_timeout=240)
         ensureElectionsDone(looper, nodes)
 
     # Reset delays
