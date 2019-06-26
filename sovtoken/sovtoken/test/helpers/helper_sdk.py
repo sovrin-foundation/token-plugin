@@ -1,4 +1,8 @@
 import json
+
+from indy.anoncreds import issuer_create_and_store_credential_def
+from indy.ledger import build_cred_def_request
+
 import plenum.test.helper as plenum_helper
 
 from sovtoken.constants import RESULT
@@ -99,3 +103,12 @@ class HelperSdk():
             sdk_wallet,
             requests
         )
+
+    def sdk_build_claim_def(self, schema_json, identifier=None, sdk_wallet=None):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+        identifier = identifier or sdk_wallet[1]
+        wallet_handle, _ = sdk_wallet
+        _, definition_json = self._looper.loop.run_until_complete(issuer_create_and_store_credential_def(
+            wallet_handle, identifier, schema_json, "some_tag", "CL", json.dumps({"support_revocation": True})))
+        request = self._looper.loop.run_until_complete(build_cred_def_request(identifier, definition_json))
+        return request
