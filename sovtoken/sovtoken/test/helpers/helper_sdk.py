@@ -7,10 +7,11 @@ import plenum.test.helper as plenum_helper
 
 from sovtoken.constants import RESULT
 
-from indy_node.test.anon_creds.helper import create_revoc_reg
+from indy_node.test.anon_creds.helper import create_revoc_reg, create_revoc_reg_entry
 
 from indy_common.constants import ISSUANCE_BY_DEFAULT
 
+from indy_common.types import Request
 from plenum.common.util import randomString
 
 
@@ -129,3 +130,16 @@ class HelperSdk():
         identifier = identifier or sdk_wallet[1]
         wallet_handle, _ = sdk_wallet
         return create_revoc_reg(self._looper, wallet_handle, identifier, tag, claim_def_id, issuance=issuance)
+
+    def sdk_build_revoc_reg_entry(self,
+                                  claim_def_id,
+                                  tag=randomString(5),
+                                  identifier=None,
+                                  sdk_wallet=None,
+                                  issuance=ISSUANCE_BY_DEFAULT):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+        identifier = identifier or sdk_wallet[1]
+        wallet_handle, _ = sdk_wallet
+        reg_def, reg_entry = create_revoc_reg_entry(self._looper, wallet_handle, identifier, tag, claim_def_id, issuance=issuance)
+        self.send_and_check_request_objects([Request(**json.loads(reg_def))], wallet=sdk_wallet)
+        return reg_entry
