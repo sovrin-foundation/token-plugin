@@ -15,10 +15,9 @@ logger = getlogger()
 
 
 class DomainFeeBatchHandler(BatchRequestHandler):
-    def __init__(self, database_manager, fees_tracker: BatchFeesTracker, token_tracker):
+    def __init__(self, database_manager, fees_tracker: BatchFeesTracker):
         super().__init__(database_manager, DOMAIN_LEDGER_ID)
         self._fees_tracker = fees_tracker
-        self._token_tracker = token_tracker
 
     @property
     def token_state(self):
@@ -29,20 +28,24 @@ class DomainFeeBatchHandler(BatchRequestHandler):
         return self.database_manager.get_ledger(TOKEN_LEDGER_ID)
 
     @property
+    def token_tracker(self):
+        return self.database_manager.get_tracker(TOKEN_LEDGER_ID)
+
+    @property
     def utxo_cache(self):
         return self.database_manager.get_store(UTXO_CACHE_LABEL)
 
     def post_batch_applied(self, three_pc_batch, prev_handler_result=None):
-        self._token_tracker.apply_batch(self.token_state.headHash,
-                                        self.token_ledger.uncommitted_root_hash,
-                                        self.token_ledger.uncommitted_size)
+        self.token_tracker.apply_batch(self.token_state.headHash,
+                                       self.token_ledger.uncommitted_root_hash,
+                                       self.token_ledger.uncommitted_size)
         if self._fees_tracker.fees_in_current_batch > 0:
             state_root = self.token_state.headHash
             self.utxo_cache.create_batch_from_current(state_root)
             self._fees_tracker.fees_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id, prev_handler_result=None):
-        uncommitted_hash, uncommitted_txn_root, txn_count = self._token_tracker.reject_batch()
+        uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
         if txn_count == 0 or self.token_ledger.uncommitted_root_hash == uncommitted_txn_root or \
                 self.token_state.headHash == uncommitted_hash:
             return 0
@@ -53,7 +56,7 @@ class DomainFeeBatchHandler(BatchRequestHandler):
 
     def commit_batch(self, three_pc_batch, prev_handler_result=None):
         committed_txns = prev_handler_result
-        token_state_root, token_txn_root, _ = self._token_tracker.commit_batch()
+        token_state_root, token_txn_root, _ = self.token_tracker.commit_batch()
         committed_seq_nos_with_fees = [get_seq_no(t) for t in committed_txns
                                        if self._fees_tracker.has_deducted_fees(get_type(t), get_seq_no(t))]
         if len(committed_seq_nos_with_fees) > 0:

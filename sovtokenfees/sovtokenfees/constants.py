@@ -19,3 +19,8 @@ FEES_FIELD_NAME = 'fees'
 FEE_ALIAS_LENGTH = 128
 
 MAX_FEE_OUTPUTS = 1
+
+ACCEPTABLE_WRITE_TYPES_FEE = {FeesTransactions.SET_FEES.value, }
+ACCEPTABLE_QUERY_TYPES_FEE = {FeesTransactions.GET_FEES.value,
+                              FeesTransactions.GET_FEE.value}
+ACCEPTABLE_ACTION_TYPES_FEE = {}

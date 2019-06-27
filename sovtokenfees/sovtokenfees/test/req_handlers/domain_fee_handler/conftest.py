@@ -24,7 +24,9 @@ from storage.helper import initKeyValueStorage
 
 @pytest.fixture(scope="module")
 def domain_fee_handler(db_manager_with_config, fees_tracker, utxo_cache, mint_tokens):
-    return DomainFeeHandler(db_manager_with_config, NYM, fees_tracker)
+    handler = DomainFeeHandler(db_manager_with_config, fees_tracker)
+    handler.txn_type = NYM
+    return handler
 
 
 @pytest.fixture()
