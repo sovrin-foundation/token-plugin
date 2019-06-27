@@ -15,8 +15,8 @@ from plenum.server.request_handlers.handler_interfaces.write_request_handler imp
 
 class DomainFeeHandler(WriteRequestHandler):
 
-    def __init__(self, db_manager: DatabaseManager, txn_id, fees_tracker: BatchFeesTracker):
-        super().__init__(db_manager, txn_id, DOMAIN_LEDGER_ID)
+    def __init__(self, db_manager: DatabaseManager, fees_tracker: BatchFeesTracker):
+        super().__init__(db_manager, None, DOMAIN_LEDGER_ID)
         self._fees_tracker = fees_tracker
 
     def static_validation(self, request: Request):
@@ -25,10 +25,11 @@ class DomainFeeHandler(WriteRequestHandler):
     def dynamic_validation(self, request: Request):
         pass
 
-    def update_state(self, txn, prev_result, request, is_committed=False):
+    def apply_request(self, request: Request, batch_ts, prev_result):
+        self._validate_request_type(request)
         txn_type = request.operation[TXN_TYPE]
-        seq_no = get_seq_no(txn)
-        cons_time = get_txn_time(txn)
+        seq_no = get_seq_no(prev_result)
+        cons_time = get_txn_time(prev_result)
         if FeesAuthorizer.has_fees(request):
             inputs, outputs, signatures = getattr(request, f.FEES.nm)
             # This is correct since FEES is changed from config ledger whose
@@ -44,40 +45,21 @@ class DomainFeeHandler(WriteRequestHandler):
                     FEES: fees,
                 },
                 f.SIGS.nm: sigs,
-                f.REQ_ID.nm: get_req_id(txn),
+                f.REQ_ID.nm: get_req_id(prev_result),
                 f.PROTOCOL_VERSION.nm: 2,
             }
             txn = reqToTxn(txn)
             self.token_ledger.append_txns_metadata([txn], txn_time=cons_time)
             _, txns = self.token_ledger.appendTxns([txn])
-            self._update_state(txns, is_committed)
+            self.update_token_state(txn, request)
             self._fees_tracker.fees_in_current_batch += 1
             self._fees_tracker.add_deducted_fees(txn_type, seq_no, fees)
-            return txn
+        return None, None, prev_result
 
-    @property
-    def utxo_cache(self):
-        return self.database_manager.get_store(UTXO_CACHE_LABEL)
-
-    @property
-    def token_state(self):
-        return self.database_manager.get_state(TOKEN_LEDGER_ID)
-
-    @property
-    def token_ledger(self):
-        return self.database_manager.get_ledger(TOKEN_LEDGER_ID)
-
-    def gen_state_key(self, txn):
+    def update_state(self, txn, prev_result, request, is_committed=False):
         pass
 
-    def _get_ref_for_txn_fees(self, seq_no):
-        return '{}:{}'.format(self.ledger_id, seq_no)
-
-    def _update_state(self, txns, isCommitted=False):
-        for txn in txns:
-            self._update_state_with_single_txn(txn, is_committed=isCommitted)
-
-    def _update_state_with_single_txn(self, txn, is_committed=False):
+    def update_token_state(self, txn, request, is_committed=False):
         for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
             spend_input(
                 state=self.token_state,
@@ -96,3 +78,21 @@ class DomainFeeHandler(WriteRequestHandler):
                     seq_no,
                     output[AMOUNT]),
                 is_committed=is_committed)
+
+    @property
+    def utxo_cache(self):
+        return self.database_manager.get_store(UTXO_CACHE_LABEL)
+
+    @property
+    def token_state(self):
+        return self.database_manager.get_state(TOKEN_LEDGER_ID)
+
+    @property
+    def token_ledger(self):
+        return self.database_manager.get_ledger(TOKEN_LEDGER_ID)
+
+    def gen_state_key(self, txn):
+        pass
+
+    def _get_ref_for_txn_fees(self, seq_no):
+        return '{}:{}'.format(self.ledger_id, seq_no)

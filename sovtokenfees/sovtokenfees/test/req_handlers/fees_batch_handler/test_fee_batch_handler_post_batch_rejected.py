@@ -10,4 +10,4 @@ def test_fee_batch_handler_post_batch_rejected(fee_batch_handler, fees_tracker):
     fee_batch_handler.post_batch_rejected(None, None)
     assert not len(utxo_cache.current_batch_ops)
     assert not len(utxo_cache.un_committed)
-    assert not len(fee_batch_handler._token_tracker.un_committed)
+    assert not len(fee_batch_handler.token_tracker.un_committed)

@@ -16,7 +16,7 @@ from plenum.test.helper import sdk_json_to_request_object, sdk_sign_request_obje
 
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.utxo_cache import UTXOAmounts
-from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO
+from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO, UTXO_CACHE_LABEL
 
 from sovtokenfees.constants import FEES
 
@@ -343,10 +343,10 @@ def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,
         for n in nodes:
             cache[n.name] = {}
             utxo_data[n.name] = {}
-            cache_storage = n.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache._store
+            cache_storage = n.db_manager.get_store(UTXO_CACHE_LABEL)._store
             for key, value in cache_storage.iterator(include_value=True):
                 cache[n.name][key] = value
-                utxo_data[n.name] = UTXOAmounts.get_amounts(key, n.ledger_to_req_handler[TOKEN_LEDGER_ID].utxo_cache,
+                utxo_data[n.name] = UTXOAmounts.get_amounts(key, n.db_manager.get_store(UTXO_CACHE_LABEL),
                                                             is_committed=True).as_str()
         assert all(cache[node.name] == cache[n.name] for n in nodes)
         assert all(utxo_data[node.name] == utxo_data[n.name] for n in nodes)
