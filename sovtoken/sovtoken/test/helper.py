@@ -1,5 +1,6 @@
 import json
 import pytest
+from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
 
 from common.serializers.serialization import proof_nodes_serializer
 
@@ -39,7 +40,7 @@ def send_xfer(looper, inputs, outputs, sdk_pool_handle, extra_data=None):
 
 def check_output_val_on_all_nodes(nodes, address, amount):
     for node in nodes:
-        handler = node.write_manager.request_handlers[XFER_PUBLIC][0]
+        handler = next(h for h in node.write_manager.request_handlers[XFER_PUBLIC] if isinstance(h, XferHandler))
         assert int(amount) in [out.amount for out in
                                handler.utxo_cache.get_unspent_outputs(
                                    address, is_committed=True)]
