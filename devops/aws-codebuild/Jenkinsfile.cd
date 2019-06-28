@@ -2,6 +2,7 @@
 
 env.SOVRIN_CORE_REPO_NAME = 'test'
 env.LIBSOVTOKEN_DEF_RECIPIENTS = ''
+env.BRANCH_NAME = 'stable'
 
 String projectName = 'token-plugin'
 
