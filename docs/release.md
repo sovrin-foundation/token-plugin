@@ -22,7 +22,8 @@ There are several types of releases:
 3. Publishing and Notification
     1. Built packages are published to the repository component depending on the `indy-node` dependency version and GitHub branch as it was mentioned above:
         - `master` commits are published to `master`, debian packages include unique pipeline build number as part of their versions.
-        - `stable` commits are published to `rc` if `indy-node` version is *non stable* (e.g. `1.8.0~rc1`) and to `stable` otherwise. These artifacts' versions match ones from the source code.
+        - `stable` commits are published to `rc` if `indy-node` version is *non stable* (e.g. `1.8.0~rc1`) and to `stable` otherwise.
+          `stable` packages' versions match ones from the source code and `rc` packages will have additional suffix.
 
 ## Release Workflow
 
@@ -47,8 +48,5 @@ There are several types of releases:
     2. [**Maintainer**] once CI testing is passed, reviews, approves and merges that PR.
     3. [**build server**]
         - Once PR is merged starts the [release pipeline](#release-pipeline) which publishes debian packages to `stable` repo component.
-
-
-### Important Note
-
-Commits to `stable` with plugins versions and `indy-node` version that were already published can't be published again since release logic detects duplicates in the debian repository and skips publishing for such cases.
+4. New development cycle start
+    1. [**Contributor**] creates a PR version bumps in [sovtoken/__metadata__.py](../sovtoken/sovtoken/__metadata__.py) and [sovtokenfees/__metadata__.py](../sovtokenfees/sovtokenfees/__metadata__.py)
