@@ -55,9 +55,9 @@ pipelineWrapper({
             if (!indyNodeVersion) {
                 throw new Exception('indy-node version is not found')
             }
-            logger.info("Detected indy-node version: '$indyNodeVersion'")
             isRC = ((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
             isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
+            logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
         }
 
         Map builds = [
