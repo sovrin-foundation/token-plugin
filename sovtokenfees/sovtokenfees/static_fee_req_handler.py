@@ -33,9 +33,9 @@ from sovtoken.types import Output
 from sovtoken.exceptions import InsufficientFundsError, ExtraFundsError
 from state.trie.pruning_trie import rlp_decode
 
-
 txn_root_serializer = Base58Serializer()
 logger = getlogger()
+
 
 class StaticFeesReqHandler(FeeReqHandler):
     write_types = FeeReqHandler.write_types.union({SET_FEES, FEE_TXN})
@@ -120,15 +120,15 @@ class StaticFeesReqHandler(FeeReqHandler):
     def doStaticValidation(self, request: Request):
         operation = request.operation
         if operation[TXN_TYPE] in (SET_FEES, GET_FEES, GET_FEE):
-                try:
-                    if operation[TXN_TYPE] == SET_FEES:
-                        self.set_fees_validator_cls(**request.operation)
-                    elif operation[TXN_TYPE] == GET_FEE:
-                        self.get_fee_validator_cls(**request.operation)
-                except TypeError as exc:
-                    raise InvalidClientRequest(request.identifier,
-                                               request.reqId,
-                                               exc)
+            try:
+                if operation[TXN_TYPE] == SET_FEES:
+                    self.set_fees_validator_cls(**request.operation)
+                elif operation[TXN_TYPE] == GET_FEE:
+                    self.get_fee_validator_cls(**request.operation)
+            except TypeError as exc:
+                raise InvalidClientRequest(request.identifier,
+                                           request.reqId,
+                                           exc)
         else:
             super().doStaticValidation(request)
 
@@ -147,6 +147,8 @@ class StaticFeesReqHandler(FeeReqHandler):
                                                        current_fees))
 
     def _validate_metadata(self, current_fees, constraint: AuthConstraint, wrong_aliases):
+        if constraint.constraint_id == ConstraintsEnum.FORBIDDEN_CONSTRAINT_ID:
+            return
         if constraint.constraint_id != ConstraintsEnum.ROLE_CONSTRAINT_ID:
             for constr in constraint.auth_constraints:
                 self._validate_metadata(current_fees, constr, wrong_aliases)
@@ -264,12 +266,13 @@ class StaticFeesReqHandler(FeeReqHandler):
         try:
             fees_key = build_path_for_set_fees(alias=fees_alias)
             if with_proof:
+                root_hash = self.state.committedHeadHash if is_committed else self.state.headHash
                 proof, serz = self.state.generate_state_proof(fees_key,
+                                                              root=self.state.get_head_by_hash(root_hash),
                                                               serialize=True,
                                                               get_value=True)
                 if serz:
-                    serz = rlp_decode(serz)[0]
-                root_hash = self.state.committedHeadHash if is_committed else self.state.headHash
+                    serz = self.state.get_decoded(serz)
                 encoded_root_hash = state_roots_serializer.serialize(bytes(root_hash))
                 multi_sig = self.bls_store.get(encoded_root_hash)
                 if multi_sig:

@@ -11,7 +11,6 @@ from plenum.common.exceptions import (CouldNotAuthenticate,
 from plenum.common.types import OPERATION, PLUGIN_TYPE_AUTHENTICATOR, f
 from plenum.common.verifier import DidVerifier, Verifier
 from plenum.server.client_authn import CoreAuthNr
-from sovtoken import AcceptableQueryTypes, AcceptableWriteTypes
 from sovtoken.constants import (ADDRESS, INPUTS, MINT_PUBLIC, OUTPUTS, SIGS,
                                 XFER_PUBLIC, EXTRA)
 from sovtoken.util import address_to_verkey
@@ -29,9 +28,6 @@ class AddressSigVerifier(Verifier):
 
 class TokenAuthNr(CoreAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
-
-    write_types = AcceptableWriteTypes
-    query_types = AcceptableQueryTypes
 
     # ------------------------------------------------------------------------------------
     # Entrance point for transaction signature verification. Here come all transactions of all types,
@@ -71,7 +67,7 @@ class TokenAuthNr(CoreAuthNr):
         if len(identifier) not in (21, 22):
             vk = address_to_verkey(identifier)
             if len(vk) in (43, 44):
-            # Address is the 32 byte verkey
+                # Address is the 32 byte verkey
                 return vk
         return super().getVerkey(identifier)
 

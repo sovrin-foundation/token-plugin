@@ -37,7 +37,7 @@ RUN apt-get update -y && apt-get install -y \
         zlib1g-dev \
         liblz4-dev \
         libsnappy-dev \
-    # libindy 
+    # libindy
         python3-nacl \
         libindy-crypto=0.4.5 \
         libindy=1.8.2

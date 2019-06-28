@@ -67,7 +67,7 @@ def test_trustee_invalid_minting(helpers, addresses):
         helpers.inner.general.do_mint(outputs)
 
 
-# What about trust anchors, TGB, do those fail as well?
+# What about endorsers, TGB, do those fail as well?
 def test_non_trustee_minting(helpers, addresses):
     """
     Non trustees (stewards in this case) should not be able to mint new tokens
