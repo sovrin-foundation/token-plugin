@@ -60,7 +60,7 @@ pipelineWrapper({
             }
             logger.info("Detected indy-node version: '$indyNodeVersion'")
             isRC = ((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
-            isRelease = (((env.BRANCH_NAME == 'stable') && !isRC)
+            isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
         }
 
         Map builds = [
