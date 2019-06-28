@@ -35,6 +35,9 @@ pipelineWrapper({
         List projects = ['sovtoken', 'sovtokenfees']
         List pkgsList = []
         String indyNodeVersion
+        Boolean isRC = false
+        Boolean isRelease = false
+        Boolean isDev = (env.BRANCH_NAME == 'master')
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -53,7 +56,9 @@ pipelineWrapper({
             if (!indyNodeVersion) {
                 throw new Exception('indy-node version is not found')
             }
-            logger.info("Detected indy-node version: '$indyNodeVersion'")
+            isRC = !!((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
+            isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
+            logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
         }
 
         Map builds = [
@@ -113,8 +118,7 @@ pipelineWrapper({
 
 
                     stage('Set release parameters') {
-                        def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "$BUILD_NUMBER"
-
+                        def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
                         debPVersion = "$srcVersion${releaseVersion ? '~' + releaseVersion : ''}"
                         logger.info("Package version for sovrin repo: $debPVersion")
                     }
@@ -180,7 +184,7 @@ pipelineWrapper({
             String repoComponent = env.BRANCH_NAME
             String debsDir = 'debs'
 
-            if ((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/)) {
+            if (isRC) {
                 repoComponent = 'rc'
             }
             logger.info("Debian repo component is set to: '$repoComponent'")
