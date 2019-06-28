@@ -47,6 +47,8 @@ There are several types of releases:
     2. [**Maintainer**] once CI testing is passed, reviews, approves and merges that PR.
     3. [**build server**]
         - Once PR is merged starts the [release pipeline](#release-pipeline) which publishes debian packages to `stable` repo component.
+4. New development cycle start
+    1. [**Contributor**] creates a PR version bumps in [sovtoken/__metadata__.py](../sovtoken/sovtoken/__metadata__.py) and [sovtokenfees/__metadata__.py](../sovtokenfees/sovtokenfees/__metadata__.py)
 
 
 ### Important Note
