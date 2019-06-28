@@ -3,6 +3,7 @@ import json
 from indy.payment import add_request_fees, build_set_txn_fees_req, build_get_txn_fees_req
 from sovtoken.test.helpers import HelperRequest
 from sovtokenfees.constants import FEES
+from sovtokenfees.test.constants import txn_type_to_alias
 from sovtokenfees.test.helpers.abstract_helper_request import AbstractHelperRequest
 from plenum.common.constants import TXN_TYPE, ALIAS
 from sovtokenfees.constants import SET_FEES, FEES, GET_FEES, GET_FEE
@@ -54,8 +55,17 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
 
         request = self._create_request(payload, identifier=self._client_did)
         return request
+
+    def claim_def(self, schema_json, identifier=None, sdk_wallet=None):
+        return self._sdk.sdk_build_claim_def(schema_json, identifier=identifier, sdk_wallet=sdk_wallet)
+
+    def revoc_reg_def(self, claim_def_id, identifier=None, sdk_wallet=None):
+        return self._sdk.sdk_build_revoc_reg_def(claim_def_id, identifier=identifier, sdk_wallet=sdk_wallet)
+
+    def revoc_reg_entry(self, claim_def_id, identifier=None, sdk_wallet=None):
+        return self._sdk.sdk_build_revoc_reg_entry(claim_def_id, identifier=identifier, sdk_wallet=sdk_wallet)
+
     def add_fees_to_req(self, request, inputs, outputs):
         request_with_fees_future = add_request_fees(self._client_wallet_handle, None, json.dumps(request.as_dict),
                                                     json.dumps(inputs), json.dumps(outputs), None)
         return self._looper.loop.run_until_complete(request_with_fees_future)
-
