@@ -1,3 +1,5 @@
+from sovtokenfees.req_handlers.batch_handlers.fee_batch_handler import DomainFeeBatchHandler
+
 from plenum.common.constants import CONFIG_LEDGER_ID, DOMAIN_LEDGER_ID
 from plenum.common.types import f
 from sovtoken.constants import ADDRESS, AMOUNT
@@ -20,14 +22,16 @@ def node(helpers, user_address):
 
 
 @pytest.fixture()
-def static_req_handler(node):
-    return node.get_req_handler(CONFIG_LEDGER_ID)
+def domain_batch_fee_handler(node):
+    return next(h for h in node.write_manager.batch_handlers[DOMAIN_LEDGER_ID] if isinstance(h, DomainFeeBatchHandler))
 
 
 @pytest.fixture()
-def three_phase_handler(node, static_req_handler):
-    token_handler = node.get_req_handler(ledger_id=TOKEN_LEDGER_ID)
-    return ThreePhaseCommitHandler(node.master_replica, token_handler.ledger, token_handler.state, static_req_handler)
+def three_phase_handler(node, domain_batch_fee_handler):
+    return ThreePhaseCommitHandler(node.master_replica,
+                                   node.db_manager.get_ledger(TOKEN_LEDGER_ID),
+                                   node.db_manager.get_state(TOKEN_LEDGER_ID),
+                                   domain_batch_fee_handler._fees_tracker)
 
 
 @pytest.fixture()
@@ -142,12 +146,12 @@ class PP:
         state_root_deserialized = state_roots_serializer.deserialize(PP.plugin_data[FEES][f.STATE_ROOT.nm])
         txn_root_deserialized = state_roots_serializer.deserialize(PP.plugin_data[FEES][f.TXN_ROOT.nm])
 
-        monkeypatch.setattr(three_phase_handler.fees_req_handler, 'fee_txns_in_current_batch', 1)
+        monkeypatch.setattr(three_phase_handler.fees_tracker, 'fees_in_current_batch', 1)
         monkeypatch.setattr(three_phase_handler.master_replica, 'stateRootHash', mock_get_state_root)
         monkeypatch.setattr(three_phase_handler.master_replica, 'txnRootHash', mock_get_txn_root)
-        monkeypatch.setattr(three_phase_handler.fees_req_handler.token_state._trie, 'root_hash',
+        monkeypatch.setattr(three_phase_handler.token_state._trie, 'root_hash',
                             state_root_deserialized)
-        monkeypatch.setattr(three_phase_handler.fees_req_handler.token_ledger, 'uncommittedRootHash',
+        monkeypatch.setattr(three_phase_handler.token_ledger, 'uncommittedRootHash',
                             txn_root_deserialized)
 
         return three_phase_handler.add_to_pre_prepare(pp)

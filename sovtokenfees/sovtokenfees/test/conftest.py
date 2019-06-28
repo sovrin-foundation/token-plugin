@@ -44,6 +44,10 @@ from sovtokenfees.test.helpers import form_helpers
 from plenum.test.conftest import get_data_for_role
 
 
+from stp_core.common.log import Logger
+Logger().enableStdLogging()
+
+
 @unique
 class MintStrategy(Enum):
     first_only = 1  # mint only for the first address
