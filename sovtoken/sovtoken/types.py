@@ -3,7 +3,7 @@ import json
 
 
 class Output:
-    def __init__(self, address: str, seq_no: str, value: Optional[int]):
+    def __init__(self, address: str, seq_no: int, value: Optional[int]):
         self.address = address
         self.seqNo = seq_no
         self.amount = value
