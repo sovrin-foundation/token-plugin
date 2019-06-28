@@ -40,6 +40,7 @@ pipelineWrapper({
         String indyNodeVersion
         Boolean isRC = false
         Boolean isRelease = false
+        Boolean isDev = (env.BRANCH_NAME == 'master')
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -120,7 +121,7 @@ pipelineWrapper({
 
 
                     stage('Set release parameters') {
-                        def releaseVersion =  isRelease ? '' : "$BUILD_NUMBER"
+                        def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
                         debPVersion = "$srcVersion${releaseVersion ? '~' + releaseVersion : ''}"
                         logger.info("Package version for sovrin repo: $debPVersion")
                     }
