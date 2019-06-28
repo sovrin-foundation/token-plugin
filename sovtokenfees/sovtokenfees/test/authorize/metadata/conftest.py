@@ -4,7 +4,7 @@ import functools
 import pytest
 
 from indy_common.authorize.auth_constraints import IDENTITY_OWNER
-from indy_common.constants import TRUST_ANCHOR
+from indy_common.constants import ENDORSER
 from indy_common.test.auth.metadata.helper import PluginAuthorizer
 from plenum.common.constants import TRUSTEE, STEWARD
 from plenum.test.conftest import getValueFromModule
@@ -14,7 +14,7 @@ from indy_common.test.auth.conftest import write_auth_req_validator as warv, idr
     constraint_serializer, config_state, write_request_validation
 
 
-ROLES = [TRUSTEE, STEWARD, TRUST_ANCHOR, IDENTITY_OWNER]
+ROLES = [TRUSTEE, STEWARD, ENDORSER, IDENTITY_OWNER]
 MAX_SIG_COUNT = 3
 
 
