@@ -2,7 +2,6 @@ import pytest
 from plenum.common.exceptions import InvalidClientMessageException
 
 from sovtoken.exceptions import ExtraFundsError
-from sovtoken.token_req_handler import TokenReqHandler
 
 
 def test_xfer_public_txn_equal():

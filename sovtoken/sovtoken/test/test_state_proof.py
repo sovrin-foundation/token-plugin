@@ -1,8 +1,8 @@
+from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
+
 from storage.kv_in_memory import KeyValueStorageInMemory
 
 from state.db.persistent_db import PersistentDB
-
-from sovtoken.token_req_handler import TokenReqHandler
 
 from common.serializers.serialization import state_roots_serializer
 
@@ -48,7 +48,7 @@ def test_state_proof(public_minting, looper,  # noqa
     encoded = {}
     outputs = res[OUTPUTS]
     for out in outputs:
-        state_key = TokenReqHandler.create_state_key(out["address"], out["seqNo"])
+        state_key = XferHandler.create_state_key(out["address"], out["seqNo"])
         encoded[state_key] = rlp_encode([str(out["amount"])])
     proof_nodes = decode_proof(res[STATE_PROOF][PROOF_NODES])
     client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))

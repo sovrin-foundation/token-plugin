@@ -6,6 +6,7 @@ from indy_common.state import config
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
 
+from indy_node.server.request_handlers.read_req_handlers.get_auth_rule_handler import GetAuthRuleHandler
 from plenum.common.types import OPERATION
 
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
@@ -13,7 +14,6 @@ from indy_common.authorize.auth_constraints import ROLE, ConstraintCreator, Auth
 from indy_common.authorize.auth_map import auth_map
 from indy_common.constants import NYM, ENDORSER, AUTH_ACTION, AUTH_TYPE, FIELD, NEW_VALUE, \
     OLD_VALUE, GET_AUTH_RULE, SCHEMA, CONSTRAINT
-from indy_node.server.config_req_handler import ConfigReqHandler
 from indy_node.test.auth_rule.helper import generate_constraint_list, generate_constraint_entity, \
     sdk_send_and_check_auth_rule_request, sdk_send_and_check_get_auth_rule_request, \
     sdk_send_and_check_get_auth_rule_invalid_request
@@ -58,7 +58,7 @@ def test_get_one_auth_rule_transaction(looper,
                                        sdk_wallet_trustee,
                                        sdk_pool_handle):
     key = generate_key()
-    str_key = ConfigReqHandler.get_auth_key(key)
+    str_key = GetAuthRuleHandler.get_auth_key(key)
     req, resp = sdk_send_and_check_get_auth_rule_request(looper,
                                                          sdk_pool_handle,
                                                          sdk_wallet_trustee,

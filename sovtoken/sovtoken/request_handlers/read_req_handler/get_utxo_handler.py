@@ -27,6 +27,10 @@ class GetUtxoHandler(ReadRequestHandler):
                                        request.reqId,
                                        error)
 
+    @staticmethod
+    def create_state_key(address: str, seq_no: int) -> bytes:
+        return ':'.join([address, str(seq_no)]).encode()
+
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]
         encoded_root_hash = state_roots_serializer.serialize(
