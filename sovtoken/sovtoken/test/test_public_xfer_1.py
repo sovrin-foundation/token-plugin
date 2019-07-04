@@ -4,7 +4,7 @@ from sovtoken.request_handlers.token_utils import create_state_key
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS, PAYMENT_ADDRESS, TOKEN_LEDGER_ID
+from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, INPUTS
 from sovtoken.test.helper import user1_token_wallet
 
 
@@ -306,3 +306,30 @@ def test_multiple_inputs_outputs_with_change(
     assert address5_utxos[1][PAYMENT_ADDRESS] == address5
     assert address5_utxos[0][AMOUNT] == 100
     assert address5_utxos[1][AMOUNT] == 10
+
+
+def test_xfer_signatures_included_in_txn(
+        helpers,
+        addresses,
+        initial_mint
+):
+    [address1, address2, address3, address4, address5] = addresses
+
+    inputs = helpers.general.get_utxo_addresses([address1, address2, address3])
+    inputs = [utxo for utxos in inputs for utxo in utxos]
+
+    outputs = [
+        {"address": address4, "amount": 200},
+        {"address": address5, "amount": 100},
+    ]
+
+    request = helpers.request.transfer(inputs, outputs)
+    response = helpers.sdk.send_and_check_request_objects([request])
+
+    sigs = [(i["address"], s) for i, s in zip(request.operation[INPUTS], request.operation[SIGS])]
+    request = response[0][0]
+    sigs.append((request["identifier"], request["signature"]))
+
+    rep_sigs = [(v['from'], v['value']) for v in response[0][1]["result"]["reqSignature"]["values"]]
+
+    assert sorted(rep_sigs) == sorted(sigs)
