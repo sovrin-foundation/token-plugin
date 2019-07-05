@@ -9,7 +9,6 @@ from plenum.common.constants import TYPE
 from plenum.test.helper import randomOperation
 from sovtokenfees.constants import FEES_FIELD_NAME
 from sovtokenfees.domain import build_path_for_set_fees
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 
 PLUGIN_FIELD = FEES_FIELD_NAME
 

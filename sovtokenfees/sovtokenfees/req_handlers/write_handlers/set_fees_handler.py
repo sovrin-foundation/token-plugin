@@ -1,7 +1,6 @@
 from sovtokenfees.constants import SET_FEES, FEES
 from sovtokenfees.req_handlers.fees_utils import get_fee_from_state
-
-from common.serializers.serialization import proof_nodes_serializer, state_roots_serializer, config_state_serializer
+from sovtokenfees.serializers import proof_nodes_serializer, config_state_serializer
 from indy_common.authorize.auth_actions import AuthActionEdit
 from sovtokenfees import FeesTransactions
 from sovtokenfees.messages.fields import SetFeesMsg

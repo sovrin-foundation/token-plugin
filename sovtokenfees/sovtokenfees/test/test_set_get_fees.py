@@ -1,8 +1,8 @@
 import json
 
 import pytest
+from sovtokenfees.serializers import state_roots_serializer, config_state_serializer
 
-from common.serializers.serialization import state_roots_serializer
 from plenum.common.constants import NYM, PROOF_NODES, ROOT_HASH, STATE_PROOF, AUDIT_LEDGER_ID
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException, PoolLedgerTimeoutException)
@@ -11,7 +11,6 @@ from sovtoken.constants import ADDRESS, AMOUNT, PAYMENT_ADDRESS
 from sovtoken.test.helper import decode_proof
 from sovtokenfees.constants import FEES, FEE
 from sovtokenfees.domain import build_path_for_set_fees
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 
 from plenum.test.delayers import req_delay
 from plenum.test.stasher import delay_rules
@@ -253,7 +252,7 @@ def test_get_fees_with_proof(helpers, fees_set, fees):
     assert state_proof
     proof_nodes = decode_proof(result[STATE_PROOF][PROOF_NODES])
     client_trie = Trie(PersistentDB(KeyValueStorageInMemory()))
-    fees = rlp_encode([StaticFeesReqHandler.state_serializer.serialize(fees)])
+    fees = rlp_encode([config_state_serializer.serialize(fees)])
     assert client_trie.verify_spv_proof(
         state_roots_serializer.deserialize(result[STATE_PROOF][ROOT_HASH]),
         build_path_for_set_fees(), fees, proof_nodes)

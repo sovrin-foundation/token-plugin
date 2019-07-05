@@ -4,7 +4,6 @@ from plenum.common.constants import AUDIT_LEDGER_ID
 from sovtokenfees.constants import FEES
 from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.fees_authorizer import FeesAuthorizer
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 
 from stp_core.loop.eventually import eventually
 

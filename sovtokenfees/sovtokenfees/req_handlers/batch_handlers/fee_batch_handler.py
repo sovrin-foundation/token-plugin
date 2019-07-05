@@ -4,7 +4,7 @@ from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
 from sovtokenfees.constants import FEES
 from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
-from common.serializers.serialization import txn_root_serializer
+from sovtokenfees.serializers import txn_root_serializer
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.txn_util import get_seq_no, get_type
 from plenum.server.batch_handlers.batch_request_handler import BatchRequestHandler

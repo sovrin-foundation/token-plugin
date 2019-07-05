@@ -1,6 +1,6 @@
 from collections import namedtuple
 from base58 import b58decode
-from sovtokenfees.static_fee_req_handler import txn_root_serializer
+from sovtokenfees.serializers import txn_root_serializer
 
 
 def test_token_batch_handler_commit_batch(utxo_batch_handler, utxo_cache):

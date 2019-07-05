@@ -7,6 +7,8 @@ from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
 
 from indy_node.server.request_handlers.read_req_handlers.get_auth_rule_handler import GetAuthRuleHandler
+
+from indy_node.server.request_handlers.config_req_handlers.auth_rule.static_auth_rule_helper import StaticAuthRuleHelper
 from plenum.common.types import OPERATION
 
 from indy_common.authorize.auth_actions import ADD_PREFIX, EDIT_PREFIX
@@ -98,7 +100,7 @@ def test_get_all_auth_rule_transactions(looper,
 
     for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
         rule = result[i]
-        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        assert auth_key == StaticAuthRuleHelper.get_auth_key(rule)
         if constraint is None:
             assert {} == rule[CONSTRAINT]
         else:
@@ -148,7 +150,7 @@ def test_get_all_auth_rule_transactions_after_write(looper,
                                                 auth_action=auth_action, auth_type=auth_type,
                                                 field=field, new_value=new_value,
                                                 constraint=auth_constraint)
-    auth_key = ConfigReqHandler.get_auth_key(resp[0][0][OPERATION])
+    auth_key = StaticAuthRuleHelper.get_auth_key(resp[0][0][OPERATION])
     resp = sdk_send_and_check_get_auth_rule_request(looper,
                                                     sdk_pool_handle,
                                                     sdk_wallet_trustee)
@@ -160,7 +162,7 @@ def test_get_all_auth_rule_transactions_after_write(looper,
 
     for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
         rule = result[i]
-        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        assert auth_key == StaticAuthRuleHelper.get_auth_key(rule)
         if constraint is None:
             assert {} == rule[CONSTRAINT]
         else:

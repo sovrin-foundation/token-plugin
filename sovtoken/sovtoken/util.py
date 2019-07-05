@@ -5,7 +5,6 @@ from base58 import b58decode_check, b58encode_check, b58encode, b58decode
 from plenum.common.exceptions import UnauthorizedClientRequest
 from plenum.common.types import f
 from plenum.common.roles import Roles
-from plenum.server.domain_req_handler import DomainRequestHandler
 
 
 def register_token_wallet_with_client(client, token_wallet):

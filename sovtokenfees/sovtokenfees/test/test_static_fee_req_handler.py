@@ -29,7 +29,6 @@ from sovtokenfees.fees_authorizer import FeesAuthorizer
 from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS
 from stp_core.loop.eventually import eventually
 
-from indy_node.server.config_req_handler import ConfigReqHandler
 
 VALID_FEES = {
     NYM_FEES_ALIAS: 1,
