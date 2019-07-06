@@ -1,5 +1,11 @@
+try:
+    import ujson as json
+except ImportError:
+    import json
+from copy import deepcopy
+
 from sovtoken import TokenTransactions
-from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID
+from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
 from sovtoken.request_handlers.token_utils import parse_state_key
 from sovtoken.types import Output
@@ -13,6 +19,7 @@ from plenum.common.types import f
 from plenum.server.database_manager import DatabaseManager
 from plenum.server.request_handlers.handler_interfaces.read_request_handler import ReadRequestHandler
 from state.trie.pruning_trie import rlp_decode
+from stp_core.config import MSG_LEN_LIMIT
 
 
 class GetUtxoHandler(ReadRequestHandler):
@@ -60,10 +67,21 @@ class GetUtxoHandler(ReadRequestHandler):
                 continue
             outputs.add(Output(addr, int(seq_no), int(amount)))
 
+        utxos = outputs.sorted_list
+        next_seqno = None
+        if len(utxos) > UTXO_LIMIT:
+            next_seqno = utxos[UTXO_LIMIT].seqNo
+            utxos = utxos[:UTXO_LIMIT]
+
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs.sorted_list}
-        if proof:
-            result[STATE_PROOF] = proof
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: utxos}
 
         result.update(request.operation)
+        if next_seqno:
+            result[NEXT_SEQNO] = next_seqno
+        if proof:
+            res_sub = deepcopy(result)
+            res_sub[STATE_PROOF] = proof
+            if len(json.dumps(res_sub)) <= MSG_LEN_LIMIT:
+                result = res_sub
         return result

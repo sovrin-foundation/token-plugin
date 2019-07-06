@@ -13,7 +13,7 @@ from plenum.common.types import f
 
 def spend_input(state, utxo_cache: UTXOCache, address, seq_no, is_committed=False):
     state_key = create_state_key(address, seq_no)
-    state.set(state_key, b'')
+    state.remove(state_key)
     utxo_cache.spend_output(Output(address, seq_no, None),
                             is_committed=is_committed)
 

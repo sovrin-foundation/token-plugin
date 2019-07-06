@@ -24,3 +24,6 @@ ACCEPTABLE_WRITE_TYPES = {TokenTransactions.MINT_PUBLIC.value,
                           TokenTransactions.XFER_PUBLIC.value}
 ACCEPTABLE_QUERY_TYPES = {TokenTransactions.GET_UTXO.value, }
 ACCEPTABLE_ACTION_TYPES = {}
+
+UTXO_LIMIT = 1000
+NEXT_SEQNO = "next"

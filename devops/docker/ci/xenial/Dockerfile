@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # rocksdb
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
     && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc master" \
     && apt-get update && apt-get install -y \
         libbz2-dev \
@@ -44,4 +44,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.18.0
+ENV CI_ENV_VERSION=0.19.0
