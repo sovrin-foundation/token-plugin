@@ -63,18 +63,18 @@ class GetUtxoHandler(ReadRequestHandler):
                 continue
             outputs.add(Output(addr, int(seq_no), int(amount)))
 
-        list = outputs.sorted_list
-        next = None
-        if len(list) > UTXO_LIMIT:
-            next = list[UTXO_LIMIT].seqNo
-            list = list[:UTXO_LIMIT]
+        utxos = outputs.sorted_list
+        next_seqno = None
+        if len(utxos) > UTXO_LIMIT:
+            next_seqno = utxos[UTXO_LIMIT].seqNo
+            utxos = utxos[:UTXO_LIMIT]
 
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: list}
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: utxos}
 
         result.update(request.operation)
-        if next:
-            result[NEXT_SEQNO] = next
+        if next_seqno:
+            result[NEXT_SEQNO] = next_seqno
         if proof:
             res_sub = deepcopy(result)
             res_sub[STATE_PROOF] = proof
