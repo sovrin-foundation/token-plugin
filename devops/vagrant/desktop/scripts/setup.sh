@@ -11,7 +11,7 @@ sudo apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
 
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
 
 echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
