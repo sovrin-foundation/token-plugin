@@ -13,6 +13,10 @@ from state.trie.pruning_trie import Trie
 from sovtoken.test.wallet import TokenWallet
 
 
+def libsovtoken_address_to_address(addr):
+    return addr[8:]
+
+
 def xfer_request(inputs, outputs, extra_data=None):
     payload = {
         TXN_TYPE: XFER_PUBLIC,

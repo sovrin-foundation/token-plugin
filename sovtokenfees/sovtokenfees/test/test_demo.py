@@ -1,4 +1,6 @@
 import pytest
+from sovtoken.test.helper import libsovtoken_address_to_address
+
 from plenum.common.txn_util import get_payload_data, get_seq_no
 from sovtokenfees.constants import FEES
 from sovtoken.constants import OUTPUTS, TOKEN_LEDGER_ID, ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
@@ -58,7 +60,7 @@ def mint_tokens_to_client(helpers, client_address):
     outputs = [{ADDRESS: client_address, AMOUNT: MINT_TOKEN_AMOUNT}]
     result = helpers.general.do_mint(outputs)
     assert get_payload_data(result)[OUTPUTS][0] == {
-        ADDRESS: client_address.replace("pay:sov:", ""),
+        ADDRESS: libsovtoken_address_to_address(client_address),
         AMOUNT: MINT_TOKEN_AMOUNT
     }
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
@@ -128,7 +130,7 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
     for fee_txn in transactions:
         fee_data = get_payload_data(fee_txn)
         assert fee_data[OUTPUTS] == [{
-            ADDRESS: client_address.replace("pay:sov:", ""),
+            ADDRESS: libsovtoken_address_to_address(client_address),
             AMOUNT: MINT_TOKEN_AMOUNT - TXN_FEES[NYM_FEES_ALIAS]
         }]
         assert fee_data[FEES] == TXN_FEES[NYM_FEES_ALIAS]
