@@ -65,12 +65,9 @@ def register_req_handlers(node, fees_tracker):
     node.write_manager.register_req_handler(XferFeeHandler(node.db_manager,
                                                            node.write_req_validator))
 
+    domain_fee_r_h = DomainFeeHandler(node.db_manager, fees_tracker)
     for typ in list(node.write_manager.ledger_id_to_types[DOMAIN_LEDGER_ID]):
-        # Ugly hack, replace it with expanding register_req_handler method
-        # TODO: Additional functionality to request_manager ^^^
-        domain_fee_r_h = DomainFeeHandler(node.db_manager, fees_tracker)
-        domain_fee_r_h.txn_type = typ
-        node.write_manager.register_req_handler(domain_fee_r_h)
+        node.write_manager.register_req_handler(domain_fee_r_h, typ=typ)
 
     node.write_manager.register_req_handler(FeeTxnCatchupHandler(node.db_manager))
     node.read_manager.register_req_handler(GetFeeHandler(node.db_manager))
@@ -82,23 +79,8 @@ def register_req_handlers(node, fees_tracker):
 
 
 def register_batch_handlers(node, fees_tracker):
-    handlers = node.write_manager.batch_handlers[DOMAIN_LEDGER_ID]
-    node.write_manager.remove_batch_handler(DOMAIN_LEDGER_ID)
-
-    # Temp checks, remove after integration
-    if len(handlers) != 4 or not isinstance(handlers[-1], TsStoreBatchHandler) \
-            or not (handlers[-2], AuditBatchHandler):
-        raise LogicError
-
-    handlers.insert(handlers.index(handlers[-2]),
-                    DomainFeeBatchHandler(node.db_manager, fees_tracker))
-
-    for h in handlers:
-        if isinstance(h, (AuditBatchHandler, TsStoreBatchHandler)):
-            node.write_manager.register_batch_handler(h, ledger_id=DOMAIN_LEDGER_ID)
-        node.write_manager.register_batch_handler(h)
-    # TODO: Additional functionality to request_manager ^^^
-
+    domain_fee_batch_handler = DomainFeeBatchHandler(node.db_manager, fees_tracker)
+    node.write_manager.register_batch_handler(domain_fee_batch_handler)
 
 def set_callbacks(node):
     set_post_catchup_callback(node)
