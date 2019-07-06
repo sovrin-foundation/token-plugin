@@ -11,7 +11,7 @@ from sovtoken.request_handlers.token_utils import parse_state_key
 from sovtoken.types import Output
 from sovtoken.util import SortedItems
 
-from common.serializers.serialization import state_roots_serializer, proof_nodes_serializer
+from sovtokenfees.serializers import state_roots_serializer, proof_nodes_serializer
 from plenum.common.constants import MULTI_SIGNATURE, ROOT_HASH, PROOF_NODES, STATE_PROOF
 from plenum.common.exceptions import InvalidClientRequest
 from plenum.common.request import Request

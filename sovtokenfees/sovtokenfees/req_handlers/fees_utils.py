@@ -1,6 +1,6 @@
 from sovtokenfees.domain import build_path_for_set_fees
 
-from common.serializers.serialization import state_roots_serializer, proof_nodes_serializer, config_state_serializer
+from sovtokenfees.serializers import state_roots_serializer, proof_nodes_serializer, config_state_serializer
 from plenum.common.constants import BLS_LABEL, MULTI_SIGNATURE, ROOT_HASH, PROOF_NODES
 from state.trie.pruning_trie import rlp_decode
 

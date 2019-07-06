@@ -26,7 +26,6 @@ class DomainFeeHandler(WriteRequestHandler):
         pass
 
     def apply_request(self, request: Request, batch_ts, prev_result):
-        self._validate_request_type(request)
         txn_type = request.operation[TXN_TYPE]
         seq_no = get_seq_no(prev_result)
         cons_time = get_txn_time(prev_result)
