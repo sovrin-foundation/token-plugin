@@ -7,6 +7,8 @@ from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from base58 import b58encode_check
 from indy.payment import build_payment_req
 from indy_node.test.conftest import write_auth_req_validator, constraint_serializer, config_state, idr_cache
+from sovtoken.test.helper import libsovtoken_address_to_address
+
 from plenum.common.txn_util import append_txn_metadata
 from plenum.test.helper import sdk_json_to_request_object
 
