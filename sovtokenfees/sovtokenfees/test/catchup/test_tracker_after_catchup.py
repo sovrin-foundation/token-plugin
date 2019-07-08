@@ -2,6 +2,7 @@ import json
 
 import pytest
 from sovtoken import TOKEN_LEDGER_ID
+from sovtoken.constants import XFER_PUBLIC
 from sovtokenfees.test.helper import get_amount_from_token_txn, nyms_with_fees
 
 from plenum.test.stasher import delay_rules
@@ -17,7 +18,7 @@ from plenum.common.startable import Mode
 
 
 def get_last_committed_from_tracker(node):
-    tracker = node.ledger_to_req_handler.get(TOKEN_LEDGER_ID).tracker
+    tracker = node.read_manager.request_handlers[XFER_PUBLIC][0].tracker
     return tracker.last_committed
 
 

@@ -1,5 +1,11 @@
+try:
+    import ujson as json
+except ImportError:
+    import json
+from copy import deepcopy
+
 from sovtoken import TokenTransactions
-from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID
+from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
 from sovtoken.request_handlers.token_utils import parse_state_key
 from sovtoken.types import Output
@@ -13,12 +19,12 @@ from plenum.common.types import f
 from plenum.server.database_manager import DatabaseManager
 from plenum.server.request_handlers.handler_interfaces.read_request_handler import ReadRequestHandler
 from state.trie.pruning_trie import rlp_decode
+from stp_core.config import MSG_LEN_LIMIT
 
 
 class GetUtxoHandler(ReadRequestHandler):
-    def __init__(self, database_manager: DatabaseManager, bls_store):
+    def __init__(self, database_manager: DatabaseManager):
         super().__init__(database_manager, TokenTransactions.GET_UTXO.value, TOKEN_LEDGER_ID)
-        self._bls_store = bls_store
 
     def static_validation(self, request: Request):
         error = txt_get_utxo_validate(request)
@@ -35,7 +41,7 @@ class GetUtxoHandler(ReadRequestHandler):
         proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
                                                                          serialize=True,
                                                                          get_value=True)
-        multi_sig = self._bls_store.get(encoded_root_hash)
+        multi_sig = self.database_manager.bls_store.get(encoded_root_hash)
         if multi_sig:
             encoded_proof = proof_nodes_serializer.serialize(proof)
             proof = {
@@ -57,11 +63,21 @@ class GetUtxoHandler(ReadRequestHandler):
                 continue
             outputs.add(Output(addr, int(seq_no), int(amount)))
 
+        utxos = outputs.sorted_list
+        next_seqno = None
+        if len(utxos) > UTXO_LIMIT:
+            next_seqno = utxos[UTXO_LIMIT].seqNo
+            utxos = utxos[:UTXO_LIMIT]
+
         result = {f.IDENTIFIER.nm: request.identifier,
-                  f.REQ_ID.nm: request.reqId, OUTPUTS: outputs.sorted_list}
-        if proof:
-            result[STATE_PROOF] = proof
+                  f.REQ_ID.nm: request.reqId, OUTPUTS: utxos}
 
         result.update(request.operation)
+        if next_seqno:
+            result[NEXT_SEQNO] = next_seqno
+        if proof:
+            res_sub = deepcopy(result)
+            res_sub[STATE_PROOF] = proof
+            if len(json.dumps(res_sub)) <= MSG_LEN_LIMIT:
+                result = res_sub
         return result
-

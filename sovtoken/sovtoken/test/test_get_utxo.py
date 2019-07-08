@@ -3,12 +3,14 @@ from random import randint
 import pytest
 
 from base58 import b58encode_check
+from sovtoken.request_handlers.token_utils import create_state_key
+from sovtoken.test.helper import libsovtoken_address_to_address
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.util import randomString
-from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS
+from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, NEXT_SEQNO, SEQNO
 
 
 @pytest.fixture
@@ -116,3 +118,30 @@ def test_get_utxo_utxos_in_order(helpers, addresses):
             seq_nos.append(output["seqNo"])
 
         assert seq_nos == sorted(seq_nos)
+
+
+def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedTokenPlugin):
+    """
+    test if we send more have more than a 1000 UTXO's we still receive a response.
+    """
+
+    _, address_2 = addresses
+
+    states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
+    utxos = []
+
+    for i in range(1200):
+        amount = randint(1, 5)
+        key = create_state_key(libsovtoken_address_to_address(address_2), i+5)
+        utxos.append((key, amount))
+        for state in states:
+            state.set(key, str(amount).encode())
+
+    request = helpers.request.get_utxo(address_2)
+    responses = helpers.sdk.send_and_check_request_objects([request])
+    for response in responses:
+        result = response[1]['result']
+        assert len(result[OUTPUTS]) == 1000
+        for output in result[OUTPUTS]:
+            assert (create_state_key(output[ADDRESS], output[SEQNO]), output[AMOUNT]) in utxos
+        assert result.get(NEXT_SEQNO, None)

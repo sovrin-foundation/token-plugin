@@ -8,8 +8,8 @@ from sovtoken.constants import ADDRESS, AMOUNT
 
 
 def get_nym_details(helpers, dest):
-    domain_req_handler = helpers.node.get_domain_req_handler()
-    return domain_req_handler.getNymDetails(domain_req_handler.state, dest, False)
+    nym_req_handler = helpers.node.nym_handler
+    return nym_req_handler.get_nym_details(nym_req_handler.state, dest, False)
 
 
 @pytest.mark.helper_test

@@ -11,7 +11,7 @@ sudo apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
 
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
 
 echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
@@ -57,7 +57,7 @@ sudo pip3 install -U \
     setuptools \
     pytest \
     pytest-xdist \
-    python3-indy==1.6.7 \
+    python3-indy==1.8.2 \
     mock
 
 echo ${CYAN}plenum
@@ -65,8 +65,8 @@ echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
 sudo apt-get update && apt-get install -y \
          supervisor \
          python3-indy-crypto=0.4.5 \
-         indy-plenum=1.6.53 \
-         indy-node=1.6.75 \
+         indy-plenum=1.7.1 \
+         indy-node=1.7.1 \
      && rm -rf /var/lib/apt/lists/*
 
 

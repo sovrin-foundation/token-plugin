@@ -1,5 +1,7 @@
 #!groovy
 
+String projectName = 'token-plugin'
+
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
@@ -18,12 +20,11 @@ def downloadPackagingUtils() {
 }
 
 def nodeLabels = [
-        codeBuild: env.LIBSOVTOKEN_CODEBUILD_NODE_LABEL ?: 'codebuild',
-        macos: env.LIBSOVTOKEN_MACOS_NODE_LABEL ?: 'macos',
+    codeBuild: env.LIBSOVTOKEN_CODEBUILD_NODE_LABEL ?: 'codebuild',
+    macos: env.LIBSOVTOKEN_MACOS_NODE_LABEL ?: 'macos',
 ]
 
 pipelineWrapper({
-
     //put code build containers inside a vpc under our dev account
     env.USE_VPC_CONFIG = true
     //this IP is outdated, should use the one from env
@@ -32,6 +33,11 @@ pipelineWrapper({
     nodeWrapper(nodeLabels.codeBuild) {
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
+        List pkgsList = []
+        String indyNodeVersion
+        Boolean isRC = false
+        Boolean isRelease = false
+        Boolean isDev = (env.BRANCH_NAME == 'master')
 
         stage('Checkout sources from SCM') {
             checkout scm
@@ -42,6 +48,18 @@ pipelineWrapper({
         def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
+
+        stage('Get indy-node version') {
+            indyNodeVersion = utils.shStdout("""
+                sed -n "s/.*indy-node==\\([^\\"\\']\\+\\).*/\\1/p" sovtoken/setup.py
+            """)
+            if (!indyNodeVersion) {
+                throw new Exception('indy-node version is not found')
+            }
+            isRC = !!((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
+            isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
+            logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
+        }
 
         Map builds = [
             "s3-upload": {  // performs on the current jenkins node
@@ -65,125 +83,141 @@ pipelineWrapper({
         }
 
         builds = projects.collectEntries { proj ->
-            ["$osname:$proj": [
-                 nodeLabel: "${nodeLabels.codeBuild}",
-                 build: {
+            String projLabel = "$osname-$proj"
 
-                     def packageName = proj
-                     def prTag = "ci-$osname-$proj" // use ci project
-                     def srcVersion
-                     def lastRevision
-                     def debPVersion
-                     def goals = ['package']
+            ["$projLabel": [
+                nodeLabel: "${nodeLabels.codeBuild}",
+                build: {
+                    def packageName = proj
+                    def prTag = "ci-$osname-$proj" // use ci project
+                    def srcVersion
+                    def lastRevision
+                    def debPVersion
+                    def goals = ['package']
 
-                     def ciImageTag
+                    def ciImageTag
 
-                     stage('Get source version') {
-                         srcVersion = utils.shStdout("SRC_DIR_NAME=$proj make -C devops src_version -s")
-                         logger.info("Current source version: $srcVersion")
-                     }
+                    stage('Get source version') {
+                        srcVersion = utils.shStdout("SRC_DIR_NAME=$proj make -C devops src_version -s")
+                        logger.info("Current source version: $srcVersion")
+                    }
 
-//                stage('Get last revision') {
-//                    lastRevision = evernymRepo.getLastRevision {
-//                        delegate.packageName = packageName
-//                        packageSrcVersion = srcVersion
-//                        repoDistr = 'agency-dev'
-//                    }
+//               stage('Get last revision') {
+//                   lastRevision = evernymRepo.getLastRevision {
+//                       delegate.packageName = packageName
+//                       packageSrcVersion = srcVersion
+//                       repoDistr = 'agency-dev'
+//                   }
 //
-//                    if (lastRevision) {
-//                        logger.info("Found last revision number: $lastRevision")
-//                    } else {
-//                        logger.info("No previous revision was found")
-//                    }
-//                }
+//                   if (lastRevision) {
+//                       logger.info("Found last revision number: $lastRevision")
+//                   } else {
+//                       logger.info("No previous revision was found")
+//                   }
+//               }
 
 
-                     stage('Set release parameters') {
-                         def releaseVersion =  env.BRANCH_NAME == 'stable' ? '' : "$BUILD_NUMBER"
+                    stage('Set release parameters') {
+                        def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
+                        debPVersion = "$srcVersion${releaseVersion ? '~' + releaseVersion : ''}"
+                        logger.info("Package version for sovrin repo: $debPVersion")
+                    }
 
-                         debPVersion = "$srcVersion${releaseVersion ? '~' + releaseVersion : ''}"
-                         logger.info("Package version for sovrin repo: $debPVersion")
-                     }
+                    stage("$projLabel: Resolve image tag") {
+                        def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
+                        ciImageTag = "$_imgVersion-$osname-$proj-ci"
+                        logger.info("CI docker image tag: $ciImageTag")
+                    }
 
-                     stage("$osname:$proj: Resolve image tag") {
-                         def _imgVersion = utils.shStdout("OSNAME=$osname make -C devops image_ci_version -s")
-                         ciImageTag = "$_imgVersion-$osname-$proj-ci"
-                         logger.info("CI docker image tag: $ciImageTag")
-                     }
+                    awsCBHelper.build() {
+                        projectTag = prTag
 
-                     awsCBHelper.build() {
-                         projectTag = prTag
+                        // build spec for env image
+                        envBuildSrc = ['devops', "${proj}/${proj}/__metadata__.py"] // TODO make more accurate
+                        envBuildCmds = [
+                                'export PROJECT_DIR=$PWD',
+                                'make -C devops image_ci'
+                        ]
+                        envBuildEnvv = [
+                                [name: 'OSNAME', value: osname],
+                                [name: 'SRC_DIR_NAME', value: proj],
+                                [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
+                                [name: 'DOCKER_TAG', value: ciImageTag],
+                        ]
 
-                         // build spec for env image
-                         envBuildSrc = ['devops', "${proj}/${proj}/__metadata__.py"] // TODO make more accurate
-                         envBuildCmds = [
-                                 'export PROJECT_DIR=$PWD',
-                                 'make -C devops image_ci'
-                         ]
-                         envBuildEnvv = [
-                                 [name: 'OSNAME', value: osname],
-                                 [name: 'SRC_DIR_NAME', value: proj],
-                                 [name: 'DOCKER_NAME', value: awsCBHelper.buildCtx.projectName],
-                                 [name: 'DOCKER_TAG', value: ciImageTag],
-                         ]
+                        // env and build spec
+                        imageTag = ciImageTag
+                        buildspec = 'devops/aws-codebuild/buildspec.yml'
+                        envv = [
+                                [name: 'OSNAME', value: osname],
+                                [name: 'MAKE_GOALS', value: 'package'],
+                                [name: 'SRC_DIR_NAME', value: proj],
+                                [name: 'ARTIFACTS', value: "devops/_build/${proj}/*${packageName}*.*"], // TODO more accurate here
+                                [name: 'FPM_P_VERSION', value: debPVersion],
+                        ]
 
-                         // env and build spec
-                         imageTag = ciImageTag
-                         buildspec = 'devops/aws-codebuild/buildspec.yml'
-                         envv = [
-                                 [name: 'OSNAME', value: osname],
-                                 [name: 'MAKE_GOALS', value: 'package'],
-                                 [name: 'SRC_DIR_NAME', value: proj],
-                                 [name: 'ARTIFACTS', value: "devops/_build/$proj/*$packageName*.*"], // TODO more accurate here
-                                 [name: 'FPM_P_VERSION', value: debPVersion],
-                         ]
+                        onArtifacts = {
+                            this.stage("$projLabel: Archive logs") {
+                                utils.archiveArtifacts("logs/*.log*") {
+                                    truncate = true
+                                    allowEmptyArchive = true
+                                }
 
-                         onArtifacts = {
-                             this.stage("$osname:$proj: Archive logs") {
-                                 utils.archiveArtifacts("logs/*.log*") {
-                                     truncate = true
-                                     allowEmptyArchive = true
-                                 }
-                             }
-                         }
-                     }
+                                String pkgBaseName = "${packageName}_${debPVersion}"
 
-
-                     stage('Upload debs to repos') {
-
-                         String debName
-
-                         dir("${awsCBHelper.buildCtx.projects[prTag].artifactsDir}") {
-                             dir("sovrin-packaging") {
-                                 downloadPackagingUtils()
-                             }
-
-                             debName = utils.shStdout("ls $packageName*$debPVersion*.deb")
-
-                             logger.info("Uploading debian package '$debName' to sovrin repo")
-                             sh "mkdir debs &&  mv $debName ./debs/"
-                             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                                 sh "./sovrin-packaging/upload_debs.py ./debs $env.SOVRIN_CORE_REPO_NAME $env.BRANCH_NAME --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key"
-                             }
-
-                         }
-
-                         notifier.email {
-                             to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
-                             subject = '$PROJECT_NAME - Build # $BUILD_NUMBER: ' + "new deb '$debName' was published"
-                             body = ("New debian package '$debName' was built and published" +
-                                     '\n\nCheck console output at $BUILD_URL to view the results.')
-                         }
-                     }
-
-                 }
-                ]
-            ]
+                                this.stash includes: utils.shStdout("ls ${pkgBaseName}_*.deb"), name: pkgBaseName
+                                pkgsList += pkgBaseName
+                            }
+                        }
+                    }
+                }
+            ]]
         }
 
-        stage("Package and publish") {
+        stage("Build artifacts") {
             builds.failFast = false
             utils.parallel builds
+        }
+
+        stage('Release artifacts') {
+            String repoName = env.SOVRIN_CORE_REPO_NAME
+            String repoComponent = env.BRANCH_NAME
+            String debsDir = 'debs'
+
+            if (isRC) {
+                repoComponent = 'rc'
+            }
+            logger.info("Debian repo component is set to: '$repoComponent'")
+
+            dir(debsDir) {
+                pkgsList.each {
+                    unstash name: it
+                }
+            }
+            logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
+
+            dir("sovrin-packaging") {
+                downloadPackagingUtils()
+            }
+
+            withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                sh "./sovrin-packaging/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup"
+            }
+
+            notifier.email {
+                to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
+                subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
+                body = """
+                    |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
+                    |
+                    |Build:
+                    |   Project: \$PROJECT_NAME
+                    |   Url: ${this.env.BUILD_URL}
+                    |   Number: ${this.env.BUILD_NUMBER}
+                    |
+                    |Check console output at ${this.env.BUILD_URL}console to view the details.
+                """.stripMargin()
+            }
         }
     }
 }, { err ->
@@ -193,6 +227,7 @@ pipelineWrapper({
 
     stage("Build result notification") {
         notifier.email {
+            subject = "[$projectName] \$DEFAULT_SUBJECT"
             to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
         }
     }

@@ -53,7 +53,7 @@ def fees_constraint():
 @pytest.fixture()
 def fees_authorizer(fees):
     authorizer = FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
-                          utxo_cache=UTXOCache(KeyValueStorageInMemory()))
+                                utxo_cache=UTXOCache(KeyValueStorageInMemory()))
     authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM_FEES_ALIAS)
     return authorizer
 

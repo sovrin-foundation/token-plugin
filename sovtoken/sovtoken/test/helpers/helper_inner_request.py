@@ -113,7 +113,7 @@ class HelperInnerRequest:
             ''    => Standard User,
             '0'   => Trustee,
             '2'   => Steward,
-            '101' => Trust Anchor,
+            '101' => Endorser,
         """
         sdk_wallet_did = self._find_wallet_did(sdk_wallet)
 
