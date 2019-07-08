@@ -4,7 +4,7 @@ from collections import OrderedDict
 import base58
 import pytest
 from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
-from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
@@ -78,7 +78,7 @@ def test_token_req_handler_commit_batch_different_state_root(
 ):
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     with pytest.raises(TokenValueError):
-        commit_to_utxo_cache(utxo_cache, 1)
+        TokenStaticHelper.commit_to_utxo_cache(utxo_cache, 1)
 
 
 def test_token_req_handler_static_validation_MINT_PUBLIC_success(

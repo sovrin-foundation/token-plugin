@@ -1,5 +1,5 @@
 import pytest
-from sovtoken.request_handlers.token_utils import create_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
@@ -44,7 +44,7 @@ def test_state_after_xfer(helpers, initial_mint, addresses, nodeSetWithIntegrate
     outputs = [{"address": address2, "amount": 100}]
 
     helpers.general.do_transfer(inputs, outputs)
-    key = create_state_key(libsovtoken_address_to_address(address1), mint_seq_no)
+    key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), mint_seq_no)
 
     for n in nodeSetWithIntegratedTokenPlugin:
         res = n.db_manager.get_state(TOKEN_LEDGER_ID).get(key)

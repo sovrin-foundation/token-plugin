@@ -7,7 +7,7 @@ from copy import deepcopy
 from sovtoken import TokenTransactions
 from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
-from sovtoken.request_handlers.token_utils import parse_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
 from sovtoken.util import SortedItems
 
@@ -61,7 +61,7 @@ class GetUtxoHandler(ReadRequestHandler):
         # already constructed list was made
         outputs = SortedItems()
         for k, v in rv.items():
-            addr, seq_no = parse_state_key(k.decode())
+            addr, seq_no = TokenStaticHelper.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
             if not amount:
                 continue

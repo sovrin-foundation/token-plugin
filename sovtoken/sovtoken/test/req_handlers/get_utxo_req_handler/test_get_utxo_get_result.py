@@ -1,6 +1,6 @@
 import pytest
 from sovtoken.constants import OUTPUTS, ADDRESS
-from sovtoken.request_handlers.token_utils import create_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
 
 from plenum.common.constants import STATE_PROOF
@@ -8,7 +8,7 @@ from plenum.common.constants import STATE_PROOF
 
 @pytest.fixture(scope="module", autouse=True)
 def add_utxo(payment_address, get_utxo_handler):
-    get_utxo_handler.state.set(create_state_key(libsovtoken_address_to_address(payment_address), 1), "3".encode())
+    get_utxo_handler.state.set(TokenStaticHelper.create_state_key(libsovtoken_address_to_address(payment_address), 1), "3".encode())
 
 
 def test_get_utxo_request_has_utxos(get_utxo_request, get_utxo_handler, payment_address, add_utxo):

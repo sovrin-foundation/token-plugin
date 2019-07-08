@@ -1,6 +1,6 @@
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.constants import UTXO_CACHE_LABEL
-from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtokenfees.constants import FEES
 from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 
@@ -71,7 +71,7 @@ class DomainFeeBatchHandler(BatchRequestHandler):
                                                      primaries=three_pc_batch.primaries,
                                                      valid_digests=[i for i in range(len(committed_seq_nos_with_fees))])
             committed_token_txns = super()._commit(self.token_ledger, self.token_state, token_fake_three_pc_batch)
-            commit_to_utxo_cache(self.utxo_cache, token_state_root)
+            TokenStaticHelper.commit_to_utxo_cache(self.utxo_cache, token_state_root)
             i = 0
             # We are adding fees txn to the reply, so that client could get information about token transition
             for txn in committed_txns:
