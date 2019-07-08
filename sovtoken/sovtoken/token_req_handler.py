@@ -273,7 +273,7 @@ class TokenReqHandler(LedgerRequestHandler):
     @staticmethod
     def spend_input(state, utxo_cache, address, seq_no, is_committed=False):
         state_key = TokenReqHandler.create_state_key(address, seq_no)
-        state.set(state_key, b'')
+        state.remove(state_key.decode())
         utxo_cache.spend_output(Output(address, seq_no, None),
                                 is_committed=is_committed)
 
