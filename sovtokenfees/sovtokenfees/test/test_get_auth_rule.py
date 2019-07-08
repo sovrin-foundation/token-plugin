@@ -60,7 +60,7 @@ def test_get_one_auth_rule_transaction(looper,
                                        sdk_wallet_trustee,
                                        sdk_pool_handle):
     key = generate_key()
-    str_key = GetAuthRuleHandler.get_auth_key(key)
+    str_key = StaticAuthRuleHelper.get_auth_key(key)
     req, resp = sdk_send_and_check_get_auth_rule_request(looper,
                                                          sdk_pool_handle,
                                                          sdk_wallet_trustee,
