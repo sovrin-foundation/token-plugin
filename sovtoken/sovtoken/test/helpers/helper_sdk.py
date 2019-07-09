@@ -1,7 +1,8 @@
 import json
 
-from indy.anoncreds import issuer_create_and_store_credential_def
-from indy.ledger import build_cred_def_request
+from indy import did
+from indy.anoncreds import issuer_create_and_store_credential_def, issuer_create_schema
+from indy.ledger import build_cred_def_request, build_attrib_request, build_schema_request, build_nym_request
 
 import plenum.test.helper as plenum_helper
 
@@ -53,7 +54,7 @@ class HelperSdk():
 
     def prepare_request_objects(self, request_objects, wallet=None, sign=False):
         """ Prepares the request to be sent by transforming it into json and sign. """
-        if sign and all(not(req.signature or req.signatures) for req in request_objects):
+        if sign and all(not (req.signature or req.signatures) for req in request_objects):
             requests = self.sdk_sign_request_objects(request_objects, wallet)
         else:
             requests = [json.dumps(request.as_dict) for request in request_objects]
@@ -111,6 +112,31 @@ class HelperSdk():
             requests
         )
 
+    def sdk_build_nym(self, identifier=None, sdk_wallet=None):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+        identifier = identifier or sdk_wallet[1]
+        ident, verk = self._looper.loop.run_until_complete(
+            did.create_and_store_my_did(self._wallet_steward[0],
+                                        json.dumps({'seed': plenum_helper.random_string(32)})))
+
+        request = self._looper.loop.run_until_complete(build_nym_request(identifier, ident, verk, None, None))
+        return request
+
+    def sdk_build_attrib(self, identifier=None, sdk_wallet=None):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+        identifier = identifier or sdk_wallet[1]
+        request = self._looper.loop.run_until_complete(build_attrib_request(identifier, identifier, None,
+                                                                            json.dumps({'answer': 42}), None))
+        return request
+
+    def sdk_build_schema(self, identifier=None, sdk_wallet=None):
+        sdk_wallet = sdk_wallet or self._wallet_steward
+        identifier = identifier or sdk_wallet[1]
+        _, schema_json = self._looper.loop.run_until_complete(
+            issuer_create_schema(identifier, "name", "1.0", json.dumps(["first", "last"])))
+        request = self._looper.loop.run_until_complete(build_schema_request(identifier, schema_json))
+        return request
+
     def sdk_build_claim_def(self, schema_json, identifier=None, sdk_wallet=None):
         sdk_wallet = sdk_wallet or self._wallet_steward
         identifier = identifier or sdk_wallet[1]
@@ -140,6 +166,7 @@ class HelperSdk():
         sdk_wallet = sdk_wallet or self._wallet_steward
         identifier = identifier or sdk_wallet[1]
         wallet_handle, _ = sdk_wallet
-        reg_def, reg_entry = create_revoc_reg_entry(self._looper, wallet_handle, identifier, tag, claim_def_id, issuance=issuance)
+        reg_def, reg_entry = create_revoc_reg_entry(self._looper, wallet_handle, identifier, tag, claim_def_id,
+                                                    issuance=issuance)
         self.send_and_check_request_objects([Request(**json.loads(reg_def))], wallet=sdk_wallet)
         return reg_entry
