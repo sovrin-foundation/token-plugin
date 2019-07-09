@@ -25,7 +25,7 @@ class GetFeesHandler(ReadRequestHandler):
         return result
 
     def get_fees(self, is_committed=False, with_proof=False):
-        result = FeesStaticHelper.et_fee_from_state(self.state, is_committed=is_committed, with_proof=with_proof,
+        result = FeesStaticHelper.get_fee_from_state(self.state, is_committed=is_committed, with_proof=with_proof,
                                     bls_store=self.database_manager.get_store(BLS_LABEL))
         if with_proof:
             fees, proof = result
