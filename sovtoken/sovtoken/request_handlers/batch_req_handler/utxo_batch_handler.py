@@ -1,8 +1,7 @@
 import base58
 from sovtoken.constants import UTXO_CACHE_LABEL, TOKEN_LEDGER_ID
 from sovtoken.exceptions import TokenValueError
-from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
-
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from plenum.server.database_manager import DatabaseManager
 
 from plenum.server.batch_handlers.batch_request_handler import BatchRequestHandler
@@ -24,4 +23,4 @@ class UTXOBatchHandler(BatchRequestHandler):
         self.utxo_cache.create_batch_from_current(three_pc_batch.state_root)
 
     def commit_batch(self, three_pc_batch, prev_handler_result=None):
-        commit_to_utxo_cache(self.utxo_cache, three_pc_batch.state_root)
+        TokenStaticHelper.commit_to_utxo_cache(self.utxo_cache, three_pc_batch.state_root)
