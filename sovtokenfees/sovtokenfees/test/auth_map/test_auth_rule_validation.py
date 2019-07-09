@@ -15,7 +15,6 @@ from sovtokenfees.constants import FEES_FIELD_NAME, FEES
 from plenum.common.exceptions import RequestRejectedException
 
 from indy_node.test.auth_rule.test_get_auth_rule import sdk_send_and_check_get_auth_rule_request, generate_key
-from indy_node.server.config_req_handler import ConfigReqHandler
 from indy_common.authorize.auth_constraints import IDENTITY_OWNER
 
 

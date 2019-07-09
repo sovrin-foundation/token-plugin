@@ -3,7 +3,7 @@ from random import randint
 import pytest
 
 from base58 import b58encode_check
-from sovtoken.request_handlers.token_utils import create_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
@@ -132,7 +132,7 @@ def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedT
 
     for i in range(1200):
         amount = randint(1, 5)
-        key = create_state_key(libsovtoken_address_to_address(address_2), i+5)
+        key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), i+5)
         utxos.append((key, amount))
         for state in states:
             state.set(key, str(amount).encode())
@@ -143,5 +143,5 @@ def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedT
         result = response[1]['result']
         assert len(result[OUTPUTS]) == 1000
         for output in result[OUTPUTS]:
-            assert (create_state_key(output[ADDRESS], output[SEQNO]), output[AMOUNT]) in utxos
+            assert (TokenStaticHelper.create_state_key(output[ADDRESS], output[SEQNO]), output[AMOUNT]) in utxos
         assert result.get(NEXT_SEQNO, None)

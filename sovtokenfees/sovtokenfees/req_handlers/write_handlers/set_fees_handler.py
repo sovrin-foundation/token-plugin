@@ -1,7 +1,6 @@
 from sovtokenfees.constants import SET_FEES, FEES
-from sovtokenfees.req_handlers.fees_utils import get_fee_from_state
-
-from common.serializers.serialization import proof_nodes_serializer, state_roots_serializer, config_state_serializer
+from sovtokenfees.req_handlers.fees_utils import FeesStaticHelper
+from sovtokenfees.serializers import proof_nodes_serializer, config_state_serializer
 from indy_common.authorize.auth_actions import AuthActionEdit
 from sovtokenfees import FeesTransactions
 from sovtokenfees.messages.fields import SetFeesMsg
@@ -41,7 +40,7 @@ class SetFeesHandler(WriteRequestHandler):
     def update_state(self, txn, prev_result, request, is_committed=False):
         payload = get_payload_data(txn)
         fees_from_req = payload.get(FEES)
-        current_fees = get_fee_from_state(self.state)
+        current_fees = FeesStaticHelper.get_fee_from_state(self.state)
         current_fees = current_fees if current_fees else {}
         current_fees.update(fees_from_req)
         for fees_alias, fees_value in fees_from_req.items():

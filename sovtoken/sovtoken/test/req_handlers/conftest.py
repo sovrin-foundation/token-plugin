@@ -3,7 +3,7 @@ import json
 import pytest
 from base58 import b58decode
 from sovtoken.constants import UTXO_CACHE_LABEL
-from sovtokenfees.static_fee_req_handler import txn_root_serializer
+from sovtokenfees.serializers import txn_root_serializer
 
 from indy_node.test.request_handlers.helper import get_fake_ledger
 from sovtoken import TOKEN_LEDGER_ID

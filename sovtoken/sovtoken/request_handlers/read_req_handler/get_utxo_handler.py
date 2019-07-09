@@ -7,11 +7,11 @@ from copy import deepcopy
 from sovtoken import TokenTransactions
 from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
-from sovtoken.request_handlers.token_utils import parse_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
 from sovtoken.util import SortedItems
 
-from common.serializers.serialization import state_roots_serializer, proof_nodes_serializer
+from sovtokenfees.serializers import state_roots_serializer, proof_nodes_serializer
 from plenum.common.constants import MULTI_SIGNATURE, ROOT_HASH, PROOF_NODES, STATE_PROOF
 from plenum.common.exceptions import InvalidClientRequest
 from plenum.common.request import Request
@@ -33,6 +33,10 @@ class GetUtxoHandler(ReadRequestHandler):
             raise InvalidClientRequest(request.identifier,
                                        request.reqId,
                                        error)
+
+    @staticmethod
+    def create_state_key(address: str, seq_no: int) -> bytes:
+        return TokenStaticHelper.create_state_key(address=address, seq_no=seq_no)
 
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]
@@ -57,7 +61,7 @@ class GetUtxoHandler(ReadRequestHandler):
         # already constructed list was made
         outputs = SortedItems()
         for k, v in rv.items():
-            addr, seq_no = parse_state_key(k.decode())
+            addr, seq_no = TokenStaticHelper.parse_state_key(k.decode())
             amount = rlp_decode(v)[0]
             if not amount:
                 continue

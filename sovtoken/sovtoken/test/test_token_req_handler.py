@@ -3,7 +3,8 @@ from collections import OrderedDict
 
 import base58
 import pytest
-from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
+from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
@@ -18,7 +19,6 @@ from sovtoken.constants import (ADDRESS, GET_UTXO, INPUTS, MINT_PUBLIC,
                                 OUTPUTS, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL, XFER_PUBLIC)
 from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError, TokenValueError
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
-from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 
 # Test Constants
@@ -78,7 +78,7 @@ def test_token_req_handler_commit_batch_different_state_root(
 ):
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     with pytest.raises(TokenValueError):
-        commit_to_utxo_cache(utxo_cache, 1)
+        TokenStaticHelper.commit_to_utxo_cache(utxo_cache, 1)
 
 
 def test_token_req_handler_static_validation_MINT_PUBLIC_success(
@@ -301,7 +301,7 @@ def test_token_req_handler_update_state_XFER_PUBLIC_success(
     xfer_handler_a.dynamic_validation(request)
     xfer_handler_a.update_state(txn, None, request)
 
-    state_key = TokenReqHandler.create_state_key(libsovtoken_address_to_address(address1), seq_no)
+    state_key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), seq_no)
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     key = utxo_cache._create_key(Output(libsovtoken_address_to_address(address1), seq_no, 60))
     assert utxo_cache._store._has_key(key)

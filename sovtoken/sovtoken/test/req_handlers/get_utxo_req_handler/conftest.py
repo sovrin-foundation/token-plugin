@@ -4,7 +4,7 @@ import pytest
 
 from sovtoken import TOKEN_LEDGER_ID, TokenTransactions
 from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
-from sovtoken.request_handlers.token_utils import create_state_key
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
 
 from plenum.test.helper import sdk_json_to_request_object
@@ -30,4 +30,4 @@ def get_utxo_request(looper, payment_address, wallet):
 def insert_over_thousand_utxos(db_manager, payment_address):
     token_state = db_manager.get_state(TOKEN_LEDGER_ID)
     for i in range(1200):
-        token_state.set(create_state_key(libsovtoken_address_to_address(payment_address), i), str(i).encode())
+        token_state.set(TokenStaticHelper.create_state_key(libsovtoken_address_to_address(payment_address), i), str(i).encode())
