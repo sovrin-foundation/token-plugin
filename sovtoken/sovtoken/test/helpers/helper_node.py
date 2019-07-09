@@ -6,6 +6,8 @@ from indy_node.server.request_handlers.domain_req_handlers.nym_handler import Ny
 from plenum.common.constants import DOMAIN_LEDGER_ID, CONFIG_LEDGER_ID
 from sovtoken.constants import TOKEN_LEDGER_ID, XFER_PUBLIC, GET_UTXO, MINT_PUBLIC
 
+from plenum.test.helper import get_handler_by_type_wm
+
 
 class HelperNode():
     """
@@ -37,17 +39,17 @@ class HelperNode():
     @property
     def xfer_handler(self):
         """ Get the xfer request handler of the first node. """
-        return next(h for h in self._nodes[0].write_manager.request_handlers[XFER_PUBLIC] if isinstance(h, XferHandler))
+        return get_handler_by_type_wm(self._nodes[0].write_manager, XferHandler)
 
     @property
     def mint_handler(self):
         """ Get the xfer request handler of the first node. """
-        return next(h for h in self._nodes[0].write_manager.request_handlers[MINT_PUBLIC] if isinstance(h, MintHandler))
+        return get_handler_by_type_wm(self._nodes[0].write_manager, MintHandler)
 
     @property
     def nym_handler(self):
         """ Get the NYM request handler of the first node. """
-        return next(h for h in self._nodes[0].write_manager.request_handlers[NYM] if isinstance(h, NymHandler))
+        return get_handler_by_type_wm(self._nodes[0].write_manager, NymHandler)
 
     @property
     def get_utxo_handler(self):
