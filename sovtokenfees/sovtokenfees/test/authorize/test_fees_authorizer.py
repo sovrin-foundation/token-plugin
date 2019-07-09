@@ -8,7 +8,6 @@ from sovtoken.utxo_cache import UTXOCache
 from sovtokenfees.constants import FEES_FIELD_NAME
 from sovtokenfees.domain import build_path_for_set_fees
 from sovtokenfees.fees_authorizer import FeesAuthorizer
-from sovtokenfees.static_fee_req_handler import StaticFeesReqHandler
 from sovtokenfees.test.constants import NYM_FEES_ALIAS
 from sovtokenfees.test.helper import add_fees_request_with_address
 from indy_common.authorize.auth_constraints import AuthConstraint

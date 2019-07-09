@@ -4,8 +4,7 @@ from sovtoken.exceptions import UTXOError
 from indy_common.authorize.auth_actions import AuthActionAdd
 from sovtoken.constants import INPUTS, OUTPUTS, XFER_PUBLIC, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL, SIGS
 from sovtoken.messages.txn_validator import txn_xfer_public_validate
-from sovtoken.request_handlers.token_utils import spend_input, add_new_output, sum_inputs, sum_outputs, \
-    validate_given_inputs_outputs
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
 
 from plenum.common.constants import ED25519
@@ -47,14 +46,16 @@ class XferHandler(WriteRequestHandler):
         try:
             payload = get_payload_data(txn)
             for inp in payload[INPUTS]:
-                spend_input(self.state,
+                TokenStaticHelper.spend_input(
+                            self.state,
                             self.utxo_cache,
                             inp["address"],
                             inp["seqNo"],
                             is_committed=is_committed)
             for output in payload[OUTPUTS]:
                 seq_no = get_seq_no(txn)
-                add_new_output(self.state,
+                TokenStaticHelper.add_new_output(
+                               self.state,
                                self.utxo_cache,
                                Output(output["address"],
                                       seq_no,
@@ -74,11 +75,12 @@ class XferHandler(WriteRequestHandler):
 
     def _do_validate_inputs_ouputs(self, request):
         try:
-            sum_in = sum_inputs(self.utxo_cache,
+            sum_in = TokenStaticHelper.sum_inputs(
+                                self.utxo_cache,
                                 request,
                                 is_committed=False)
 
-            sum_out = sum_outputs(request)
+            sum_out = TokenStaticHelper.sum_outputs(request)
         except Exception as ex:
             if isinstance(ex, InvalidClientMessageException):
                 raise ex
@@ -87,4 +89,4 @@ class XferHandler(WriteRequestHandler):
                                                 getattr(request, 'reqId', None),
                                                 error)
         else:
-            return validate_given_inputs_outputs(sum_in, sum_out, sum_out, request)
+            return TokenStaticHelper.validate_given_inputs_outputs(sum_in, sum_out, sum_out, request)

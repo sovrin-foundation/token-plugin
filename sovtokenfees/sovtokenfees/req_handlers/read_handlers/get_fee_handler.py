@@ -1,7 +1,7 @@
 from sovtokenfees import FeesTransactions
 from sovtokenfees.constants import FEE
 from sovtokenfees.messages.fields import GetFeeMsg
-from sovtokenfees.req_handlers.fees_utils import get_fee_from_state
+from sovtokenfees.req_handlers.fees_utils import FeesStaticHelper
 
 from plenum.common.constants import ALIAS, STATE_PROOF, CONFIG_LEDGER_ID, BLS_LABEL
 from plenum.common.exceptions import InvalidClientRequest
@@ -19,7 +19,7 @@ class GetFeeHandler(ReadRequestHandler):
 
     def get_result(self, request: Request):
         alias = request.operation.get(ALIAS)
-        fee, proof = get_fee_from_state(self.state, fees_alias=alias, is_committed=True, with_proof=True,
+        fee, proof = FeesStaticHelper.get_fee_from_state(self.state, fees_alias=alias, is_committed=True, with_proof=True,
                                         bls_store=self.database_manager.get_store(BLS_LABEL))
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEE: fee}

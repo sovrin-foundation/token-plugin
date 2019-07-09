@@ -1,5 +1,5 @@
 from sovtoken.constants import INPUTS, OUTPUTS, ADDRESS, UTXO_CACHE_LABEL, SEQNO, AMOUNT, TOKEN_LEDGER_ID
-from sovtoken.request_handlers.token_utils import spend_input, add_new_output
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
 from sovtokenfees.constants import FEE_TXN, REF, FEES
 from sovtokenfees.fees_authorizer import FeesAuthorizer
@@ -26,7 +26,6 @@ class DomainFeeHandler(WriteRequestHandler):
         pass
 
     def apply_request(self, request: Request, batch_ts, prev_result):
-        self._validate_request_type(request)
         txn_type = request.operation[TXN_TYPE]
         seq_no = get_seq_no(prev_result)
         cons_time = get_txn_time(prev_result)
@@ -61,7 +60,7 @@ class DomainFeeHandler(WriteRequestHandler):
 
     def update_token_state(self, txn, request, is_committed=False):
         for utxo in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][INPUTS]:
-            spend_input(
+            TokenStaticHelper.spend_input(
                 state=self.token_state,
                 utxo_cache=self.utxo_cache,
                 address=utxo[ADDRESS],
@@ -70,7 +69,7 @@ class DomainFeeHandler(WriteRequestHandler):
             )
         seq_no = get_seq_no(txn)
         for output in txn[TXN_PAYLOAD][TXN_PAYLOAD_DATA][OUTPUTS]:
-            add_new_output(
+            TokenStaticHelper.add_new_output(
                 state=self.token_state,
                 utxo_cache=self.utxo_cache,
                 output=Output(

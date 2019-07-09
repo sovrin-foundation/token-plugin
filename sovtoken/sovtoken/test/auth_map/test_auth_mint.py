@@ -8,11 +8,11 @@ from indy_common.authorize.auth_actions import ADD_PREFIX
 from indy_common.authorize.auth_constraints import AuthConstraint
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map, add_mint
 
-from indy_node.server.config_req_handler import ConfigReqHandler
-
 from indy_common.constants import CONSTRAINT
 
 from indy_common.authorize.auth_map import auth_map
+
+from indy_node.server.request_handlers.config_req_handlers.auth_rule.static_auth_rule_helper import StaticAuthRuleHelper
 from plenum.common.constants import STEWARD, TXN_TYPE, DATA
 from plenum.common.exceptions import RequestRejectedException
 
@@ -90,7 +90,7 @@ def test_auth_mint(helpers,
     result = resp[0][1]["result"][DATA]
     for i, (auth_key, constraint) in enumerate(full_auth_map.items()):
         rule = result[i]
-        assert auth_key == ConfigReqHandler.get_auth_key(rule)
+        assert auth_key == StaticAuthRuleHelper.get_auth_key(rule)
         if constraint is None:
             assert {} == rule[CONSTRAINT]
         else:

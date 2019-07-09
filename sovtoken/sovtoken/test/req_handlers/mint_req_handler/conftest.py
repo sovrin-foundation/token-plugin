@@ -9,10 +9,10 @@ from indy.payment import build_mint_req
 from indy.did import create_and_store_my_did
 from indy.ledger import multi_sign_request
 
+from indy_node.test.conftest import write_auth_req_validator, constraint_serializer, config_state
 from plenum.common.txn_util import append_txn_metadata
 from plenum.test.helper import sdk_json_to_request_object
 
-from indy_common.test.auth.conftest import write_auth_req_validator, constraint_serializer, config_state
 from plenum.test.testing_utils import FakeSomething
 
 

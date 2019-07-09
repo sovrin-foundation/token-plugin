@@ -10,7 +10,7 @@ from plenum.common.constants import TRUSTEE, STEWARD
 from plenum.test.conftest import getValueFromModule
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 
-from indy_common.test.auth.conftest import write_auth_req_validator as warv, idr_cache, \
+from indy_node.test.conftest import write_auth_req_validator as warv, idr_cache, \
     constraint_serializer, config_state, write_request_validation
 
 

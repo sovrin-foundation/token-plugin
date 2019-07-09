@@ -1,4 +1,4 @@
-from sovtoken.request_handlers.token_utils import validate_given_inputs_outputs
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 
 from indy_common.authorize.authorizer import AbstractAuthorizer
 
@@ -99,7 +99,7 @@ class FeesAuthorizer(AbstractAuthorizer):
         else:
             change_amount = sum([a[AMOUNT] for a in outputs])
             expected_amount = change_amount + required_fees
-            validate_given_inputs_outputs(
+            TokenStaticHelper.validate_given_inputs_outputs(
                 sum_inputs,
                 change_amount,
                 expected_amount,

@@ -6,7 +6,7 @@ from sovtoken.constants import ADDRESS, AMOUNT
 from sovtokenfees.constants import FEE_TXNS_IN_BATCH, FEES
 from sovtoken import TOKEN_LEDGER_ID
 from state.trie.pruning_trie import BLANK_ROOT
-from common.serializers.serialization import state_roots_serializer
+from sovtokenfees.serializers import state_roots_serializer
 from plenum.common.messages.node_messages import PrePrepare, Prepare, Ordered
 from plenum.common.util import get_utc_epoch
 from sovtokenfees.three_phase_commit_handling import ThreePhaseCommitHandler
