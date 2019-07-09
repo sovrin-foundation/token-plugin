@@ -36,7 +36,7 @@ class GetUtxoHandler(ReadRequestHandler):
 
     @staticmethod
     def create_state_key(address: str, seq_no: int) -> bytes:
-        return ':'.join([address, str(seq_no)]).encode()
+        return TokenStaticHelper.create_state_key(address=address, seq_no=seq_no)
 
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]
