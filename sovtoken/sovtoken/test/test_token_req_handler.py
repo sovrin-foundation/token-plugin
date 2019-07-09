@@ -301,7 +301,7 @@ def test_token_req_handler_update_state_XFER_PUBLIC_success(
     xfer_handler_a.dynamic_validation(request)
     xfer_handler_a.update_state(txn, None, request)
 
-    state_key = GetUtxoHandler.create_state_key(libsovtoken_address_to_address(address1), seq_no)
+    state_key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), seq_no)
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     key = utxo_cache._create_key(Output(libsovtoken_address_to_address(address1), seq_no, 60))
     assert utxo_cache._store._has_key(key)
