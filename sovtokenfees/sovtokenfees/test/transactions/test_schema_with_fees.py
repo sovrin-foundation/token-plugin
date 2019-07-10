@@ -28,7 +28,7 @@ def test_send_schema_with_fees(helpers,
                                sdk_wallet_trustee,
                                sdk_pool_handle,
                                fees_set, address_main, mint_tokens):
-    req = helpers.request.schema(sdk_wallet=sdk_wallet_trustee)
+    req = helpers.request.schema_new(sdk_wallet=sdk_wallet_trustee)
     amount = get_amount_from_token_txn(mint_tokens)
     init_seq_no = 1
     utxos = [{"source": utxo_from_addr_and_seq_no(address_main, init_seq_no),

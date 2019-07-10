@@ -56,13 +56,13 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
         request = self._create_request(payload, identifier=self._client_did)
         return request
 
-    def nym(self, identifier=None, sdk_wallet=None):
+    def nym_new(self, identifier=None, sdk_wallet=None):
         return self._sdk.sdk_build_nym(identifier=identifier, sdk_wallet=sdk_wallet)
 
     def attrib(self, identifier=None, sdk_wallet=None):
         return self._sdk.sdk_build_attrib(identifier=identifier, sdk_wallet=sdk_wallet)
 
-    def schema(self, identifier=None, sdk_wallet=None):
+    def schema_new(self, identifier=None, sdk_wallet=None):
         return self._sdk.sdk_build_schema(identifier=identifier, sdk_wallet=sdk_wallet)
 
     def claim_def(self, schema_json, identifier=None, sdk_wallet=None):
