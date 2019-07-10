@@ -3,6 +3,7 @@ import json
 import pytest
 
 from sovtoken import TOKEN_LEDGER_ID, TokenTransactions
+from sovtoken.constants import FROM_SEQNO
 from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
 from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.test.helper import libsovtoken_address_to_address
@@ -23,6 +24,15 @@ def get_utxo_request(looper, payment_address, wallet):
     get_utxo_request, _ = looper.loop.run_until_complete(get_utxo_request_future)
     get_utxo_request = json.loads(get_utxo_request)
     get_utxo_request = sdk_json_to_request_object(get_utxo_request)
+    return get_utxo_request
+
+
+FROM_SHIFT = 200
+
+
+@pytest.fixture()
+def get_utxo_request_with_from(get_utxo_request):
+    get_utxo_request.operation[FROM_SEQNO] = FROM_SHIFT
     return get_utxo_request
 
 

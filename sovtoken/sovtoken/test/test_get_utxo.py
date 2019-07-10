@@ -10,7 +10,8 @@ from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.txn_util import get_seq_no, get_payload_data
 from plenum.common.util import randomString
-from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, NEXT_SEQNO, SEQNO
+from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, NEXT_SEQNO, SEQNO, \
+    UTXO_LIMIT
 
 
 @pytest.fixture
@@ -130,7 +131,7 @@ def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedT
     states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
     utxos = []
 
-    for i in range(1200):
+    for i in range(UTXO_LIMIT+200):
         amount = randint(1, 5)
         key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), i+5)
         utxos.append((key, amount))
@@ -141,7 +142,37 @@ def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedT
     responses = helpers.sdk.send_and_check_request_objects([request])
     for response in responses:
         result = response[1]['result']
-        assert len(result[OUTPUTS]) == 1000
+        assert len(result[OUTPUTS]) == UTXO_LIMIT
         for output in result[OUTPUTS]:
             assert (TokenStaticHelper.create_state_key(output[ADDRESS], output[SEQNO]), output[AMOUNT]) in utxos
+        assert result.get(NEXT_SEQNO, None)
+
+
+def test_get_more_then_thousand_utxos_with_from(helpers, addresses, nodeSetWithIntegratedTokenPlugin):
+    """
+    test if we send more have more than a 1000 UTXO's we still receive a response.
+    """
+
+    _, address_2 = addresses
+
+    states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
+    utxos = []
+
+    for i in range(UTXO_LIMIT+200):
+        amount = randint(1, 5)
+        seq_no = i+5
+        key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), seq_no)
+        utxos.append((key, amount, seq_no))
+        for state in states:
+            state.set(key, str(amount).encode())
+
+    shift = 50
+    request = helpers.request.get_utxo(address_2, utxos[shift][2])
+    responses = helpers.sdk.send_and_check_request_objects([request])
+    utxos = utxos[shift:shift+UTXO_LIMIT]
+    for response in responses:
+        result = response[1]['result']
+        assert len(result[OUTPUTS]) == UTXO_LIMIT
+        for output in result[OUTPUTS]:
+            assert (TokenStaticHelper.create_state_key(output[ADDRESS], output[SEQNO]), output[AMOUNT], output[SEQNO]) in utxos
         assert result.get(NEXT_SEQNO, None)

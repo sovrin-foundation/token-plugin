@@ -5,7 +5,7 @@ except ImportError:
 from copy import deepcopy
 
 from sovtoken import TokenTransactions
-from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT
+from sovtoken.constants import ADDRESS, OUTPUTS, TOKEN_LEDGER_ID, NEXT_SEQNO, UTXO_LIMIT, FROM_SEQNO
 from sovtoken.messages.txn_validator import txt_get_utxo_validate
 from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
@@ -40,6 +40,7 @@ class GetUtxoHandler(ReadRequestHandler):
 
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]
+        from_seqno = request.operation.get(FROM_SEQNO, None)
         encoded_root_hash = state_roots_serializer.serialize(
             bytes(self.state.committedHeadHash))
         proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
@@ -69,6 +70,10 @@ class GetUtxoHandler(ReadRequestHandler):
 
         utxos = outputs.sorted_list
         next_seqno = None
+        if from_seqno:
+            idx = next((idx for utxo, idx in zip(utxos, range(len(utxos))) if utxo.seqNo == from_seqno), None)
+            if idx:
+                utxos = utxos[idx:]
         if len(utxos) > UTXO_LIMIT:
             next_seqno = utxos[UTXO_LIMIT].seqNo
             utxos = utxos[:UTXO_LIMIT]

@@ -11,7 +11,7 @@ from sovtoken.test.constants import VALID_IDENTIFIER
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from sovtoken.constants import ADDRESS, AMOUNT
+from sovtoken.constants import ADDRESS, AMOUNT, FROM_SEQNO
 
 
 class HelperRequest():
@@ -42,12 +42,16 @@ class HelperRequest():
         self._client_wallet = client_wallet
         self._steward_wallet = steward_wallet
 
-    def get_utxo(self, address):
+    def get_utxo(self, address, from_seqno=None):
         """ Builds a get_utxo request. """
 
         get_utxo_request_future = build_get_payment_sources_request(self._client_wallet_handle, VALID_IDENTIFIER, address)
         get_utxo_request = self._looper.loop.run_until_complete(get_utxo_request_future)[0]
         get_utxo_request = self._sdk.sdk_json_to_request_object(json.loads(get_utxo_request))
+
+        # TODO: as soon as SDK gets implemented "from", remove this two lines and pass it to the builder
+        if from_seqno:
+            get_utxo_request.operation[FROM_SEQNO] = from_seqno
 
         return get_utxo_request
 
