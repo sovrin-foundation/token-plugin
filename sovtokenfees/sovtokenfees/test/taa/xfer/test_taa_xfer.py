@@ -3,6 +3,7 @@ import time
 
 import pytest
 from indy.ledger import append_txn_author_agreement_acceptance_to_request
+from sovtoken.test.helpers.helper_request import SEC_PER_DAY
 
 from plenum.common.exceptions import RequestNackedException, RequestRejectedException
 
@@ -47,7 +48,7 @@ def test_taa_xfer_negative_not_signed(helpers,
                                                                        version,
                                                                        None,
                                                                        set_acceptance_mechanism,
-                                                                       round(time.time()))
+                                                                       int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
     request = looper.loop.run_until_complete(request_future)
     with pytest.raises(RequestNackedException):
         helpers.sdk.sdk_send_and_check([request])
