@@ -12,10 +12,12 @@ from plenum.test.helper import sdk_json_to_request_object
 
 from indy.payment import build_get_payment_sources_request
 
+from stp_core.config import MSG_LEN_LIMIT
+
 
 @pytest.fixture(scope="module")
 def get_utxo_handler(db_manager, bls_store):
-    return GetUtxoHandler(database_manager=db_manager)
+    return GetUtxoHandler(database_manager=db_manager, msg_limit=MSG_LEN_LIMIT)
 
 
 @pytest.fixture()
@@ -27,17 +29,16 @@ def get_utxo_request(looper, payment_address, wallet):
     return get_utxo_request
 
 
-FROM_SHIFT = 200
-
-
-@pytest.fixture()
-def get_utxo_request_with_from(get_utxo_request):
-    get_utxo_request.operation[FROM_SEQNO] = FROM_SHIFT
-    return get_utxo_request
-
-
 @pytest.fixture(scope="module")
 def insert_over_thousand_utxos(db_manager, payment_address):
     token_state = db_manager.get_state(TOKEN_LEDGER_ID)
     for i in range(1200):
         token_state.set(TokenStaticHelper.create_state_key(libsovtoken_address_to_address(payment_address), i), str(i).encode())
+
+
+@pytest.fixture(scope="module")
+def insert_utxos_after_gap(db_manager, payment_address):
+    token_state = db_manager.get_state(TOKEN_LEDGER_ID)
+    for i in range(1300, 2400):
+        token_state.set(TokenStaticHelper.create_state_key(libsovtoken_address_to_address(payment_address), i), str(i).encode())
+    return 1300

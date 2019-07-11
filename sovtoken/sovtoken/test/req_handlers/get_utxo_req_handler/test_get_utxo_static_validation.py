@@ -41,5 +41,5 @@ def test_get_utxo_request_invalid_vk_length(get_utxo_handler, get_utxo_request):
 def test_get_utxo_request_invalid_from_seqno(get_utxo_handler, get_utxo_request):
     operation = get_utxo_request.operation
     operation[FROM_SEQNO] = "next"
-    with pytest.raises(InvalidClientRequest, match="'from' validation failed"):
+    with pytest.raises(InvalidClientRequest, match="'{}' validation failed".format(FROM_SEQNO)):
         get_utxo_handler.static_validation(get_utxo_request)

@@ -19,12 +19,12 @@ from plenum.common.types import f
 from plenum.server.database_manager import DatabaseManager
 from plenum.server.request_handlers.handler_interfaces.read_request_handler import ReadRequestHandler
 from state.trie.pruning_trie import rlp_decode
-from stp_core.config import MSG_LEN_LIMIT
 
 
 class GetUtxoHandler(ReadRequestHandler):
-    def __init__(self, database_manager: DatabaseManager):
+    def __init__(self, database_manager: DatabaseManager, msg_limit):
         super().__init__(database_manager, TokenTransactions.GET_UTXO.value, TOKEN_LEDGER_ID)
+        self._msg_limit = msg_limit
 
     def static_validation(self, request: Request):
         error = txt_get_utxo_validate(request)
@@ -40,7 +40,7 @@ class GetUtxoHandler(ReadRequestHandler):
 
     def get_result(self, request: Request):
         address = request.operation[ADDRESS]
-        from_seqno = request.operation.get(FROM_SEQNO, None)
+        from_seqno = request.operation.get(FROM_SEQNO)
         encoded_root_hash = state_roots_serializer.serialize(
             bytes(self.state.committedHeadHash))
         proof, rv = self.state.generate_state_proof_for_keys_with_prefix(address,
@@ -71,9 +71,11 @@ class GetUtxoHandler(ReadRequestHandler):
         utxos = outputs.sorted_list
         next_seqno = None
         if from_seqno:
-            idx = next((idx for utxo, idx in zip(utxos, range(len(utxos))) if utxo.seqNo == from_seqno), None)
+            idx = next((idx for utxo, idx in zip(utxos, range(len(utxos))) if utxo.seqNo >= from_seqno), None)
             if idx:
                 utxos = utxos[idx:]
+            else:
+                utxos = []
         if len(utxos) > UTXO_LIMIT:
             next_seqno = utxos[UTXO_LIMIT].seqNo
             utxos = utxos[:UTXO_LIMIT]
@@ -87,6 +89,6 @@ class GetUtxoHandler(ReadRequestHandler):
         if proof:
             res_sub = deepcopy(result)
             res_sub[STATE_PROOF] = proof
-            if len(json.dumps(res_sub)) <= MSG_LEN_LIMIT:
+            if len(json.dumps(res_sub)) <= self._msg_limit:
                 result = res_sub
         return result

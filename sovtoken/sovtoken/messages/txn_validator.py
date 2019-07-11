@@ -41,7 +41,7 @@ def inputs_validate(request: Request):
     return PUBLIC_INPUTS_VALIDATOR.validate(operation[INPUTS])
 
 
-def next_validate(request: Request):
+def from_validate(request: Request):
     operation = request.operation
     if FROM_SEQNO in operation:
         from_seqno = operation[FROM_SEQNO]
@@ -92,5 +92,5 @@ def txt_get_utxo_validate(request: Request):
         if error:
             return error
         else:
-            error = next_validate(request)
+            error = from_validate(request)
         return error
