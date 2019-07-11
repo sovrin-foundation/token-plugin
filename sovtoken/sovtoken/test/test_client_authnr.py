@@ -5,6 +5,7 @@ import pytest
 import mock
 from indy.ledger import append_txn_author_agreement_acceptance_to_request
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+from sovtoken.test.helpers.helper_request import SEC_PER_DAY
 
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
@@ -283,7 +284,7 @@ def test_authenticate_xfer_with_taa_not_signed(helpers, node, addresses, looper)
                                                                        "version",
                                                                        None,
                                                                        "mechanism",
-                                                                       round(time.time()))
+                                                                       int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
     request = looper.loop.run_until_complete(request_future)
     req_data = json.loads(request)
     with pytest.raises(InsufficientCorrectSignatures):
