@@ -86,7 +86,7 @@ def register_req_handlers(node):
                                                         node.write_req_validator))
     node.write_manager.register_req_handler(MintHandler(node.db_manager,
                                                         node.write_req_validator))
-    node.read_manager.register_req_handler(GetUtxoHandler(node.db_manager))
+    node.read_manager.register_req_handler(GetUtxoHandler(node.db_manager, node.config.MSG_LEN_LIMIT))
 
 
 def register_batch_handlers(node):
