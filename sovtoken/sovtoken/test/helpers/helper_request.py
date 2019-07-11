@@ -13,6 +13,8 @@ from plenum.common.request import Request
 from plenum.common.types import f
 from sovtoken.constants import ADDRESS, AMOUNT, FROM_SEQNO
 
+SEC_PER_DAY = 24 * 60 * 60
+
 
 class HelperRequest():
     """
@@ -80,13 +82,13 @@ class HelperRequest():
 
     def add_transaction_author_agreement_to_extra(self, extra, text, mechanism, version):
         extra_future = prepare_payment_extra_with_acceptance_data(extra, text, version, None, mechanism,
-                                                                  round(time.time()))
+                                                                  int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 
     def add_transaction_author_agreement_to_request(self, request, text, mechanism, version):
         extra_future = append_txn_author_agreement_acceptance_to_request(request, text, version, None, mechanism,
-                                                                         round(time.time()))
+                                                                         int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 
