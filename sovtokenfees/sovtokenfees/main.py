@@ -1,9 +1,9 @@
 import functools
 
-from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
 from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE, \
     FEE_TXN
 from sovtokenfees.req_handlers.batch_handlers.fee_batch_handler import DomainFeeBatchHandler
+from sovtokenfees.req_handlers.batch_handlers.tracker_batch_handler import TrackerBatchHandler
 from sovtokenfees.req_handlers.read_handlers.get_fee_handler import GetFeeHandler
 from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHandler
 from sovtokenfees.req_handlers.write_handlers.auth_rule_fee_handler import AuthRuleFeeHandler
@@ -14,9 +14,7 @@ from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 from sovtokenfees.req_handlers.write_handlers.domain_fee_handler import DomainFeeHandler
 
 from plenum.common.ledger_uncommitted_tracker import LedgerUncommittedTracker
-from plenum.common.constants import CONFIG_LEDGER_ID
 
-from common.exceptions import LogicError
 from sovtoken.constants import UTXO_CACHE_LABEL, XFER_PUBLIC
 from sovtokenfees.sovtokenfees_auth_map import sovtokenfees_auth_map
 
@@ -35,8 +33,6 @@ from sovtokenfees.three_phase_commit_handling import \
 from sovtoken import TOKEN_LEDGER_ID
 from sovtoken.client_authnr import TokenAuthNr
 
-from plenum.server.batch_handlers.audit_batch_handler import AuditBatchHandler
-from plenum.server.batch_handlers.ts_store_batch_handler import TsStoreBatchHandler
 from sovtokenfees.req_handlers.write_handlers.auth_rules_fee_handler import AuthRulesFeeHandler
 
 
@@ -44,7 +40,7 @@ def integrate_plugin_in_node(node):
     token_ledger = node.db_manager.get_ledger(TOKEN_LEDGER_ID)
     token_state = node.db_manager.get_state(TOKEN_LEDGER_ID)
 
-    fees_tracker = register_trackers()
+    fees_tracker = register_trackers(node, token_state, token_ledger)
     node.write_req_validator.auth_map.update(sovtokenfees_auth_map)
     register_req_handlers(node, fees_tracker)
     register_batch_handlers(node, fees_tracker)
@@ -80,7 +76,10 @@ def register_req_handlers(node, fees_tracker):
 
 def register_batch_handlers(node, fees_tracker):
     domain_fee_batch_handler = DomainFeeBatchHandler(node.db_manager, fees_tracker)
+    tracker_batch_handler = TrackerBatchHandler(node.db_manager)
     node.write_manager.register_batch_handler(domain_fee_batch_handler)
+    node.write_manager.register_batch_handler(tracker_batch_handler)
+
 
 def set_callbacks(node):
     set_post_catchup_callback(node)
@@ -155,7 +154,11 @@ def register_three_pc_hooks(node, token_ledger, token_state, fees_tracker):
                                       three_pc_handler.check_recvd_pre_prepare)
 
 
-def register_trackers():
+def register_trackers(node, token_state, token_ledger):
     # TODO: move trackers into write_manager
     fees_tracker = BatchFeesTracker()
+    token_tracker = LedgerUncommittedTracker(token_state.committedHeadHash,
+                                             token_ledger.uncommitted_root_hash,
+                                             token_ledger.size)
+    node.db_manager.register_new_tracker(TOKEN_LEDGER_ID, token_tracker)
     return fees_tracker
