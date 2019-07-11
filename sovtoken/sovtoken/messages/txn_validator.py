@@ -47,7 +47,7 @@ def from_validate(request: Request):
         from_seqno = operation[FROM_SEQNO]
         error = FROM_VALIDATOR.validate(from_seqno)
         if error:
-            error = "'from' validation failed: {}".format(error)
+            error = "'{}' validation failed: {}".format(FROM_SEQNO, error)
         return error
 
 
