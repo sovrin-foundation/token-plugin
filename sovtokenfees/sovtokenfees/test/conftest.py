@@ -5,7 +5,6 @@ from sovtoken.test.conftest import build_wallets_from_data
 from plenum.common.constants import NYM, STEWARD, TARGET_NYM, TRUSTEE_STRING
 from sovtoken.test.helpers import libloader
 
-
 import pytest
 from enum import Enum, unique
 
@@ -22,7 +21,6 @@ from sovtoken.constants import (
     XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO, OUTPUTS
 )
 from sovtoken.main import integrate_plugin_in_node as enable_token
-
 
 from sovtokenfees.main import integrate_plugin_in_node as enable_fees
 from sovtokenfees.constants import MAX_FEE_OUTPUTS
@@ -42,10 +40,6 @@ from sovtokenfees.test.helper import (
 from sovtokenfees.test.helpers import form_helpers
 
 from plenum.test.conftest import get_data_for_role
-
-
-from stp_core.common.log import Logger
-Logger().enableStdLogging()
 
 
 @unique
@@ -93,6 +87,7 @@ class IOAddressesStatic(IOAddresses):
 # configuration fixtures
 # ######################
 8
+
 
 @pytest.fixture(scope="module")
 def fees(request):
@@ -184,17 +179,17 @@ def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):
 
 @pytest.fixture(scope="module")
 def helpers(
-    nodeSetWithIntegratedTokenPlugin,
-    looper,
-    sdk_pool_handle,
-    trustee_wallets,
-    steward_wallets,
-    sdk_wallet_client,
-    sdk_wallet_steward,
-    libsovtoken,
-    sdk_wallet_handle,
-    sdk_trustees,
-    sdk_stewards
+        nodeSetWithIntegratedTokenPlugin,
+        looper,
+        sdk_pool_handle,
+        trustee_wallets,
+        steward_wallets,
+        sdk_wallet_client,
+        sdk_wallet_steward,
+        libsovtoken,
+        sdk_wallet_handle,
+        sdk_trustees,
+        sdk_stewards
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -223,7 +218,6 @@ def address_main(helpers, libsovtoken):
 @pytest.fixture()
 def address_main_inner(helpers, libsovtoken):
     return helpers.inner.wallet.create_address()
-
 
 
 @pytest.fixture(scope="module")
@@ -274,6 +268,7 @@ def xfer_addresses(helpers, libsovtoken):
 @pytest.fixture
 def addresses(helpers, addresses_num):
     return helpers.wallet.create_new_addresses(addresses_num)
+
 
 @pytest.fixture
 def mint_amount_spec(request, addresses, mint_strategy, mint_amount):
@@ -341,8 +336,8 @@ def prepare_inputs(helpers, inputs_strategy, io_addresses):
 
 @pytest.fixture
 def prepare_outputs(
-    helpers, outputs_strategy, transfer_amount,
-    io_addresses, prepare_inputs, fees
+        helpers, outputs_strategy, transfer_amount,
+        io_addresses, prepare_inputs, fees
 ):
     _outputs_strategy = outputs_strategy
 
@@ -366,7 +361,7 @@ def prepare_outputs(
 
 @pytest.fixture
 def send_and_check_xfer(
-    looper, helpers, prepare_inputs, prepare_outputs, fees,
+        looper, helpers, prepare_inputs, prepare_outputs, fees,
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs(txn_type=XFER_PUBLIC) if inputs is None else inputs
@@ -379,7 +374,7 @@ def send_and_check_xfer(
 
 @pytest.fixture
 def send_and_check_nym(
-    looper, helpers, prepare_inputs, prepare_outputs, fees,
+        looper, helpers, prepare_inputs, prepare_outputs, fees,
 ):
     def wrapped(inputs=None, outputs=None):
         inputs = prepare_inputs(txn_type=NYM) if inputs is None else inputs

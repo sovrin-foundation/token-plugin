@@ -1,12 +1,18 @@
 from indy_common.constants import NYM, ATTRIB, SCHEMA, CLAIM_DEF
 from sovtoken.constants import XFER_PUBLIC
 
+from indy_common.constants import REVOC_REG_DEF
+
+from indy_common.constants import REVOC_REG_ENTRY
+
 NYM_FEES_ALIAS = 'nym_fees_alias'
 XFER_PUBLIC_FEES_ALIAS = 'xfer_public_fees_alias'
 NODE_FEES_ALIAS = 'node_fees_alias'
 ATTRIB_FEES_ALIAS = 'attrib_fees_alias'
 SCHEMA_FEES_ALIAS = 'schema_fees_alias'
 CLAIM_DEF_FEES_ALIAS = 'claim_def_fees_alias'
+REVOC_REG_DEF_FEES_ALIAS = "revoc_reg_def_fees_alias"
+REVOC_REG_ENTRY_FEES_ALIAS = "revoc_reg_entry_fees_alias"
 
 
 txn_type_to_alias = {
@@ -14,7 +20,9 @@ txn_type_to_alias = {
     XFER_PUBLIC: XFER_PUBLIC_FEES_ALIAS,
     ATTRIB: ATTRIB_FEES_ALIAS,
     SCHEMA: SCHEMA_FEES_ALIAS,
-    CLAIM_DEF: CLAIM_DEF_FEES_ALIAS
+    CLAIM_DEF: CLAIM_DEF_FEES_ALIAS,
+    REVOC_REG_DEF: REVOC_REG_DEF_FEES_ALIAS,
+    REVOC_REG_ENTRY: REVOC_REG_ENTRY_FEES_ALIAS
 }
 
 alias_to_txn_type = {
@@ -23,4 +31,6 @@ alias_to_txn_type = {
     ATTRIB_FEES_ALIAS: ATTRIB,
     SCHEMA_FEES_ALIAS: SCHEMA,
     CLAIM_DEF_FEES_ALIAS: CLAIM_DEF,
+    REVOC_REG_DEF_FEES_ALIAS: REVOC_REG_DEF,
+    REVOC_REG_ENTRY_FEES_ALIAS: REVOC_REG_ENTRY
 }

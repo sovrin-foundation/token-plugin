@@ -1,5 +1,6 @@
 import json
 import pytest
+from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
 
 from common.serializers.serialization import proof_nodes_serializer
 
@@ -8,7 +9,7 @@ from sovtoken.constants import MINT_PUBLIC, OUTPUTS, XFER_PUBLIC, \
     EXTRA, TOKEN_LEDGER_ID, GET_UTXO, ADDRESS, SIGS
 from sovtoken.util import address_to_verkey
 from plenum.test.helper import sdk_send_signed_requests, \
-    sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj
+    sdk_get_and_check_replies, sdk_gen_request, sdk_sign_and_submit_req_obj, get_handler_by_type_wm
 from state.trie.pruning_trie import Trie
 from sovtoken.test.wallet import TokenWallet
 
@@ -43,7 +44,7 @@ def send_xfer(looper, inputs, outputs, sdk_pool_handle, extra_data=None):
 
 def check_output_val_on_all_nodes(nodes, address, amount):
     for node in nodes:
-        handler = node.write_manager.request_handlers[XFER_PUBLIC][0]
+        handler = get_handler_by_type_wm(node.write_manager, XferHandler)
         assert int(amount) in [out.amount for out in
                                handler.utxo_cache.get_unspent_outputs(
                                    address, is_committed=True)]
