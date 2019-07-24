@@ -33,7 +33,7 @@ There are several types of releases:
     1. [**Contributor**]
         - Create a branch from `stable`.
         - Merge necessary changes from `master`;
-        - Wait for `indy-node` release candidate and set its version in [sovtoken/setup.py](../sovtoken/setup.py) and [devops/Makefile](../devops/Makefile).
+        - Wait for `indy-node` release candidate and set its version in [sovtoken/setup.py](../sovtoken/setup.py) and `FPM_P_DEPENDS` variable in  [devops/Makefile](../devops/Makefile).
         - Create a pull request to `stable`.
     2. [**build server**]
         - Run CI for the PR.
