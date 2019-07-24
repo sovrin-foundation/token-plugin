@@ -4,7 +4,7 @@ import base58
 from base58 import b58decode
 
 from common.serializers.serialization import serialize_msg_for_signing
-from plenum.common.constants import TXN_TYPE
+from plenum.common.constants import TXN_TYPE, IDENTIFIER
 from plenum.common.exceptions import (CouldNotAuthenticate,
                                       InsufficientCorrectSignatures,
                                       InvalidSignatureFormat)
@@ -63,13 +63,13 @@ class TokenAuthNr(CoreAuthNr):
     # ------------------------------------------------------------------------------------
     # Gets verkey from payment address
     # Raises UnknownIdentifier if it is not a valid base58 value
-    def getVerkey(self, identifier):
-        if len(identifier) not in (21, 22):
-            vk = address_to_verkey(identifier)
+    def getVerkey(self, ident, request):
+        if len(ident) not in (21, 22):
+            vk = address_to_verkey(ident)
             if len(vk) in (43, 44):
                 # Address is the 32 byte verkey
                 return vk
-        return super().getVerkey(identifier)
+        return super().getVerkey(ident, request)
 
     @staticmethod
     def verify_signtures_on_payments(inputs, outputs, signatures, verifier,
