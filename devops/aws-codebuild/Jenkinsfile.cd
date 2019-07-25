@@ -69,8 +69,13 @@ pipelineWrapper({
 
         def upload = {
             logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
-            withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                sh "./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup"
+            docker.image('python:3.5-alpine').inside {
+                withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                    sh """
+                        pip3 install -U plumbum deb-pkg-tools
+                        ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
+                    """
+                }
             }
         }
 
@@ -246,7 +251,6 @@ pipelineWrapper({
         stage("Install packaging utils") {
             dir(pkgUtilsDir) {
                 git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
-                sh "pip3 install -U plumbum deb-pkg-tools"
             }
         }
 
