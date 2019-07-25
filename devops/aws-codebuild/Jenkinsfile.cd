@@ -3,7 +3,7 @@
 String projectName = 'token-plugin'
 
 env.LIBSOVTOKEN_DEF_RECIPIENTS = "andrey.kononykhin@dsr-corporation.com"
-env.BRANCH_NAME = 'master'
+env.BRANCH_NAME = 'stable'
 env.SOVRIN_CORE_REPO_NAME = 'test'
 
 def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
