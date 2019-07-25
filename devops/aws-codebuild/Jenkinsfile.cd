@@ -67,7 +67,7 @@ pipelineWrapper({
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
-        def upload = {
+        Closure _upload = {
             logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
             docker.image('python:3.5-alpine').inside {
                 withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
@@ -79,7 +79,7 @@ pipelineWrapper({
             }
         }
 
-        def notify = {
+        Closure _notify = {
             notifier.email {
                 to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
                 subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
@@ -259,7 +259,7 @@ pipelineWrapper({
         }
 
         stage("Publish to $repoComponent") {
-            upload()
+            _upload()
             if (isRelease) {
                 stash includes: "$pkgUtilsDir/**/*", name: pkgUtilsDir
                 stash includes: "$debsDir/**/*", name: debsDir
@@ -268,7 +268,7 @@ pipelineWrapper({
     }
 
     stage("Notify for $repoComponent") {
-        notify()
+        _notify()
     }
 
     if (isRelease) {
@@ -293,12 +293,13 @@ pipelineWrapper({
             nodeWrapper('ubuntu') {
                 unstash pkgUtilsDir
                 unstash debsDir
-                upload()
+
+                _upload()
             }
         }
 
         stage("Notify for $repoComponent") {
-            notify()
+            _notify()
         }
     }
 }, { err ->
