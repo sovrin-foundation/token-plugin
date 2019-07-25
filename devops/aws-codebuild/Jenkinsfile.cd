@@ -14,11 +14,6 @@ def getParam(name) {
     return (params."$name" ?: env."$name")
 }
 
-def downloadPackagingUtils() {
-    git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
-    sh "pip3 install -U plumbum deb-pkg-tools"
-}
-
 def getApprove(name) {
     def approval
     try {
@@ -248,9 +243,10 @@ pipelineWrapper({
             sh "ls -la $debsDir"
         }
 
-        stage("Get packaging utils") {
+        stage("Install packaging utils") {
             dir(pkgUtilsDir) {
-                downloadPackagingUtils()
+                git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
+                sh "pip3 install -U plumbum deb-pkg-tools"
             }
         }
 
