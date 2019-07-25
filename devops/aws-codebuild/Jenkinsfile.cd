@@ -72,14 +72,14 @@ pipelineWrapper({
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
-        def upload = { repoComponent ->
+        def upload = {
             logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
                 sh "./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup"
             }
         }
 
-        def notify = { repoComponent ->
+        def notify = {
             notifier.email {
                 to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
                 subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
@@ -234,7 +234,7 @@ pipelineWrapper({
                     unstash name: it
                 }
             }
-            sh "ls -la debsDir"
+            sh "ls -la $debsDir"
         }
 
         stage("Get packaging utils") {
@@ -248,7 +248,7 @@ pipelineWrapper({
         }
 
         stage("Publish to $repoComponent") {
-            upload(repoComponent)
+            upload()
             if (isRelease) {
                 stash includes: "$pkgUtilsDir/**/*", name: pkgUtilsDir
                 stash includes: "$debsDir/**/*", name: debsDir
@@ -257,7 +257,7 @@ pipelineWrapper({
     }
 
     stage("Notify for $repoComponent") {
-        notify(repoComponent)
+        notify()
     }
 
     if (isRelease) {
@@ -282,12 +282,12 @@ pipelineWrapper({
             nodeWrapper('ubuntu') {
                 unstash pkgUtilsDir
                 unstash debsDir
-                upload(repoComponent)
+                upload()
             }
         }
 
         stage("Notify for $repoComponent") {
-            notify(repoComponent)
+            notify()
         }
     }
 }, { err ->
