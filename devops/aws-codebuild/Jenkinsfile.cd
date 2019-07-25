@@ -65,9 +65,8 @@ pipelineWrapper({
                 "--build-arg=u_id=$u_id -f devops/docker/cd/debs_upload.dockerfile devops/docker/cd"
         ).inside {
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                // TODO remove force-backup
                 sh """
-                    ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
+                    ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key
                 """
             }
         }
@@ -284,15 +283,9 @@ pipelineWrapper({
             }
         }
 
-        // TODO alternative options for now:
-        // 1. copy packages between channels one by one:
-        //      - it will just copy already signed packages
-        //      - but it will lead to two freight caching operations since
-        //      mupltiple copy is not supported by packaging utils for now
-        // 2. copy `sovtokenfees` with copyWithDeps option:
-        //      - just one caching procedure
-        //      - `sovtoken` is not pinned plus points to `indy-node`, thus
-        //      a lot more work will happen during copy preparation
+        // Note. it is assumed here that packages are already in a backup
+        // directory and their upload would be actually skipped since '--force-backup'
+        // is not used
         stage("Publish to $repoComponent") {
             nodeWrapper('ubuntu') {
                 unstash pkgUtilsDir
