@@ -30,6 +30,7 @@ def getApprove(name) {
 
 logger = sovLibrary.Logger.new(this)
 notifier = sovLibrary.Notifier.new(this)
+utils = sovLibrary.Utils.new(this)
 logger.setGlobalLevel('TRACE')
 
 String gitHubUserCredId = getParam('GITHUB_BOT_USER') ?: 'sovbot-github'
@@ -58,12 +59,14 @@ pipelineWrapper({
 
     Closure _upload = {
         logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
-        docker.image('python:3.5-alpine').inside('-u 0') {
+        String u_id = utils.shStdout('id -u')
+        docker.build(
+                "$projectName:debs-upload",
+                "--build-arg=u_id=$u_id -f devops/docker/cd/debs_upload.dockerfile devops/docker/cd"
+        ).inside {
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                // TODO remove force-backup
                 sh """
-                    apk update
-                    apk add openssh
-                    pip3 install -U plumbum deb-pkg-tools
                     ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
                 """
             }
@@ -93,7 +96,6 @@ pipelineWrapper({
         String indyNodeVersion
 
         def sovrinRepo = sovLibrary.SovrinRepo.new(this)
-        def utils = sovLibrary.Utils.new(this)
         def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
