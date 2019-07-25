@@ -133,7 +133,7 @@ pipelineWrapper({
 
         stage("Prepare common env") {
             builds.failFast = false
-            //utils.parallel builds
+            utils.parallel builds
         }
 
         builds = projects.collectEntries { proj ->
@@ -170,17 +170,6 @@ pipelineWrapper({
 //                   }
 //               }
 
-
-                        
-                        debPVersion = "1.0.1~dev66"
-                        String _pkgBaseName = "${packageName}_${debPVersion}"
-
-                        sh "wget https://repo.sovrin.org/lib/apt/xenial/master/${_pkgBaseName}_amd64.deb"
-                        this.stash includes: utils.shStdout("ls ${_pkgBaseName}_*.deb"), name: _pkgBaseName
-                        pkgsList += _pkgBaseName
-
-
-                    return
 
                     stage('Set release parameters') {
                         def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
