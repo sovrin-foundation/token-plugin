@@ -110,8 +110,8 @@ pipelineWrapper({
             if (!indyNodeVersion) {
                 throw new Exception('indy-node version is not found')
             }
-            isRC = !!((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
-            isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
+            isRC = (env.BRANCH_NAME == 'stable')
+            isRelease = !!(isRC && !indyNodeVersion.find(/[^0-9\.]/))
             logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
         }
 
@@ -251,13 +251,13 @@ pipelineWrapper({
             sh "ls -la $debsDir"
         }
 
-        stage("Install packaging utils") {
+        stage("Get packaging utils") {
             dir(pkgUtilsDir) {
                 git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
             }
         }
 
-        if (isRC || isRelease) {
+        if (isRC) {
             repoComponent = 'rc'
         }
 
@@ -270,7 +270,7 @@ pipelineWrapper({
         }
     }
 
-    stage("Notify for $repoComponent") {
+    stage("Notify about $repoComponent") {
         _notify()
     }
 
@@ -295,7 +295,7 @@ pipelineWrapper({
             }
         }
 
-        stage("Notify for $repoComponent") {
+        stage("Notify about $repoComponent") {
             _notify()
         }
     }
