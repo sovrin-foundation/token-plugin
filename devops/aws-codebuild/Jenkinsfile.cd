@@ -275,19 +275,26 @@ pipelineWrapper({
     }
 
     if (isRelease) {
+        Boolean approval = false
         repoComponent = 'stable'
 
         stage("QA approval") {
-            if (!getApprove("QA")) {
-                return
-            }
+            approval = getApprove("QA")
         }
 
-        // Note. it is assumed here that packages are already in a backup
-        // directory and their upload would be actually skipped since '--force-backup'
-        // is not used
-        stage("Publish to $repoComponent") {
-            nodeWrapper('ubuntu') {
+        if (!approval) {
+            return
+        }
+
+        nodeWrapper('ubuntu') {
+            stage('Checkout sources from SCM') {
+                checkout scm
+            }
+
+            // Note. it is assumed here that packages are already in a backup
+            // directory and their upload would be actually skipped since '--force-backup'
+            // is not used
+            stage("Publish to $repoComponent") {
                 unstash pkgUtilsDir
                 unstash debsDir
 
