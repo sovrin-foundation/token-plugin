@@ -58,9 +58,11 @@ pipelineWrapper({
 
     Closure _upload = {
         logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
-        docker.image('python:3.5-alpine').inside {
+        docker.image('python:3.5-alpine').inside('-u 0') {
             withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
                 sh """
+                    apk update
+                    apk add openssh
                     pip3 install -U plumbum deb-pkg-tools
                     ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
                 """
