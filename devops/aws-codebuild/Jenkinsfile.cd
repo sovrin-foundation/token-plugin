@@ -56,6 +56,35 @@ pipelineWrapper({
     String debsDir = 'debs'
     String pkgUtilsDir = 'sovrin-packaging'
 
+    Closure _upload = {
+        logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
+        docker.image('python:3.5-alpine').inside {
+            withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                sh """
+                    pip3 install -U plumbum deb-pkg-tools
+                    ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
+                """
+            }
+        }
+    }
+
+    Closure _notify = {
+        notifier.email {
+            to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
+            subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
+            body = """
+                |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
+                |
+                |Build:
+                |   Project: \$PROJECT_NAME
+                |   Url: ${this.env.BUILD_URL}
+                |   Number: ${this.env.BUILD_NUMBER}
+                |
+                |Check console output at ${this.env.BUILD_URL}console to view the details.
+            """.stripMargin()
+        }
+    }
+
     nodeWrapper(nodeLabels.codeBuild) {
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
@@ -66,35 +95,6 @@ pipelineWrapper({
         def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
             ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
         def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
-
-        Closure _upload = {
-            logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
-            docker.image('python:3.5-alpine').inside {
-                withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                    sh """
-                        pip3 install -U plumbum deb-pkg-tools
-                        ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup
-                    """
-                }
-            }
-        }
-
-        Closure _notify = {
-            notifier.email {
-                to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
-                subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
-                body = """
-                    |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
-                    |
-                    |Build:
-                    |   Project: \$PROJECT_NAME
-                    |   Url: ${this.env.BUILD_URL}
-                    |   Number: ${this.env.BUILD_NUMBER}
-                    |
-                    |Check console output at ${this.env.BUILD_URL}console to view the details.
-                """.stripMargin()
-            }
-        }
 
         stage('Checkout sources from SCM') {
             checkout scm
