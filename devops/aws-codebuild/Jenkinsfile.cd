@@ -99,16 +99,18 @@ pipelineWrapper({
             checkout scm
         }
 
-        stage('Get indy-node version') {
+        stage('Set release params') {
             indyNodeVersion = utils.shStdout("""
                 sed -n "s/.*indy-node==\\([^\\"\\']\\+\\).*/\\1/p" sovtoken/setup.py
             """)
             if (!indyNodeVersion) {
                 throw new Exception('indy-node version is not found')
             }
+            logger.info("Detected indy-node version: '$indyNodeVersion'")
+
             isRC = (env.BRANCH_NAME == 'stable')
             isRelease = !!(isRC && !indyNodeVersion.find(/[^0-9\.]/))
-            logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
+            logger.info("Release parameters: isRC: $isRC, isRelease: $isRelease")
         }
 
         Map builds = [
@@ -152,20 +154,21 @@ pipelineWrapper({
                         logger.info("Current source version: $srcVersion")
                     }
 
-//               stage('Get last revision') {
-//                   lastRevision = evernymRepo.getLastRevision {
-//                       delegate.packageName = packageName
-//                       packageSrcVersion = srcVersion
-//                       repoDistr = 'agency-dev'
-//                   }
-//
-//                   if (lastRevision) {
-//                       logger.info("Found last revision number: $lastRevision")
-//                   } else {
-//                       logger.info("No previous revision was found")
-//                   }
-//               }
+/*
+                    stage('Get last revision') {
+                        lastRevision = evernymRepo.getLastRevision {
+                            delegate.packageName = packageName
+                            packageSrcVersion = srcVersion
+                            repoDistr = 'agency-dev'
+                        }
 
+                        if (lastRevision) {
+                            logger.info("Found last revision number: $lastRevision")
+                        } else {
+                            logger.info("No previous revision was found")
+                        }
+                    }
+*/
 
                     stage('Set release parameters') {
                         def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
