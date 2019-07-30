@@ -1,17 +1,17 @@
+from indy_node.server.client_authn import LedgerBasedAuthNr
 from plenum.common.constants import TXN_TYPE
 from plenum.common.exceptions import InvalidClientRequest
 from plenum.common.types import PLUGIN_TYPE_AUTHENTICATOR, OPERATION, f
 from plenum.common.verifier import DidVerifier
-from plenum.server.client_authn import CoreAuthNr
-from sovtokenfees.constants import SET_FEES, GET_FEE, GET_FEES
+from sovtokenfees.constants import SET_FEES
 from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 
 
-class FeesAuthNr(CoreAuthNr):
+class FeesAuthNr(LedgerBasedAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
 
-    def __init__(self, write_types, query_types, action_types, state, token_authnr):
-        super().__init__(write_types, query_types, action_types, state)
+    def __init__(self, write_types, query_types, action_types, cache, token_authnr):
+        super().__init__(write_types, query_types, action_types, cache)
         self.token_authnr = token_authnr
 
     def authenticate(self, req_data, identifier: str = None,

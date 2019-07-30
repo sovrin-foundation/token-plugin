@@ -8,10 +8,8 @@ from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtoken.test.helpers.helper_request import SEC_PER_DAY
 
 from indy_common.types import Request
-from plenum.common.constants import DOMAIN_LEDGER_ID
-from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
-    CouldNotAuthenticate
-from plenum.server.client_authn import CoreAuthNr
+from indy_node.server.client_authn import LedgerBasedAuthNr
+from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures
 from sovtoken.test.wallet import TokenWallet
 from sovtoken.client_authnr import TokenAuthNr, AddressSigVerifier
 from sovtoken.constants import INPUTS, OUTPUTS, EXTRA, ACCEPTABLE_WRITE_TYPES, ACCEPTABLE_QUERY_TYPES, \
@@ -118,7 +116,7 @@ def test_authenticate_invalid_signatures_format(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
@@ -137,7 +135,7 @@ def test_authenticate_insufficient_valid_signatures_data(helpers, node, addresse
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
@@ -153,7 +151,7 @@ def test_authenticate_success_3_sigs(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     outputs = [{"address": SF_address, "amount": 30}, {"address": user1_address, "amount": 30}]
     request = helpers.request.mint(outputs)
     req_data = request.as_dict
@@ -167,7 +165,7 @@ def test_authenticate_calls_authenticate_xfer(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
@@ -185,7 +183,7 @@ def test_authenticate_xfer_success(node, user2_token_wallet, user2_address, user
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [[user2_token_wallet, user2_address, 1]]
     outputs = [{"address": user1_address, "amount": 10}, {"address": user2_address, "amount": 10}]
     request = xfer_request(inputs, outputs)
@@ -199,7 +197,7 @@ def test_authenticate_xfer_invalid_signature_format(node, user2_token_wallet, us
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [[user2_token_wallet, user2_address, 1]]
     outputs = [[user1_address, 10], [user2_address, 10]]
     request = xfer_request(inputs, outputs)
@@ -215,7 +213,7 @@ def test_authenticate_xfer_insufficient_correct_signatures(node, user2_token_wal
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [[user2_token_wallet, user2_address, 1], [SF_token_wallet, SF_address, 2]]
     outputs = [[user1_address, 10], [user2_address, 10]]
     request = xfer_request(inputs, outputs)
@@ -232,7 +230,7 @@ def test_authenticate_xfer_with_extra(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs, extra=json.dumps({"aaa": "bbb"}))
@@ -246,7 +244,7 @@ def test_authenticate_xfer_with_extra_not_signed(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
@@ -262,7 +260,7 @@ def test_authenticate_xfer_with_taa(helpers, node, addresses):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     extra = helpers.request.add_transaction_author_agreement_to_extra(None, "text", "mechanism", "version")
@@ -276,7 +274,7 @@ def test_authenticate_xfer_with_taa_not_signed(helpers, node, addresses, looper)
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [{"source": utxo_from_addr_and_seq_no(SF_address, 1)}]
     outputs = [{"address": user1_address, "amount": 10}, {"address": SF_address, "amount": 10}]
     request = helpers.request.transfer(inputs, outputs)
@@ -295,13 +293,13 @@ def test_authenticate_xfer_with_taa_not_signed(helpers, node, addresses, looper)
 # -------------------------Test serializeForSig method------------------------------------------------------------------
 
 # This test that the serializeForSig method is being called when a XFER_PUBLIC request is submitted
-@mock.patch.object(CoreAuthNr, 'serializeForSig', return_value=True)
+@mock.patch.object(LedgerBasedAuthNr, 'serializeForSig', return_value=True)
 def test_serializeForSig_XFER_PUBLIC_path(node, user2_token_wallet, user2_address,
                                           SF_token_wallet, SF_address, user1_address):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [[user2_token_wallet, user2_address, 1], [SF_token_wallet, SF_address, 2]]
     outputs = [[user1_address, 10], [user1_address, 10]]
     request = xfer_request(inputs, outputs)
@@ -311,13 +309,13 @@ def test_serializeForSig_XFER_PUBLIC_path(node, user2_token_wallet, user2_addres
 
 
 # This test that the serializeForSig method is being called when a MINT_PUBLIC request is submitted
-@mock.patch.object(CoreAuthNr, 'serializeForSig')
+@mock.patch.object(LedgerBasedAuthNr, 'serializeForSig')
 def test_serializeForSig_MINT_PUBLIC_path(helpers, node, addresses):
     [SF_address, user1_address] = addresses
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     outputs = [[SF_address, 30], [user1_address, 30]]
     request = helpers.request.mint(outputs)
     msg = request.as_dict
@@ -333,7 +331,7 @@ def test_getVerkey_success(node):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     ver_key = token_authnr.getVerkey(VALID_IDENTIFIER, Request())
     assert len(ver_key) == 23
     assert ver_key[0] == '~'
@@ -344,7 +342,7 @@ def test_getVerkey_pay_address_success(node):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     # TODO change these to indicate they are addresses
     identifier_43 = 'sjw1ceG7wtym3VcnyaYtf1xo37gCUQHDR5VWcKWNPLRZ1X8eC'
     ver_key = token_authnr.getVerkey(identifier_43, Request())
@@ -356,7 +354,7 @@ def test_getVerkey_invalid_identifier(node):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     identifier_invalid = 'INVALID_IDENTIFIER'
     with pytest.raises(UnknownIdentifier):
         token_authnr.getVerkey(identifier_invalid, Request())
@@ -370,7 +368,7 @@ def test_get_xfer_ser_data_success(node, user2_token_wallet, user2_address,
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node[0].states[DOMAIN_LEDGER_ID])
+                               node[0].db_manager.idr_cache)
     inputs = [[user2_token_wallet, user2_address, 1], [SF_token_wallet, SF_address, 2]]
     outputs = [[user1_address, 10], [user1_address, 10]]
     request = xfer_request(inputs, outputs)
