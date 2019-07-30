@@ -6,18 +6,34 @@ def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: m
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
 
+def getParam(name) {
+    return (params."$name" ?: env."$name")
+}
+
+def getApprove(name) {
+    def approval
+    try {
+        input(message: 'Do you want to publish this package?')
+        approval = true
+        echo "$name approval granted"
+    }
+    catch (Exception err) {
+        approval = false
+        echo "$name approval denied"
+    }
+    return approval
+}
+
 logger = sovLibrary.Logger.new(this)
 notifier = sovLibrary.Notifier.new(this)
+utils = sovLibrary.Utils.new(this)
 logger.setGlobalLevel('TRACE')
 
-gitHubUserCredId = env.GITHUB_BOT_USER ?: 'sovbot-github'
-sovrinPackagingRepo = env.SOVRIN_PACKAGING_REPO ?: 'https://github.com/sovrin-foundation/sovrin-packaging'
-sovrinPackagingBranch = env.SOVRIN_PACKAGING_BRANCH ?: 'master'
-
-def downloadPackagingUtils() {
-    git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
-    sh "pip3 install -U plumbum deb-pkg-tools"
-}
+String gitHubUserCredId = getParam('GITHUB_BOT_USER') ?: 'sovbot-github'
+String sovrinPackagingRepo = getParam('env.SOVRIN_PACKAGING_REPO') ?: 'https://github.com/sovrin-foundation/sovrin-packaging'
+String sovrinPackagingBranch = getParam('SOVRIN_PACKAGING_BRANCH') ?: 'master'
+String repoName = getParam('SOVRIN_CORE_REPO_NAME') ?: 'core'
+String repoComponent = getParam('SOVRIN_CORE_REPO_CHANNEL') ?: env.BRANCH_NAME ?: 'master'
 
 def nodeLabels = [
     codeBuild: env.LIBSOVTOKEN_CODEBUILD_NODE_LABEL ?: 'codebuild',
@@ -30,35 +46,71 @@ pipelineWrapper({
     //this IP is outdated, should use the one from env
 //    env.SOVRIN_REPO_HOST = '192.168.11.115'
 
+    Boolean isRC = false
+    Boolean isRelease = false
+    Boolean isDev = (env.BRANCH_NAME == 'master')
+    List pkgsList = []
+    String debsDir = 'debs'
+    String pkgUtilsDir = 'sovrin-packaging'
+
+    Closure _upload = {
+        logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
+        String u_id = utils.shStdout('id -u')
+        docker.build(
+                "$projectName:debs-upload",
+                "--build-arg=u_id=$u_id -f devops/docker/cd/debs_upload.dockerfile devops/docker/cd"
+        ).inside {
+            withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
+                sh """
+                    ./$pkgUtilsDir/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key
+                """
+            }
+        }
+    }
+
+    Closure _notify = {
+        notifier.email {
+            to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
+            subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
+            body = """
+                |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
+                |
+                |Build:
+                |   Project: \$PROJECT_NAME
+                |   Url: ${this.env.BUILD_URL}
+                |   Number: ${this.env.BUILD_NUMBER}
+                |
+                |Check console output at ${this.env.BUILD_URL}console to view the details.
+            """.stripMargin()
+        }
+    }
+
     nodeWrapper(nodeLabels.codeBuild) {
         def osname = 'xenial'
         List projects = ['sovtoken', 'sovtokenfees']
-        List pkgsList = []
         String indyNodeVersion
-        Boolean isRC = false
-        Boolean isRelease = false
-        Boolean isDev = (env.BRANCH_NAME == 'master')
+
+        def sovrinRepo = sovLibrary.SovrinRepo.new(this)
+        def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
+            ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
+        def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
 
         stage('Checkout sources from SCM') {
             checkout scm
         }
 
-        def sovrinRepo = sovLibrary.SovrinRepo.new(this)
-        def utils = sovLibrary.Utils.new(this)
-        def buildCtx = sovLibrary.AwsCodeBuildHelper.BuildCtx.new('plugin',
-            ['devops', 'sovtoken/sovtoken/__metadata__.py', 'sovtokenfees/sovtokenfees/__metadata__.py'])
-        def awsCBHelper = sovLibrary.AwsCodeBuildHelper.new(this, buildCtx)
-
-        stage('Get indy-node version') {
+        stage('Set release params') {
             indyNodeVersion = utils.shStdout("""
                 sed -n "s/.*indy-node==\\([^\\"\\']\\+\\).*/\\1/p" sovtoken/setup.py
             """)
             if (!indyNodeVersion) {
                 throw new Exception('indy-node version is not found')
             }
-            isRC = !!((env.BRANCH_NAME == 'stable') && indyNodeVersion.find(/[^0-9\.]/))
-            isRelease = ((env.BRANCH_NAME == 'stable') && !isRC)
-            logger.info("Detected indy-node version: '$indyNodeVersion', isRC: $isRC, isRelease: $isRelease")
+            logger.info("Detected indy-node version: '$indyNodeVersion'")
+
+            isRC = (env.BRANCH_NAME == 'stable')
+            isRelease = !!(isRC && !indyNodeVersion.find(/[^0-9\.]/))
+            logger.info("Release parameters: isRC: $isRC, isRelease: $isRelease")
         }
 
         Map builds = [
@@ -102,20 +154,21 @@ pipelineWrapper({
                         logger.info("Current source version: $srcVersion")
                     }
 
-//               stage('Get last revision') {
-//                   lastRevision = evernymRepo.getLastRevision {
-//                       delegate.packageName = packageName
-//                       packageSrcVersion = srcVersion
-//                       repoDistr = 'agency-dev'
-//                   }
-//
-//                   if (lastRevision) {
-//                       logger.info("Found last revision number: $lastRevision")
-//                   } else {
-//                       logger.info("No previous revision was found")
-//                   }
-//               }
+/*
+                    stage('Get last revision') {
+                        lastRevision = evernymRepo.getLastRevision {
+                            delegate.packageName = packageName
+                            packageSrcVersion = srcVersion
+                            repoDistr = 'agency-dev'
+                        }
 
+                        if (lastRevision) {
+                            logger.info("Found last revision number: $lastRevision")
+                        } else {
+                            logger.info("No previous revision was found")
+                        }
+                    }
+*/
 
                     stage('Set release parameters') {
                         def releaseVersion =  isRelease ? '' : (isRC ? 'rc' : isDev ? 'dev' : '') + "$BUILD_NUMBER"
@@ -177,47 +230,68 @@ pipelineWrapper({
         stage("Build artifacts") {
             builds.failFast = false
             utils.parallel builds
-        }
-
-        stage('Release artifacts') {
-            String repoName = env.SOVRIN_CORE_REPO_NAME
-            String repoComponent = env.BRANCH_NAME
-            String debsDir = 'debs'
-
-            if (isRC) {
-                repoComponent = 'rc'
-            }
-            logger.info("Debian repo component is set to: '$repoComponent'")
 
             dir(debsDir) {
                 pkgsList.each {
                     unstash name: it
                 }
             }
-            logger.info("Uploading debian packages to '${repoName}/${repoComponent}' sovrin repo: $pkgsList")
+            sh "ls -la $debsDir"
+        }
 
-            dir("sovrin-packaging") {
-                downloadPackagingUtils()
+        stage("Get packaging utils") {
+            dir(pkgUtilsDir) {
+                git branch: sovrinPackagingBranch, credentialsId: gitHubUserCredId, url: sovrinPackagingRepo
+            }
+        }
+
+        if (isRC) {
+            repoComponent = 'rc'
+        }
+
+        stage("Publish to $repoComponent") {
+            _upload()
+            if (isRelease) {
+                stash includes: "$pkgUtilsDir/**/*", name: pkgUtilsDir
+                stash includes: "$debsDir/**/*", name: debsDir
+            }
+        }
+    }
+
+    stage("Notify about $repoComponent") {
+        _notify()
+    }
+
+    if (isRelease) {
+        Boolean approval = false
+        repoComponent = 'stable'
+
+        stage("QA approval") {
+            approval = getApprove("QA")
+        }
+
+        if (!approval) {
+            return
+        }
+
+        nodeWrapper('ubuntu') {
+            stage('Checkout sources from SCM') {
+                checkout scm
             }
 
-            withCredentials([file(credentialsId: 'SovrinRepoSSHKey', variable: 'sovrin_key')]) {
-                sh "./sovrin-packaging/upload_debs.py $debsDir $repoName $repoComponent --host $env.SOVRIN_REPO_HOST --ssh-key $sovrin_key --force-backup"
-            }
+            // Note. it is assumed here that packages are already in a backup
+            // directory and their upload would be actually skipped since '--force-backup'
+            // is not used
+            stage("Publish to $repoComponent") {
+                unstash pkgUtilsDir
+                unstash debsDir
 
-            notifier.email {
-                to = '$DEFAULT_RECIPIENTS ' + (this.env.LIBSOVTOKEN_DEF_RECIPIENTS ?: '')
-                subject = "[$projectName] new packages ${pkgsList.join(' ')} published to '${repoName}/${repoComponent}' repo"
-                body = """
-                    |New debian packages ${pkgsList.join(' ')} were built and published to '${repoName}/${repoComponent}' repo
-                    |
-                    |Build:
-                    |   Project: \$PROJECT_NAME
-                    |   Url: ${this.env.BUILD_URL}
-                    |   Number: ${this.env.BUILD_NUMBER}
-                    |
-                    |Check console output at ${this.env.BUILD_URL}console to view the details.
-                """.stripMargin()
+                _upload()
             }
+        }
+
+        stage("Notify about $repoComponent") {
+            _notify()
         }
     }
 }, { err ->
