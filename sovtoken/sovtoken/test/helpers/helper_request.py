@@ -11,7 +11,9 @@ from sovtoken.test.constants import VALID_IDENTIFIER
 from plenum.common.constants import TXN_TYPE, CURRENT_PROTOCOL_VERSION, GET_TXN, DATA
 from plenum.common.request import Request
 from plenum.common.types import f
-from sovtoken.constants import ADDRESS, AMOUNT
+from sovtoken.constants import ADDRESS, AMOUNT, FROM_SEQNO
+
+SEC_PER_DAY = 24 * 60 * 60
 
 
 class HelperRequest():
@@ -42,12 +44,16 @@ class HelperRequest():
         self._client_wallet = client_wallet
         self._steward_wallet = steward_wallet
 
-    def get_utxo(self, address):
+    def get_utxo(self, address, from_seqno=None):
         """ Builds a get_utxo request. """
 
         get_utxo_request_future = build_get_payment_sources_request(self._client_wallet_handle, VALID_IDENTIFIER, address)
         get_utxo_request = self._looper.loop.run_until_complete(get_utxo_request_future)[0]
         get_utxo_request = self._sdk.sdk_json_to_request_object(json.loads(get_utxo_request))
+
+        # TODO: as soon as SDK gets implemented "from", remove this two lines and pass it to the builder
+        if from_seqno:
+            get_utxo_request.operation[FROM_SEQNO] = from_seqno
 
         return get_utxo_request
 
@@ -76,13 +82,13 @@ class HelperRequest():
 
     def add_transaction_author_agreement_to_extra(self, extra, text, mechanism, version):
         extra_future = prepare_payment_extra_with_acceptance_data(extra, text, version, None, mechanism,
-                                                                  round(time.time()))
+                                                                  int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 
     def add_transaction_author_agreement_to_request(self, request, text, mechanism, version):
         extra_future = append_txn_author_agreement_acceptance_to_request(request, text, version, None, mechanism,
-                                                                         round(time.time()))
+                                                                         int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
         extra = self._looper.loop.run_until_complete(extra_future)
         return extra
 

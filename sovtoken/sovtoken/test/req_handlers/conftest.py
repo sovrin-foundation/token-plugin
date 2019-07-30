@@ -3,7 +3,7 @@ import json
 import pytest
 from base58 import b58decode
 from sovtoken.constants import UTXO_CACHE_LABEL
-from sovtokenfees.static_fee_req_handler import txn_root_serializer
+from sovtokenfees.serializers import txn_root_serializer
 
 from indy_node.test.request_handlers.helper import get_fake_ledger
 from sovtoken import TOKEN_LEDGER_ID
@@ -36,13 +36,18 @@ def bls_store(db_manager):
 
 @pytest.fixture(scope="module")
 def db_manager(tconf):
-    db_manager = DatabaseManager()
+    _db_manager = DatabaseManager()
     storage = initKeyValueStorage(KeyValueStorageType.Memory,
                                   None,
                                   "tokenInMemoryStore",
                                   txn_serializer=serialization.multi_sig_store_serializer)
     ledger = get_fake_ledger()
-    ledger.commitTxns = lambda x: (None, [1])
+
+    def commit_txns(count):
+        ledger.committed_root_hash = ledger.uncommitted_root_hash
+        return None, [1]
+
+    ledger.commitTxns = commit_txns
     ledger.root_hash = txn_root_serializer.serialize("1")
     ledger.uncommitted_root_hash = "1"
     ledger.uncommitted_size = 1
@@ -51,8 +56,8 @@ def db_manager(tconf):
     ledger.committed_root_hash = "-1"
     ledger.append_txns_metadata = lambda txns, txn_time: [append_txn_metadata(txn, 2, txn_time, 2) for txn in txns]
     ledger.appendTxns = lambda x: (None, x)
-    db_manager.register_new_database(TOKEN_LEDGER_ID, ledger, PruningState(storage))
-    return db_manager
+    _db_manager.register_new_database(TOKEN_LEDGER_ID, ledger, PruningState(storage))
+    return _db_manager
 
 
 @pytest.yield_fixture(scope="module")

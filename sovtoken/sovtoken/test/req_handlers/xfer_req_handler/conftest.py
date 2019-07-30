@@ -6,7 +6,9 @@ from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHan
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from base58 import b58encode_check
 from indy.payment import build_payment_req
-from indy_common.test.auth.conftest import write_auth_req_validator, constraint_serializer, config_state, idr_cache
+from indy_node.test.conftest import write_auth_req_validator, constraint_serializer, config_state, idr_cache
+from sovtoken.test.helper import libsovtoken_address_to_address
+
 from plenum.common.txn_util import append_txn_metadata
 from plenum.test.helper import sdk_json_to_request_object
 
@@ -20,7 +22,7 @@ def xfer_handler(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
 
 @pytest.fixture(scope="module")
 def mint_tokens(payment_address, utxo_cache, db_manager):
-    addr = payment_address[8:]
+    addr = libsovtoken_address_to_address(payment_address)
     utxo_cache.set(addr, "1:10".encode())
     db_manager.get_state(TOKEN_LEDGER_ID).set((addr + ":1").encode(), "10".encode())
 

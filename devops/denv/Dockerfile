@@ -9,7 +9,7 @@ RUN apt-get update -y && apt-get install -y \
         apt-transport-https \
         ca-certificates
 
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
 
 RUN echo "deb https://repo.sovrin.org/sdk/deb xenial stable" >> /etc/apt/sources.list
 
@@ -59,7 +59,7 @@ WORKDIR /home/indy
 # indy-node along with supervisor
 ENV INDY_NODE_VERSION ${INDY_NODE_VERSION:-1.7.1}
 ARG indy_plenum_ver=1.7.1
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
 	    supervisor \

@@ -8,7 +8,7 @@ from sovtokenfees.req_handlers.write_handlers.set_fees_handler import SetFeesHan
 from sovtoken.test.req_handlers.mint_req_handler.conftest import trustees
 from sovtoken.test.req_handlers.conftest import wallet
 
-from indy_common.test.auth.conftest import write_auth_req_validator, constraint_serializer, config_state
+from indy_node.test.conftest import write_auth_req_validator, constraint_serializer, config_state
 from plenum.common.txn_util import append_txn_metadata
 from plenum.test.helper import sdk_json_to_request_object
 from plenum.test.testing_utils import FakeSomething

@@ -1,10 +1,11 @@
 import pytest
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
 
 from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
-from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS, PAYMENT_ADDRESS, INPUTS
-from sovtoken.test.helper import user1_token_wallet
+from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, INPUTS
+from sovtoken.test.helper import user1_token_wallet, libsovtoken_address_to_address
 
 
 @pytest.fixture
@@ -31,6 +32,23 @@ def initial_mint_inner(helpers, addresses_inner):
     responses = helpers.sdk.send_and_check_request_objects([mint_request])
     result = helpers.sdk.get_first_result(responses)
     return result
+
+
+def test_state_after_xfer(helpers, initial_mint, addresses, nodeSetWithIntegratedTokenPlugin):
+
+    mint_seq_no = get_seq_no(initial_mint)
+    [address1, address2, *_] = addresses
+
+    inputs = helpers.general.get_utxo_addresses([address1])
+    inputs = [utxo for utxos in inputs for utxo in utxos]
+    outputs = [{"address": address2, "amount": 100}]
+
+    helpers.general.do_transfer(inputs, outputs)
+    key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), mint_seq_no)
+
+    for n in nodeSetWithIntegratedTokenPlugin:
+        res = n.db_manager.get_state(TOKEN_LEDGER_ID).get(key)
+        assert not res
 
 
 def test_multiple_inputs_with_1_incorrect_input_sig(  # noqa

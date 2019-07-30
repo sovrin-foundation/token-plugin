@@ -1,9 +1,9 @@
 from collections import namedtuple
 from base58 import b58decode
-from sovtokenfees.static_fee_req_handler import txn_root_serializer
+from sovtokenfees.serializers import txn_root_serializer
 
 
-def test_token_batch_handler_commit_batch(utxo_batch_handler, utxo_cache):
+def test_utxo_batch_handler_commit_batch(utxo_batch_handler, utxo_cache):
     utxo_cache.set('1', '2')
     ThreePcBatch = namedtuple("ThreePcBatch", "state_root valid_digests txn_root")
     three_ps_batch = ThreePcBatch(state_root=b58decode("1".encode()), valid_digests=["1"],

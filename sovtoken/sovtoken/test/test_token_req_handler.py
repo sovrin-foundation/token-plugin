@@ -3,7 +3,9 @@ from collections import OrderedDict
 
 import base58
 import pytest
-from sovtoken.request_handlers.token_utils import commit_to_utxo_cache
+from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
+from sovtoken.request_handlers.token_utils import TokenStaticHelper
+from sovtoken.test.helper import libsovtoken_address_to_address
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 
 from plenum.common.constants import (IDENTIFIER, STATE_PROOF,
@@ -17,7 +19,6 @@ from sovtoken.constants import (ADDRESS, GET_UTXO, INPUTS, MINT_PUBLIC,
                                 OUTPUTS, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL, XFER_PUBLIC)
 from sovtoken.exceptions import ExtraFundsError, InsufficientFundsError, TokenValueError
 from sovtoken.test.txn_response import TxnResponse, get_sorted_signatures
-from sovtoken.token_req_handler import TokenReqHandler
 from sovtoken.types import Output
 
 # Test Constants
@@ -77,7 +78,7 @@ def test_token_req_handler_commit_batch_different_state_root(
 ):
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     with pytest.raises(TokenValueError):
-        commit_to_utxo_cache(utxo_cache, 1)
+        TokenStaticHelper.commit_to_utxo_cache(utxo_cache, 1)
 
 
 def test_token_req_handler_static_validation_MINT_PUBLIC_success(
@@ -196,8 +197,8 @@ def test_token_req_handler_apply_xfer_public_success(
     outputs = [{"address": address1, "amount": 30}, {"address": address2, "amount": 30}]
     request = helpers.request.transfer(inputs, outputs)
     # test xfer now
-    address1 = address1.replace("pay:sov:", "")
-    address2 = address2.replace("pay:sov:", "")
+    address1 = libsovtoken_address_to_address(address1)
+    address2 = libsovtoken_address_to_address(address2)
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
     pre_apply_outputs_addr_1 = utxo_cache.get_unspent_outputs(address1)
     pre_apply_outputs_addr_2 = utxo_cache.get_unspent_outputs(address2)
@@ -235,11 +236,11 @@ def test_token_req_handler_apply_MINT_PUBLIC_success(
     outputs = [{"address": address, "amount": 100}]
     request = helpers.request.mint(outputs)
     utxo_cache = mint_handler.database_manager.get_store(UTXO_CACHE_LABEL)
-    pre_apply_outputs = utxo_cache.get_unspent_outputs(address.replace("pay:sov:", ""))
+    pre_apply_outputs = utxo_cache.get_unspent_outputs(libsovtoken_address_to_address(address))
     assert pre_apply_outputs == []
     # Applies the MINT_PUBLIC transaction request to the UTXO cache
     mint_handler.apply_request(request, CONS_TIME, None)
-    post_apply_outputs = utxo_cache.get_unspent_outputs(address.replace("pay:sov:", ""))
+    post_apply_outputs = utxo_cache.get_unspent_outputs(libsovtoken_address_to_address(address))
     assert post_apply_outputs[0].amount == 100
 
 
@@ -300,9 +301,9 @@ def test_token_req_handler_update_state_XFER_PUBLIC_success(
     xfer_handler_a.dynamic_validation(request)
     xfer_handler_a.update_state(txn, None, request)
 
-    state_key = TokenReqHandler.create_state_key(address1.replace("pay:sov:", ""), seq_no)
+    state_key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), seq_no)
     utxo_cache = xfer_handler_a.database_manager.get_store(UTXO_CACHE_LABEL)
-    key = utxo_cache._create_key(Output(address1.replace("pay:sov:", ""), seq_no, 60))
+    key = utxo_cache._create_key(Output(libsovtoken_address_to_address(address1), seq_no, 60))
     assert utxo_cache._store._has_key(key)
     try:
         xfer_handler_a.state.get(state_key, False)
@@ -384,7 +385,7 @@ def test_token_req_handler_get_result_success(
     results = get_utxo_handler.get_result(request)
 
     state_proof = results.pop(STATE_PROOF)
-    address1 = address1.replace("pay:sov:", "")
+    address1 = libsovtoken_address_to_address(address1)
     assert state_proof
     assert results == {
         ADDRESS: address1,
@@ -422,12 +423,12 @@ def test_token_req_handler_get_all_utxo_success(
 
     assert state_proof
     assert results == {
-        ADDRESS: address1.replace("pay:sov:", ""),
+        ADDRESS: libsovtoken_address_to_address(address1),
         TXN_TYPE: GET_UTXO,
         OUTPUTS: [
-            Output(address=address1.replace("pay:sov:", ""), seq_no=1, value=40)
+            Output(address=libsovtoken_address_to_address(address1), seq_no=1, value=40)
         ],
-        IDENTIFIER: base58.b58encode(base58.b58decode_check(address1.replace("pay:sov:", ""))).decode(),
+        IDENTIFIER: base58.b58encode(base58.b58decode_check(libsovtoken_address_to_address(address1))).decode(),
         TXN_PAYLOAD_METADATA_REQ_ID: request.reqId
     }
 

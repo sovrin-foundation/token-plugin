@@ -5,7 +5,9 @@ import pytest
 import mock
 from indy.ledger import append_txn_author_agreement_acceptance_to_request
 from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
+from sovtoken.test.helpers.helper_request import SEC_PER_DAY
 
+from indy_common.types import Request
 from plenum.common.constants import DOMAIN_LEDGER_ID
 from plenum.common.exceptions import UnknownIdentifier, InvalidSignatureFormat, InsufficientCorrectSignatures, \
     CouldNotAuthenticate
@@ -283,7 +285,7 @@ def test_authenticate_xfer_with_taa_not_signed(helpers, node, addresses, looper)
                                                                        "version",
                                                                        None,
                                                                        "mechanism",
-                                                                       round(time.time()))
+                                                                       int(time.time()) // SEC_PER_DAY * SEC_PER_DAY)
     request = looper.loop.run_until_complete(request_future)
     req_data = json.loads(request)
     with pytest.raises(InsufficientCorrectSignatures):
@@ -332,7 +334,7 @@ def test_getVerkey_success(node):
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
                                node[0].states[DOMAIN_LEDGER_ID])
-    ver_key = token_authnr.getVerkey(VALID_IDENTIFIER)
+    ver_key = token_authnr.getVerkey(VALID_IDENTIFIER, Request())
     assert len(ver_key) == 23
     assert ver_key[0] == '~'
 
@@ -345,7 +347,7 @@ def test_getVerkey_pay_address_success(node):
                                node[0].states[DOMAIN_LEDGER_ID])
     # TODO change these to indicate they are addresses
     identifier_43 = 'sjw1ceG7wtym3VcnyaYtf1xo37gCUQHDR5VWcKWNPLRZ1X8eC'
-    ver_key = token_authnr.getVerkey(identifier_43)
+    ver_key = token_authnr.getVerkey(identifier_43, Request())
     assert ver_key == '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
 
 
@@ -357,7 +359,7 @@ def test_getVerkey_invalid_identifier(node):
                                node[0].states[DOMAIN_LEDGER_ID])
     identifier_invalid = 'INVALID_IDENTIFIER'
     with pytest.raises(UnknownIdentifier):
-        token_authnr.getVerkey(identifier_invalid)
+        token_authnr.getVerkey(identifier_invalid, Request())
 
 
 # -------------------------Test get_xfer_ser_data method----------------------------------------------------------------
