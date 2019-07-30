@@ -211,14 +211,14 @@ pipelineWrapper({
 
                         onArtifacts = {
                             this.stage("$projLabel: Archive logs") {
-                                utils.archiveArtifacts("logs/*.log*") {
+                                this.utils.archiveArtifacts("logs/*.log*") {
                                     truncate = true
                                     allowEmptyArchive = true
                                 }
 
                                 String pkgBaseName = "${packageName}_${debPVersion}"
 
-                                this.stash includes: utils.shStdout("ls ${pkgBaseName}_*.deb"), name: pkgBaseName
+                                this.stash includes: this.utils.shStdout("ls ${pkgBaseName}_*.deb"), name: pkgBaseName
                                 pkgsList += pkgBaseName
                             }
                         }
