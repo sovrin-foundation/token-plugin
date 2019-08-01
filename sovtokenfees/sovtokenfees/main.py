@@ -122,7 +122,7 @@ def register_authentication(node):
         raise ImportError('sovtoken plugin should be loaded, '  # noqa
                           'authenticator not found')
     fees_authnr = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                             node.getState(DOMAIN_LEDGER_ID), token_authnr)
+                             node.db_manager.idr_cache, token_authnr)
     node.clientAuthNr.register_authenticator(fees_authnr)
     fees_authorizer = FeesAuthorizer(config_state=node.getState(CONFIG_LEDGER_ID),
                                      utxo_cache=utxo_cache)
