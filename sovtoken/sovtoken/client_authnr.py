@@ -1,16 +1,13 @@
-from copy import deepcopy
-
 import base58
 from base58 import b58decode
 
 from common.serializers.serialization import serialize_msg_for_signing
-from plenum.common.constants import TXN_TYPE, IDENTIFIER
-from plenum.common.exceptions import (CouldNotAuthenticate,
-                                      InsufficientCorrectSignatures,
+from indy_node.server.client_authn import LedgerBasedAuthNr
+from plenum.common.constants import TXN_TYPE
+from plenum.common.exceptions import (InsufficientCorrectSignatures,
                                       InvalidSignatureFormat)
 from plenum.common.types import OPERATION, PLUGIN_TYPE_AUTHENTICATOR, f
 from plenum.common.verifier import DidVerifier, Verifier
-from plenum.server.client_authn import CoreAuthNr
 from sovtoken.constants import (ADDRESS, INPUTS, MINT_PUBLIC, OUTPUTS, SIGS,
                                 XFER_PUBLIC, EXTRA)
 from sovtoken.util import address_to_verkey
@@ -26,7 +23,7 @@ class AddressSigVerifier(Verifier):
         return self._vr.verify(sig, msg)
 
 
-class TokenAuthNr(CoreAuthNr):
+class TokenAuthNr(LedgerBasedAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
 
     # ------------------------------------------------------------------------------------

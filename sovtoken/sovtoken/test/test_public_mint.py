@@ -6,13 +6,22 @@ import json
 import pytest
 
 from base58 import b58encode_check
+from indy.ledger import multi_sign_request
+from sovtokenfees.test.helper import get_uncommitted_txns_count_for_pool, get_committed_txns_count_for_pool
+
+from plenum.common.constants import TRUSTEE, DOMAIN_LEDGER_ID
 from plenum.common.exceptions import (RequestNackedException,
                                       RequestRejectedException,
                                       PoolLedgerTimeoutException)
 from plenum.common.txn_util import get_seq_no
 from plenum.common.util import randomString
 from sovtoken.test.conftest import build_wallets_from_data
-from sovtoken.constants import ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS
+from sovtoken.constants import ADDRESS, AMOUNT, SEQNO, PAYMENT_ADDRESS, TOKEN_LEDGER_ID
+
+from plenum.test.delayers import cDelay
+from plenum.test.helper import assertExp
+from plenum.test.stasher import delay_rules
+from stp_core.loop.eventually import eventually
 
 TOKENAMT = int(1e8)
 BILLION = int(1e9)
@@ -236,7 +245,6 @@ def test_trustee_valid_minting(helpers, addresses):
 
 
 def test_two_mints_to_same_address(addresses, helpers):
-
     outputs = [{ADDRESS: address, AMOUNT: 100} for address in addresses]
     first_mint_result = helpers.general.do_mint(outputs)
     outputs = [{ADDRESS: address, AMOUNT: 200} for address in addresses]
@@ -313,7 +321,6 @@ def test_repeat_mint(helpers, addresses):
 
 
 def test_different_mint_amounts(helpers):
-
     i64 = 9223372036854775807
 
     def assert_valid_minting(helpers, amount):
@@ -337,3 +344,90 @@ def test_different_mint_amounts(helpers):
     # ujson has a limit at deserializing i64.
     with pytest.raises(PoolLedgerTimeoutException):
         assert_valid_minting(helpers, i64 + 1)
+
+
+def test_mint_by_uncommitted_trustee(capsys, looper, nodeSetWithIntegratedTokenPlugin, sdk_wallet_trustee,
+                                     helpers, addresses):
+    """
+    Check that a Trustee not committed yet can sign a MINT txn.
+    """
+    uncommitted_size_before_domain = get_uncommitted_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                                         DOMAIN_LEDGER_ID)
+    uncommitted_size_before_token = get_uncommitted_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                                        TOKEN_LEDGER_ID)
+    committed_size_before_domain = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                                     DOMAIN_LEDGER_ID)
+    committed_size_before_token = get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                                    TOKEN_LEDGER_ID)
+
+    node_stashers = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
+    with delay_rules(node_stashers, cDelay()):
+        # Add a new TRUSTEE (uncommitted)
+        new_did, verkey = helpers.wallet.create_did(sdk_wallet=sdk_wallet_trustee)
+        req = helpers.request.nym(sdk_wallet=sdk_wallet_trustee,
+                                  alias="new_steward",
+                                  role=TRUSTEE,
+                                  dest=new_did,
+                                  verkey=verkey)
+        helpers.sdk.send_request_objects([req], wallet=sdk_wallet_trustee)
+        looper.run(eventually(
+            lambda: assertExp(
+                get_uncommitted_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                    DOMAIN_LEDGER_ID) == uncommitted_size_before_domain + 1
+            )))
+        looper.run(eventually(
+            lambda: assertExp(
+                get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                  DOMAIN_LEDGER_ID) == committed_size_before_domain
+            )))
+
+        # Do mint with a newly added Trustee
+        [address1, *_] = addresses
+        outputs = [{ADDRESS: address1, AMOUNT: 100}]
+        request = helpers.request.mint(outputs, number_signers=2)
+        request = looper.loop.run_until_complete(
+            multi_sign_request(sdk_wallet_trustee[0], new_did, json.dumps(request.as_dict)))
+
+        request = json.loads(request)
+        sigs = request["signatures"]
+        request = helpers.sdk.sdk_json_to_request_object(request)
+        setattr(request, "signatures", sigs)
+        helpers.sdk.send_request_objects([request])
+
+        # make sure we have both txns uncommitted
+        looper.run(eventually(
+            lambda: assertExp(
+                get_uncommitted_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                    DOMAIN_LEDGER_ID) == uncommitted_size_before_domain + 1
+            )))
+        looper.run(eventually(
+            lambda: assertExp(
+                get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                  DOMAIN_LEDGER_ID) == committed_size_before_domain
+            )))
+        looper.run(eventually(
+            lambda: assertExp(
+                get_uncommitted_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                    TOKEN_LEDGER_ID) == uncommitted_size_before_token + 1
+            )))
+        looper.run(eventually(
+            lambda: assertExp(
+                get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                                  TOKEN_LEDGER_ID) == committed_size_before_token
+            )))
+
+    # make sure we have both txns committed
+    looper.run(eventually(
+        lambda: assertExp(
+            get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                              DOMAIN_LEDGER_ID) == committed_size_before_domain + 1
+        )))
+    looper.run(eventually(
+        lambda: assertExp(
+            get_committed_txns_count_for_pool(nodeSetWithIntegratedTokenPlugin,
+                                              TOKEN_LEDGER_ID) == committed_size_before_token + 1
+        )))
+
+    [address1_utxos, *_] = helpers.general.get_utxo_addresses(addresses)
+    assert address1_utxos[0][PAYMENT_ADDRESS] == address1
+    assert address1_utxos[0][AMOUNT] == 100
