@@ -4,7 +4,7 @@ import time
 from indy.ledger import build_nym_request, build_schema_request, \
     build_acceptance_mechanisms_request, build_txn_author_agreement_request, \
     build_get_txn_author_agreement_request, append_txn_author_agreement_acceptance_to_request
-from indy.payment import build_get_payment_sources_request, build_payment_req, build_mint_req, \
+from indy.payment import build_get_payment_sources_with_from_request, build_payment_req, build_mint_req, \
     prepare_payment_extra_with_acceptance_data
 from sovtoken.test.constants import VALID_IDENTIFIER
 
@@ -44,16 +44,12 @@ class HelperRequest():
         self._client_wallet = client_wallet
         self._steward_wallet = steward_wallet
 
-    def get_utxo(self, address, from_seqno=None):
+    def get_utxo(self, address, from_seqno=-1):
         """ Builds a get_utxo request. """
 
-        get_utxo_request_future = build_get_payment_sources_request(self._client_wallet_handle, VALID_IDENTIFIER, address)
+        get_utxo_request_future = build_get_payment_sources_with_from_request(self._client_wallet_handle, VALID_IDENTIFIER, address, from_seqno)
         get_utxo_request = self._looper.loop.run_until_complete(get_utxo_request_future)[0]
         get_utxo_request = self._sdk.sdk_json_to_request_object(json.loads(get_utxo_request))
-
-        # TODO: as soon as SDK gets implemented "from", remove this two lines and pass it to the builder
-        if from_seqno:
-            get_utxo_request.operation[FROM_SEQNO] = from_seqno
 
         return get_utxo_request
 
