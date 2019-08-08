@@ -19,6 +19,8 @@ Action = NamedTuple('Action',
 
 def set_auth_constraint(validator, auth_constraint):
     def _set_to_state(state, constraint):
+        if constraint.constraint_id == ConstraintsEnum.FORBIDDEN_CONSTRAINT_ID:
+            return
         if constraint.constraint_id != ConstraintsEnum.ROLE_CONSTRAINT_ID:
             for constr in constraint.auth_constraints:
                 _set_to_state(state, constr)

@@ -233,7 +233,7 @@ def test_plugin_or_rule_one_amount_all_roles_owner_endorser(write_auth_req_valid
                            metadata={PLUGIN_FIELD: '3'}),
         ]),
         valid_actions=[Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s1, ENDORSER: s2},
-                              is_owner=owner, amount=0, extra_sigs=True)
+                              is_owner=owner, amount=amount, extra_sigs=True)
                        for s1 in range(1, 4)
                        for s2 in range(1, 4)
                        for owner in [True, False]
