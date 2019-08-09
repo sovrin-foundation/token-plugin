@@ -1,9 +1,8 @@
 import json
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional
 
-from indy_common.authorize.auth_actions import AbstractAuthAction, AuthActionAdd
-from indy_common.authorize.auth_constraints import AuthConstraint, ConstraintsEnum
-from indy_common.authorize.authorizer import AbstractAuthorizer
+from indy_common.authorize.auth_actions import AuthActionAdd
+from indy_common.authorize.auth_constraints import ConstraintsEnum
 from indy_common.test.auth.conftest import IDENTIFIERS
 from indy_common.types import Request
 from plenum.common.constants import TYPE
@@ -14,7 +13,7 @@ from sovtokenfees.domain import build_path_for_set_fees
 PLUGIN_FIELD = FEES_FIELD_NAME
 
 Action = NamedTuple('Action',
-                    [("author", str), ("endorser", str), ("sigs", dict),
+                    [("author", str), ("endorser", Optional[str]), ("sigs", dict),
                      ("is_owner", bool), ("amount", int), ("extra_sigs", bool)])
 
 def set_auth_constraint(validator, auth_constraint):
