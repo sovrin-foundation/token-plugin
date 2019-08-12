@@ -5,14 +5,12 @@ import pytest
 
 from indy_common.authorize.auth_constraints import IDENTITY_OWNER
 from indy_common.constants import ENDORSER
-from indy_common.test.auth.metadata.helper import PluginAuthorizer
 from plenum.common.constants import TRUSTEE, STEWARD
 from plenum.test.conftest import getValueFromModule
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 
 from indy_node.test.conftest import write_auth_req_validator as warv, idr_cache, \
     constraint_serializer, config_state, write_request_validation
-
 
 ROLES = [TRUSTEE, STEWARD, ENDORSER, IDENTITY_OWNER]
 MAX_SIG_COUNT = 3
@@ -23,10 +21,13 @@ def write_auth_req_validator(warv, helpers):
     fee_handler = helpers.node.get_fees_req_handler()
     fees_authorizer = FeesAuthorizer(config_state=warv.config_state,
                                      utxo_cache=fee_handler.utxo_cache)
+
     def _mocked_cpf(self, req, required_fees):
         return req.fees == required_fees, ''
+
     def _mocked_cffr(self, utxo_cache, request):
         return request.fees
+
     fees_authorizer.can_pay_fees = functools.partial(_mocked_cpf, fees_authorizer)
     fees_authorizer.calculate_fees_from_req = functools.partial(_mocked_cffr, fees_authorizer)
     warv.register_authorizer(fees_authorizer)
@@ -79,3 +80,18 @@ def signatures(request, roles):
         {role: sig_count for role, sig_count in zip(roles, sigs_count)}
         for sigs_count in product(all_sigs_count, repeat=len(roles))
     ]
+
+
+@pytest.fixture(scope='function', params=[True, False])
+def off_ledger_signature(request):
+    return request.param
+
+
+@pytest.fixture(scope='module', params=[None, ENDORSER])
+def endorser(request):
+    return request.param
+
+
+@pytest.fixture(scope='module', params=[IDENTITY_OWNER, TRUSTEE])
+def author(request):
+    return request.param
