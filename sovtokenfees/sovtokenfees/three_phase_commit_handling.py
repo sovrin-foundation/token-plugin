@@ -22,9 +22,9 @@ class ThreePhaseCommitHandler:
                 f.PLUGIN_FIELDS.nm: {
                     FEES: {
                         FEE_TXNS_IN_BATCH: self.fees_tracker.fees_in_current_batch,
-                        f.STATE_ROOT.nm: self.master_replica.stateRootHash(
+                        f.STATE_ROOT.nm: self.master_replica._ordering_service.l_stateRootHash(
                             TOKEN_LEDGER_ID),
-                        f.TXN_ROOT.nm: self.master_replica.txnRootHash(
+                        f.TXN_ROOT.nm: self.master_replica._ordering_service.l_txnRootHash(
                             TOKEN_LEDGER_ID)
                     }
                 }
