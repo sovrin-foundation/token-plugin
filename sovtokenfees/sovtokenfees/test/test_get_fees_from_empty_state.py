@@ -27,7 +27,7 @@ def test_get_fees_when_no_fees_set(helpers, looper):
     primary = helpers.node.get_primary_node()
     audit_ledger = primary.getLedger(AUDIT_LEDGER_ID)
     length_after = audit_ledger.size
-    primary.master_replica._do_send_3pc_batch(ledger_id=CONFIG_LEDGER_ID)
+    primary.master_replica._ordering_service.l_do_send_3pc_batch(ledger_id=CONFIG_LEDGER_ID)
     looper.run(eventually(_freshness_done))
     """
     GET_FEES
