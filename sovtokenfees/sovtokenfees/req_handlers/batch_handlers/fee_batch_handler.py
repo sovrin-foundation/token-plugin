@@ -42,7 +42,7 @@ class DomainFeeBatchHandler(BatchRequestHandler):
         if self._fees_tracker.fees_in_current_batch > 0:
             state_root = self.token_state.headHash
             self.utxo_cache.create_batch_from_current(state_root)
-
+            self._fees_tracker.fees_in_current_batch = 0
 
     def post_batch_rejected(self, ledger_id, prev_handler_result=None):
         uncommitted_hash, uncommitted_txn_root, txn_count = self.token_tracker.reject_batch()
