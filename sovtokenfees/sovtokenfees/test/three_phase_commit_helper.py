@@ -147,8 +147,8 @@ class PP:
         txn_root_deserialized = state_roots_serializer.deserialize(PP.plugin_data[FEES][f.TXN_ROOT.nm])
 
         monkeypatch.setattr(three_phase_handler.fees_tracker, 'fees_in_current_batch', 1)
-        monkeypatch.setattr(three_phase_handler.master_replica._ordering_service, 'l_stateRootHash', mock_get_state_root)
-        monkeypatch.setattr(three_phase_handler.master_replica._ordering_service, 'l_txnRootHash', mock_get_txn_root)
+        monkeypatch.setattr(three_phase_handler.master_replica._ordering_service, 'get_state_root_hash', mock_get_state_root)
+        monkeypatch.setattr(three_phase_handler.master_replica._ordering_service, 'get_txn_root_hash', mock_get_txn_root)
         monkeypatch.setattr(three_phase_handler.token_state._trie, 'root_hash',
                             state_root_deserialized)
         monkeypatch.setattr(three_phase_handler.token_ledger, 'uncommittedRootHash',

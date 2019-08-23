@@ -21,7 +21,7 @@ def test_malicious_primary_sent_pp_with_xfer(looper, helpers,
     not_malicious_nodes = set(nodes) - {malicious_primary}
     seq_no = get_seq_no(xfer_mint_tokens)
     for n in not_malicious_nodes:
-        n.master_replica._ordering_service.l_do_dynamic_validation = lambda *args, **kwargs: raise_invalid_ex()
+        n.master_replica._ordering_service._do_dynamic_validation = lambda *args, **kwargs: raise_invalid_ex()
     with pytest.raises(RequestRejectedException, match="client request invalid"):
         current_amount, seq_no, _ = send_and_check_transfer(helpers, xfer_addresses, fees, looper, current_amount, seq_no)
 
