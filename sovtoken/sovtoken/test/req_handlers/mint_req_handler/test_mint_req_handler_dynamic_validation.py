@@ -9,7 +9,7 @@ def test_mint_handler_dynamic_validation_valid_request(mint_handler, mint_reques
 
 
 def test_mint_handler_dynamic_validation_not_enough_signatures(mint_handler, mint_request):
-    mint_request.signatures = dict([(k, v) for k, v in mint_request.signatures.items()][:-1])
+    mint_request.signatures = {mint_request.identifier: mint_request.signatures[mint_request.identifier]}
     with pytest.raises(UnauthorizedClientRequest, match='Not enough TRUSTEE signatures'):
         mint_handler.dynamic_validation(mint_request)
 
