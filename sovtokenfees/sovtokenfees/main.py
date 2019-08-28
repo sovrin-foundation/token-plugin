@@ -22,7 +22,7 @@ from sovtokenfees.transactions import FeesTransactions
 from typing import Any
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 
-from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks, ReplicaHooks
+from plenum.common.constants import DOMAIN_LEDGER_ID
 
 from indy_common.constants import CONFIG_LEDGER_ID, AUTH_RULES, AUTH_RULE
 
