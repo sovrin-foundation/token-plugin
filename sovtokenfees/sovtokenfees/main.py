@@ -135,7 +135,9 @@ def register_hooks(node, fees_authnr):
 
 
 def register_auth_hooks(node, fees_authnr):
-    node.internal_bus.subscribe(PreSigVerification, fees_authnr.verify_signature)
+    node.replicas.subscribe_to_internal_bus(PreSigVerification,
+                                            fees_authnr.verify_signature,
+                                            node.master_replica.instId)
 
 
 def register_trackers(node, token_state, token_ledger):
