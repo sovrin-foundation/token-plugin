@@ -86,7 +86,6 @@ class IOAddressesStatic(IOAddresses):
 # ######################
 # configuration fixtures
 # ######################
-8
 
 
 @pytest.fixture(scope="module")

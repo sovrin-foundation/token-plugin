@@ -7,8 +7,6 @@ from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_
 from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
 from plenum.common.constants import DOMAIN_LEDGER_ID
-from state.pruning_state import PruningState
-from storage.kv_in_memory import KeyValueStorageInMemory
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
@@ -33,12 +31,6 @@ class FeeData:
     @property
     def digest(self):
         return "5b87c6c6f36df259af3682abdee5ce072941186b8f03abde24ee362a19f5b5b5"
-
-
-# ------------------------------------------------------------------------------------
-# creates state instance that will be good enough for some of the test below
-def pruning_state():
-    return PruningState(KeyValueStorageInMemory())
 
 
 # ------------------------------------------------------------------------------------
@@ -84,9 +76,8 @@ def test_authenticate_success(node):
 # similar to the previous success test, authenticate returns a list of authenticated signatures.  it should match the number
 # of inputted signatures since they are all valid
 def test_authenticate_success_one_signature(node):
-    state = node[0].getState(DOMAIN_LEDGER_ID)
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
 
     req_data = {
         'signatures':
@@ -110,9 +101,8 @@ def test_authenticate_success_one_signature(node):
 # ------------------------------------------------------------------------------------
 # only 2 of the 4 signatures are valid.  (hint: the last two are mucky)
 def test_authenticate_errors_on_invalid_inputs(node):
-    state = node[0].getState(DOMAIN_LEDGER_ID)
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
 
     req_data = {
         'signatures':
@@ -137,10 +127,9 @@ def test_authenticate_errors_on_invalid_inputs(node):
 
 # ------------------------------------------------------------------------------------
 # the operation type is not FEES so the exception InvalidClientRequest is raised
-def test_authenticate_invalid():
-    state = pruning_state()
+def test_authenticate_invalid(node):
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
     req_data = {'signatures': SIGNATURES, 'reqId': VALID_REQID,
                 'operation': {'type': 'INVALID_TXN_TYPE',
                               'fees': {'1': 4, '10001': 8}
@@ -152,10 +141,9 @@ def test_authenticate_invalid():
 
 # ------------------------------------------------------------------------------------
 # the signature and fees sections are populated with correct data
-def test_verify_signature_success():
-    state = pruning_state()
+def test_verify_signature_success(node):
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
 
     msg = FeeData()
     msg.signatures = {
@@ -175,11 +163,10 @@ def test_verify_signature_success():
 # ------------------------------------------------------------------------------------
 # Its pretty simple.  If verify_signature doesn't find a fee attribute, it just
 # returns, no return results and no exceptions
-def test_verify_signature_no_fees():
+def test_verify_signature_no_fees(node):
     # should just run, no exceptions
-    state = pruning_state()
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
     msg = FeeData()
     msg.signatures = {
         'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
@@ -208,10 +195,9 @@ def test_verify_signature_invalid_signature_format(node):
 
 # ------------------------------------------------------------------------------------
 # in this test, the signature in fees is not valid for the data set.  it is a valid signature and passes b58decode
-def test_verify_signature_incorrect_signatures():
-    state = pruning_state()
+def test_verify_signature_incorrect_signatures(node):
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
     msg = FeeData()
     msg.signatures = {
         'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
@@ -228,10 +214,9 @@ def test_verify_signature_incorrect_signatures():
 # ------------------------------------------------------------------------------------
 # fees sections are populated with correct data
 # however the signature is not signed for all of the values
-def test_verify_signature_mismatch_of_signatures():
-    state = pruning_state()
+def test_verify_signature_mismatch_of_signatures(node):
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
 
     msg = FeeData()
     msg.signatures = {
@@ -258,10 +243,9 @@ def test_verify_signature_mismatch_of_signatures():
 # ------------------------------------------------------------------------------------
 # the signature and fees sections are populated with correct data but the sequence
 # number is wrong.
-def test_verify_signature_sequence_order_wrong():
-    state = pruning_state()
+def test_verify_signature_sequence_order_wrong(node):
     fees_authenticator = FeesAuthNr(ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_TYPES_FEE, ACCEPTABLE_ACTION_TYPES_FEE,
-                                    state, None)
+                                    node[0].db_manager.idr_cache, None)
 
     msg = FeeData()
     msg.signatures = {

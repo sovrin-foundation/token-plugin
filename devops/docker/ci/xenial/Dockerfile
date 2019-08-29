@@ -25,8 +25,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
         libindy-crypto=0.4.5 \
-        libindy=1.9.0~1132 \
-        libsovtoken=0.9.7~66 \
+        libindy=1.11.0~1282 \
+        libsovtoken=1.0.0~79 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \

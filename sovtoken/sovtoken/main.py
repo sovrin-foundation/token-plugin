@@ -100,5 +100,5 @@ def register_authentication(node):
     token_authnr = TokenAuthNr(ACCEPTABLE_WRITE_TYPES,
                                ACCEPTABLE_QUERY_TYPES,
                                ACCEPTABLE_ACTION_TYPES,
-                               node.states[DOMAIN_LEDGER_ID])
+                               node.db_manager.idr_cache)
     node.clientAuthNr.register_authenticator(token_authnr)
