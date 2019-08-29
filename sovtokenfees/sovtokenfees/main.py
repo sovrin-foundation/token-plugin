@@ -22,7 +22,7 @@ from sovtokenfees.transactions import FeesTransactions
 from typing import Any
 from sovtokenfees.fees_authorizer import FeesAuthorizer
 
-from plenum.common.constants import DOMAIN_LEDGER_ID, NodeHooks, ReplicaHooks
+from plenum.common.constants import DOMAIN_LEDGER_ID
 
 from indy_common.constants import CONFIG_LEDGER_ID, AUTH_RULES, AUTH_RULE
 
@@ -135,7 +135,9 @@ def register_hooks(node, fees_authnr):
 
 
 def register_auth_hooks(node, fees_authnr):
-    node.internal_bus.subscribe(PreSigVerification, fees_authnr.verify_signature)
+    node.replicas.subscribe_to_internal_bus(PreSigVerification,
+                                            fees_authnr.verify_signature,
+                                            node.master_replica.instId)
 
 
 def register_trackers(node, token_state, token_ledger):
