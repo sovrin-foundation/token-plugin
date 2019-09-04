@@ -69,13 +69,12 @@ class TokenAuthNr(LedgerBasedAuthNr):
         return super().getVerkey(ident, request)
 
     @staticmethod
-    def verify_signtures_on_payments(inputs, outputs, signatures, verifier,
-                                     *extra_fields_for_signing):
+    def verify_signtures_on_payments(inputs, outputs, signatures, verifier, *extra_fields_for_signing):
         correct_sigs_from = []
-        for inp, sig in zip(inputs,
-                            signatures):
+        incorrect_signatures = {}
+        for inp, sig in zip(inputs, signatures):
             try:
-                sig = base58.b58decode(sig)
+                sig_decoded = base58.b58decode(sig)
             except Exception as ex:
                 raise InvalidSignatureFormat from ex
 
@@ -89,11 +88,12 @@ class TokenAuthNr(LedgerBasedAuthNr):
                 continue
 
             vr = verifier(verkey)
-            if vr.verify(sig, ser):
+            if vr.verify(sig_decoded, ser):
                 correct_sigs_from.append(idr)
+            else:
+                incorrect_signatures[idr] = sig
 
         if len(correct_sigs_from) != len(inputs):
             # All inputs should have signatures present
-            raise InsufficientCorrectSignatures(len(correct_sigs_from),
-                                                len(inputs))
+            raise InsufficientCorrectSignatures(len(inputs), len(correct_sigs_from), incorrect_signatures)
         return correct_sigs_from
