@@ -71,7 +71,8 @@ def test_authenticate_success(node):
     }
     with pytest.raises(InsufficientCorrectSignatures) as ex:
         fees_authenticator.authenticate(req_data)
-    assert ex.value.args == (0, 4)
+
+    assert ex.value.args == (4, 0, req_data['signatures'])
 
 
 # ------------------------------------------------------------------------------------
@@ -97,7 +98,7 @@ def test_authenticate_success_one_signature(node):
 
     with pytest.raises(InsufficientCorrectSignatures) as ex:
         fees_authenticator.authenticate(req_data)
-    assert ex.value.args == (0, 1)
+    assert ex.value.args == (1, 0, req_data['signatures'])
 
 
 # ------------------------------------------------------------------------------------
