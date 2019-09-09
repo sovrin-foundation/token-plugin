@@ -31,3 +31,4 @@ chmod_source_files()
 }
 
 add_plugin_if_missing sovtokenfees
+chmod_source_files
