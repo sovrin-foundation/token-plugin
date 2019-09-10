@@ -7,6 +7,7 @@ fi
 # End automatically added section
 
 INDY_CONFIG_PATH="/etc/indy/indy_config.py"
+PLUGINS_SOURCE_PATH="/usr/local/lib/python3.5/dist-packages/sovtokenfees"
 
 add_plugin_if_missing()
 {
@@ -22,4 +23,12 @@ add_plugin_if_missing()
     fi
 }
 
+chmod_source_files()
+{
+    if [ -f $PLUGINS_SOURCE_PATH/metadata.json ]; then
+        chmod 644 $PLUGINS_SOURCE_PATH/metadata.json
+    fi
+}
+
 add_plugin_if_missing sovtokenfees
+chmod_source_files
