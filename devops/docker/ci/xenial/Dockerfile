@@ -44,4 +44,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.19.0
+ENV CI_ENV_VERSION=0.20.0
