@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.0.2
+* TokenAuthNr needs to extend LedgerBasedAuthNr, not CoreAuthNr
+
+## 1.0.1
+* Hotfix: Request GET_UTXO needs to take into account max limit for a message
+* GET_UTXO needs to use pagination to be able to return all unspent UTXOs regardless of max message size
+
+## 1.0.0
+* Apply new request handlers approach to Token Plugins
+* Apply new request handlers approach to Token Req Handlers
+* Apply new request handlers approach to Token FEEs Handlers
+* Known Issue: Incorrect request validation
+* Known Issue: Request GET_UTXO may fail if payment address contains too many UTXOs
+
+## 0.9.13
+* Added FeesAuthorizer
+* Update SET_FEES and GET_FEES logic for Auth Rules
+* Update GET_FEES to use aliases (GET_FEE request was added)
+* Support TAA for XFER txn
+* Register auth rule for MINT, XFER_PUBLIC and SET_FEES requests in auth_map
+* Known Issue: Request GET_UTXO may fail if payment address contains too many UTXOs
+
 ## 0.9.3
 * Changed FEES transaction to only allow a single change address.
 * Changed CI/CD to new stable branch.
