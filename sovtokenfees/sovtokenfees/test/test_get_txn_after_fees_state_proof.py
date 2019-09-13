@@ -48,3 +48,4 @@ def nodeSetWithOneRespondingNode(request, nodeSetWithIntegratedTokenPlugin, make
 def test_get_txn_audit_proof_after_txn_with_fees(helpers, addresses, last_txn, nodeSetWithOneRespondingNode):
     seq_no = get_seq_no(last_txn)
     helpers.general.get_txn(str(TOKEN_LEDGER_ID), seq_no)
+    helpers.general.get_utxo_addresses(addresses[1:])
