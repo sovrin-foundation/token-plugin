@@ -39,3 +39,8 @@ class HelperGeneral:
         if fill_auth_map:
             self._node.set_fees_directly(fees)
         return res
+
+    def get_txn(self, ledger_id, seq_no):
+        request = self._request.get_txn(seq_no, ledger_id)
+        res = self._send_get_first_result(request, sign=False)
+        return res

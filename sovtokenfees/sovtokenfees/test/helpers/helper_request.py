@@ -1,6 +1,8 @@
 import json
 
 from indy.payment import add_request_fees, build_set_txn_fees_req, build_get_txn_fees_req
+
+from plenum.common.request import Request
 from sovtoken.test.helpers import HelperRequest
 from sovtokenfees.constants import FEES
 from sovtokenfees.test.constants import txn_type_to_alias
@@ -78,3 +80,8 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
         request_with_fees_future = add_request_fees(self._client_wallet_handle, None, json.dumps(request.as_dict),
                                                     json.dumps(inputs), json.dumps(outputs), None)
         return self._looper.loop.run_until_complete(request_with_fees_future)
+
+    def get_txn(self, ledger_id, seq_no):
+        req = self._sdk.sdk_build_get_txn(seq_no, ledger_id)
+        req = Request(**json.loads(req))
+        return req

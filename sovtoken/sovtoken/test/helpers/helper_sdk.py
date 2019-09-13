@@ -2,7 +2,8 @@ import json
 
 from indy import did
 from indy.anoncreds import issuer_create_and_store_credential_def, issuer_create_schema
-from indy.ledger import build_cred_def_request, build_attrib_request, build_schema_request, build_nym_request
+from indy.ledger import build_cred_def_request, build_attrib_request, build_schema_request, build_nym_request, \
+    build_get_txn_request
 
 import plenum.test.helper as plenum_helper
 
@@ -170,3 +171,8 @@ class HelperSdk():
                                                     issuance=issuance)
         self.send_and_check_request_objects([Request(**json.loads(reg_def))], wallet=sdk_wallet)
         return reg_entry
+
+    def sdk_build_get_txn(self, ledger_id, seq_no):
+        get_txn_request_future = build_get_txn_request(None, ledger_id, seq_no)
+        get_txn_request = self._looper.loop.run_until_complete(get_txn_request_future)
+        return get_txn_request
