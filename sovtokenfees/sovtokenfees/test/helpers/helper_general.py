@@ -41,6 +41,6 @@ class HelperGeneral:
         return res
 
     def get_txn(self, ledger_id, seq_no):
-        request = self._request.get_txn(seq_no, ledger_id)
+        request = self._request.get_txn(ledger_id, seq_no)
         res = self._send_get_first_result(request, sign=False)
         return res

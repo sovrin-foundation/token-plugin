@@ -82,6 +82,6 @@ class HelperRequest(AbstractHelperRequest, HelperRequest):
         return self._looper.loop.run_until_complete(request_with_fees_future)
 
     def get_txn(self, ledger_id, seq_no):
-        req = self._sdk.sdk_build_get_txn(seq_no, ledger_id)
+        req = self._sdk.sdk_build_get_txn(ledger_id, seq_no)
         req = Request(**json.loads(req))
         return req
