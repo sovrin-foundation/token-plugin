@@ -418,7 +418,7 @@ def test_valid_txn_with_fees(
 
 def test_get_fees_txn(helpers, fees_paid, nodeSetWithIntegratedTokenPlugin):
     seq_no = get_seq_no(fees_paid[FEES])
-    request = helpers.request.get_txn(TOKEN_LEDGER_ID, seq_no)
+    request = helpers.request.get_txn(str(TOKEN_LEDGER_ID), seq_no)
     responses = helpers.sdk.send_and_check_request_objects([request, ])
     result = helpers.sdk.get_first_result(responses)
     data = result[DATA]
