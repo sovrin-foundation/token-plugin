@@ -18,7 +18,7 @@ metadata={}
 with open(os.path.join(here, 'sovtokenfees', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pytest==4.6.2', 'pytest-xdist', 'python3-indy==1.11.1-dev-1317']
+tests_require = ['attrs==19.1.0', 'pytest==4.6.2', 'pytest-xdist', 'python3-indy==1.11.1-dev-1317']
 
 setup(
 
