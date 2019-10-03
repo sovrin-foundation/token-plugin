@@ -93,8 +93,8 @@ class HelperGeneral():
     # Private Methods
     # =============
 
-    def _send_get_first_result(self, request_object):
-        responses = self._sdk.send_and_check_request_objects([request_object])
+    def _send_get_first_result(self, request_object, sign=True):
+        responses = self._sdk.send_and_check_request_objects([request_object], sign=sign)
         result = self._sdk.get_first_result(responses)
         return result
 
