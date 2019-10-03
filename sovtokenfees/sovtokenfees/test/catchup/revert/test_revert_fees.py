@@ -7,7 +7,6 @@ from sovtokenfees.constants import FEES
 from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS, ATTRIB_FEES_ALIAS
 from sovtokenfees.test.helper import check_state, ensure_all_nodes_have_same_data, send_and_check_nym_with_fees
 
-from indy_common.constants import NYM, ATTRIB, CONFIG_LEDGER_ID
 from plenum.common.startable import Mode
 from plenum.common.txn_util import get_seq_no
 from plenum.test.delayers import cDelay, pDelay
@@ -21,7 +20,7 @@ from plenum.common.constants import DOMAIN_LEDGER_ID
 
 
 def _get_ppseqno(n):
-    return n.master_replica.last_prepared_certificate_in_view()[1]
+    return n.master_replica._ordering_service.l_last_prepared_certificate_in_view()[1]
 
 def get_ppseqno_from_all_nodes(nodes):
     res = set()
@@ -113,7 +112,7 @@ def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlu
 
     def _get_len_preprepares(n):
         replica = n.master_replica
-        return len(replica.sentPrePrepares if replica.isPrimary else replica.prePrepares)
+        return len(replica._ordering_service.sent_preprepares if replica.isPrimary else replica._ordering_service.prePrepares)
 
     def _check_len_pprs(old_pprs_len):
         _len_pprs = set([_get_len_preprepares(n) for n in nodeSetWithIntegratedTokenPlugin])

@@ -7,6 +7,8 @@ from sovtokenfees.constants import ACCEPTABLE_WRITE_TYPES_FEE, ACCEPTABLE_QUERY_
 from plenum.common.exceptions import InvalidSignatureFormat, \
     InsufficientCorrectSignatures, InvalidClientRequest
 from plenum.common.constants import DOMAIN_LEDGER_ID
+from plenum.common.messages.internal_messages import PreSigVerification
+
 
 VALID_IDENTIFIER = "6ouriXMZkLeHsuXrN1X1fd"
 VALID_REQID = 1517423828260117
@@ -69,7 +71,8 @@ def test_authenticate_success(node):
     }
     with pytest.raises(InsufficientCorrectSignatures) as ex:
         fees_authenticator.authenticate(req_data)
-    assert ex.value.args == (0, 4)
+
+    assert ex.value.args == (4, 0, req_data['signatures'])
 
 
 # ------------------------------------------------------------------------------------
@@ -95,7 +98,7 @@ def test_authenticate_success_one_signature(node):
 
     with pytest.raises(InsufficientCorrectSignatures) as ex:
         fees_authenticator.authenticate(req_data)
-    assert ex.value.args == (0, 1)
+    assert ex.value.args == (1, 0, req_data['signatures'])
 
 
 # ------------------------------------------------------------------------------------
@@ -157,7 +160,7 @@ def test_verify_signature_success(node):
     setattr(msg, "fees", [inputs, outputs, signatures])
     msg.payload_digest = msg.digest
 
-    fees_authenticator.verify_signature(msg)
+    fees_authenticator.verify_signature(PreSigVerification(msg))
 
 
 # ------------------------------------------------------------------------------------
@@ -171,7 +174,7 @@ def test_verify_signature_no_fees(node):
     msg.signatures = {
         'MSjKTWkPLtYoPEaTF1TUDb': '61PUc8K8aAkhmCjWLstxwRREBAJKbVMRuGiUXxSo1tiRwXgUfVT4TY47NJtbQymcDW3paXPWNqqD4cziJjoPQSSX'}
 
-    fees_authenticator.verify_signature(msg)
+    fees_authenticator.verify_signature(PreSigVerification(msg))
 
 
 # ------------------------------------------------------------------------------------
@@ -190,7 +193,7 @@ def test_verify_signature_invalid_signature_format(node):
     setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InvalidSignatureFormat):
-        fees_authenticator.verify_signature(msg)
+        fees_authenticator.verify_signature(PreSigVerification(msg))
 
 
 # ------------------------------------------------------------------------------------
@@ -208,7 +211,7 @@ def test_verify_signature_incorrect_signatures(node):
     setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
-        fees_authenticator.verify_signature(msg)
+        fees_authenticator.verify_signature(PreSigVerification(msg))
 
 
 # ------------------------------------------------------------------------------------
@@ -237,7 +240,7 @@ def test_verify_signature_mismatch_of_signatures(node):
     setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
-        fees_authenticator.verify_signature(msg)
+        fees_authenticator.verify_signature(PreSigVerification(msg))
 
 
 # ------------------------------------------------------------------------------------
@@ -260,4 +263,4 @@ def test_verify_signature_sequence_order_wrong(node):
     setattr(msg, "fees", [inputs, outputs, signatures])
 
     with pytest.raises(InsufficientCorrectSignatures):
-        fees_authenticator.verify_signature(msg)
+        fees_authenticator.verify_signature(PreSigVerification(msg))

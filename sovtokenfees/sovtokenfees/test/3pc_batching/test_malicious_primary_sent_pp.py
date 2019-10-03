@@ -26,7 +26,7 @@ def test_malicious_primary_sent_pp(looper, helpers,
     malicious_primary = getPrimaryReplica(nodes).node
     not_malicious_nodes = set(nodes) - {malicious_primary}
     for n in not_malicious_nodes:
-        n.doDynamicValidation = lambda *args, **kwargs: raise_invalid_ex()
+        n.master_replica._ordering_service._do_dynamic_validation = lambda *args, **kwargs: raise_invalid_ex()
     r1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
 
     with pytest.raises(RequestRejectedException, match="client request invalid"):

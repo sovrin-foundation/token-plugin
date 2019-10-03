@@ -55,13 +55,13 @@ def test_catchup_several_batches(looper, helpers,
     reverted_node = node_set[-1]
     with delay_rules(reverted_node.nodeIbStasher, cDelay()):
 
-        len_batches_before = len(reverted_node.master_replica.batches)
+        len_batches_before = len(reverted_node.master_replica._ordering_service.batches)
         sdk_requests = []
         for req in reqs_to_catchup:
             r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, req)
             sdk_requests.append(r)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
-        len_batches_after = len(reverted_node.master_replica.batches)
+        len_batches_after = len(reverted_node.master_replica._ordering_service.batches)
         """
         Checks, that we have a 2 new batches
         """

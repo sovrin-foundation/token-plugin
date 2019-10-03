@@ -6,6 +6,8 @@ from plenum.common.verifier import DidVerifier
 from sovtokenfees.constants import SET_FEES
 from sovtoken.client_authnr import AddressSigVerifier, TokenAuthNr
 
+from plenum.common.messages.internal_messages import PreSigVerification
+
 
 class FeesAuthNr(LedgerBasedAuthNr):
     pluginType = PLUGIN_TYPE_AUTHENTICATOR
@@ -30,7 +32,7 @@ class FeesAuthNr(LedgerBasedAuthNr):
             raise InvalidClientRequest(req_data[f.REQ_ID.nm], identifier,
                                        "txn type is {} not {}".format(txn_type, SET_FEES))
 
-    def verify_signature(self, msg):
+    def verify_signature(self, msg: PreSigVerification):
         """
         verify the signatures in the fees section
         if the signatures found do not match the signatures expected,
@@ -39,6 +41,7 @@ class FeesAuthNr(LedgerBasedAuthNr):
         If everything is ok, nothing is returned
         If there is no fees, nothing is returned
         """
+        msg = msg.cmsg
         try:
             fees = getattr(msg, f.FEES.nm)
         except (AttributeError, KeyError):

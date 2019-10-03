@@ -63,12 +63,12 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
     current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
 
     with delay_rules_without_processing(reverted_node.nodeIbStasher, delay_3pc(view_no=0, msgs=Commit)):
-        len_batches_before = len(reverted_node.master_replica.batches)
+        len_batches_before = len(reverted_node.master_replica._ordering_service.batches)
         current_amount, seq_no, _ = send_and_check_transfer(helpers, addresses, fees, looper, current_amount, seq_no)
         current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                                  current_amount)
         looper.runFor(waits.expectedPrePrepareTime(len(nodeSetWithIntegratedTokenPlugin)))
-        len_batches_after = len(reverted_node.master_replica.batches)
+        len_batches_after = len(reverted_node.master_replica._ordering_service.batches)
 
         """
         Checks, that we have a 2 new batches
@@ -104,13 +104,13 @@ def test_revert_for_all_after_view_change(looper, helpers,
     ensure_all_nodes_have_same_data(looper, node_set)
 
     with delay_rules([n.nodeIbStasher for n in node_set], cDelay(), pDelay()):
-        len_batches_before = len(reverted_node.master_replica.batches)
+        len_batches_before = len(reverted_node.master_replica._ordering_service.batches)
         current_amount, seq_no, resp1 = send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
                                                                 seq_no, check_reply=False)
         current_amount, seq_no, resp2 = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                                      current_amount, check_reply=False)
         looper.runFor(waits.expectedPrePrepareTime(len(nodeSetWithIntegratedTokenPlugin)))
-        len_batches_after = len(reverted_node.master_replica.batches)
+        len_batches_after = len(reverted_node.master_replica._ordering_service.batches)
 
         """
         Checks, that we have a 2 new batches
