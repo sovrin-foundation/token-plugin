@@ -22,7 +22,7 @@ def test_fee_batch_handler_commit_batch(fee_batch_handler, fees_tracker):
     }]
 
     three_pc_batch = ThreePcBatch(0, 0, 0, 3, 1, 'state', 'txn',
-                                  ['a', 'b', 'c'], ['a'])
+                                  ['a', 'b', 'c'], ['a'], 0)
 
     fee_batch_handler.commit_batch(three_pc_batch, prev_res)
     assert not len(utxo_cache.current_batch_ops)
