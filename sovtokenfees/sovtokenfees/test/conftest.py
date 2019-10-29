@@ -15,6 +15,7 @@ from plenum.test.conftest import getValueFromModule, sdk_wallet_handle
 from sovtoken.test.conftest import sdk_trustees, sdk_stewards
 
 # fixtures, do not remove
+from indy_common.test.conftest import tconf as _tconf
 from indy_node.test.conftest import *
 
 from sovtoken.constants import (

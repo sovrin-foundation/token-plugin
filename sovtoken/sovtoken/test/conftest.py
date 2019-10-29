@@ -11,6 +11,7 @@ from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers, libloader
+from indy_common.test.conftest import tconf as _tconf
 from indy_node.test.conftest import *
 from indy.did import create_and_store_my_did
 from indy.ledger import build_nym_request, sign_and_submit_request
