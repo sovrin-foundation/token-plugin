@@ -90,6 +90,17 @@ class IOAddressesStatic(IOAddresses):
 
 
 @pytest.fixture(scope="module")
+def tconf(_tconf):
+    oldMax3PCBatchSize = _tconf.Max3PCBatchSize
+    oldMax3PCBatchWait = _tconf.Max3PCBatchWait
+    _tconf.Max3PCBatchSize = 1000
+    _tconf.Max3PCBatchWait = 1
+    yield _tconf
+    _tconf.Max3PCBatchSize = oldMax3PCBatchSize
+    _tconf.Max3PCBatchWait = oldMax3PCBatchWait
+
+
+@pytest.fixture(scope="module")
 def fees(request):
     default_fees = {
         NYM_FEES_ALIAS: 4,

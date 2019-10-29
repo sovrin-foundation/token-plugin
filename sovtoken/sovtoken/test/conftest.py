@@ -37,6 +37,17 @@ def build_wallets_from_data(name_seeds):
 
 
 @pytest.fixture(scope="module")
+def tconf(_tconf):
+    oldMax3PCBatchSize = _tconf.Max3PCBatchSize
+    oldMax3PCBatchWait = _tconf.Max3PCBatchWait
+    _tconf.Max3PCBatchSize = 1000
+    _tconf.Max3PCBatchWait = 1
+    yield _tconf
+    _tconf.Max3PCBatchSize = oldMax3PCBatchSize
+    _tconf.Max3PCBatchWait = oldMax3PCBatchWait
+
+
+@pytest.fixture(scope="module")
 def SF_token_wallet():
     return TokenWallet('SF_MASTER')
 
