@@ -11,6 +11,7 @@ from sovtoken.test.wallet import TokenWallet
 from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers, libloader
+from indy_common.test.conftest import tconf as _tconf
 from indy_node.test.conftest import *
 from indy.did import create_and_store_my_did
 from indy.ledger import build_nym_request, sign_and_submit_request
@@ -33,6 +34,17 @@ def build_wallets_from_data(name_seeds):
         w.addIdentifier(seed=seed.encode())
         wallets.append(w)
     return wallets
+
+
+@pytest.fixture(scope="module")
+def tconf(_tconf):
+    oldMax3PCBatchSize = _tconf.Max3PCBatchSize
+    oldMax3PCBatchWait = _tconf.Max3PCBatchWait
+    _tconf.Max3PCBatchSize = 1000
+    _tconf.Max3PCBatchWait = 1
+    yield _tconf
+    _tconf.Max3PCBatchSize = oldMax3PCBatchSize
+    _tconf.Max3PCBatchWait = oldMax3PCBatchWait
 
 
 @pytest.fixture(scope="module")

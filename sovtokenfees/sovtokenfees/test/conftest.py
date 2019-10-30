@@ -15,6 +15,7 @@ from plenum.test.conftest import getValueFromModule, sdk_wallet_handle
 from sovtoken.test.conftest import sdk_trustees, sdk_stewards
 
 # fixtures, do not remove
+from indy_common.test.conftest import tconf as _tconf
 from indy_node.test.conftest import *
 
 from sovtoken.constants import (
@@ -86,6 +87,17 @@ class IOAddressesStatic(IOAddresses):
 # ######################
 # configuration fixtures
 # ######################
+
+
+@pytest.fixture(scope="module")
+def tconf(_tconf):
+    oldMax3PCBatchSize = _tconf.Max3PCBatchSize
+    oldMax3PCBatchWait = _tconf.Max3PCBatchWait
+    _tconf.Max3PCBatchSize = 1000
+    _tconf.Max3PCBatchWait = 1
+    yield _tconf
+    _tconf.Max3PCBatchSize = oldMax3PCBatchSize
+    _tconf.Max3PCBatchWait = oldMax3PCBatchWait
 
 
 @pytest.fixture(scope="module")
