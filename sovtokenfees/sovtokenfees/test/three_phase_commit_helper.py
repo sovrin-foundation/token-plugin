@@ -212,7 +212,8 @@ class Ord:
             pp.txnRootHash,
             pp.auditTxnRootHash,
             ["Alpha", "Beta"],
-            pp.viewNo
+            pp.viewNo,
+            pp.digest
         ]
 
         return Ordered(*ord_args)
