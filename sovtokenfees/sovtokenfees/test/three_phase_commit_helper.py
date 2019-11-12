@@ -212,6 +212,7 @@ class Ord:
             pp.txnRootHash,
             pp.auditTxnRootHash,
             ["Alpha", "Beta"],
+            ["Alpha", "Beta", "Gamma", "Delta"],
             pp.viewNo,
             pp.digest
         ]
