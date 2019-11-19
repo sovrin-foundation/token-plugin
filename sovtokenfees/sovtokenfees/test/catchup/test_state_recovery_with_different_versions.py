@@ -62,18 +62,15 @@ def send_node_upgrades(nodes, version, looper, count=None):
 
         node.startedProcessingReq(request.key, node.nodestack.name)
         node.send(request)
-        print(request)
-    looper.run(eventually(lambda: assertEquality(node.master_last_ordered_3PC[1],
-                                                     last_ordered + len(nodes[:count]))))
+        looper.run(eventually(lambda: assertEquality(node.master_last_ordered_3PC[1],
+                                                         last_ordered + 1)))
+        last_ordered += 1
 
 
 def test_state_recovery_with_fees(looper, tconf, tdir,
                                   sdk_pool_handle,
                                   sdk_wallet_trustee,
                                   allPluginsPath,
-                                  # fees_set,
-                                  # mint_tokens, addresses,
-                                  # fees,
                                   do_post_node_creation,
                                   nodeSetWithIntegratedTokenPlugin,
                                   helpers,
@@ -95,11 +92,10 @@ def test_state_recovery_with_fees(looper, tconf, tdir,
         handler_for_0_9_3 = n.write_manager._request_handlers_with_version.get((SET_FEES, "0.9.3"))[0]
         monkeypatch.setattr(handler, 'update_state',
                             handler_for_0_9_3.update_state)
-    helpers.general.do_set_fees({"B": 2}, fill_auth_map=False)
-    # looper.runFor(30)
+    helpers.general.do_set_fees({"A": 2}, fill_auth_map=False)
     send_node_upgrades(node_set, version2, looper)
     monkeypatch.undo()
-    helpers.general.do_set_fees({"C": 2}, fill_auth_map=False)
+    helpers.general.do_set_fees({"B": 2}, fill_auth_map=False)
 
     node_to_stop = node_set[-1]
     state_db_pathes = [state._kv.db_path
@@ -125,8 +121,5 @@ def test_state_recovery_with_fees(looper, tconf, tdir,
     node_set[-1] = restarted_node
 
     looper.run(checkNodesConnected(node_set))
-    for n in node_set:
-        print("________")
-        print(n.getState(2).as_dict)
     waitNodeDataEquality(looper, restarted_node, *node_set[:-1], exclude_from_check=['check_last_ordered_3pc_backup'])
 
