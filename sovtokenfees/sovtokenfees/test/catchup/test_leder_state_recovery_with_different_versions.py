@@ -91,6 +91,7 @@ def test_state_recovery_with_xfer(looper, tconf, tdir,
                                   helpers,
                                   valid_upgrade,
                                   mint_tokens,
+                                  addresses,
                                   monkeypatch):
     version1 = "1.1.50"
     version2 = "1.1.88"
@@ -113,12 +114,12 @@ def test_state_recovery_with_xfer(looper, tconf, tdir,
 
     current_amount, seq_no, _ = send_and_check_transfer(helpers, [addresses[0], addresses[1]], {}, looper,
                                                         current_amount, seq_no,
-                                                        transfer_summ=current_amount)
+                                                        transfer_summ=1)
     send_node_upgrades(node_set, version2, looper)
     monkeypatch.undo()
     current_amount, seq_no, _ = send_and_check_transfer(helpers, [addresses[0], addresses[1]], {}, looper,
                                                         current_amount, seq_no,
-                                                        transfer_summ=current_amount)
+                                                        transfer_summ=1)
 
     node_to_stop = node_set[-1]
     state_db_pathes = [state._kv.db_path
@@ -147,5 +148,5 @@ def test_state_recovery_with_xfer(looper, tconf, tdir,
     waitNodeDataEquality(looper, restarted_node, *node_set[:-1], exclude_from_check=['check_last_ordered_3pc_backup'])
     current_amount, seq_no, _ = send_and_check_transfer(helpers, [addresses[0], addresses[1]], {}, looper,
                                                         current_amount, seq_no,
-                                                        transfer_summ=current_amount)
+                                                        transfer_summ=1)
     sdk_ensure_pool_functional(looper, node_set, sdk_wallet_trustee, sdk_pool_handle)
