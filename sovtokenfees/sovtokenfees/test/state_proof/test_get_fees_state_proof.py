@@ -10,7 +10,6 @@ from plenum.test.delayers import req_delay
 from sovtokenfees.test.helper import send_and_check_auth_rule
 
 
-@pytest.mark.skip
 def test_state_proof_for_get_fees(helpers, nodeSetWithIntegratedTokenPlugin,
                                   looper, sdk_pool_handle, sdk_wallet_trustee):
     # make sure that config ledger is BLS signed by sending a txn to config ledger
