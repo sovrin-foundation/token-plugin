@@ -14,9 +14,12 @@ from plenum.common.types import f
 class TokenStaticHelper:
 
     @staticmethod
-    def spend_input(state, utxo_cache: UTXOCache, address, seq_no, is_committed=False):
+    def spend_input(state, utxo_cache: UTXOCache, address, seq_no, is_committed=False, remove_spent=True):
         state_key = TokenStaticHelper.create_state_key(address, seq_no)
-        state.remove(state_key)
+        if remove_spent:
+            state.remove(state_key)
+        else:
+            state.set(state_key, b'')
         utxo_cache.spend_output(Output(address, seq_no, None),
                                 is_committed=is_committed)
 
