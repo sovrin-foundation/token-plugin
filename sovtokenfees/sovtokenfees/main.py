@@ -9,6 +9,7 @@ from sovtokenfees.req_handlers.read_handlers.get_fees_handler import GetFeesHand
 from sovtokenfees.req_handlers.write_handlers.auth_rule_fee_handler import AuthRuleFeeHandler
 from sovtokenfees.req_handlers.write_handlers.fee_txn_handler import FeeTxnCatchupHandler
 from sovtokenfees.req_handlers.write_handlers.set_fees_handler import SetFeesHandler
+from sovtokenfees.req_handlers.write_handlers.set_fees_handler_0_9_3 import SetFeesHandler093
 from sovtokenfees.req_handlers.write_handlers.xfer_fee_handler import XferFeeHandler
 from sovtokenfees.req_handlers.fees_utils import BatchFeesTracker
 from sovtokenfees.req_handlers.write_handlers.domain_fee_handler import DomainFeeHandler
@@ -53,6 +54,9 @@ def integrate_plugin_in_node(node):
 def register_req_handlers(node, fees_tracker):
     node.write_manager.register_req_handler(SetFeesHandler(node.db_manager,
                                                            node.write_req_validator))
+    node.write_manager.register_req_handler_with_version(SetFeesHandler093(node.db_manager,
+                                                                           node.write_req_validator),
+                                                         "0.9.3")
 
     if XFER_PUBLIC not in node.write_manager.request_handlers:
         raise ImportError('sovtoken plugin should be loaded, request '
