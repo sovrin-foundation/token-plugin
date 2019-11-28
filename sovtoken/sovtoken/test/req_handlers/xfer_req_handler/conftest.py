@@ -3,6 +3,7 @@ import json
 import pytest
 from sovtoken import TokenTransactions, TOKEN_LEDGER_ID
 from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
+from sovtoken.request_handlers.write_request_handler.xfer_handler_1_0_0 import XferHandler100
 from sovtoken.sovtoken_auth_map import sovtoken_auth_map
 from base58 import b58encode_check
 from indy.payment import build_payment_req
@@ -18,6 +19,13 @@ def xfer_handler(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return XferHandler(db_manager,
                        write_req_validator=write_auth_req_validator)
+
+
+@pytest.fixture(scope="module")
+def xfer_handler_1_0_0(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
+    write_auth_req_validator.auth_map.update(sovtoken_auth_map)
+    return XferHandler100(db_manager,
+                          write_req_validator=write_auth_req_validator)
 
 
 @pytest.fixture(scope="module")
@@ -79,4 +87,4 @@ def xfer_txn(xfer_handler, xfer_request):
 
 def make_utxo(addr, seq_no):
     txo_inner = json.dumps({"address": addr, "seqNo": seq_no})
-    return "{}{}". format("txo:sov:", b58encode_check(txo_inner.encode()).decode())
+    return "{}{}".format("txo:sov:", b58encode_check(txo_inner.encode()).decode())
