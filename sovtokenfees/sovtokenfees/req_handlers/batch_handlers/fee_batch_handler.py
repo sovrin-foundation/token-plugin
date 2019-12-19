@@ -69,7 +69,8 @@ class DomainFeeBatchHandler(BatchRequestHandler):
                                                      state_root=token_state_root,
                                                      txn_root=txn_root_serializer.serialize(token_txn_root),
                                                      primaries=three_pc_batch.primaries,
-                                                     valid_digests=[i for i in range(len(committed_seq_nos_with_fees))])
+                                                     valid_digests=[i for i in range(len(committed_seq_nos_with_fees))],
+                                                     pp_digest=three_pc_batch.pp_digest)
             committed_token_txns = super()._commit(self.token_ledger, self.token_state, token_fake_three_pc_batch)
             TokenStaticHelper.commit_to_utxo_cache(self.utxo_cache, token_state_root)
             i = 0

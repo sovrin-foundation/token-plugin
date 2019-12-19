@@ -6,7 +6,7 @@ from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from sovtokenfees.test.constants import NYM_FEES_ALIAS, txn_type_to_alias, XFER_PUBLIC_FEES_ALIAS
 from stp_core.loop.eventually import eventually
 
-from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM
+from plenum.common.constants import DOMAIN_LEDGER_ID, DATA, TXN_TYPE, NYM, TRUSTEE, STEWARD
 from plenum.common.util import randomString
 from plenum.common.types import f
 from plenum.test.node_catchup.helper import waitNodeDataEquality
@@ -20,30 +20,40 @@ from sovtoken.constants import OUTPUTS, AMOUNT, ADDRESS, XFER_PUBLIC, SEQNO, UTX
 
 from sovtokenfees.constants import FEES
 
+from indy_node.test.helper import generate_constraint_entity
+
+from indy_node.test.auth_rule.helper import generate_constraint_list, sdk_send_and_check_auth_rule_request
+
+from indy_common.authorize.auth_actions import ADD_PREFIX
+
+from indy_common.constants import ENDORSER, ROLE
+
 
 @unique
 class InputsStrategy(Enum):
-    all_utxos = 1           # use all utxos from each input address
-    first_utxo_only = 2     # use only single (first) from each input address
+    all_utxos = 1  # use all utxos from each input address
+    first_utxo_only = 2  # use only single (first) from each input address
 
 
 @unique
 class OutputsStrategy(Enum):
     transfer_some_equal = 1
-                # divide transfer among output addresses in (almost)
-                # equal parts, a change (total_input - transfer - fee)
-                # goes either to one address listed in both inputs and
-                # outputs if there is such one or to the first input
-                # address otherwise
+    # divide transfer among output addresses in (almost)
+    # equal parts, a change (total_input - transfer - fee)
+    # goes either to one address listed in both inputs and
+    # outputs if there is such one or to the first input
+    # address otherwise
     transfer_all_equal = 2
-                # divide (total_input - fee) among all
-                # output addresses in (almost) equal parts
-                # ( useful when we move all amount to other addresses )
+    # divide (total_input - fee) among all
+    # output addresses in (almost) equal parts
+    # ( useful when we move all amount to other addresses )
 
 
 def check_state(n, is_equal=False):
-    assert (n.getLedger(DOMAIN_LEDGER_ID).tree.root_hash == n.getLedger(DOMAIN_LEDGER_ID).uncommitted_root_hash) == is_equal
-    assert (n.getLedger(TOKEN_LEDGER_ID).tree.root_hash == n.getLedger(TOKEN_LEDGER_ID).uncommitted_root_hash) == is_equal
+    assert (n.getLedger(DOMAIN_LEDGER_ID).tree.root_hash == n.getLedger(
+        DOMAIN_LEDGER_ID).uncommitted_root_hash) == is_equal
+    assert (n.getLedger(TOKEN_LEDGER_ID).tree.root_hash == n.getLedger(
+        TOKEN_LEDGER_ID).uncommitted_root_hash) == is_equal
 
     assert (n.getState(DOMAIN_LEDGER_ID).headHash ==
             n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
@@ -60,7 +70,8 @@ def check_uncommitted_txn(node, expected_length, ledger_id):
     assert len(node.getLedger(ledger_id).uncommittedTxns) == expected_length
 
 
-def add_fees_request_with_address_inner(helpers, fees_set, request, address, utxos=None, change_address=None, adjust_fees=0):
+def add_fees_request_with_address_inner(helpers, fees_set, request, address, utxos=None, change_address=None,
+                                        adjust_fees=0):
     utxos = utxos if utxos else helpers.inner.general.get_utxo_addresses([address])[0]
     txn_type = request.operation[TXN_TYPE]
     fee_amount = fees_set[FEES][txn_type_to_alias[txn_type]]
@@ -230,7 +241,8 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
         new_amount = transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)
     else:
         outputs = [{ADDRESS: address_receiver, AMOUNT: transfer_summ},
-                   {ADDRESS: address_giver, AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)}]
+                   {ADDRESS: address_giver,
+                    AMOUNT: current_amount - transfer_summ - fees.get(XFER_PUBLIC_FEES_ALIAS, 0)}]
         new_amount = current_amount - (fees.get(XFER_PUBLIC_FEES_ALIAS, 0) + transfer_summ)
 
     inputs = [{"source": utxo_from_addr_and_seq_no(address_giver, seq_no)}]
@@ -245,7 +257,7 @@ def send_and_check_transfer(helpers, addresses, fees, looper, current_amount,
 
 
 def prepare_inputs(
-    helpers, addresses, strategy=InputsStrategy.all_utxos
+        helpers, addresses, strategy=InputsStrategy.all_utxos
 ):
     assert strategy in InputsStrategy, "Unknown input strategy {}".format(strategy)
 
@@ -255,7 +267,8 @@ def prepare_inputs(
         if not addr.all_seq_nos:
             raise ValueError("no seq_nos for {}".format(addr.address))
         for seq_no in addr.all_seq_nos:
-            inputs.append({"source": utxo_from_addr_and_seq_no(addr.address, seq_no), ADDRESS: addr.address, SEQNO: seq_no})
+            inputs.append(
+                {"source": utxo_from_addr_and_seq_no(addr.address, seq_no), ADDRESS: addr.address, SEQNO: seq_no})
             if strategy == InputsStrategy.first_utxo_only:
                 break
 
@@ -263,8 +276,8 @@ def prepare_inputs(
 
 
 def prepare_outputs(
-    helpers, fee, inputs, addresses,
-    strategy=OutputsStrategy.transfer_some_equal, transfer_amount=20
+        helpers, fee, inputs, addresses,
+        strategy=OutputsStrategy.transfer_some_equal, transfer_amount=20
 ):
     def divide_equal(output_addresses, amount):
         assert output_addresses
@@ -329,6 +342,17 @@ def send_and_check_nym(looper, helpers, inputs, outputs):
     )
     helpers.wallet.handle_txn_with_fees(resp)
     return resp
+
+
+def send_and_check_auth_rule(looper, sdk_pool_handle, sdk_wallet_trustee):
+    auth_constraint = generate_constraint_list(auth_constraints=[generate_constraint_entity(role=TRUSTEE),
+                                                                 generate_constraint_entity(role=STEWARD)])
+    sdk_send_and_check_auth_rule_request(looper,
+                                         sdk_pool_handle,
+                                         sdk_wallet_trustee,
+                                         auth_action=ADD_PREFIX, auth_type=NYM,
+                                         field=ROLE, new_value=ENDORSER,
+                                         constraint=auth_constraint)
 
 
 def ensure_all_nodes_have_same_data(looper, node_set, custom_timeout=None,

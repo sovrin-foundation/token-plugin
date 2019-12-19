@@ -3,6 +3,7 @@ from sovtoken.request_handlers.batch_req_handler.utxo_batch_handler import UTXOB
 from sovtoken.request_handlers.read_req_handler.get_utxo_handler import GetUtxoHandler
 from sovtoken.request_handlers.write_request_handler.mint_handler import MintHandler
 from sovtoken.request_handlers.write_request_handler.xfer_handler import XferHandler
+from sovtoken.request_handlers.write_request_handler.xfer_handler_1_0_0 import XferHandler100
 from sovtoken.utxo_cache import UTXOCache
 
 from state.pruning_state import PruningState
@@ -84,6 +85,9 @@ def init_token_database(node):
 def register_req_handlers(node):
     node.write_manager.register_req_handler(XferHandler(node.db_manager,
                                                         node.write_req_validator))
+    node.write_manager.register_req_handler_with_version(XferHandler100(node.db_manager,
+                                                                        node.write_req_validator),
+                                                         "1.0.0")
     node.write_manager.register_req_handler(MintHandler(node.db_manager,
                                                         node.write_req_validator))
     node.read_manager.register_req_handler(GetUtxoHandler(node.db_manager, node.config.MSG_LEN_LIMIT))
@@ -92,7 +96,7 @@ def register_req_handlers(node):
 def register_batch_handlers(node):
     node.write_manager.register_batch_handler(UTXOBatchHandler(node.db_manager), add_to_begin=True)
     node.write_manager.register_batch_handler(TokenBatchHandler(node.db_manager), add_to_begin=True)
-    node.write_manager.register_batch_handler(node.write_manager.future_primary_handler,
+    node.write_manager.register_batch_handler(node.write_manager.node_reg_handler,
                                               ledger_id=TOKEN_LEDGER_ID)
     node.write_manager.register_batch_handler(node.write_manager.audit_b_handler,
                                               ledger_id=TOKEN_LEDGER_ID)

@@ -26,7 +26,7 @@ RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
         libindy-crypto=0.4.5 \
         libindy=1.12.0~1365 \
-        libsovtoken=1.0.1~83 \
+        libsovtoken=1.0.2~92 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
@@ -44,4 +44,4 @@ RUN if [ "$u_id" != "0" ]; then \
 USER $u_id
 
 # TODO CMD ENTRYPOINT ...
-ENV CI_ENV_VERSION=0.20.0
+ENV CI_ENV_VERSION=0.21.0
