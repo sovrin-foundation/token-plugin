@@ -18,8 +18,7 @@ def test_nym_with_fees_with_taa(helpers,
         fees_set[FEES][NYM_FEES_ALIAS],
         change_address=addresses[0]
     )[0]
-    with pytest.raises(RequestRejectedException):
-        helpers.sdk.sdk_send_and_check([request])
+    helpers.sdk.sdk_send_and_check([request])
 
 
 def test_nym_with_fees_no_taa(helpers,
