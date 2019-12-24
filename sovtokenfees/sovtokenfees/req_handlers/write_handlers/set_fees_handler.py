@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtokenfees.constants import SET_FEES, FEES
 from sovtokenfees.req_handlers.fees_utils import FeesStaticHelper
 from sovtokenfees.serializers import proof_nodes_serializer, config_state_serializer
@@ -30,7 +32,7 @@ class SetFeesHandler(WriteRequestHandler):
                                        request.reqId,
                                        exc)
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         return self._write_req_validator.validate(request,
                                                   [AuthActionEdit(txn_type=SET_FEES,
                                                                   field="*",

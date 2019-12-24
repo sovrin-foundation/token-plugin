@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtoken import TokenTransactions
 from sovtoken.constants import MINT_PUBLIC, OUTPUTS, TOKEN_LEDGER_ID, UTXO_CACHE_LABEL
 from sovtoken.exceptions import UTXOError
@@ -32,7 +34,7 @@ class MintHandler(WriteRequestHandler):
                                        request.reqId,
                                        error)
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         return self._write_req_validator.validate(request,
                                                   [AuthActionAdd(txn_type=MINT_PUBLIC,
                                                                  field="*",

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtoken import TokenTransactions
 from sovtoken.exceptions import UTXOError
 
@@ -32,7 +34,7 @@ class XferHandler(WriteRequestHandler):
                                        request.reqId,
                                        error)
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         self._do_validate_inputs_ouputs(request)
         return self._write_req_validator.validate(request, [AuthActionAdd(txn_type=XFER_PUBLIC,
                                                                           field="*",
