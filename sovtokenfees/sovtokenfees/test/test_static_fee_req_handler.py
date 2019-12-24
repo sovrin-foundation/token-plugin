@@ -237,7 +237,7 @@ class TestValidation():
         request.signatures[reversed_did] = sig
 
         with pytest.raises(UnauthorizedClientRequest):
-            set_fees_handler.dynamic_validation(request)
+            set_fees_handler.dynamic_validation(request, 0)
 
     def test_set_fees_invalid_signature(self, helpers, set_fees_handler):
         """
@@ -253,7 +253,7 @@ class TestValidation():
         reversed_sig = sig[::-1]
         request.signatures[did] = reversed_sig
 
-        set_fees_handler.dynamic_validation(request)
+        set_fees_handler.dynamic_validation(request, 0)
 
     def test_set_fees_test_missing_signee(self, helpers, set_fees_handler):
         """
@@ -265,7 +265,7 @@ class TestValidation():
         (did, sig) = request.signatures.popitem()
 
         with pytest.raises(UnauthorizedClientRequest):
-            set_fees_handler.dynamic_validation(request)
+            set_fees_handler.dynamic_validation(request, 0)
 
     def test_set_fees_test_extra_signees(
             self,
@@ -282,7 +282,7 @@ class TestValidation():
         request = helpers.wallet.sign_request(request, increased_trustees)
         assert len(request.signatures) == 7
 
-        assert set_fees_handler.dynamic_validation(request)
+        assert set_fees_handler.dynamic_validation(request, 0)
 
     def test_validate_unknown_type(self, helpers, fee_handler):
         """
@@ -290,7 +290,7 @@ class TestValidation():
         """
 
         request = helpers.request.nym()
-        fee_handler.dynamic_validation(request)
+        fee_handler.dynamic_validation(request, 0)
 
 
 class TestCanPayFees():
