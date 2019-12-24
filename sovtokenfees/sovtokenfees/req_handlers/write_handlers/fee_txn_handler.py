@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtoken import TOKEN_LEDGER_ID
 from sovtokenfees.constants import FEE_TXN
 from sovtokenfees.req_handlers.write_handlers.xfer_fee_handler import XferFeeHandler
@@ -18,5 +20,5 @@ class FeeTxnCatchupHandler(XferFeeHandler):
     def static_validation(self, request: Request):
         pass
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         pass

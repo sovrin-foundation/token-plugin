@@ -156,7 +156,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid(
     request = helpers.request.transfer(inputs, outputs)
     # This test should raise an issue because the inputs are not on the ledger
     with pytest.raises(InvalidClientMessageException):
-        xfer_handler_a.dynamic_validation(request)
+        xfer_handler_a.dynamic_validation(request, 0)
 
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(
@@ -170,7 +170,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_overspend(
     request = helpers.request.transfer(inputs, outputs)
     # This test is expected to fail because
     with pytest.raises(InsufficientFundsError):
-        xfer_handler_a.dynamic_validation(request)
+        xfer_handler_a.dynamic_validation(request, 0)
 
 
 def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
@@ -184,7 +184,7 @@ def test_token_req_handler_validate_XFER_PUBLIC_invalid_underspend(
     request = helpers.request.transfer(inputs, outputs)
     # This test is expected to fail because
     with pytest.raises(ExtraFundsError):
-        xfer_handler_a.dynamic_validation(request)
+        xfer_handler_a.dynamic_validation(request, 0)
 
 
 def test_token_req_handler_apply_xfer_public_success(
@@ -298,7 +298,7 @@ def test_token_req_handler_update_state_XFER_PUBLIC_success(
     txn = reqToTxn(request)
     append_txn_metadata(txn, seq_no=seq_no)
 
-    xfer_handler_a.dynamic_validation(request)
+    xfer_handler_a.dynamic_validation(request, 0)
     xfer_handler_a.update_state(txn, None, request)
 
     state_key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address1), seq_no)
@@ -496,7 +496,7 @@ class TestValidateMintPublic():
     def test_less_than_min_trustees(self, helpers, mint_request):
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.dynamic_validation(mint_request)
+            self.handler.dynamic_validation(mint_request, 0)
 
     # def test_steward_with_trustees(
     #         self,
@@ -522,7 +522,7 @@ class TestValidateMintPublic():
             mint_request,
             trustee_wallets
         )
-        assert self.handler.dynamic_validation(mint_request)
+        assert self.handler.dynamic_validation(mint_request, 0)
 
     @pytest.mark.skip
     def test_no_quorum_trustees(self, helpers, mint_request, trustee_wallets):
@@ -533,7 +533,7 @@ class TestValidateMintPublic():
         )
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.dynamic_validation(mint_request)
+            self.handler.dynamic_validation(mint_request, 0)
 
     @pytest.mark.skip
     def test_quorum_increased_trustees(
@@ -547,7 +547,7 @@ class TestValidateMintPublic():
             mint_request,
             increased_trustees
         )
-        assert self.handler.dynamic_validation(mint_request)
+        assert self.handler.dynamic_validation(mint_request, 0)
 
     @pytest.mark.skip
     def test_no_quorum_increased_trustees(
@@ -563,4 +563,4 @@ class TestValidateMintPublic():
         )
         mint_request.signatures.popitem()
         with pytest.raises(InvalidClientMessageException):
-            self.handler.dynamic_validation(mint_request)
+            self.handler.dynamic_validation(mint_request, 0)

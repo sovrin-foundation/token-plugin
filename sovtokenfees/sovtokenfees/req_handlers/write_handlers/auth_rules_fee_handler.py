@@ -1,3 +1,5 @@
+from typing import Optional
+
 from indy_common.constants import AUTH_RULES, RULES
 
 from indy_node.server.request_handlers.config_req_handlers.auth_rule.static_auth_rule_helper import StaticAuthRuleHelper
@@ -23,7 +25,7 @@ class AuthRulesFeeHandler(WriteRequestHandler):
     def static_validation(self, request: Request):
         pass
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         self.fees_specific_validation(request)
 
     def update_state(self, txn, prev_result, request, is_committed=False):

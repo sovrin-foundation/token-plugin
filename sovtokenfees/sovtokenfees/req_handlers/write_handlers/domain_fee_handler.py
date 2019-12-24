@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtoken.constants import INPUTS, OUTPUTS, ADDRESS, UTXO_CACHE_LABEL, SEQNO, AMOUNT, TOKEN_LEDGER_ID
 from sovtoken.request_handlers.token_utils import TokenStaticHelper
 from sovtoken.types import Output
@@ -22,7 +24,7 @@ class DomainFeeHandler(WriteRequestHandler):
     def static_validation(self, request: Request):
         pass
 
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         pass
 
     def apply_request(self, request: Request, batch_ts, prev_result):
