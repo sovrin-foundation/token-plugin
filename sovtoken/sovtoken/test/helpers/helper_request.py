@@ -170,8 +170,8 @@ class HelperRequest():
         acceptance_mechanism_request = self._sign_sdk(acceptance_mechanism_request, sdk_trustee_wallet)
         return acceptance_mechanism_request
 
-    def transaction_author_agreement(self, sdk_trustee_wallet, text, version):
-        txn_author_agreement_future = build_txn_author_agreement_request(sdk_trustee_wallet[1], text, version)
+    def transaction_author_agreement(self, sdk_trustee_wallet, text, version, ratification_ts=0):
+        txn_author_agreement_future = build_txn_author_agreement_request(sdk_trustee_wallet[1], text, version, ratification_ts)
         txn_author_agreement_request = self._looper.loop.run_until_complete(txn_author_agreement_future)
         txn_author_agreement_request = self._sdk.sdk_json_to_request_object(json.loads(txn_author_agreement_request))
         txn_author_agreement_request = self._sign_sdk(txn_author_agreement_request, sdk_trustee_wallet)
