@@ -25,7 +25,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
         libindy-crypto=0.4.5 \
-        libindy=1.12.0~1365 \
+        libindy=1.13.0~1404 \
         libsovtoken=1.0.2~92 \
     && rm -rf /var/lib/apt/lists/*
 
