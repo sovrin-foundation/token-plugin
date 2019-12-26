@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sovtoken.constants import XFER_PUBLIC
 
 from indy_common.authorize.auth_actions import AuthActionAdd
@@ -7,7 +9,7 @@ from plenum.common.request import Request
 
 
 class XferFeeHandler(XferHandler):
-    def dynamic_validation(self, request: Request):
+    def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         # We are intentionally omitting validation of inputs and outputs so that
         # could satisfy logic of xfer with fees.
         return self._write_req_validator.validate(request, [AuthActionAdd(txn_type=XFER_PUBLIC,

@@ -5,7 +5,7 @@ from plenum.common.constants import TXN_TYPE, TXN_PAYLOAD, TXN_PAYLOAD_METADATA,
     TXN_PAYLOAD_METADATA_DIGEST, TXN_METADATA, TXN_SIGNATURE, TXN_VERSION, \
     TXN_PAYLOAD_PROTOCOL_VERSION, TXN_SIGNATURE_FROM, TXN_SIGNATURE_VALUE, \
     TXN_SIGNATURE_VALUES, TXN_SIGNATURE_TYPE, ED25519, TXN_METADATA_TIME, \
-    TXN_METADATA_ID, TXN_METADATA_SEQ_NO
+    TXN_METADATA_ID, TXN_METADATA_SEQ_NO, CURRENT_TXN_PAYLOAD_VERSIONS, CURRENT_TXN_VERSION
 
 
 def get_sorted_signatures(txn_response):
@@ -13,9 +13,8 @@ def get_sorted_signatures(txn_response):
     signatures[TXN_SIGNATURE_VALUES].sort(key=lambda fv: fv[TXN_SIGNATURE_FROM])
     return signatures
 
-class TxnResponse:
 
-    version = 1
+class TxnResponse:
 
     def __init__(self,
                  type,
@@ -41,7 +40,7 @@ class TxnResponse:
         data = self._form_data()
 
         response = {
-            TXN_VERSION: self.version,
+            TXN_VERSION: CURRENT_TXN_VERSION,
             TXN_PAYLOAD_PROTOCOL_VERSION: 2,
             TXN_PAYLOAD: {
                 TXN_TYPE: self.type,
