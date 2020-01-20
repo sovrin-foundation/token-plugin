@@ -15,6 +15,8 @@ from plenum.test.helper import assertExp, sdk_get_and_check_replies
 from plenum.test.view_change.helper import ensure_view_change, ensure_view_change_complete
 from plenum.common.startable import Mode
 
+from plenum.test.view_change_service.helper import trigger_view_change
+
 
 @pytest.fixture()
 def addresses(helpers):
@@ -74,8 +76,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
         Checks, that we have a 2 new batches
         """
         assert len_batches_after - len_batches_before == 2
-        for n in node_set:
-            n.view_changer.on_master_degradation()
+        trigger_view_change(node_set)
         ensure_view_change(looper, nodeSetWithIntegratedTokenPlugin)
 
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))
@@ -116,9 +117,7 @@ def test_revert_for_all_after_view_change(looper, helpers,
         Checks, that we have a 2 new batches
         """
         assert len_batches_after - len_batches_before == 2
-        for n in node_set:
-            n.view_changer.on_master_degradation()
-
+        trigger_view_change(node_set)
         ensure_view_change_complete(looper, nodeSetWithIntegratedTokenPlugin)
 
 
