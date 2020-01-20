@@ -37,6 +37,12 @@ def test_revert_xfer_with_fees_before_catchup(looper, helpers,
         looper.runFor(waits.expectedPrePrepareTime(len(nodes)))
         for n in nodes:
             n.start_catchup()
+        # clear all request queues to not re-send the same reqs after catch-up
+        for n in nodes:
+            n.requests.clear()
+            for r in n.replicas.values():
+                for ledger_id, queue in r._ordering_service.requestQueues.items():
+                    queue.clear()
         for n in nodes:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
         for n in nodes:
