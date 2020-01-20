@@ -86,7 +86,6 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
     ensure_all_nodes_have_same_data(looper, node_set)
 
 
-
 @pytest.mark.skip(reason="requestQueues doesn't guarantee the order of requests after view_change")
 def test_revert_for_all_after_view_change(looper, helpers,
                                           nodeSetWithIntegratedTokenPlugin,
@@ -119,7 +118,6 @@ def test_revert_for_all_after_view_change(looper, helpers,
         assert len_batches_after - len_batches_before == 2
         trigger_view_change(node_set)
         ensure_view_change_complete(looper, nodeSetWithIntegratedTokenPlugin)
-
 
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))
     ensure_all_nodes_have_same_data(looper, node_set)
