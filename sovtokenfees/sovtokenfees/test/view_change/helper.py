@@ -5,9 +5,11 @@ from plenum.common.exceptions import RequestRejectedException
 from plenum.test.stasher import delay_rules
 from plenum.test.delayers import pDelay, cDelay
 from plenum.test.view_change.helper import ensure_view_change
-from plenum.test.test_node import ensureElectionsDone
+from plenum.test.test_node import ensureElectionsDone, check_not_in_view_change
 
 from sovtokenfees.test.helper import ensure_all_nodes_have_same_data
+
+from stp_core.loop.eventually import eventually
 
 
 def scenario_txns_during_view_change(
@@ -52,8 +54,9 @@ def scenario_txns_during_view_change(
 
         # Initiate view change
         # Wait until view change is finished and check that needed transactions are written.
-        ensure_view_change(looper, nodes, custom_timeout=240)
-        ensureElectionsDone(looper, nodes)
+        ensure_view_change(looper, nodes)
+        looper.run(eventually(check_not_in_view_change, nodes))
+    ensureElectionsDone(looper, nodes)
 
     # Reset delays
     # Make sure that all nodes have equal state
