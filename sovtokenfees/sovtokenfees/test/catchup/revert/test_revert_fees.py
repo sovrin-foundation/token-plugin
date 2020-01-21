@@ -139,6 +139,12 @@ def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlu
                                      check_reply=False)
         for n in nodeSetWithIntegratedTokenPlugin:
             n.start_catchup()
+        # clear all request queues to not re-send the same reqs after catch-up
+        for n in nodeSetWithIntegratedTokenPlugin:
+            n.requests.clear()
+            for r in n.replicas.values():
+                for ledger_id, queue in r._ordering_service.requestQueues.items():
+                    queue.clear()
         for n in nodes:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
     ensure_all_nodes_have_same_data(looper, nodes)
