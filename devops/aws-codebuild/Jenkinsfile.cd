@@ -2,7 +2,7 @@
 
 String projectName = 'token-plugin'
 
-def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.1', retriever: modernSCM(
+def sovLibrary = library(identifier: 'sovrin-aws-codebuild@v1.0.2', retriever: modernSCM(
     github(credentialsId: 'sovbot-github', repoOwner: 'sovrin-foundation', repository: 'aws-codebuild-pipeline-plugin')
 )).com.sovrin.pipeline
 

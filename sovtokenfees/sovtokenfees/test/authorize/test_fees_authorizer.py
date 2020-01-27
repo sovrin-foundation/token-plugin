@@ -98,7 +98,7 @@ def test_fail_on_req_without_fees_but_required(fees_authorizer,
     authorized, msg = fees_authorizer.authorize(request=req_with_fees,
                                                 auth_constraint=fees_constraint)
     assert not authorized
-    assert  "Fees are required for this txn type" in msg
+    assert "Fees are required for this txn type" in msg
 
 
 def test_fail_on_req_with_fees_but_cannot_pay(fees_authorizer,
