@@ -130,11 +130,11 @@ class FeesAuthorizer(AbstractAuthorizer):
         is_fees_required = fees_amount > 0
         if request.txn_type != XFER_PUBLIC:
             if is_fees_required and not self.has_fees(request):
-                logger.warning("Validation error: Fees are required for this txn type")
+                logger.debug("Validation error: Fees are required for this txn type")
                 return False, "Fees are required for this txn type"
             if not is_fees_required and self.has_fees(request) \
                     and self.calculate_fees_from_req(self.utxo_cache, request) > 0:
-                logger.warning("Validation error: Fees are not required for this txn type")
+                logger.debug("Validation error: Fees are not required for this txn type")
                 return False, "Fees are not required for this txn type"
             if not is_fees_required and not self.has_fees(request):
                 return True, ""

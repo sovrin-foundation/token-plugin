@@ -12,7 +12,7 @@ from plenum.test.helper import sdk_send_signed_requests, assertExp, sdk_sign_and
 
 from plenum.test.view_change.helper import ensure_view_change
 
-from plenum.test.test_node import ensureElectionsDone
+from plenum.test.test_node import ensureElectionsDone, check_not_in_view_change
 
 from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
@@ -53,7 +53,8 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
 
-        ensureElectionsDone(looper=looper, nodes=nodeSetWithIntegratedTokenPlugin)
+        looper.run(eventually(check_not_in_view_change, nodeSetWithIntegratedTokenPlugin))
+
         committed_hash_after = get_committed_hash_for_pool(nodeSetWithIntegratedTokenPlugin, DOMAIN_LEDGER_ID)
         assert committed_hash_before == committed_hash_after
 

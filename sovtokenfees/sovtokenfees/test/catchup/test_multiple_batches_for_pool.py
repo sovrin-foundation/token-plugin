@@ -59,6 +59,12 @@ def test_multiple_batches_for_pool(looper, helpers,
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         for n in node_set:
             n.start_catchup()
+        # clear all request queues to not re-send the same reqs after catch-up
+        for n in node_set:
+            n.requests.clear()
+            for r in n.replicas.values():
+                for ledger_id, queue in r._ordering_service.requestQueues.items():
+                    queue.clear()
         for n in node_set:
             looper.run(eventually(lambda: assertExp(n.mode == Mode.participating)))
     txns_count_after = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
