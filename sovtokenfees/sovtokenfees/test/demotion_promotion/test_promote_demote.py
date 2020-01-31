@@ -51,7 +51,7 @@ def mint_tokens(helpers, addresses):
     params=[
         {NYM_FEES_ALIAS: 4,
          XFER_PUBLIC_FEES_ALIAS: 4},  # with fees
-    ], ids=lambda x: 'fees' if x[NODE_FEES_ALIAS] else 'nofees'
+    ], ids=lambda x: 'fees'
 )
 def fees(request):
     return request.param
