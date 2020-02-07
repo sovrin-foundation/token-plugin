@@ -14,7 +14,13 @@ from indy_node.test.anon_creds.helper import create_revoc_reg, create_revoc_reg_
 from indy_common.constants import ISSUANCE_BY_DEFAULT
 
 from indy_common.types import Request
-from plenum.common.util import randomString
+from plenum.common.util import randomString, hexToFriendly
+
+from plenum.test.pool_transactions.helper import prepare_node_request
+
+from plenum.common.constants import VALIDATOR
+
+from plenum.test.helper import sdk_json_to_request_object
 
 
 class HelperSdk():
@@ -176,3 +182,26 @@ class HelperSdk():
         get_txn_request_future = build_get_txn_request(None, ledger_id, seq_no)
         get_txn_request = self._looper.loop.run_until_complete(get_txn_request_future)
         return get_txn_request
+
+    def sdk_prepare_node_request(self, node, wallet, services=[]) -> str:
+        _, submitter_did = wallet
+        node_nym = hexToFriendly(node.nodestack.verhex)
+        return self._looper.loop.run_until_complete(
+                prepare_node_request(submitter_did,
+                                     new_node_name=node.name,
+                                     clientIp=None,
+                                     clientPort=None,
+                                     nodeIp=None,
+                                     nodePort=None,
+                                     bls_key=None,
+                                     destination=node_nym,
+                                     services=services,
+                                     key_proof=None))
+
+    def sdk_build_demote_txn(self, node, wallet):
+        req_str = self.sdk_prepare_node_request(node, wallet, [])
+        return sdk_json_to_request_object(json.loads(req_str))
+
+    def sdk_build_promote_txn(self, node, wallet):
+        req_str = self.sdk_prepare_node_request(node, wallet, [VALIDATOR])
+        return sdk_json_to_request_object(json.loads(req_str))
