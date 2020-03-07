@@ -13,7 +13,7 @@ def test_malicious_primary_sent_pp_with_xfer(looper, helpers,
                                    fees_set, address_main, xfer_mint_tokens,
                                    fees, xfer_addresses):
     def raise_invalid_ex():
-        raise InvalidClientMessageException(1, 2, 3)
+        raise InvalidClientMessageException(1, 2, "3")
 
     nodes = nodeSetWithIntegratedTokenPlugin
     current_amount = get_amount_from_token_txn(xfer_mint_tokens)

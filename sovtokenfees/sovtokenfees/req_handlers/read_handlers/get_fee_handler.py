@@ -34,4 +34,4 @@ class GetFeeHandler(ReadRequestHandler):
         except TypeError as exc:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId,
-                                       exc)
+                                       str(exc))
