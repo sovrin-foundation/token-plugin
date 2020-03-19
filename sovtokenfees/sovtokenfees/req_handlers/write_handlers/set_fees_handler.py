@@ -30,7 +30,7 @@ class SetFeesHandler(WriteRequestHandler):
         except TypeError as exc:
             raise InvalidClientRequest(request.identifier,
                                        request.reqId,
-                                       exc)
+                                       str(exc))
 
     def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         return self._write_req_validator.validate(request,
