@@ -22,11 +22,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # install fpm
 ENV FPM_VERSION=1.9.3
+ENV CHILDPROCESS_VERSION=3.0.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ruby \
         ruby-dev \
         rubygems \
-    && gem install --no-ri --no-rdoc rake fpm:$FPM_VERSION \
+    && gem install --no-ri --no-rdoc rake childprocess:$CHILDPROCESS_VERSION fpm:$FPM_VERSION \
     && rm -rf /var/lib/apt/lists/*
 
 # TODO CMD ENTRYPOINT ...
