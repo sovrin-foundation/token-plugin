@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # install fpm
 ENV FPM_VERSION=1.9.3
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        ruby-childprocess=0.5.9-1ubuntu1
         ruby \
         ruby-dev \
         rubygems \
