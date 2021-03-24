@@ -1,7 +1,8 @@
-version: '2'
+version: "2"
 
 services:
   token:
+    container_name: "token-plugin_token_1"
     build:
       context: devops/denv/
       dockerfile: Dockerfile
