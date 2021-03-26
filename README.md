@@ -1,6 +1,4 @@
-
 ![img](./banner.png)
-
 
 # Table of Contents
 
@@ -23,20 +21,17 @@
 
 This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
 
-
 <a id="org6c5e3ee"></a>
 
 ## Install
 
-run the following command: 
+run the following command:
 
     ./build_indy_pool
-
 
 <a id="org003878b"></a>
 
 ## Development Environment
-
 
 <a id="orga843a17"></a>
 
@@ -48,19 +43,28 @@ We provide a docker environment that comes pre-loaded with all required dependen
 
 ### Requirements
 
--   [docker](https://www.docker.com/get-docker)
--   [docker-compose](https://docs.docker.com/compose/)
--   [docker-sync](https://github.com/EugenMayer/docker-sync)
--   ruby
--   gem
+- [docker](https://www.docker.com/get-docker)
+- [docker-compose](https://docs.docker.com/compose/)
+- [docker-sync](https://github.com/EugenMayer/docker-sync)
+- ruby
+- gem
 
+### Running on Windows
+
+This repo utilizes docker-sync which will not run natively on Windows. The following steps can be used to run the Dev Environment on Windows via WSL.
+
+1. Install the relevant WSL Ubuntu distro on your machine via the Windows store (currently 18.04). Note, ensure that the Windows Subsystem for Linux is enabled under **Turn Windows features on or off**
+2. Within Docker -> Settings -> General, ensure that **Use the WSL 2 based engine is checked** and **Expose Docker daemon on tcp://localhost:2375 without TLS** is unchecked.
+3. Within Docker -> Settings -> Resources -> WSL Integration ensure that your installed WSL Ubuntu distro is checked. refer to this [docker doc](https://docs.docker.com/docker-for-windows/wsl/) for more help if required
+4. Open your WSL terminal and install the following dependencies:
+5. Complete steps 3-10, **skipping step 8 and step 4** of the [docker sync setup](https://docker-sync.readthedocs.io/en/latest/getting-started/installation.html#let-s-go) Step 8 is not required as WSL 2 does not require insecure Docker settings.
+6. Navigate to /mnt/YOUR_REPO_DIRECTORY within wsl. You can now run all of the below commands.
 
 <a id="orge005da4"></a>
 
 ### Installing docker-sync
 
     gem install docker-sync
-
 
 <a id="orgb33d5f6"></a>
 
@@ -77,7 +81,6 @@ and mount your local directory.
 
 In the second window:
 
-    make deps
     make setup
 
 This will fix config files and install sovtoken and sovtoken fees
@@ -88,20 +91,19 @@ Now we run our test:
 
 when you're all done using sync just use:
 
-    make clean 
-
+    make clean
 
 <a id="orga76b3c6"></a>
 
 ### Alternative for running tests
 
-To use this script, you will need to use make as instructed above.  Once you have the docker image running and synchronized, you can use run-test.sh to run individual tests.
+To use this script, you will need to use make as instructed above. Once you have the docker image running and synchronized, you can use run-test.sh to run individual tests.
 
-We have a shell script to assist with running tests.  Here's an example:
+We have a shell script to assist with running tests. Here's an example:
 
     ./run-test.sh token test_token_req_handler test_token_req_handler_MINT_PUBLIC_validate_missing_output
 
-The first parameter is required.  It can be either *token* or *fees*.  Anything else will return an error.
+The first parameter is required. It can be either _token_ or _fees_. Anything else will return an error.
 
 The remaining parameters are optional.
 
@@ -117,10 +119,8 @@ The third parameter is the name of the test.
 
         ./run-test.sh token test_token_req_handler
 
-
 <a id="orgd389b14"></a>
 
 ## How To Contribute
 
-Please follow the guide [here](./docs/pull-request.md). 
-
+Please follow the guide [here](./docs/pull-request.md).
