@@ -22,3 +22,6 @@ class FeeTxnCatchupHandler(XferFeeHandler):
 
     def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         pass
+
+    def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
+        pass

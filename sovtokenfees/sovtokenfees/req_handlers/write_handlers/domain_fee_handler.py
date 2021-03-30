@@ -27,6 +27,9 @@ class DomainFeeHandler(WriteRequestHandler):
     def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         pass
 
+    def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
+        pass
+
     def apply_request(self, request: Request, batch_ts, prev_result):
         txn_type = request.operation[TXN_TYPE]
         seq_no = get_seq_no(prev_result)
