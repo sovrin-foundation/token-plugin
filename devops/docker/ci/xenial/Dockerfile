@@ -20,13 +20,14 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
     rocksdb=5.8.8 \
     && rm -rf /var/lib/apt/lists/*
 
-# libindy and libindy-crypto
+# libindy
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
-    libindy-crypto=0.4.5 \
     libindy=1.13.0~1420 \
     libsovtoken=1.0.2~92 \
+    indy-node \
+    ursa \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \

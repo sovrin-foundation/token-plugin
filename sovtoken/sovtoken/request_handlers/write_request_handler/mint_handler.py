@@ -40,6 +40,9 @@ class MintHandler(WriteRequestHandler):
                                                                  field="*",
                                                                  value="*")])
 
+    def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
+        pass
+
     def update_state(self, txn, prev_result, request, is_committed=False):
         try:
             payload = get_payload_data(txn)

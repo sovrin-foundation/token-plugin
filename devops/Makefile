@@ -124,6 +124,13 @@ pre_package: python_version | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $@
 
+test_local_aws: image_ci
+	pushd .. \
+	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
+	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& popd
+	
+
 clean_pycache:
 	find $(SRC_DIR) \
 		-name '__pycache__' -delete -print \
