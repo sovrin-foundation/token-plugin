@@ -1,0 +1,40 @@
+FROM ubuntu:focal
+# TODO LABEL maintainer="Name <email-address>"
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y 
+# generally useful packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    apt-transport-https \
+    curl \
+    wget \
+    vim \
+    git \
+    procps \
+    autoconf \
+    automake \
+    g++ \
+    gcc \
+    make \
+    pkg-config \
+    zip \
+    unzip \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-add-repository ppa:brightbox/ruby-ng
+
+# install fpm
+ENV FPM_VERSION=1.9.3
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ruby2.6 \
+    ruby2.6-dev \
+    && gem install --no-document rake fpm:$FPM_VERSION \
+    && rm -rf /var/lib/apt/lists/*
+
+# TODO CMD ENTRYPOINT ...
+
+ENV BASE_ENV_VERSION=0.2.0

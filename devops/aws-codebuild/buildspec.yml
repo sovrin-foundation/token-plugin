@@ -3,14 +3,14 @@ version: 0.2
 env:
   variables:
     # expected
-    OSNAME: ""
-    SRC_DIR_NAME: ""
-    MAKE_GOALS: ""
+    OSNAME: "xenial"
+    SRC_DIR_NAME: "sovtoken"
+    MAKE_GOALS: "test"
+    PYTEST_ARGS: "-l -vv --junit-xml=/tmp/artifacts/logs/test.sovtoken.xml"
     # optional
     ARTIFACTS: ""
 
 phases:
-
   pre_build:
     commands:
       - echo Pre-Build started on `date`
@@ -42,4 +42,4 @@ artifacts:
   # https://forums.aws.amazon.com/thread.jspa?threadID=250742
   base-directory: /tmp/artifacts
   files:
-      - '**/*'
+    - "**/*"
