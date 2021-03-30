@@ -44,13 +44,11 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
     python3-pkg-resources=20.7.0-1 \
     python3-rocksdb=0.6.9 \
     supervisor \
-    python3-indy-crypto=0.4.5 \
     indy-plenum=${indy_plenum_ver} \
     indy-node=${INDY_NODE_VERSION} \
     libindy=1.13.0~1420 \
     libsovtoken=1.0.2~92 \
     ursa=0.3.2-1 \
-    libindy-crypto=0.4.5
     && rm -rf /var/lib/apt/lists/*
 
 # Indy SDK

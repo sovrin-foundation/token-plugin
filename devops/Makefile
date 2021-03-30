@@ -80,6 +80,11 @@ CI_IMAGE_BASED_TARGETS = test package clean
 
 $(patsubst %,image_%, $(CI_IMAGE_BASED_TARGETS)): image_ci
 
+xenial:
+	$(eval OSNAME = xenial)
+# this explicitly will build a 16.04 release (xenial). alternatively make <target> <OSNAME>= can be used, (currently focal and xenial are supported).
+image_ci_xenial: xenial image_ci
+
 pipenv_version:
 	pipenv --version
 
@@ -108,7 +113,8 @@ $(BUILD_DIR):
 test_local_aws: image_ci
 	pushd .. \
 	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
-	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtoken.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtokenfees.env \
 	&& popd
 	
 

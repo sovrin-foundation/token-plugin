@@ -121,6 +121,14 @@ The third parameter is the name of the test.
 
 <a id="orgd389b14"></a>
 
+### Devops ci/cd
+
+All ci/cd configuration for this project is stored within /devops . This includes a makefile used to build this project. Some useful make targets are:
+
+1. image_ci builds the token-plugin image in the same manner as the ci/cd scripts. Defaults to building using a base 20.04 ubuntu image. can be customised by specifying the OSNAME ie **make image_ci OSNAME=xenial**
+2. image_ci_xenial convenience target, results in the same build as **make image_ci OSNAME=xenial**
+3. test_local_aws execute a local aws codebuild, first building the image, defaulting to a base ubuntu 20.04 image, configurable in the same method as above.
+
 ## How To Contribute
 
 Please follow the guide [here](./docs/pull-request.md).

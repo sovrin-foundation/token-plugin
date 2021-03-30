@@ -38,12 +38,12 @@ RUN echo "deb https://repo.sovrin.org/sdk/deb bionic master" >> /etc/apt/sources
     apt-get update -y && apt-get install -y \ 
     libindy=1.13.0~1420
 
-# libindy-crypto and libsovtoken
+# libsovtoken
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
     libsovtoken=1.0.2~92 \
-    libindy-crypto=0.4.5 \
+    ursa=0.3.2-2 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
