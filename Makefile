@@ -14,7 +14,9 @@ test_helpers:
 	docker exec -u 0 -ti ${dirname:=_token_1} /bin/bash -c 'cd sovtokenfees/sovtokenfees/test/helpers/test && pytest --test_helpers'
 
 start:
+	pushd devops && make image_ci
 	docker-sync-stack start
+	popd
 clean:
 	docker-sync-stack clean
 

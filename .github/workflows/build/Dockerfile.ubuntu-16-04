@@ -1,0 +1,42 @@
+FROM hyperledger/indy-core-baseci:0.0.3-master
+LABEL maintainer="Hyperledger <hyperledger-indy@lists.hyperledger.org>"
+
+RUN apt-get update && apt-get install -y \
+    python3-nacl \
+    python3-pip \
+    software-properties-common \
+    # indy dependencies
+    ursa=0.3.2-2 \
+    libindy=1.13.0~1420 \
+    libsovtoken=1.0.2~92 \
+    # rocksdb python wrapper
+    libbz2-dev \
+    zlib1g-dev \
+    liblz4-dev \
+    libsnappy-dev \
+    rocksdb=5.8.8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# install fpm
+ENV FPM_VERSION=1.9.3
+RUN apt-add-repository ppa:brightbox/ruby-ng \
+    && apt-get update && apt-get install -y --no-install-recommends \
+    ruby-childprocess=0.5.9-1ubuntu1 \
+    ruby2.6 \
+    ruby2.6-dev \
+    && gem install --no-document rake fpm:$FPM_VERSION \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
+    && pip3 install -U \
+    setuptools==50.3.2 \
+    zipp==1.2.0 \
+    pytest==4.6.2 \
+    pytest-xdist==2.2.1 \
+    importlib_metadata==2.1.1 \
+    importlib_resources==3.2.1 \
+    python3-indy==1.13.0-dev-1420 \
+    indy-node==1.13.0.dev1225 \
+    mock==3.0.5
+
+RUN indy_image_clean

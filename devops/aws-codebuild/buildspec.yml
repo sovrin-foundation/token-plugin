@@ -10,7 +10,6 @@ env:
     ARTIFACTS: ""
 
 phases:
-
   pre_build:
     commands:
       - echo Pre-Build started on `date`
@@ -42,4 +41,4 @@ artifacts:
   # https://forums.aws.amazon.com/thread.jspa?threadID=250742
   base-directory: /tmp/artifacts
   files:
-      - '**/*'
+    - "**/*"
