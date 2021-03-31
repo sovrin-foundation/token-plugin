@@ -53,7 +53,7 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
 
-FPM_P_DEPENDS := indy-node(=1.13.0~dev1210)
+FPM_P_DEPENDS := indy-node(=1.13.0~dev1225)
 FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
 endif
 
@@ -123,6 +123,13 @@ pre_package: python_version | $(BUILD_DIR)
 
 $(BUILD_DIR):
 	mkdir -p $@
+
+test_local_aws: image_ci
+	pushd .. \
+	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
+	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& popd
+	
 
 clean_pycache:
 	find $(SRC_DIR) \

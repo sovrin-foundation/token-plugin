@@ -39,6 +39,9 @@ class SetFeesHandler(WriteRequestHandler):
                                                                   old_value="*",
                                                                   new_value="*")])
 
+    def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
+        pass
+
     def update_state(self, txn, prev_result, request, is_committed=False):
         payload = get_payload_data(txn)
         fees_from_req = payload.get(FEES)

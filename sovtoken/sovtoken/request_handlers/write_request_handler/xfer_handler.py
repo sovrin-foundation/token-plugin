@@ -40,6 +40,9 @@ class XferHandler(WriteRequestHandler):
                                                                           field="*",
                                                                           value="*")])
 
+    def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
+        pass
+
     @property
     def utxo_cache(self):
         return self.database_manager.get_store(UTXO_CACHE_LABEL)

@@ -26,6 +26,7 @@ RUN apt-add-repository ppa:brightbox/ruby-ng
 # install fpm
 ENV FPM_VERSION=1.9.3
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ruby-childprocess=0.5.9-1ubuntu1 \
     ruby2.6 \
     ruby2.6-dev \
     && gem install --no-document rake fpm:$FPM_VERSION \
