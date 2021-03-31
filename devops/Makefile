@@ -127,7 +127,7 @@ $(BUILD_DIR):
 test_local_aws: image_ci
 	pushd .. \
 	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
-	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
 	&& popd
 	
 
