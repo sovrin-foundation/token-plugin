@@ -19,8 +19,7 @@ metadata = {}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = []
-                 'python3-indy==1.13.0-dev-1420', 'pytest-asyncio>=0.14.0']
+tests_require = ['pip==9.0.3', 'pytest-xdist', 'mock', 'python-rocksdb==0.6.9']
 
 setup(
     name=metadata['__title__'],

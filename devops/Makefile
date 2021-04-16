@@ -66,7 +66,7 @@ image_ci_base_version:
 image_ci_version:
 	echo $(call docker_env_value,'CI_ENV_VERSION',$(CI_DOCKERFILE_PATH))
 
-image_ci: image_ci_base_version image_python3
+image_ci: 
 ifeq ($(DOCKER_TAG),)
 	$(eval DOCKER_TAG=$(call docker_env_value,'CI_ENV_VERSION',$(CI_DOCKERFILE_PATH))-$(OSNAME)-ci)
 endif
@@ -95,11 +95,9 @@ test: $(SRC_DIR)
 	echo "Running tests"
 # TODO improve usage of pipenv (remove pip completely)
 # seems pipenv has some bugs regarding extras
-	export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python3.8/dist-packages/"
 	cd $< \
-		&& pip install -U -e ../sovtoken \
-		&& pip install -U -e ../sovtokenfees \
-		&& pip install .[test] \
+		&& pip install -e ../sovtoken \
+		&& pip install -e ../sovtokenfees \
 		&& python3 -m pytest $(PYTEST_ARGS)
 
 pre_package: python_version | $(BUILD_DIR)
@@ -113,7 +111,7 @@ $(BUILD_DIR):
 test_local_aws: image_ci
 	pushd .. \
 	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
-	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtoken.env \
 	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtokenfees.env \
 	&& popd
 	
