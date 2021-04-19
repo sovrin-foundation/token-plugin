@@ -12,6 +12,9 @@ ifndef SRC_DIR_NAME
 SRC_DIR_NAME := sovtoken
 endif
 
+PACKAGE_NAME ?= $(SRC_DIR_NAME)
+
+
 ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtokenfees),)
 $(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtokenfees' but is '$(SRC_DIR_NAME)'")
 endif
@@ -34,8 +37,9 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
 
+FPM_P_NAME += $(PACKAGE_NAME) 
 FPM_P_DEPENDS := indy-node(=1.13.0~dev1225)
-FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
+FPM_ARGS := --no-python-dependencies $(FPM_ARGS) ../$(SRC_DIR_NAME)
 endif
 
 # docker related variables

@@ -83,7 +83,6 @@ endif
 
 endif
 
-
 # TODO deps with versions like "package (>= 1.0)"
 package: _check_fpm_args $(PRE_PACKAGE_GOALS)
 	$(FPM) $(FPM_ARGS)
@@ -113,10 +112,13 @@ image_python3: image_python3_base_version image_base
 	PYTHON3_DOCKER_VERSION=$(PYTHON3_DOCKER_VERSION) \
 		docker-compose -f $(_THIS_MK_ABS_DIR)/docker/docker-compose.yml build python3
 
-%_in_docker: image_%
+# target default implementation
+%_in_docker_opts: ;
+
+%_in_docker: image_% %_in_docker_opts
 	echo "Re-running goal $* in docker $(DOCKER_NAME):$(DOCKER_TAG)"
-	$(DOCKER) run --rm -t -u $(DOCKER_UID) \
-		-v $(PROJECT_DIR):/tmp/$(PROJECT_NAME) \
+	$(DOCKER) run --rm -t -u $(DOCKER_UID):$(DOCKER_UID) \
+		-v $(PROJECT_DIR):/tmp/$(PROJECT_NAME) $(DOCKER_OPTS) \
 		$(DOCKER_NAME):$(DOCKER_TAG) \
 		/bin/bash -cl \
 			'MAKEFLAGS="$(MAKEFLAGS)" $(foreach var,$(EXPORT_ENV),$(var)="$($(var))") \
