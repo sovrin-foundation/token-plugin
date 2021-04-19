@@ -8,10 +8,10 @@ from sovtokenfees.test.helper import InputsStrategy, OutputsStrategy
 
 def pytest_configure(config):
     config.addinivalue_line(
-       "markers", "io_border(int): mark test to use specific inputs/outputs addresses division"
+        "markers", "io_border(int): mark test to use specific inputs/outputs addresses division"
     )
     config.addinivalue_line(
-       "markers", "nym_fee(int): mark test to use specific nym fee value"
+        "markers", "nym_fee(int): mark test to use specific nym fee value"
     )
 
 

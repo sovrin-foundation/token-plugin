@@ -25,7 +25,6 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test import waits
 
 
-
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize

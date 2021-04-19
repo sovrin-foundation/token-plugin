@@ -29,8 +29,10 @@ class UTXONotFound(UTXOError):
 class UTXOAddressNotFound(UTXONotFound):
     pass
 
+
 class UTXOAlreadySpentError(UTXOError):
     pass
+
 
 class TokenValueError(PlenumValueError):
     pass

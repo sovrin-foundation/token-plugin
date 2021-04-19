@@ -35,9 +35,9 @@ def idr_cache():
 @pytest.fixture()
 def set_fees_request(libsovtoken, looper, trustees, wallet, fees):
     set_fees_future = build_set_txn_fees_req(wallet,
-                                         trustees[0],
-                                         "sov",
-                                         fees)
+                                             trustees[0],
+                                             "sov",
+                                             fees)
     set_fees_request = looper.loop.run_until_complete(set_fees_future)
     for trustee in trustees:
         set_fees_future = multi_sign_request(wallet, trustee, set_fees_request)

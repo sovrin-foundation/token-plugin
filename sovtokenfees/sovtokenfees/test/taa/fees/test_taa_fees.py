@@ -24,7 +24,6 @@ def test_nym_with_fees_with_taa(helpers,
     helpers.sdk.sdk_send_and_check([request])
 
 
-
 def test_nym_with_fees_no_taa(helpers,
                               addresses,
                               mint_tokens,

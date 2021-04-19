@@ -89,7 +89,7 @@ def test_invalid_fees_numeric(helpers, mint_tokens):
     _test_invalid_fees(-1, fees=1001)
     _test_invalid_fees(0, fees=1000)
     _test_invalid_fees(4.5, fees=None)
-    _test_invalid_fees(None, fees=None) 
+    _test_invalid_fees(None, fees=None)
 
 
 def test_zero_fees(
@@ -237,7 +237,7 @@ def test_fees_output_with_zero_tokens(
     empty_address = helpers.wallet.create_address()
     inputs = helpers.general.get_utxo_addresses([address_main])[0]
     outputs = [{ADDRESS: empty_address, AMOUNT: 0}]
- 
+
     request = helpers.request.nym()
     request = helpers.request.add_fees_specific(request, inputs, outputs)[0]
 

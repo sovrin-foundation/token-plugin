@@ -85,4 +85,3 @@ class TxnResponse:
         data = self.data
         data.pop(TXN_TYPE)
         return data
-

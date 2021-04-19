@@ -29,6 +29,7 @@ class UTXOCache(OptimisticKVStore):
     An unspent output is the combination of an address and a reference (seq no) to a txn in which this address was
     transferred some tokens
     """
+
     def __init__(self, kv_store: KeyValueStorage):
         super().__init__(kv_store)
 
@@ -153,14 +154,14 @@ class UTXOAmounts:
                 self.data)
             raise UTXONotFound(err_msg)
 
-        if i < len(self.data) and (i+1) < len(self.data):
+        if i < len(self.data) and (i + 1) < len(self.data):
             self.data.pop(i)
             # List has changed length, value at index `i+1` has moved to index `i`
             self.data.pop(i)
         else:
             raise UTXOError("Unable to remove seq_no from address")
 
-    def sum_amounts(self, seq_nos:Set[int])->int:
+    def sum_amounts(self, seq_nos: Set[int]) -> int:
         total = 0
         for i in range(0, len(self.data), 2):
             if int(self.data[i]) in seq_nos:
@@ -193,7 +194,6 @@ class UTXOAmounts:
                     .format(self.data[i], self.data[i + 1], self.address)
                 )
             rtn.append(Output(self.address, seq_no, amount))
-
 
         return rtn
 

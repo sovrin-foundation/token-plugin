@@ -24,10 +24,9 @@ def schema_json(looper, sdk_pool_handle, sdk_wallet_trustee):
 
 @pytest.fixture()
 def claim_def_id(helpers,
-              schema_json,
-              sdk_wallet_trustee):
+                 schema_json,
+                 sdk_wallet_trustee):
     req = helpers.request.claim_def(schema_json, sdk_wallet=sdk_wallet_trustee)
     req = Request(**json.loads(req))
     write_rep = helpers.sdk.send_and_check_request_objects([req], wallet=sdk_wallet_trustee)
     return write_rep[0][1]['result'][TXN_METADATA][TXN_METADATA_ID]
-

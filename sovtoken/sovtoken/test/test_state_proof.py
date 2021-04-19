@@ -31,7 +31,7 @@ def test_state_proof(public_minting, looper,  # noqa
                  for _ in lst]
         seq_no, amount = utxos[0]
         inputs = [[seller_token_wallet, seller_address, seq_no]]
-        outputs = [{"address": user1_address, "amount": 1}, {"address": seller_address, "amount": amount-1}]
+        outputs = [{"address": user1_address, "amount": 1}, {"address": seller_address, "amount": amount - 1}]
         res = send_xfer(looper, inputs, outputs, sdk_pool_handle)
         update_token_wallet_with_result(seller_token_wallet, res)
         res = send_get_utxo(looper, seller_address, sdk_wallet_client,

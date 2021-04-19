@@ -187,16 +187,16 @@ class HelperSdk():
         _, submitter_did = wallet
         node_nym = hexToFriendly(node.nodestack.verhex)
         return self._looper.loop.run_until_complete(
-                prepare_node_request(submitter_did,
-                                     new_node_name=node.name,
-                                     clientIp=None,
-                                     clientPort=None,
-                                     nodeIp=None,
-                                     nodePort=None,
-                                     bls_key=None,
-                                     destination=node_nym,
-                                     services=services,
-                                     key_proof=None))
+            prepare_node_request(submitter_did,
+                                 new_node_name=node.name,
+                                 clientIp=None,
+                                 clientPort=None,
+                                 nodeIp=None,
+                                 nodePort=None,
+                                 bls_key=None,
+                                 destination=node_nym,
+                                 services=services,
+                                 key_proof=None))
 
     def sdk_build_demote_txn(self, node, wallet):
         req_str = self.sdk_prepare_node_request(node, wallet, [])

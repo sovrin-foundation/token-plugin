@@ -36,6 +36,7 @@ def test_add_metadata_with_not_existed_alias(looper,
                                              field=ROLE, new_value=STEWARD,
                                              old_value=None, constraint=constraint.as_dict)
 
+
 def test_add_metadata_with_complex_constraint(looper,
                                               helpers,
                                               sdk_wallet_trustee,

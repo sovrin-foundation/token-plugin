@@ -39,4 +39,3 @@ def mint_tokens(helpers, addresses, set_acceptance_mechanism, set_transaction_au
 def mint_tokens_no_taa(helpers, addresses):
     outputs = [{ADDRESS: addresses[0], AMOUNT: 1000}]
     return helpers.general.do_mint(outputs)
-

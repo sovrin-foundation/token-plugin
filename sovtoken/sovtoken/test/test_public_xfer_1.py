@@ -12,6 +12,7 @@ from sovtoken.test.helper import user1_token_wallet, libsovtoken_address_to_addr
 def addresses(helpers):
     return helpers.wallet.create_new_addresses(5)
 
+
 @pytest.fixture
 def addresses_inner(helpers):
     return helpers.inner.wallet.create_new_addresses(5)
@@ -24,6 +25,7 @@ def initial_mint(helpers, addresses):
     responses = helpers.sdk.send_and_check_request_objects([mint_request])
     result = helpers.sdk.get_first_result(responses)
     return result
+
 
 @pytest.fixture
 def initial_mint_inner(helpers, addresses_inner):

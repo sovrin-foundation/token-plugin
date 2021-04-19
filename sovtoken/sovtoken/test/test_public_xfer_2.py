@@ -33,6 +33,7 @@ def initial_mint(helpers, addresses):
     outputs = [{"address": address, "amount": 100} for address in addresses]
     return helpers.general.do_mint(outputs)
 
+
 @pytest.fixture
 def initial_mint_inner(helpers, addresses_inner):
     outputs = [{"address": "pay:sov:" + address, "amount": 100} for address in addresses_inner]

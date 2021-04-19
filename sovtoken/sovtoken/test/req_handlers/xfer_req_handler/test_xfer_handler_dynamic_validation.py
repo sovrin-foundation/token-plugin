@@ -24,4 +24,4 @@ def test_xfer_handler_dynamic_validation_utxo_not_exists(xfer_handler, invalid_a
     with pytest.raises(InvalidFundsError):
         xfer_handler.dynamic_validation(invalid_amount_xfer_request_utxo_does_not_exist, 0)
         pytest.fail(message="InvalidFundsError(\"seq_nos {{2}} are not found in list of seq_nos_amounts for "
-                               "address {} -- current list: ['1', '10']\",)".format(libsovtoken_address_to_address(payment_address)))
+                    "address {} -- current list: ['1', '10']\",)".format(libsovtoken_address_to_address(payment_address)))

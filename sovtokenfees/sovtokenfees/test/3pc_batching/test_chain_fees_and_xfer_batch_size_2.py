@@ -128,4 +128,3 @@ def test_chain_fees_and_xfer_batch_size_2(looper, helpers,
     assert c_nym_get[OUTPUTS][0][AMOUNT] == c_nym_amount == transfer_summ - fees.get(NYM_FEES_ALIAS, 0)
 
     ensure_all_nodes_have_same_data(looper, nodeSetWithIntegratedTokenPlugin)
-

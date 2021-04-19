@@ -7,10 +7,11 @@ def _val_to_exception(validation_result):
     if validation_result:
         raise Exception(validation_result)
 
+
 def test_fees_variations():
     test_fees = [  # valid
         [
-            {"address":"2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "seqNo": 2}
+            {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "seqNo": 2}
         ],
         [
             {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}
@@ -45,7 +46,7 @@ def test_fees_variations():
 
     test_fees = [  # invalid input as tuple
         [
-         ("2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", 2)
+            ("2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", 2)
         ],
         [
             {"address": "2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es", "amount": 9}

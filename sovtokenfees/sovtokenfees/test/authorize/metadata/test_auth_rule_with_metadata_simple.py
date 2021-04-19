@@ -262,10 +262,10 @@ def test_plugin_simple_rule_0_sig_owner_no_endorser(write_auth_req_validator, wr
         valid_actions=[Action(author=IDENTITY_OWNER, endorser=None, sigs={},
                               is_owner=owner, amount=2, extra_sigs=False)
                        for owner in [True, False]] +
-                      [Action(author=IDENTITY_OWNER, endorser=None, sigs={IDENTITY_OWNER: s},
-                              is_owner=owner, amount=2, extra_sigs=False)
-                       for owner in [True, False]
-                       for s in range(1, MAX_SIG_COUNT + 1)],
+        [Action(author=IDENTITY_OWNER, endorser=None, sigs={IDENTITY_OWNER: s},
+                is_owner=owner, amount=2, extra_sigs=False)
+         for owner in [True, False]
+         for s in range(1, MAX_SIG_COUNT + 1)],
         author=IDENTITY_OWNER, endorser=None,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,

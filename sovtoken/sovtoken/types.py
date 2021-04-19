@@ -19,9 +19,9 @@ class Output:
 
     def __eq__(self, other):
         return isinstance(other, Output) \
-               and self.address == other.address \
-               and self.seqNo == other.seqNo \
-               and self.amount == other.amount
+            and self.address == other.address \
+            and self.seqNo == other.seqNo \
+            and self.amount == other.amount
 
     def __hash__(self) -> int:
         return hash(self.address) + hash(self.seqNo) + hash(self.amount)

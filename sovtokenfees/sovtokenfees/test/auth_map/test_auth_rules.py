@@ -71,15 +71,15 @@ input_params_map = [
                    RequestParams(fees=fee_5[1],
                                  wallets={TRUSTEE: 1,
                                           STEWARD: 1}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=fee_5[1],
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=fee_5[1],
                                  wallets={IDENTITY_OWNER: 1})
-               ]),
+    ]),
     # 1
     InputParam(auth_constraint=AuthConstraintAnd([AuthConstraint(STEWARD, 2,
                                                                  metadata={FEES_FIELD_NAME: fee_5[0]}),
@@ -92,8 +92,8 @@ input_params_map = [
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 3,
                                           TRUSTEE: 2}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 3}),
                    RequestParams(fees=fee_5[1],
@@ -101,7 +101,7 @@ input_params_map = [
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 1,
                                           TRUSTEE: 1})
-               ]),
+    ]),
     # 2
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 1,
                                                                 metadata={FEES_FIELD_NAME: fee_2[0]}),
@@ -115,13 +115,13 @@ input_params_map = [
                    RequestParams(fees=fee_2[1],
                                  wallets={STEWARD: 1,
                                           TRUSTEE: 1}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_6[1],
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=fee_5[1],
                                  wallets={TRUSTEE: 1})
-               ]),
+    ]),
     # 3
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 3,
                                                                 metadata={FEES_FIELD_NAME: fee_1[0]}),
@@ -141,15 +141,15 @@ input_params_map = [
                                  wallets={STEWARD: 3,
                                           TRUSTEE: 1,
                                           IDENTITY_OWNER: 1}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 2}),
                    RequestParams(fees=fee_100[1],
                                  wallets={ENDORSER: 1}),
                    RequestParams(fees=fee_100[1],
                                  wallets={TRUSTEE: 1})
-               ]),
+    ]),
     # 4
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 3,
                                                                 metadata={FEES_FIELD_NAME: fee_1[0]}),
@@ -166,15 +166,15 @@ input_params_map = [
                                  wallets={STEWARD: 3}),
                    RequestParams(wallets={STEWARD: 1,
                                           TRUSTEE: 1})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={ENDORSER: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1})
-               ]),
+    ]),
     # 5
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 1,
                                                                 need_to_be_owner=False,
@@ -192,14 +192,14 @@ input_params_map = [
                    RequestParams(fees=fee_3[1],
                                  owner=STEWARD,
                                  wallets={STEWARD: 2})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  owner=STEWARD,
                                  wallets={STEWARD: 2}),
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1})
-               ]),
+    ]),
     # 6
     InputParam(auth_constraint=AuthConstraintAnd([AuthConstraint(STEWARD, 1,
                                                                  need_to_be_owner=False,
@@ -212,8 +212,8 @@ input_params_map = [
                    RequestParams(fees=fee_3[1],
                                  owner=STEWARD,
                                  wallets={STEWARD: 2}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_3[1],
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=fee_1[1],
@@ -224,7 +224,7 @@ input_params_map = [
                    RequestParams(fees=0,
                                  owner=STEWARD,
                                  wallets={STEWARD: 2})
-               ]),
+    ]),
     # 7
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint("*", 1,
                                                                 metadata={FEES_FIELD_NAME: fee_5[0]}),
@@ -246,15 +246,15 @@ input_params_map = [
                                           TRUSTEE: 1}),
                    RequestParams(fees=fee_5[1],
                                  wallets={TRUSTEE: 1}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_1[1],
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=fee_1[1],
                                  wallets={IDENTITY_OWNER: 1}),
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 1})
-               ]),
+    ]),
     # 8
     InputParam(auth_constraint=AuthConstraint(TRUSTEE, 3,
                                               metadata={FEES_FIELD_NAME: fee_0[0]}),
@@ -262,15 +262,15 @@ input_params_map = [
                    RequestParams(wallets={TRUSTEE: 3}),
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 4})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_1[1],
                                  wallets={TRUSTEE: 3}),
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 3})
-               ]),
+    ]),
     # 9
     InputParam(auth_constraint=AuthConstraint(TRUSTEE, 1),
                valid_requests=[
@@ -278,11 +278,11 @@ input_params_map = [
                                  wallets={TRUSTEE: 1}),
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 2})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 1})
-               ]),
+    ]),
     # 10
     InputParam(auth_constraint=AuthConstraint("*", 1,
                                               need_to_be_owner=True,
@@ -298,11 +298,11 @@ input_params_map = [
                                  owner=TRUSTEE,
                                  wallets={TRUSTEE: 1,
                                           STEWARD: 1})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_1[1],
                                  wallets={STEWARD: 1})
-               ]),
+    ]),
     # 11
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(TRUSTEE, 3),
                                                  AuthConstraint(STEWARD, 1,
@@ -317,13 +317,13 @@ input_params_map = [
                    RequestParams(fees=0,
                                  owner=STEWARD,
                                  wallets={STEWARD: 1})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={TRUSTEE: 2})
-               ]),
+    ]),
     # 12
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 1,
                                                                 metadata={FEES_FIELD_NAME: fee_5[0]}),
@@ -336,11 +336,11 @@ input_params_map = [
                                  wallets={STEWARD: 2}),
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 2}),
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1})
-               ]),
+    ]),
     # 13
     InputParam(auth_constraint=AuthConstraintOr([AuthConstraint(STEWARD, 1,
                                                                 metadata={FEES_FIELD_NAME: fee_5[0]}),
@@ -351,37 +351,37 @@ input_params_map = [
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1})
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 2})
-               ]),
+    ]),
     # 14
     InputParam(auth_constraint=AuthConstraintForbidden(),
                valid_requests=[
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 2}),
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1})
-               ]),
+    ]),
     # 15
     InputParam(auth_constraint=AuthConstraintAnd([AuthConstraintForbidden(),
                                                   AuthConstraint(STEWARD, 1),
                                                   ]),
                valid_requests=[
-               ],
-               invalid_requests=[
+    ],
+        invalid_requests=[
                    RequestParams(fees=fee_5[1],
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={STEWARD: 1}),
                    RequestParams(fees=0,
                                  wallets={IDENTITY_OWNER: 2})
-               ]),
+    ]),
 ]
 
 
@@ -480,9 +480,9 @@ def _send_request(looper, helpers, fees, wallets_count, address, owner, sdk_wall
                   sdk_wallet_clients, sdk_wallet_endorsers):
     print(wallets_count)
     wallets = sdk_wallet_trustees[:wallets_count.get(TRUSTEE, 0)] + \
-              sdk_wallet_stewards[:wallets_count.get(STEWARD, 0)] + \
-              sdk_wallet_clients[:wallets_count.get(IDENTITY_OWNER, 0)] + \
-              sdk_wallet_endorsers[:wallets_count.get(ENDORSER, 0)]
+        sdk_wallet_stewards[:wallets_count.get(STEWARD, 0)] + \
+        sdk_wallet_clients[:wallets_count.get(IDENTITY_OWNER, 0)] + \
+        sdk_wallet_endorsers[:wallets_count.get(ENDORSER, 0)]
     # prepare owner parameter
     if owner == TRUSTEE:
         sender_wallet = sdk_wallet_trustees[0]

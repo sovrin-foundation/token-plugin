@@ -49,10 +49,10 @@ class MintHandler(WriteRequestHandler):
             seq_no = get_seq_no(txn)
             for output in payload[OUTPUTS]:
                 TokenStaticHelper.add_new_output(
-                               self.state,
-                               self.database_manager.get_store(UTXO_CACHE_LABEL),
-                               Output(output["address"], seq_no, output["amount"]),
-                               is_committed=is_committed)
+                    self.state,
+                    self.database_manager.get_store(UTXO_CACHE_LABEL),
+                    Output(output["address"], seq_no, output["amount"]),
+                    is_committed=is_committed)
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)
             raise OperationError(error)

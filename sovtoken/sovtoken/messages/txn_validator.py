@@ -73,7 +73,6 @@ def txn_mint_public_validate(request: Request):
         return error
 
 
-
 def txn_xfer_public_validate(request: Request):
     operation = request.operation
     if operation[TXN_TYPE] == XFER_PUBLIC:

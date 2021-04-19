@@ -54,4 +54,4 @@ def test_last_committed_after_catchup(looper, helpers,
         reverted_node.start_catchup()
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))
         assert get_last_committed_from_tracker(reverted_node) ==\
-               get_last_committed_from_tracker(node_set[0])
+            get_last_committed_from_tracker(node_set[0])

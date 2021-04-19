@@ -41,6 +41,7 @@ def req_with_fees(helpers,
         utxos=utxos,
     )
 
+
 @pytest.fixture()
 def fees_constraint():
     return AuthConstraint(role='*',
@@ -53,7 +54,7 @@ def fees_constraint():
 def fees_authorizer(fees):
     authorizer = FeesAuthorizer(config_state=PruningState(KeyValueStorageInMemory()),
                                 utxo_cache=UTXOCache(KeyValueStorageInMemory()))
-    authorizer.calculate_fees_from_req=lambda *args, **kwargs: fees.get(NYM_FEES_ALIAS)
+    authorizer.calculate_fees_from_req = lambda *args, **kwargs: fees.get(NYM_FEES_ALIAS)
     return authorizer
 
 

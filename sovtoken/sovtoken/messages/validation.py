@@ -32,6 +32,3 @@ def static_req_validation(request: Request):
                                    request.reqId,
                                    "Invalid type in operation",
                                    txn_type)
-
-
-

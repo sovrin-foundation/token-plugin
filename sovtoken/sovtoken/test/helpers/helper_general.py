@@ -4,6 +4,7 @@ import base58
 from sovtoken.constants import RESULT, OUTPUTS, SEQNO, ADDRESS
 from indy.payment import parse_get_payment_sources_response
 
+
 class HelperGeneral():
     """
     Helper that uses all the other helpers.

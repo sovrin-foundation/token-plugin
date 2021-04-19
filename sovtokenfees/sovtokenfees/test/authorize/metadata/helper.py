@@ -16,6 +16,7 @@ Action = NamedTuple('Action',
                     [("author", str), ("endorser", Optional[str]), ("sigs", dict),
                      ("is_owner", bool), ("amount", int), ("extra_sigs", bool)])
 
+
 def set_auth_constraint(validator, auth_constraint):
     def _set_to_state(state, constraint):
         if constraint.constraint_id == ConstraintsEnum.FORBIDDEN_CONSTRAINT_ID:
@@ -99,4 +100,3 @@ def is_expected(next_action: Action, valid_actions: List[Action]):
             continue
         return True
     return False
-

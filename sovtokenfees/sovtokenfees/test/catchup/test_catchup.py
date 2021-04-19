@@ -50,7 +50,7 @@ def test_valid_txn_with_fees(helpers, mint_tokens, fees_set,
         }]
         outputs = [
             {ADDRESS: address, AMOUNT: 1},
-            {ADDRESS: address_main, AMOUNT: remaining - 2}, # XFER fee is 1
+            {ADDRESS: address_main, AMOUNT: remaining - 2},  # XFER fee is 1
         ]
         request = helpers.request.transfer(inputs, outputs)
         response = helpers.sdk.send_and_check_request_objects([request])

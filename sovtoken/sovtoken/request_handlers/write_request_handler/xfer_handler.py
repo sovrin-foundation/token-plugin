@@ -52,20 +52,20 @@ class XferHandler(WriteRequestHandler):
             payload = get_payload_data(txn)
             for inp in payload[INPUTS]:
                 TokenStaticHelper.spend_input(
-                            self.state,
-                            self.utxo_cache,
-                            inp["address"],
-                            inp["seqNo"],
-                            is_committed=is_committed)
+                    self.state,
+                    self.utxo_cache,
+                    inp["address"],
+                    inp["seqNo"],
+                    is_committed=is_committed)
             for output in payload[OUTPUTS]:
                 seq_no = get_seq_no(txn)
                 TokenStaticHelper.add_new_output(
-                               self.state,
-                               self.utxo_cache,
-                               Output(output["address"],
-                                      seq_no,
-                                      output["amount"]),
-                               is_committed=is_committed)
+                    self.state,
+                    self.utxo_cache,
+                    Output(output["address"],
+                           seq_no,
+                           output["amount"]),
+                    is_committed=is_committed)
         except UTXOError as ex:
             error = 'Exception {} while updating state'.format(ex)
             raise OperationError(error)
@@ -81,9 +81,9 @@ class XferHandler(WriteRequestHandler):
     def _do_validate_inputs_ouputs(self, request):
         try:
             sum_in = TokenStaticHelper.sum_inputs(
-                                self.utxo_cache,
-                                request,
-                                is_committed=False)
+                self.utxo_cache,
+                request,
+                is_committed=False)
 
             sum_out = TokenStaticHelper.sum_outputs(request)
         except Exception as ex:

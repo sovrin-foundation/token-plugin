@@ -21,7 +21,6 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test import waits
 
 
-
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
@@ -41,11 +40,11 @@ def test_multiple_batches_for_one_node(looper, helpers,
     amount = get_amount_from_token_txn(mint_tokens)
     init_seq_no = 1
     request1, request2, request3 = nyms_with_fees(3,
-                                                   helpers,
-                                                   fees_set,
-                                                   address_main,
-                                                   amount,
-                                                   init_seq_no=init_seq_no)
+                                                  helpers,
+                                                  fees_set,
+                                                  address_main,
+                                                  amount,
+                                                  init_seq_no=init_seq_no)
 
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)

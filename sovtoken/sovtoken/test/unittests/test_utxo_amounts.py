@@ -48,6 +48,7 @@ def test_init_bytearray():
     amount = UTXOAmounts(VALID_ADDR_1, val)
     assert amount.data == ['10', '10']
 
+
 def test_init_invalid():
     val = [10, 11, 12, 5, 13, 6]
     with pytest.raises(UTXOError):
@@ -59,6 +60,7 @@ def test_parse_val_invalid_wrong_split():
 
     with pytest.raises(UTXOError):
         UTXOAmounts(VALID_ADDR_1, val)
+
 
 def test_parse_val_empty():
     amount = UTXOAmounts(VALID_ADDR_1, "")
