@@ -69,8 +69,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
     && add-apt-repository "deb http://archive.ubuntu.com/ubuntu xenial universe main" \
     && apt-get update -y && apt-get install -y \ 
     libindy=1.15.0~1625-bionic \
-    indy-plenum=1.12.4.dev.0 \
-    indy-node=1.12.4.dev.0 \
+    indy-plenum=1.13.0.dev.0 \
+    indy-node=1.13.0.dev.0 \
     libsodium23
 
 # pypi based packages

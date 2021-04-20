@@ -160,7 +160,7 @@ jobs:
         run: python3 -m flake8
   build_token_plugin_release:
     name: Token Plugin Release
-    needs: [workflow-setup, build-image]
+    needs: [workflow-setup, build-image, token_plugin_tests]
     runs-on: ubuntu-20.04
     env:
       DOCKER_FILE_POSTFIX: ${{ needs.workflow-setup.outputs.DOCKER_FILE_POSTFIX }}
