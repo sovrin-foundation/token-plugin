@@ -93,7 +93,7 @@ def test_verify_success(node, user2_token_wallet, user2_address, user1_address):
     msg = b'identifier:24xHHVDRq97Hss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY|operation:extra:|inputs:24xHHVDRq97Hss5Bx' \
           b'iTciEDsve7nYNx1pxAMi9RAvcWMouviSY,1|outputs:2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7Es,10,24xHH' \
           b'VDRq97Hss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY,10|type:10001|reqId:1525258251652534'
-    assert True == addressSigVerifier_obj.verify(sig, msg)
+    assert addressSigVerifier_obj.verify(sig, msg)
 
 
 # This test that the verKey can't verify the signature. The hardcoded values come from debug mode of running
@@ -105,7 +105,7 @@ def test_verify_fail():
     ser_data = b'identifier:24xHHVDRq97Hss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY|operation:extra:|inputs:24xHHVDRq97H' \
                b'ss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY,2|outputs:2jS4PHWQJKcawRxdW6GVsjnZBa1ecGdCssn7KhWYJZGTXgL7E' \
                b's,10,24xHHVDRq97Hss5BxiTciEDsve7nYNx1pxAMi9RAvcWMouviSY,10|type:10001|reqId:1525258344537237'
-    assert False == addressSigVerifier_obj.verify(sig, ser_data)
+    assert addressSigVerifier_obj.verify(sig, ser_data) is False
 
 
 # -------------------------Test authenticate method---------------------------------------------------------------------
@@ -305,7 +305,7 @@ def test_serializeForSig_XFER_PUBLIC_path(node, user2_token_wallet, user2_addres
     request = xfer_request(inputs, outputs)
     msg = request.as_dict
     serialize_for_sig_called = token_authnr.serializeForSig(msg, VALID_IDENTIFIER, None)
-    assert serialize_for_sig_called == True
+    assert serialize_for_sig_called
 
 
 # This test that the serializeForSig method is being called when a MINT_PUBLIC request is submitted
@@ -319,7 +319,7 @@ def test_serializeForSig_MINT_PUBLIC_path(helpers, node, addresses):
     outputs = [[SF_address, 30], [user1_address, 30]]
     request = helpers.request.mint(outputs)
     msg = request.as_dict
-    serialize_for_sig_called = token_authnr.serializeForSig(msg, VALID_IDENTIFIER, None)
+    token_authnr.serializeForSig(msg, VALID_IDENTIFIER, None)
     token_authnr.serializeForSig.assert_called()
 
 

@@ -23,8 +23,6 @@ class AbstractHelperRequest:
     - fees_signatures
     """
 
-
-
     def add_fees(
         self,
         request,
@@ -52,12 +50,12 @@ class AbstractHelperRequest:
             change_mod = change % len(change_address)
             outputs = []
             for address in change_address:
-                outputs.append({ADDRESS: address, AMOUNT: change_part+change_mod})
-                change_mod = 0 # Only add remainder once
+                outputs.append({ADDRESS: address, AMOUNT: change_part + change_mod})
+                change_mod = 0  # Only add remainder once
         else:
             outputs = []
 
-        logger.info("*"*20)
+        logger.info("*" * 20)
         logger.info(str(outputs))
 
         request = self.add_fees_specific(request, inputs, outputs)

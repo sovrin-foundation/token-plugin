@@ -1,4 +1,4 @@
-FROM ubuntu:xenial
+FROM hyperledger/indy-core-baseci:0.0.3-master
 # TODO LABEL maintainer="Name <email-address>"
 
 # generally useful packages

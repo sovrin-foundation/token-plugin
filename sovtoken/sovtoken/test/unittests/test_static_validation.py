@@ -50,6 +50,7 @@ def test_XFER_PUBLIC_validate_success():
     ret_val = txn_xfer_public_validate(request)
     assert ret_val is None
 
+
 def test_XFER_PUBLIC_validate_missing_output():
     request = Request(VALID_IDENTIFIER, VALID_REQID, {TXN_TYPE: XFER_PUBLIC, INPUTS: [{"address": VALID_ADDR_2, "seqNo": 1}]},
                       None, SIGNATURES, 1)

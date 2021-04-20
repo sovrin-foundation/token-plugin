@@ -123,7 +123,7 @@ class FeesAuthorizer(AbstractAuthorizer):
     def authorize(self,
                   request,
                   auth_constraint: AuthConstraint,
-                  auth_action: AbstractAuthAction=None):
+                  auth_action: AbstractAuthAction = None):
         fees_alias = self._get_fees_alias_from_constraint(auth_constraint)
         fees = self._get_fees_from_state()
         fees_amount = fees.get(fees_alias, 0)

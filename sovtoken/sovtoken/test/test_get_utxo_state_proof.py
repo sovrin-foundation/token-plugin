@@ -19,9 +19,9 @@ def make_tokens(helpers, nodeSetWithIntegratedTokenPlugin, addresses):
     states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
     utxos = []
 
-    for i in range(UTXO_LIMIT+200):
+    for i in range(UTXO_LIMIT + 200):
         amount = randint(1, 5)
-        seq_no = i+5
+        seq_no = i + 5
         key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address), seq_no)
         utxos.append((key, amount, seq_no))
         for state in states:

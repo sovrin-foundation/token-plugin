@@ -19,6 +19,8 @@ TXN_FEES = {
 step1_info = """
     Create an address
 """
+
+
 def create_client_address(helpers):
     client_address = helpers.wallet.create_address()
 
@@ -31,6 +33,8 @@ def create_client_address(helpers):
 step2_info = """
     Set a fee for nym transactions.
 """
+
+
 def set_fee_for_nym_transactions(helpers):
     result = helpers.general.do_set_fees(TXN_FEES)
     assert get_payload_data(result)[FEES][NYM_FEES_ALIAS] == TXN_FEES[NYM_FEES_ALIAS]
@@ -44,6 +48,8 @@ def set_fee_for_nym_transactions(helpers):
 step3_info = """
     Get current fees and assert the fee is set for nym transactions.
 """
+
+
 def check_fee_set_for_nym_transactions(helpers):
     fees = helpers.general.do_get_fees()[FEES]
     assert fees[NYM_FEES_ALIAS] == TXN_FEES[NYM_FEES_ALIAS]
@@ -56,6 +62,8 @@ def check_fee_set_for_nym_transactions(helpers):
 step4_info = """
     Mint tokens for the client.
 """
+
+
 def mint_tokens_to_client(helpers, client_address):
     outputs = [{ADDRESS: client_address, AMOUNT: MINT_TOKEN_AMOUNT}]
     result = helpers.general.do_mint(outputs)
@@ -79,6 +87,8 @@ def mint_tokens_to_client(helpers, client_address):
 step5_info = """
     Send a nym request.
 """
+
+
 def create_and_send_nym_request(helpers, client_address, client_utxos):
     # =============
     # Create nym request and add fees.
@@ -110,6 +120,8 @@ def create_and_send_nym_request(helpers, client_address, client_utxos):
 step6_info = """
     Tokens charged for fee are no longer in the client wallet.
 """
+
+
 def check_tokens_at_address(helpers, client_address):
     client_utxos = helpers.general.get_utxo_addresses([client_address])[0]
     expected_amount = MINT_TOKEN_AMOUNT - TXN_FEES[NYM_FEES_ALIAS]
@@ -125,6 +137,8 @@ def check_tokens_at_address(helpers, client_address):
 step7_info = """
     Fee transaction is on the ledger.
 """
+
+
 def check_fee_request_on_ledger(helpers, client_address, nym_result):
     transactions = helpers.node.get_last_ledger_transaction_on_nodes(TOKEN_LEDGER_ID)
     for fee_txn in transactions:
@@ -149,6 +163,8 @@ def check_fee_request_on_ledger(helpers, client_address, nym_result):
 step8_info = """
     Fees are automatically distributed.
 """
+
+
 def distribute_fees():
     demo_logger.log_header(step8_info)
     demo_logger.log_blue("Not implemented")

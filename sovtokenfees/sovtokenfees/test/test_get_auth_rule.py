@@ -143,7 +143,7 @@ def test_get_all_auth_rule_transactions_after_write(looper,
     field = ROLE
     new_value = ENDORSER
     auth_constraint = generate_constraint_list(auth_constraints=[generate_constraint_entity(role=TRUSTEE),
-                                                            generate_constraint_entity(role=STEWARD)])
+                                                                 generate_constraint_entity(role=STEWARD)])
     resp = sdk_send_and_check_auth_rule_request(looper,
                                                 sdk_pool_handle,
                                                 sdk_wallet_trustee,

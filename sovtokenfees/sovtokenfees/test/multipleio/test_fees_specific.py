@@ -47,7 +47,7 @@ def test_nym_with_no_change_no_outputs(
     mint_multiple_tokens,
     send_and_check_nym,
 ):
-   send_and_check_nym()
+    send_and_check_nym()
 
 
 @pytest.mark.io_border(ADDRESSES_NUM - 1)
@@ -57,4 +57,4 @@ def test_nym_with_output_not_in_inputs(
     mint_multiple_tokens,
     send_and_check_nym,
 ):
-   send_and_check_nym()
+    send_and_check_nym()

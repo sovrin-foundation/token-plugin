@@ -14,12 +14,12 @@ from plenum.common.constants import TXN_TYPE
 
 ALLOWED_FEES_TXNS = [
     TokenTransactions.XFER_PUBLIC.value,
-    "1", #NYM
-    "100", #ATTRIB
-    "101", #SCHEMA
-    "102", #CRED_DEF
-    "113", #REVOC_REG_DEF
-    "114", #REVOC_REG_ENTRY
+    "1",  # NYM
+    "100",  # ATTRIB
+    "101",  # SCHEMA
+    "102",  # CRED_DEF
+    "113",  # REVOC_REG_DEF
+    "114",  # REVOC_REG_ENTRY
 ]
 
 
@@ -35,6 +35,7 @@ class GetFeeMsg(MessageBase):
         (TXN_TYPE, ConstantField(GET_FEE)),
         (FEES_ALIAS, LimitedLengthStringField(max_length=FEE_ALIAS_LENGTH)),
     )
+
 
 class SetFeesField(MapField):
     def __init__(self, **kwargs):

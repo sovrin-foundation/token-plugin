@@ -13,7 +13,7 @@ def test_malicious_primary_sent_pp(looper, helpers,
                                    sdk_pool_handle,
                                    fees_set, address_main, mint_tokens):
     def raise_invalid_ex():
-        raise InvalidClientMessageException(1,2,"3")
+        raise InvalidClientMessageException(1, 2, "3")
     nodes = nodeSetWithIntegratedTokenPlugin
     amount = get_amount_from_token_txn(mint_tokens)
     init_seq_no = 1

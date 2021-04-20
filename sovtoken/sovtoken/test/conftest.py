@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from plenum.client.wallet import Wallet
 from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY
@@ -97,7 +98,7 @@ def nodeSetWithIntegratedTokenPlugin(do_post_node_creation, tconf, nodeSet):
     return nodeSet
 
 
-@pytest.fixture(scope='module') # noqa
+@pytest.fixture(scope='module')  # noqa
 def public_minting(
     helpers,
     SF_token_wallet,

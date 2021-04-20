@@ -22,6 +22,7 @@ from plenum.common.constants import DOMAIN_LEDGER_ID
 def _get_ppseqno(n):
     return n.master_replica._ordering_service.l_last_prepared_certificate_in_view()[1]
 
+
 def get_ppseqno_from_all_nodes(nodes):
     res = set()
     for n in nodes:
@@ -36,7 +37,7 @@ def check_batch_ordered(old, nodes):
 
 
 def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens,
-                               fees_set, helpers, looper, xfer_addresses):
+                                                            fees_set, helpers, looper, xfer_addresses):
     """
         Check that XFER and SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
     """
@@ -75,7 +76,7 @@ def test_revert_during_view_change_all_nodes_xfer_with_fees(nodeSetWithIntegrate
 
 
 def test_revert_during_view_change_all_nodes_set_fees(tconf, nodeSetWithIntegratedTokenPlugin,
-                                    fees_set, helpers, looper):
+                                                      fees_set, helpers, looper):
     """
         Check that SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
     """
@@ -105,7 +106,7 @@ def test_revert_during_view_change_all_nodes_set_fees(tconf, nodeSetWithIntegrat
 
 
 def test_revert_set_fees_and_view_change_all_nodes(nodeSetWithIntegratedTokenPlugin, xfer_mint_tokens, helpers, looper,
-                                         xfer_addresses):
+                                                   xfer_addresses):
     """
         Send SET_FEES and init view change. Check that it is reverted and transaction passes with old fees
     """

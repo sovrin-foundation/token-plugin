@@ -48,6 +48,7 @@ def test_init_bytearray():
     amount = UTXOAmounts(VALID_ADDR_1, val)
     assert amount.data == ['10', '10']
 
+
 def test_init_invalid():
     val = [10, 11, 12, 5, 13, 6]
     with pytest.raises(UTXOError):
@@ -59,6 +60,7 @@ def test_parse_val_invalid_wrong_split():
 
     with pytest.raises(UTXOError):
         UTXOAmounts(VALID_ADDR_1, val)
+
 
 def test_parse_val_empty():
     amount = UTXOAmounts(VALID_ADDR_1, "")
@@ -86,7 +88,7 @@ def test_add_amount():
         amount.add_amount(32, None)
 
 
-def test_remove_seq_no():
+def test_remove_seq_no_1():
     amount = UTXOAmounts(VALID_ADDR_1, "1:100:2:332")
     amount.remove_seq_no(2)
     assert len(amount.data) == 2
@@ -101,7 +103,7 @@ def test_remove_seq_no():
         amount.remove_seq_no(2)
 
 
-def test_as_output_list():
+def test_as_output_list_1():
     amount = UTXOAmounts(VALID_ADDR_1, "1:100:2:332")
     output_list = amount.as_output_list()
     assert len(output_list) == 2
@@ -136,7 +138,7 @@ def test_as_str_invalid():
     assert val == '10:11:12:5:13:6'
 
 
-def test_as_output_list():
+def test_as_output_list_2():
     with pytest.raises(UTXOError):
         UTXOAmounts(VALID_ADDR_1, '2:20:3:30:30:40:40:30:20').as_output_list()
     with pytest.raises(UTXOError):
@@ -156,7 +158,7 @@ def test_as_output_list():
                                                                ]
 
 
-def test_remove_seq_no():
+def test_remove_seq_no_2():
     seq_nos_amounts = ":".join(['2', '20', '3', '30', '30', '40', '40', '30', '20', '1'])
     amounts = UTXOAmounts(VALID_ADDR_1, seq_nos_amounts)
     original_length = len(amounts.data)

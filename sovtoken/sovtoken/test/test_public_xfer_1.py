@@ -12,6 +12,7 @@ from sovtoken.test.helper import user1_token_wallet, libsovtoken_address_to_addr
 def addresses(helpers):
     return helpers.wallet.create_new_addresses(5)
 
+
 @pytest.fixture
 def addresses_inner(helpers):
     return helpers.inner.wallet.create_new_addresses(5)
@@ -24,6 +25,7 @@ def initial_mint(helpers, addresses):
     responses = helpers.sdk.send_and_check_request_objects([mint_request])
     result = helpers.sdk.get_first_result(responses)
     return result
+
 
 @pytest.fixture
 def initial_mint_inner(helpers, addresses_inner):
@@ -56,7 +58,6 @@ def test_multiple_inputs_with_1_incorrect_input_sig(  # noqa
     addresses,
     initial_mint,
 ):
-    mint_seq_no = get_seq_no(initial_mint)
     [address1, address2, address3, *_] = addresses
 
     # Multiple inputs are used in a transaction but one of the inputs
@@ -80,7 +81,6 @@ def test_multiple_inputs_with_1_missing_sig(  # noqa
 ):
     # Multiple inputs are used in a transaction but one of the inputs's
     # signature is missing, so there are 3 inputs but only 2 signatures.
-    mint_seq_no = get_seq_no(initial_mint)
     [address1, address2, address3, *_] = addresses
 
     inputs = helpers.general.get_utxo_addresses([address1, address2])
@@ -224,7 +224,6 @@ def test_multiple_inputs_outputs_without_change(
     initial_mint
 ):
     [address1, address2, address3, address4, address5] = addresses
-    mint_seq_no = get_seq_no(initial_mint)
 
     inputs = helpers.general.get_utxo_addresses([address1, address2, address3])
     inputs = [utxo for utxos in inputs for utxo in utxos]
@@ -237,8 +236,7 @@ def test_multiple_inputs_outputs_without_change(
     request = helpers.request.transfer(inputs, outputs)
     response = helpers.sdk.send_and_check_request_objects([request])
     assert response[0][1]["result"]["reqSignature"] != {}
-    result = helpers.sdk.get_first_result(response)
-    xfer_seq_no = get_seq_no(result)
+    helpers.sdk.get_first_result(response)
 
     [
         address1_utxos,
@@ -265,10 +263,8 @@ def test_multiple_inputs_outputs_with_change(
     helpers,
     addresses,
     initial_mint,
-    user1_token_wallet,
 ):
     [address1, address2, address3, address4, address5] = addresses
-    mint_seq_no = get_seq_no(initial_mint)
 
     inputs = helpers.general.get_utxo_addresses([address1, address2, address3])
     inputs = [utxo for utxos in inputs for utxo in utxos]
@@ -282,8 +278,7 @@ def test_multiple_inputs_outputs_with_change(
     request = helpers.request.transfer(inputs, outputs)
     response = helpers.sdk.send_and_check_request_objects([request])
     assert response[0][1]["result"]["reqSignature"] != {}
-    result = helpers.sdk.get_first_result(response)
-    xfer_seq_no = get_seq_no(result)
+    helpers.sdk.get_first_result(response)
 
     [
         address1_utxos,

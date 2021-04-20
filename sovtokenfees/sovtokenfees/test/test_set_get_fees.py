@@ -49,7 +49,7 @@ def test_fees_can_be_zero(helpers):
     helpers.general.do_set_fees(fees)
 
     with pytest.raises(RequestRejectedException):
-        result = helpers.general.do_nym()
+        helpers.general.do_nym()
 
     fees = {NYM_FEES_ALIAS: 0}
     helpers.general.do_set_fees(fees)
@@ -107,8 +107,7 @@ def test_set_fees_with_stewards(helpers):
     """
     fees = {NYM_FEES_ALIAS: 1}
     fees_request = helpers.request.set_fees(fees)
-    sigs = [(k, v) for k, v in fees_request.signatures.items()]
-    sigs.sort()
+    sigs = sorted([(k, v) for k, v in fees_request.signatures.items()])
     sigs.pop(0)
     fees_request.signatures = {k: v for k, v in sigs}
     assert len(fees_request.signatures) == 2
@@ -225,7 +224,7 @@ def test_mint_after_set_fees(helpers, fees_set):
     # Try another minting after setting fees
     address = helpers.wallet.create_address()
     outputs = [{ADDRESS: address, AMOUNT: 60}]
-    mint_req = helpers.general.do_mint(outputs)
+    helpers.general.do_mint(outputs)
     utxos = helpers.general.get_utxo_addresses([address])[0]
     assert utxos[0][PAYMENT_ADDRESS] == address
     assert utxos[0][AMOUNT] == 60

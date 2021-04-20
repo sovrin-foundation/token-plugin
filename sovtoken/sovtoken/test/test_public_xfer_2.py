@@ -33,6 +33,7 @@ def initial_mint(helpers, addresses):
     outputs = [{"address": address, "amount": 100} for address in addresses]
     return helpers.general.do_mint(outputs)
 
+
 @pytest.fixture
 def initial_mint_inner(helpers, addresses_inner):
     outputs = [{"address": "pay:sov:" + address, "amount": 100} for address in addresses_inner]
@@ -203,8 +204,8 @@ def test_invalid_address(helpers, addresses_inner, initial_mint_inner):
 
 
 def test_seller_xfer_double_spend_attempt(looper, sdk_pool_handle,  # noqa
-    nodeSetWithIntegratedTokenPlugin, public_minting, sdk_wallet_client,
-    seller_address, seller_token_wallet, user1_address, user2_address):
+                                          nodeSetWithIntegratedTokenPlugin, public_minting, sdk_wallet_client,
+                                          seller_address, seller_token_wallet, user1_address, user2_address):
     """
     An address tries to send to send to transactions using the same UTXO,
     one of the txn gets rejected even though the amount held by the UTXO is
@@ -303,8 +304,7 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     amount = 50
     first_address = helpers.wallet.create_address()
     outputs = [{"address": first_address, "amount": amount}]
-    mint_result = helpers.general.do_mint(outputs)
-    seq_no = get_seq_no(mint_result)
+    helpers.general.do_mint(outputs)
 
     # =============
     # Transfer tokens to 3 different addresses
@@ -317,13 +317,12 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     inputs = helpers.general.get_utxo_addresses([first_address])[0]
     outputs = [{"address": address, "amount": amount // 3} for address in new_addresses]
     outputs[-1]["amount"] += amount % 3
-    xfer_result = helpers.general.do_transfer(inputs, outputs)
+    helpers.general.do_transfer(inputs, outputs)
 
     # =============
     # Assert tokens are in new addresses
     # =============
 
-    xfer_seq_no = get_seq_no(xfer_result)
     new_address_utxos = helpers.general.get_utxo_addresses(new_addresses)
 
     assert new_address_utxos[0][0][PAYMENT_ADDRESS] == new_addresses[0]
@@ -340,7 +339,7 @@ def test_xfer_with_multiple_inputs(helpers, seller_token_wallet):
     inputs = helpers.general.get_utxo_addresses(new_addresses)
     inputs = [utxo for utxos in inputs for utxo in utxos]
     outputs = [{"address": first_address, "amount": amount}]
-    xfer_result = helpers.general.do_transfer(inputs, outputs)
+    helpers.general.do_transfer(inputs, outputs)
 
     [
         first_address_utxos,

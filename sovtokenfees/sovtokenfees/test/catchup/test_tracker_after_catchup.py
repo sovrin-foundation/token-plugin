@@ -43,15 +43,15 @@ def test_last_committed_after_catchup(looper, helpers,
     assert reverted_last_committed == not_reverted_last_committed
     with delay_rules(reverted_node.nodeIbStasher, cDelay()):
         """
-        Send NYM with FEES and wait for reply. 
+        Send NYM with FEES and wait for reply.
         """
         r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_1)
         sdk_get_and_check_replies(looper, [r])
         """
-        Start catchup. Uncommitted batch for reverted_node should be rejected and it will get 
-        NYM with FEES during catchup procedure. 
+        Start catchup. Uncommitted batch for reverted_node should be rejected and it will get
+        NYM with FEES during catchup procedure.
         """
         reverted_node.start_catchup()
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))
         assert get_last_committed_from_tracker(reverted_node) ==\
-               get_last_committed_from_tracker(node_set[0])
+            get_last_committed_from_tracker(node_set[0])

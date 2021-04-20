@@ -82,7 +82,7 @@ def test_create_did_without_endorser_payment(looper, nodeSetWithIntegratedTokenP
         utxos=utxos
     )
 
-    rep = helpers.sdk.send_and_check_request_objects([req], wallet=(wh, sender_did))
+    helpers.sdk.send_and_check_request_objects([req], wallet=(wh, sender_did))
 
     details = get_nym_details(nodeSetWithIntegratedTokenPlugin[0].states[1], sender_did, is_committed=True)
     assert details[ROLE] == NEW_ROLE

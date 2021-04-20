@@ -25,7 +25,6 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 from plenum.test import waits
 
 
-
 @pytest.fixture(scope="module")
 def tconf(tconf):
     old_max_size = tconf.Max3PCBatchSize
@@ -53,9 +52,9 @@ def test_multiple_batches_for_pool(looper, helpers,
 
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     with delay_rules(node_stashers, cDelay()):
-        r1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
-        r2 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         for n in node_set:
             n.start_catchup()

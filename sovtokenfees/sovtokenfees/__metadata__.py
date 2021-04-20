@@ -22,4 +22,3 @@ __all__ = ['__title__',
            '__author_email__',
            '__maintainer__',
            '__license__']
-

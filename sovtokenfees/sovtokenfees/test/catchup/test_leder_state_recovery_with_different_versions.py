@@ -158,4 +158,3 @@ def test_state_recovery_with_xfer(looper, tconf, tdir,
                                                         current_amount, seq_no,
                                                         transfer_summ=1)
     waitNodeDataEquality(looper, restarted_node, *node_set[:-1], exclude_from_check=['check_last_ordered_3pc_backup'])
-

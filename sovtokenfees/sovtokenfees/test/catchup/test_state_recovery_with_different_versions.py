@@ -63,7 +63,7 @@ def send_node_upgrades(nodes, version, looper, count=None):
         node.startedProcessingReq(request.key, node.nodestack.name)
         node.send(request)
         looper.run(eventually(lambda: assertEquality(node.master_last_ordered_3PC[1],
-                                                         last_ordered + 1)))
+                                                     last_ordered + 1)))
         last_ordered += 1
 
 
@@ -84,7 +84,7 @@ def test_state_recovery_with_fees(looper, tconf, tdir,
     sdk_ensure_upgrade_sent(looper, sdk_pool_handle, sdk_wallet_trustee,
                             valid_upgrade)
     looper.run(eventually(lambda: assertEquality(node_set[0].master_last_ordered_3PC[1],
-                                                     last_ordered + 1)))
+                                                 last_ordered + 1)))
 
     send_node_upgrades(node_set, version1, looper)
     for n in node_set:
@@ -122,4 +122,3 @@ def test_state_recovery_with_fees(looper, tconf, tdir,
 
     looper.run(checkNodesConnected(node_set))
     waitNodeDataEquality(looper, restarted_node, *node_set[:-1], exclude_from_check=['check_last_ordered_3pc_backup'])
-

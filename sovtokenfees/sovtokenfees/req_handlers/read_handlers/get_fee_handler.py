@@ -20,7 +20,7 @@ class GetFeeHandler(ReadRequestHandler):
     def get_result(self, request: Request):
         alias = request.operation.get(ALIAS)
         fee, proof = FeesStaticHelper.get_fee_from_state(self.state, fees_alias=alias, is_committed=True, with_proof=True,
-                                        bls_store=self.database_manager.get_store(BLS_LABEL))
+                                                         bls_store=self.database_manager.get_store(BLS_LABEL))
         result = {f.IDENTIFIER.nm: request.identifier,
                   f.REQ_ID.nm: request.reqId, FEE: fee}
         if proof:

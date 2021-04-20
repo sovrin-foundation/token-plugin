@@ -9,5 +9,3 @@ def test_mint_handler_update_state_valid_txn(mint_txn, mint_handler, payment_add
 
     assert int(token_state.get((libsovtoken_address_to_address(payment_address) + ":1").encode(), isCommitted=False)) == 10
     assert utxo_cache.get(libsovtoken_address_to_address(payment_address).encode()).decode() == '1:10'
-
-

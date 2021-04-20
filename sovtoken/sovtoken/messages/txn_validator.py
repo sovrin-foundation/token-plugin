@@ -66,12 +66,11 @@ def txn_mint_public_validate(request: Request):
     operation = request.operation
     if operation[TXN_TYPE] == MINT_PUBLIC:
         error = outputs_validate(request)
-        if not error and len(operation[OUTPUTS]) is 0:
+        if not error and len(operation[OUTPUTS]) == 0:
             error = "Outputs for a mint request can't be empty."
             raise InvalidClientRequest(request.identifier, request.reqId, error)
 
         return error
-
 
 
 def txn_xfer_public_validate(request: Request):

@@ -1,0 +1,17 @@
+FROM sovrin/base:0.2.0-focal
+# TODO LABEL maintainer="Name <email-address>"
+
+RUN add-apt-repository ppa:deadsnakes/ppa
+# python
+RUN apt-get update && apt-get install -y \
+        python3-pip \
+        && rm -rf /var/lib/apt/lists/*
+
+# pypi based packages
+RUN pip3 install -U \ 
+        'pip<10.0.0' \
+        setuptools==50.3.2 
+
+# TODO CMD ENTRYPOINT ...
+
+ENV PYTHON3_ENV_VERSION=0.2.0

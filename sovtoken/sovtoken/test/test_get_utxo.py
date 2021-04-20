@@ -19,6 +19,7 @@ from sovtoken.constants import OUTPUTS, ADDRESS, AMOUNT, PAYMENT_ADDRESS, TOKEN_
 def addresses(helpers):
     return helpers.wallet.create_new_addresses(2)
 
+
 def test_empty_address(helpers):
     with pytest.raises(RequestNackedException):
         helpers.inner.general.do_get_utxo('')
@@ -60,9 +61,8 @@ def test_address_utxos(helpers, addresses):
 
     address = addresses[0]
     outputs = [{"address": address, "amount": 1000}]
-    mint_result = helpers.general.do_mint(outputs)
+    helpers.general.do_mint(outputs)
 
-    mint_seq_no = get_seq_no(mint_result)
     get_utxo_result = helpers.general.get_utxo_addresses([address])[0]
 
     assert get_utxo_result[0][PAYMENT_ADDRESS] == address
@@ -73,7 +73,7 @@ def test_address_utxos(helpers, addresses):
 # complicated state proof. So this test has been changed to show that multiple
 # addresses are not accepted.
 def test_get_multiple_addresses(helpers, addresses):
-    
+
     # Create a request with a single address and then replace it to check for
     # multiple addresses.
     request = helpers.request.get_utxo(addresses[0])
@@ -132,9 +132,9 @@ def test_get_more_then_thousand_utxos(helpers, addresses, nodeSetWithIntegratedT
     states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
     utxos = []
 
-    for i in range(UTXO_LIMIT+200):
+    for i in range(UTXO_LIMIT + 200):
         amount = randint(1, 5)
-        key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), i+5)
+        key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), i + 5)
         utxos.append((key, amount))
         for state in states:
             state.set(key, str(amount).encode())
@@ -159,23 +159,20 @@ def test_get_more_then_thousand_utxos_with_from(helpers, addresses, nodeSetWithI
     states = [n.db_manager.get_state(TOKEN_LEDGER_ID) for n in nodeSetWithIntegratedTokenPlugin]
     utxos = []
 
-    for i in range(UTXO_LIMIT+200):
+    for i in range(UTXO_LIMIT + 200):
         amount = randint(1, 5)
-        seq_no = i+5
+        seq_no = i + 5
         key = TokenStaticHelper.create_state_key(libsovtoken_address_to_address(address_2), seq_no)
         utxos.append((key, amount, seq_no))
         for state in states:
             state.set(key, str(amount).encode())
 
     # NB: this transaction is needed just to update bls_store with new root hash
-    total = 1000
-    outputs = [{"address": address_1, "amount": total}]
-    mint_result = helpers.general.do_mint(outputs)
 
     shift = 50
     request = helpers.request.get_utxo(address_2, utxos[shift][2])
     responses = helpers.sdk.send_and_check_request_objects([request])
-    utxos = utxos[shift:shift+UTXO_LIMIT]
+    utxos = utxos[shift:shift + UTXO_LIMIT]
     for response in responses:
         result = response[1]['result']
         assert result[STATE_PROOF]

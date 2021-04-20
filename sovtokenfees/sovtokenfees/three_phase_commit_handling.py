@@ -90,26 +90,26 @@ class ThreePhaseCommitHandler:
                 if fees.get(FEE_TXNS_IN_BATCH) != fee_txn_count:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                        FEE_TXNS_IN_BATCH,
-                        fee_txn_count,
-                        fees.get(FEE_TXNS_IN_BATCH)))
+                                        FEE_TXNS_IN_BATCH,
+                                        fee_txn_count,
+                                        fees.get(FEE_TXNS_IN_BATCH)))
 
                 recvd_state_root = self.master_replica._state_root_serializer.deserialize(
                     fees.get(f.STATE_ROOT.nm, '').encode())
                 if recvd_state_root != self.token_state.headHash:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                        f.STATE_ROOT.nm,
-                        self.token_state.headHash,
-                        recvd_state_root))
+                                        f.STATE_ROOT.nm,
+                                        self.token_state.headHash,
+                                        recvd_state_root))
 
                 recvd_txn_root = self.token_ledger.strToHash(fees.get(f.TXN_ROOT.nm, ''))
                 if recvd_txn_root != self.token_ledger.uncommittedRootHash:
                     raise Exception('{} mismatch in PRE-PREPARE '
                                     'expected {}, found {}'.format(
-                        f.TXN_ROOT.nm,
-                        self.token_ledger.uncommittedRootHash,
-                        recvd_txn_root))
+                                        f.TXN_ROOT.nm,
+                                        self.token_ledger.uncommittedRootHash,
+                                        recvd_txn_root))
 
     # Makes sure that the "plugins_fields" member is contained in a message. This field is what distinguishes normal
     # messages from messages that support the sovrin plugin

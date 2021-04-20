@@ -36,10 +36,10 @@ def add_new_node(helpers, looper, node_set, sdk_wallet, current_amount, seq_no, 
               AMOUNT: current_amount,
               f.SEQ_NO.nm: seq_no}]
     req = add_fees_request_with_address(helpers,
-                                          fees_set,
-                                          req,
-                                          address,
-                                          utxos=utxos)
+                                        fees_set,
+                                        req,
+                                        address,
+                                        utxos=utxos)
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount, nym_with_fees=req)
     new_steward_wallet_handle = sdk_wallet[0], new_did
@@ -72,7 +72,7 @@ def test_first_catchup_for_a_new_node(looper, helpers,
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = 1
     reverted_node = node_set[-1]
-    idx = node_set.index(reverted_node)
+    node_set.index(reverted_node)
 
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount)

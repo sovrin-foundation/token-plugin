@@ -19,9 +19,9 @@ from plenum.common.startable import Mode
 
 
 def test_revert_nym_with_fees_before_catchup(looper, helpers,
-                                                  nodeSetWithIntegratedTokenPlugin,
-                                                  fees_set, fees,
-                                                  xfer_mint_tokens, xfer_addresses):
+                                             nodeSetWithIntegratedTokenPlugin,
+                                             fees_set, fees,
+                                             xfer_mint_tokens, xfer_addresses):
     nodes = nodeSetWithIntegratedTokenPlugin
     current_amount = get_amount_from_token_txn(xfer_mint_tokens)
     seq_no = get_seq_no(xfer_mint_tokens)

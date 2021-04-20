@@ -23,7 +23,7 @@ class AuthRuleFeeHandler(WriteRequestHandler):
 
     def dynamic_validation(self, request: Request, req_pp_time: Optional[int]):
         self.fees_specific_validation(request)
-    
+
     def additional_dynamic_validation(self, request, req_pp_time: Optional[int]):
         pass
 

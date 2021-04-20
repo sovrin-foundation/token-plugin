@@ -1,4 +1,8 @@
-import logging, builtins, importlib, sys
+import logging
+import builtins
+import importlib
+import sys
+
 
 def mute_loggers(*, lvl=logging.WARNING, protected=[]):
     def filter(record):
@@ -21,6 +25,7 @@ def mute_loggers(*, lvl=logging.WARNING, protected=[]):
 
     return unmute
 
+
 def mute_print():
     original_print = builtins.print
     _overload_print_function(lambda *args: 1)
@@ -28,9 +33,11 @@ def mute_print():
     # Unumute print function
     return lambda: _overload_print_function(original_print)
 
+
 def _overload_print_function(func):
     builtins.print = func
     importlib.reload(builtins)
+
 
 def _remove_current_handlers(logger):
     current_handlers = list(logger.handlers)

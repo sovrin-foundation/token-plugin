@@ -7,7 +7,7 @@ from sovtoken.exceptions import ExtraFundsError
 
 
 def test_xfer_public_txn_equal():
-    TokenStaticHelper.validate_given_inputs_outputs(1, 1, 1,  None)
+    TokenStaticHelper.validate_given_inputs_outputs(1, 1, 1, None)
     TokenStaticHelper.validate_given_inputs_outputs(10, 10, 10, None)
     TokenStaticHelper.validate_given_inputs_outputs(100, 100, 100, None)
     TokenStaticHelper.validate_given_inputs_outputs(100000000000000, 100000000000000, 100000000000000, None)

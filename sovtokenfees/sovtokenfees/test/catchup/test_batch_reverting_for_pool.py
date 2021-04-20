@@ -15,10 +15,10 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 
 def test_revert_works_for_fees_before_catch_up_on_all_nodes(looper, helpers,
-                                                        nodeSetWithIntegratedTokenPlugin,
-                                                        sdk_pool_handle,
-                                                        sdk_wallet_trustee,
-                                                        fees_set, address_main, mint_tokens):
+                                                            nodeSetWithIntegratedTokenPlugin,
+                                                            sdk_pool_handle,
+                                                            sdk_wallet_trustee,
+                                                            fees_set, address_main, mint_tokens):
     node_set = [n.nodeIbStasher for n in nodeSetWithIntegratedTokenPlugin]
 
     with delay_rules(node_set, cDelay()):

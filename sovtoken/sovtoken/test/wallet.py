@@ -62,8 +62,8 @@ class TokenWallet(Wallet):
     txn_seq_no_valdator = TxnSeqNoField()
 
     def __init__(self,
-                 name: str=None,
-                 supportedDidMethods: DidMethods=None):
+                 name: str = None,
+                 supportedDidMethods: DidMethods = None):
         super().__init__(name, supportedDidMethods)
         self.addresses = OrderedDict()  # type: OrderedDict[str, Address]
         self.reply_handlers = {
@@ -71,15 +71,15 @@ class TokenWallet(Wallet):
             XFER_PUBLIC: self.handle_xfer
         }
 
-    def add_new_address(self, address: Address=None, seed=None):
+    def add_new_address(self, address: Address = None, seed=None):
         assert address or seed
         if not address:
             address = Address(seed=seed)
         assert address.address not in self.addresses
         self.addresses[address.address] = address
 
-    def sign_using_output(self, id, seq_no, op: Dict=None,
-                          request: Request=None):
+    def sign_using_output(self, id, seq_no, op: Dict = None,
+                          request: Request = None):
         assert lxor(op, request)
         if op:
             request = Request(reqId=Request.gen_req_id(), operation=op, protocolVersion=CURRENT_PROTOCOL_VERSION)

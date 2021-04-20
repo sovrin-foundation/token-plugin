@@ -1,4 +1,4 @@
-FROM sovrin/python3:0.1.0-xenial
+FROM hyperledger/indy-core-baseci:0.0.3-master
 # TODO LABEL maintainer="Name <email-address>"
 
 ARG u_id=1000
@@ -7,6 +7,7 @@ ARG u_name=user
 # TODO move to base image
 RUN apt-get update && apt-get install -y \
     software-properties-common \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # rocksdb
@@ -26,28 +27,21 @@ RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
     libindy=1.13.0~1420 \
     libsovtoken=1.0.2~92 \
-    indy-node \
     ursa=0.3.2-2 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
     && pip3 install -U \
-    pipenv \
     setuptools==50.3.2 \
     zipp==1.2.0 \
+    pytest==4.6.2 \
+    pytest-xdist==2.2.1 \
     importlib_metadata==2.1.1 \
-    importlib_resources==3.2.1
+    importlib_resources==3.2.1 \
+    python3-indy==1.13.0-dev-1420 \
+    indy-node==1.13.0.dev1225 \
+    mock==3.0.5
 
-# TODO workaround (suggested by http://click.pocoo.org/5/python3/)
-# to use pipenv's dependency 'click' (http://click.pocoo.org)
-# check for alternatives
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-
-RUN if [ "$u_id" != "0" ]; then \
-    useradd -ms /bin/bash -u $u_id $u_name; \
-    fi
-USER $u_id
 
 # TODO CMD ENTRYPOINT ...
 ENV CI_ENV_VERSION=0.22.0

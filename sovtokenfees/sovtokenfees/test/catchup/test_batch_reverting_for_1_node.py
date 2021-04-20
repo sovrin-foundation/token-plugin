@@ -18,9 +18,9 @@ from plenum.test.node_catchup.helper import ensure_all_nodes_have_same_data
 
 
 def test_revert_works_for_fees_before_catch_up_on_one_node(looper, helpers,
-                                           nodeSetWithIntegratedTokenPlugin,
-                                           sdk_pool_handle,
-                                           fees_set, address_main, mint_tokens):
+                                                           nodeSetWithIntegratedTokenPlugin,
+                                                           sdk_pool_handle,
+                                                           fees_set, address_main, mint_tokens):
     node_set = nodeSetWithIntegratedTokenPlugin
     reverted_node = node_set[-1]
 
@@ -35,15 +35,15 @@ def test_revert_works_for_fees_before_catch_up_on_one_node(looper, helpers,
     c_ledger_root_before = get_committed_txn_root_for_pool([reverted_node], TOKEN_LEDGER_ID)
     with delay_rules(reverted_node.nodeIbStasher, cDelay()):
         """
-        Send NYM with FEES and wait for reply. All of nodes, except reverted_node will order them 
+        Send NYM with FEES and wait for reply. All of nodes, except reverted_node will order them
         """
         r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_1)
         sdk_get_and_check_replies(looper, [r])
         check_state(reverted_node, is_equal=False)
         c_ledger_root_for_other = get_committed_txn_root_for_pool(node_set[:-1], TOKEN_LEDGER_ID)
         """
-        Start catchup. Uncommitted batch for reverted_node should be rejected and it will get 
-        NYM with FEES during catchup procedure. 
+        Start catchup. Uncommitted batch for reverted_node should be rejected and it will get
+        NYM with FEES during catchup procedure.
         """
         reverted_node.start_catchup()
         looper.run(eventually(lambda: assertExp(reverted_node.mode == Mode.participating)))

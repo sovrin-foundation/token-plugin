@@ -1,7 +1,7 @@
 #TODO
 # - docker-compose re-runs build always (it's fast because of cache but anyway)
 
-OSNAME ?= xenial
+OSNAME ?= focal
 
 ifndef PROJECT_DIR
 PROJECT_DIR := $(shell git rev-parse --show-toplevel)
@@ -11,6 +11,9 @@ endif
 ifndef SRC_DIR_NAME
 SRC_DIR_NAME := sovtoken
 endif
+
+PACKAGE_NAME ?= $(SRC_DIR_NAME)
+
 
 ifeq ($(filter $(SRC_DIR_NAME),sovtoken sovtokenfees),)
 $(error "SRC_DIR_NAME should be either 'sovtoken' or 'sovtokenfees' but is '$(SRC_DIR_NAME)'")
@@ -25,25 +28,6 @@ BUILD_DIR := _build/$(SRC_DIR_NAME)
 metadata_value = $(call check_non_empty,$(shell python -c "md={}; exec(open('$(SRC_METADATA)', 'r').read(), md); print(md['$1'])"), \
 				   "Metadata value for '$(1)' not found in $(SRC_METADATA)")
 
-# package related variables
-PRE_PACKAGE_GOALS := pre_package
-FPM_P_INPUT_TYPE := python
-FPM_P_ARCH := amd64
-# TODO seems fpm ignores maintainer field in setup.py
-# TODO delayed (recursive) expansion since 'check_non_empty' is available only after
-# ext/Makefile include statement
-FPM_P_MAINTAINER = $(call metadata_value,__maintainer__)
-FPM_P_OUTPUT_DIR := $(BUILD_DIR)
-
-FPM_ARGS := --no-python-fix-name \
-		   --python-bin "/usr/bin/python3" \
-		   --no-python-fix-dependencies \
-		   --exclude "*.pyc" \
-		   --exclude "*.pyo" \
-		   --after-install "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/postinst" \
-           --before-remove "build-scripts/$(OSNAME)/$(SRC_DIR_NAME)/prerm" \
-		   $(SRC_DIR)
-
 ifeq ($(SRC_DIR_NAME),sovtoken)
 # TODO duplication with setup.py
 # necessary since indy-plenum from master is published as:
@@ -53,8 +37,9 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # 	pypi: indy-plenum
 # 	apt: indy-plenum (stable component)
 
+FPM_P_NAME += $(PACKAGE_NAME) 
 FPM_P_DEPENDS := indy-node(=1.13.0~dev1225)
-FPM_ARGS := --no-python-dependencies $(FPM_ARGS)
+FPM_ARGS := --no-python-dependencies $(FPM_ARGS) ../$(SRC_DIR_NAME)
 endif
 
 # docker related variables
@@ -85,7 +70,7 @@ image_ci_base_version:
 image_ci_version:
 	echo $(call docker_env_value,'CI_ENV_VERSION',$(CI_DOCKERFILE_PATH))
 
-image_ci: image_ci_base_version image_python3
+image_ci: 
 ifeq ($(DOCKER_TAG),)
 	$(eval DOCKER_TAG=$(call docker_env_value,'CI_ENV_VERSION',$(CI_DOCKERFILE_PATH))-$(OSNAME)-ci)
 endif
@@ -99,22 +84,25 @@ CI_IMAGE_BASED_TARGETS = test package clean
 
 $(patsubst %,image_%, $(CI_IMAGE_BASED_TARGETS)): image_ci
 
+xenial:
+	$(eval OSNAME = xenial)
+# this explicitly will build a 16.04 release (xenial). alternatively make <target> <OSNAME>= can be used, (currently focal and xenial are supported).
+image_ci_xenial: xenial image_ci
+
 pipenv_version:
 	pipenv --version
 
 # TODO
 # clean_pycache needs only when mixing in-docker and host testing
 # needs to optimze to leave cache otherwise
-test: $(SRC_DIR) pipenv_version clean_pycache
+test: $(SRC_DIR)
 	echo "Running tests"
 # TODO improve usage of pipenv (remove pip completely)
 # seems pipenv has some bugs regarding extras
 	cd $< \
-		&& pipenv --three \
-		&& pipenv run pip install -U -e ../sovtoken \
-		&& pipenv run pip install -U -e ../sovtokenfees \
-		&& pipenv run pip install .[test] \
-		&& pipenv run python -m pytest $(PYTEST_ARGS)
+		&& pip install -e ../sovtoken \
+		&& pip install -e ../sovtokenfees \
+		&& python3 -m pytest $(PYTEST_ARGS)
 
 pre_package: python_version | $(BUILD_DIR)
 	rm -f $(BUILD_DIR)/$(LIBNAME)*.$(FPM_P_OUTPUT_TYPE)
@@ -127,7 +115,8 @@ $(BUILD_DIR):
 test_local_aws: image_ci
 	pushd .. \
 	&& docker pull amazon/aws-codebuild-local:latest --disable-content-trust=false \
-	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:$(DOCKER_TAG) -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtoken.env \
+	&& ./codebuild_build.sh -i sovrin/plugin:0.21.0-$(OSNAME)-ci -b ./devops/aws-codebuild/buildspec.yml -a ./tmp -e aws_local_codebuild_sovtokenfees.env \
 	&& popd
 	
 

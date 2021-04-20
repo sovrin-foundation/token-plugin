@@ -29,7 +29,7 @@ def tconf(tconf):
 
 
 def test_revert_during_view_change_all_nodes_set_fees(tconf, nodeSetWithIntegratedTokenPlugin,
-                                    fees_set_with_batch, helpers, looper):
+                                                      fees_set_with_batch, helpers, looper):
     """
         Check that SET_FEES transaction will be written after view change when PREPARE quorum for it is reached
     """
