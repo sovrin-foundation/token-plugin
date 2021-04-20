@@ -80,7 +80,7 @@ def test_xfer_with_sufficient_fees(
 ):
     [address_giver, address_receiver] = addresses
     result = send_transfer_request(helpers, mint_tokens, fees, addresses)
-    transfer_seq_no = get_seq_no(result)
+    get_seq_no(result)
     fee_amount = fees[XFER_PUBLIC_FEES_ALIAS]
 
     [
@@ -124,7 +124,7 @@ def test_invalid_xfer_with_valid_fees(
     """
     helpers.general.do_set_fees(fees)
     [address_giver, address_receiver] = addresses
-    seq_no = get_seq_no(mint_tokens)
+    get_seq_no(mint_tokens)
 
     inputs = helpers.general.get_utxo_addresses([address_giver])[0]
     outputs = [{ADDRESS: address_receiver, AMOUNT: 1000}]
@@ -178,8 +178,8 @@ def test_mint_after_paying_fees(
     address_giver = addresses[0]
     outputs = [{ADDRESS: address_giver, AMOUNT: 1000}]
     mint_result = helpers.general.do_mint(outputs)
-    xfer_seq_no = get_seq_no(xfer_result)
-    mint_seq_no = get_seq_no(mint_result)
+    get_seq_no(xfer_result)
+    get_seq_no(mint_result)
 
     utxos = helpers.general.get_utxo_addresses([address_giver])[0]
 

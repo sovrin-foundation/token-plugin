@@ -49,9 +49,9 @@ def test_multiple_batches_for_one_node(looper, helpers,
     expected_txns_length = 2
     txns_count_before = get_committed_txns_count_for_pool(node_set, TOKEN_LEDGER_ID)
     with delay_rules(affected_node.nodeIbStasher, cDelay()):
-        r1 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request1)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
-        r2 = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request2)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         affected_node.start_catchup()
         looper.run(eventually(lambda: assertExp(affected_node.mode == Mode.participating)))

@@ -31,7 +31,7 @@ def create_addresses(helpers):
 
 
 def mint_tokens(helpers, addresses):
-    result = helpers.general.do_mint([{"address": addresses[SOVRIN], "amount": NEW_TOKENS}])
+    helpers.general.do_mint([{"address": addresses[SOVRIN], "amount": NEW_TOKENS}])
     template = "Minted {} sovatoms to {}."
     demo_logger.log_blue(template.format(NEW_TOKENS, SOVRIN))
 

@@ -133,7 +133,6 @@ def test_more_than_min_trustee(capsys, helpers, addresses):
 
     result = helpers.sdk.send_and_check_request_objects([request])
     result = helpers.sdk.get_first_result(result)
-    seq_no = get_seq_no(result)
 
     [address1_utxos, *_] = helpers.general.get_utxo_addresses(addresses)
 
@@ -231,7 +230,6 @@ def test_trustee_valid_minting(helpers, addresses):
     remaining = total_mint - sf_master_gets
     outputs = [{ADDRESS: address1, AMOUNT: sf_master_gets}, {ADDRESS: address2, AMOUNT: remaining}]
     result = helpers.general.do_mint(outputs)
-    mint_seq_no = get_seq_no(result)
 
     [
         address1_utxos,
@@ -311,9 +309,8 @@ def test_repeat_mint(helpers, addresses):
     request = helpers.request.mint(outputs)
 
     helpers.sdk.send_and_check_request_objects([request])
-    result = helpers.sdk.send_and_check_request_objects([request])
+    helpers.sdk.send_and_check_request_objects([request])
 
-    seq_no_1 = get_seq_no(helpers.sdk.get_first_result(result))
     utxos = helpers.general.get_utxo_addresses([address])[0]
 
     assert utxos[0][PAYMENT_ADDRESS] == address
@@ -326,11 +323,8 @@ def test_different_mint_amounts(helpers):
     def assert_valid_minting(helpers, amount):
         address = helpers.wallet.create_address()
         outputs = [{ADDRESS: address, AMOUNT: amount}]
-        result = helpers.general.do_mint(outputs)
-        utxos = helpers.general.get_utxo_addresses([address])[0]
-
-        expected = {ADDRESS: address, SEQNO: get_seq_no(result), AMOUNT: amount}
-        matches = [utxo for utxo in utxos if utxo is expected]
+        helpers.general.do_mint(outputs)
+        helpers.general.get_utxo_addresses([address])[0]
 
     # 1 sovatom
     assert_valid_minting(helpers, 1)

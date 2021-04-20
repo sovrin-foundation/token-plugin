@@ -43,7 +43,7 @@ def test_revert_works_for_fees_after_view_change(looper, helpers,
             looper.run(eventually(check_state, n, True, retryWait=0.2, timeout=15))
 
         committed_hash_before = get_committed_hash_for_pool(nodeSetWithIntegratedTokenPlugin, DOMAIN_LEDGER_ID)
-        r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request)
+        sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request)
 
         for n in nodeSetWithIntegratedTokenPlugin:
             looper.run(eventually(check_state, n, False, retryWait=0.2, timeout=15))

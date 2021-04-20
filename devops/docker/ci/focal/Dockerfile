@@ -61,12 +61,16 @@ RUN mv /usr/lib/ursa/* /usr/lib && rm -rf /usr/lib/ursa
 # RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 || \
 # 	apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CE7709D068DB5E88 && \
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \ 
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9692C00E657DDE61 \ 
+    && add-apt-repository "deb https://hyperledger.jfrog.io/artifactory/indy focal dev" \
     && add-apt-repository "deb https://repo.sovrin.org/deb xenial master" \
     && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic master" \
     && add-apt-repository "deb http://archive.ubuntu.com/ubuntu xenial universe main" \
     && apt-get update -y && apt-get install -y \ 
     libindy=1.15.0~1625-bionic \
+    indy-plenum=1.12.4.dev.0 \
+    indy-node=1.12.4.dev.0 \
     libsodium23
 
 # pypi based packages
@@ -126,9 +130,7 @@ RUN pip3 install -U \
 # python-rocksdb==0.7
 
 COPY ./deps .
-RUN dpkg -i indy-plenum_9.9.9_amd64.deb \
-    && dpkg -i indy-node_9.9.9_amd64.deb \
-    && dpkg -i libsovtoken_1.0.2_amd64.deb
+RUN dpkg -i libsovtoken_1.0.2_amd64.deb
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py
 

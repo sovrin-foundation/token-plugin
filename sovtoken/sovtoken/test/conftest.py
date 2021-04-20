@@ -1,4 +1,5 @@
 import json
+import pytest
 
 from plenum.client.wallet import Wallet
 from plenum.common.constants import STEWARD, TARGET_NYM, TRUSTEE_STRING, VERKEY

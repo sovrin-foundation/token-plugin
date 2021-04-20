@@ -72,7 +72,7 @@ def test_first_catchup_for_a_new_node(looper, helpers,
     current_amount = get_amount_from_token_txn(mint_tokens)
     seq_no = 1
     reverted_node = node_set[-1]
-    idx = node_set.index(reverted_node)
+    node_set.index(reverted_node)
 
     current_amount, seq_no, _ = send_and_check_nym_with_fees(helpers, fees_set, seq_no, looper, addresses,
                                                              current_amount)

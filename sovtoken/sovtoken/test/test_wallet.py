@@ -150,7 +150,7 @@ def test_token_wallet_get_total_amount_subset_invalid(test_wallet, address0, add
     # TypeError expected here because this method cannot handle a subset
     # This refactor has been removed because it breaks other test and is unnecessary
     with pytest.raises(TypeError):
-        total = test_wallet.get_total_address_amount([address0, address1])
+        test_wallet.get_total_address_amount([address0, address1])
 
 
 # TODO: Throws assertion error currently because of line 87 in wallet.py
@@ -281,10 +281,10 @@ def test_token_wallet_get_val_success(test_wallet, address0):
 
 def test_token_wallet_get_val_null(test_wallet, address0):
     with pytest.raises(KeyError):
-        val = test_wallet.get_val(address0, None)
+        test_wallet.get_val(address0, None)
 
 
 def test_token_wallet_get_val_invalid_address(test_wallet):
     address0_not_in_wallet = Address()
     with pytest.raises(KeyError):
-        val = test_wallet.get_val(address0_not_in_wallet, 1)
+        test_wallet.get_val(address0_not_in_wallet, 1)

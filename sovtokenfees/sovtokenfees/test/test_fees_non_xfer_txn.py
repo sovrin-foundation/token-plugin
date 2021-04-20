@@ -231,8 +231,7 @@ def test_fees_output_with_zero_tokens(
     A fee output can't be set to zero tokens.
     """
     outputs = [{ADDRESS: address_main, AMOUNT: int(fees[NYM_FEES_ALIAS])}]
-    result = helpers.general.do_mint(outputs)
-    seqno = get_seq_no(result)
+    helpers.general.do_mint(outputs)
 
     empty_address = helpers.wallet.create_address()
     inputs = helpers.general.get_utxo_addresses([address_main])[0]
@@ -261,7 +260,7 @@ def test_no_fees_when_required(
     with pytest.raises(RequestRejectedException):
         helpers.sdk.send_and_check_request_objects([req])
 
-    utxos = helpers.general.get_utxo_addresses([address_main])[0]
+    helpers.general.get_utxo_addresses([address_main])[0]
 
     setattr(req, FEES, None)
 
@@ -442,7 +441,7 @@ def test_fees_utxo_reuse(
     nym_fees_data = get_payload_data(fees_paid_manually[FEES])
     inputs = nym_fees_data[INPUTS]
     outputs = nym_fees_data[OUTPUTS]
-    fee_amount = fees_set[FEES][NYM_FEES_ALIAS]
+    fees_set[FEES][NYM_FEES_ALIAS]
 
     req = helpers.request.nym()
     fee_sigs = helpers.inner.request.fees_signatures(

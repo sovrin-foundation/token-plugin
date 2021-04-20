@@ -21,16 +21,16 @@ def test_plugin_or_rule_all_amount_trustee_no_endorser(write_auth_req_validator,
         valid_actions=[Action(author=TRUSTEE, endorser=None, sigs={TRUSTEE: s},
                               is_owner=owner, amount=1, extra_sigs=True)
                        for s in range(1, 4)
-                       for owner in [True, False]] +
-        [Action(author=TRUSTEE, endorser=None, sigs={TRUSTEE: s1, STEWARD: s2},
-                is_owner=owner, amount=2, extra_sigs=True)
-         for s1 in range(1, 4)
-         for s2 in range(1, 4)
-         for owner in [True, False]] +
-        [Action(author=TRUSTEE, endorser=None, sigs={TRUSTEE: s1, ENDORSER: s2},
-                is_owner=True, amount=3, extra_sigs=True)
-         for s1 in range(1, 4)
-         for s2 in range(1, 4)],
+                       for owner in [True, False]]
+        + [Action(author=TRUSTEE, endorser=None, sigs={TRUSTEE: s1, STEWARD: s2},
+                  is_owner=owner, amount=2, extra_sigs=True)
+           for s1 in range(1, 4)
+            for s2 in range(1, 4)
+           for owner in [True, False]]
+        + [Action(author=TRUSTEE, endorser=None, sigs={TRUSTEE: s1, ENDORSER: s2},
+                  is_owner=True, amount=3, extra_sigs=True)
+            for s1 in range(1, 4)
+            for s2 in range(1, 4)],
         author=TRUSTEE, endorser=None,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,
@@ -127,11 +127,11 @@ def test_plugin_or_rule_one_amount_diff_roles_endorser_no_endorser(write_auth_re
                               is_owner=owner, amount=amount, extra_sigs=True)
                        for s in range(1, 4)
                        for owner in [True, False]
-                       for amount in [None, 0]] +
-        [Action(author=ENDORSER, endorser=None, sigs={ENDORSER: s1, IDENTITY_OWNER: s2},
-                is_owner=True, amount=1, extra_sigs=True)
-         for s1 in range(1, 4)
-         for s2 in range(1, 4)],
+                       for amount in [None, 0]]
+        + [Action(author=ENDORSER, endorser=None, sigs={ENDORSER: s1, IDENTITY_OWNER: s2},
+                  is_owner=True, amount=1, extra_sigs=True)
+           for s1 in range(1, 4)
+            for s2 in range(1, 4)],
         author=ENDORSER, endorser=None,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,
@@ -170,11 +170,11 @@ def test_plugin_or_rule_one_amount_diff_roles_owner_endorser(write_auth_req_vali
                        for s1 in range(1, 4)
                        for s2 in range(1, 4)
                        for owner in [True, False]
-                       for amount in [0, None]] +
-        [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s1, ENDORSER: s2},
-                is_owner=True, amount=1, extra_sigs=True)
-         for s1 in range(1, 4)
-         for s2 in range(1, 4)],
+                       for amount in [0, None]]
+        + [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s1, ENDORSER: s2},
+                  is_owner=True, amount=1, extra_sigs=True)
+           for s1 in range(1, 4)
+            for s2 in range(1, 4)],
         author=IDENTITY_OWNER, endorser=ENDORSER,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,
@@ -195,10 +195,10 @@ def test_plugin_or_rule_one_amount_all_roles_endorser_no_endorser(write_auth_req
                               is_owner=owner, amount=amount, extra_sigs=True)
                        for s in range(1, 4)
                        for owner in [True, False]
-                       for amount in [0, None]] +
-        [Action(author=ENDORSER, endorser=None, sigs={ENDORSER: s},
-                is_owner=True, amount=3, extra_sigs=True)
-         for s in range(1, 4)],
+                       for amount in [0, None]]
+        + [Action(author=ENDORSER, endorser=None, sigs={ENDORSER: s},
+                  is_owner=True, amount=3, extra_sigs=True)
+           for s in range(1, 4)],
         author=ENDORSER, endorser=None,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,
@@ -239,11 +239,11 @@ def test_plugin_or_rule_one_amount_all_roles_owner_endorser(write_auth_req_valid
                        for s1 in range(1, 4)
                        for s2 in range(1, 4)
                        for owner in [True, False]
-                       for amount in [0, None]] +
-        [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s1, ENDORSER: s2},
-                is_owner=True, amount=3, extra_sigs=True)
-         for s1 in range(1, 4)
-         for s2 in range(1, 4)],
+                       for amount in [0, None]]
+        + [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s1, ENDORSER: s2},
+                  is_owner=True, amount=3, extra_sigs=True)
+           for s1 in range(1, 4)
+            for s2 in range(1, 4)],
         author=IDENTITY_OWNER, endorser=ENDORSER,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,
@@ -306,11 +306,11 @@ def test_plugin_or_rule_diff_amount_same_role_owner_endorser(write_auth_req_vali
         valid_actions=[Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s, ENDORSER: 2},
                               is_owner=owner, amount=2, extra_sigs=True)
                        for s in range(1, 4)
-                       for owner in [True, False]] +
-        [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s, ENDORSER: 3},
-                is_owner=owner, amount=1, extra_sigs=True)
-         for s in range(1, 4)
-         for owner in [True, False]],
+                       for owner in [True, False]]
+        + [Action(author=IDENTITY_OWNER, endorser=ENDORSER, sigs={IDENTITY_OWNER: s, ENDORSER: 3},
+                  is_owner=owner, amount=1, extra_sigs=True)
+           for s in range(1, 4)
+            for owner in [True, False]],
         author=IDENTITY_OWNER, endorser=ENDORSER,
         all_signatures=signatures, is_owner=is_owner, amount=amount,
         write_auth_req_validator=write_auth_req_validator,

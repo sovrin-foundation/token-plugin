@@ -61,9 +61,8 @@ def test_address_utxos(helpers, addresses):
 
     address = addresses[0]
     outputs = [{"address": address, "amount": 1000}]
-    mint_result = helpers.general.do_mint(outputs)
+    helpers.general.do_mint(outputs)
 
-    mint_seq_no = get_seq_no(mint_result)
     get_utxo_result = helpers.general.get_utxo_addresses([address])[0]
 
     assert get_utxo_result[0][PAYMENT_ADDRESS] == address
@@ -169,9 +168,6 @@ def test_get_more_then_thousand_utxos_with_from(helpers, addresses, nodeSetWithI
             state.set(key, str(amount).encode())
 
     # NB: this transaction is needed just to update bls_store with new root hash
-    total = 1000
-    outputs = [{"address": address_1, "amount": total}]
-    mint_result = helpers.general.do_mint(outputs)
 
     shift = 50
     request = helpers.request.get_utxo(address_2, utxos[shift][2])

@@ -40,7 +40,7 @@ def test_revert_batches_with_fees_unset_fees_without_fee(looper, helpers,
         r = sdk_sign_and_submit_req_obj(looper, sdk_pool_handle, helpers.request._steward_wallet, request_check_health)
         looper.runFor(waits.expectedPrePrepareTime(len(node_set)))
         """
-        We send only 1 txn with fees, and expects, 
+        We send only 1 txn with fees, and expects,
         that we have only 1 uncommitted txn for token_ledger
         """
         assert get_uncommitted_txns_count_for_pool([reverted_node], TOKEN_LEDGER_ID) - uncommitted_size_before == 1
@@ -52,7 +52,7 @@ def test_revert_batches_with_fees_unset_fees_without_fee(looper, helpers,
         helpers.node.reset_fees()
         sdk_add_new_nym(looper, sdk_pool_handle, sdk_wallet_steward)
         """
-        We sent a NYM txn without fees and expects, 
+        We sent a NYM txn without fees and expects,
         that count of uncommitted txns wasn`t changed
         """
         assert get_uncommitted_txns_count_for_pool([reverted_node], TOKEN_LEDGER_ID) - uncommitted_size_before == 1
