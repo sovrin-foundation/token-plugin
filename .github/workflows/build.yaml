@@ -1,17 +1,21 @@
 name: token-plugin-build
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
       - gha-ubuntu-20.04
       - ubuntu-20.04
       - ubuntu-20.04-upgrade
+      - Devcontainers
   pull_request:
     branches:
       - master
       - gha-ubuntu-20.04
       - ubuntu-20.04
       - ubuntu-20.04-upgrade
+      - Devcontainers
+
 jobs:
   workflow-setup:
     runs-on: ubuntu-latest
@@ -33,17 +37,9 @@ jobs:
         run: |
           # Convert the GitHub repository name to lowercase
           echo "::set-output name=GITHUB_REPOSITORY_NAME::$(echo ${GITHUB_REPOSITORY,,})"
-          # Set variables according to version of ubuntu
-          if [[ "${{github.base_ref}}" == "master" || "${{github.ref}}" == "refs/heads/master" ]]; then
-            echo "::set-output name=CACHE_KEY_BUILD::${{ hashFiles('.github/workflows/build/Dockerfile.ubuntu-16-04') }}"
-            echo "::set-output name=CACHE_KEY_LINT::${{ hashFiles('.github/workflows/lint/Dockerfile.ubuntu-16-04') }}"
-            echo "::set-output name=DOCKER_FILE_POSTFIX::ubuntu-16-04"
-          fi
-          if [[ "${{github.base_ref}}" == "ubuntu-20.04" || "${{github.ref}}" == "refs/heads/ubuntu-20.04" ||  "${{github.base_ref}}" == "ubuntu-20.04-upgrade" || "${{github.ref}}" == "refs/heads/ubuntu-20.04-upgrade" ]]; then
-            echo "::set-output name=CACHE_KEY_BUILD::${{ hashFiles('.github/workflows/build/Dockerfile.ubuntu-20-04') }}"
-            echo "::set-output name=CACHE_KEY_LINT::${{ hashFiles('.github/workflows/lint/Dockerfile.ubuntu-20-04') }}"
-            echo "::set-output name=DOCKER_FILE_POSTFIX::ubuntu-20-04"
-          fi
+          echo "::set-output name=CACHE_KEY_BUILD::${{ hashFiles('.github/workflows/build/Dockerfile.ubuntu-20-04') }}"
+          echo "::set-output name=CACHE_KEY_LINT::${{ hashFiles('.github/workflows/lint/Dockerfile.ubuntu-20-04') }}"
+          echo "::set-output name=DOCKER_FILE_POSTFIX::ubuntu-20-04"
 
   build-image:
     # Reference to workflow-setup job is required to access its various outputs.
@@ -65,13 +61,48 @@ jobs:
           path: ${GITHUB_WORKSPACE}/cache
           key: ${{ env.CACHE_KEY_BUILD}}
 
-      - name: If NOT found in cache, build and push image.
+      - name: Log into the GitHub Container Registry
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        uses: docker/setup-buildx-action@v1
+
+      - name: Prepare image labels and tags
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        id: prep
+        shell: bash
+        run: |
+          DOCKER_IMAGE=ghcr.io/${{ env.GITHUB_REPOSITORY_NAME }}/token-plugin-build
+          # ToDo - Update hard coded 'ubuntu-16-04' tag when integrating these flows with the ubuntu-20.04-upgrade branch.
+          TAGS="${DOCKER_IMAGE}:latest,${DOCKER_IMAGE}:ubuntu-20.04"
+          echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+
+      - name: Build and push image
+        if: steps.cache-image.outputs.cache-hit != 'true'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: .github/workflows/build/Dockerfile.${{ env.DOCKER_FILE_POSTFIX }}
+          no-cache: true
+          push: true
+          tags: ${{ steps.prep.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.event.repository.html_url }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+
+      - name: Touch Cache
         if: steps.cache-image.outputs.cache-hit != 'true'
         run: |
-          echo ${{ secrets.CR_PAT }} | docker login ghcr.io --username ${{ secrets.CR_USER }} --password-stdin
-          docker build -f .github/workflows/build/Dockerfile.${{ env.DOCKER_FILE_POSTFIX }} --no-cache -t ${{ env.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ env.CACHE_KEY_BUILD }} .
-          docker tag ${{ env.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ env.CACHE_KEY_BUILD }} ghcr.io/${{ env.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ env.DOCKER_FILE_POSTFIX }}
-          docker push ghcr.io/${{ env.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ env.DOCKER_FILE_POSTFIX }}
           mkdir -p ${GITHUB_WORKSPACE}/cache
           touch ${GITHUB_WORKSPACE}/cache/${{ env.CACHE_KEY_BUILD }}
 

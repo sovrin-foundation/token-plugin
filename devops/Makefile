@@ -56,7 +56,7 @@ EXPORT_ENV += OSNAME SRC_DIR_NAME PYTEST_ARGS
 
 all: test_dry test package
 
-include ext/Makefile
+include ./ext/Makefile
 
 export OSNAME
 
