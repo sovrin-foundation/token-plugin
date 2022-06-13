@@ -74,7 +74,6 @@ dist/*/*
 
 # PyCharm settings
 .idea/
-.vscode/
 
 # Dolphin file manager (KDE)
 .directory

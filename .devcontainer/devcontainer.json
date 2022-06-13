@@ -1,0 +1,37 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
+// https://github.com/microsoft/vscode-dev-containers/tree/v0.238.0/containers/docker-existing-dockerfile
+{
+	"name": "Ubuntu",
+	"build": {
+		"dockerfile": "Dockerfile",
+		// Update 'VARIANT' to pick an Ubuntu version: hirsute, focal, bionic
+		// Use hirsute or bionic on local arm64/Apple Silicon.
+		"args": { "VARIANT": "focal" }
+	},
+
+	// Set *default* container specific settings.json values on container create.
+	"settings": {},
+
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"mhutchie.git-graph",
+		"eamodio.gitlens",
+		"ms-python.python",
+		"cschleiden.vscode-github-actions",
+		"eamodio.gitlens",
+		"GitHub.vscode-pull-request-github",
+		"ms-vscode.makefile-tools",
+		"ms-azuretools.vscode-docker"
+	],
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// pip 20.0.2 will complain about version mismatches but will install indy sdk correctly. Newer versions of pip will need to use the `--use-deprecated legacy-resolver`. See https://github.com/hyperledger/indy-sdk/issues/2473
+	"postCreateCommand": "dpkg -i deps/libsovtoken_1.0.2_amd64.deb && bash install_payment_plugins.sh",
+	"mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ]
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	//"remoteUser": "vscode"
+}
