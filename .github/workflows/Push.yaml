@@ -48,10 +48,26 @@ jobs:
       DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
       UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
     
-  token-plugin-tests:
-    name: Token Plugin Tests
+  # token-plugin-tests:
+  #   name: Token Plugin Tests
+  #   needs: [workflow-setup, build-image]
+  #   uses: ./.github/workflows/reuseable_test.yaml
+  #   with:
+  #     GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+  #     UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+
+  build-package:
+    name: Token Plugin Build package
     needs: [workflow-setup, build-image]
-    uses: ./.github/workflows/reuseable_test.yaml
+    uses: ./.github/workflows/reuseable_build_package.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
       UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+
+  publish-package:
+    name: Token Plugin Publish Packages
+    needs: [workflow-setup, build-package]
+    uses: ./.github/workflows/reuseable_publish.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}

@@ -1,0 +1,39 @@
+name: "Build Token Plugin Package"
+
+on:
+  workflow_call:
+    inputs:
+      GITHUB_REPOSITORY_NAME:
+        required: true
+        type: string
+      UBUNTU_VERSION:
+        required: true
+        type: string
+
+jobs:
+  build_token_plugin_release:
+    name: Token Plugin Build Packages
+    runs-on: ubuntu-20.04
+    container:
+      image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
+    steps:
+      - name: adding github workspace as safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Build Token Plugin deployment package
+        run: |
+          mkdir -p /tmp/build-output
+          fpm  --input-type dir --output-type deb --name sovtoken  --version latest --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtoken/
+          fpm  --input-type dir --output-type deb --name sovtokenfees  --version latest --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtokenfees/
+          mv ./*.deb /tmp/build-output
+      - name: Upload sovtoken-deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: sovtoken-deb
+          path: /tmp/build-output/sovtoken_*.deb
+      - name: Upload sovtokenfees-deb
+        uses: actions/upload-artifact@v2
+        with:
+          name: sovtokenfees-deb
+          path: /tmp/build-output/sovtokenfees_*.deb
