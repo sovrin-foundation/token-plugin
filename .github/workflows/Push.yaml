@@ -1,0 +1,50 @@
+name: token-plugin-push
+
+on:
+  push:
+    branches:
+      - master
+      - gha-ubuntu-20.04
+      - ubuntu-20.04
+      - ubuntu-20.04-upgrade
+      - Devcontainers
+      - GHARefactoring
+  workflow_dispatch:
+
+jobs:
+  workflow-setup:
+    name: Initialize Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      CACHE_KEY_BUILD: ${{ steps.setup.outputs.CACHE_KEY_BUILD }}
+      UBUNTU_VERSION: ${{ steps.setup.outputs.UBUNTU_VERSION }}
+      # Expose the lowercase version of the GitHub repository name
+      # to all subsequent jobs that reference image repositories
+      # as the push and pull operations require the URL of the repository
+      # to be in lowercase.
+      GITHUB_REPOSITORY_NAME: ${{ steps.setup.outputs.GITHUB_REPOSITORY_NAME }}
+      distribution: ${{ steps.setup.outputs.distribution }}
+      publish: ${{ steps.setup.outputs.publish }}
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@v2
+      - name: setup
+        id: setup
+        uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
+
+  lint:
+    name: Lint
+    needs: [workflow-setup]
+#    if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
+    uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
+
+  build-image:
+    name: Create Builder Image
+    needs: [workflow-setup,lint]
+    if: ${{ always() }}
+    uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
+    with:
+      CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
+      DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+    
