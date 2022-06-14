@@ -1,0 +1,46 @@
+name: "Test Token Plugin"
+
+on:
+  workflow_call:
+    inputs:
+      GITHUB_REPOSITORY_NAME:
+        required: true
+        type: string
+      UBUNTU_VERSION:
+        required: true
+        type: string
+
+jobs:
+  token_plugin_tests:
+    name: Token Plugin Tests
+    # Reference to workflow-setup job is required to access the GITHUB_REPOSITORY_NAME output.
+    runs-on: ubuntu-20.04
+    # Fix for scacap/action-surefire-report out of memory error:
+    # - https://github.com/ScaCap/action-surefire-report/issues/17
+    container:
+      image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
+    strategy:
+      matrix:
+        module: [sovtoken, sovtokenfees]
+      fail-fast: false
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          pip install -U -e sovtoken
+          pip install -U -e sovtokenfees
+
+      - name: Run Token Plugin ${{ matrix.module }}
+        id: token-plugin-test
+        run: python3 -m pytest -l -vv --junitxml=test-result-token-plugin-${{ matrix.module }}.xml ${{ matrix.module }}
+
+      - name: Publish Test Report
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1.0.7
+        continue-on-error: true
+        with:
+          check_name: Token Plugin ${{ matrix.module }} Test Report
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: test-result-token-plugin-${{ matrix.module }}.xml

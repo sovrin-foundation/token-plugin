@@ -32,15 +32,15 @@ jobs:
         id: setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
 
-  lint:
-    name: Lint
-    needs: [workflow-setup]
-#    if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
-    uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
+#   lint:
+#     name: Lint
+#     needs: [workflow-setup]
+# #    if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
+#     uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
 
   build-image:
     name: Create Builder Image
-    needs: [workflow-setup,lint]
+    needs: [workflow-setup]
     if: ${{ always() }}
     uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
     with:
@@ -48,3 +48,10 @@ jobs:
       DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
       UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
     
+  token-plugin-tests:
+    name: Token Plugin Tests
+    needs: [workflow-setup, build-image]
+    uses: ./.github/workflows/reuseable_test.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
