@@ -23,18 +23,19 @@ jobs:
             python3-pip
           pip3 install -U pip plumbum==1.6.7 six==1.12.0 deb-pkg-tools
       - name: Clone Sovrin Packaging Repo
-        run: echo "Todo Clone Sovrin Packaging Repo"
+        run: echo "Todo Clone Sovrin Packaging Repo (sovtoken needs to be used and set up)"
       - name: Download sovtoken-deb package from GHA
         uses: actions/download-artifact@v2
         with:
           name: sovtoken-deb
-          path: ./
+          path: /tmp/tokendebs/
       - name: Download sovtokenfees-deb package from GHA
         uses: actions/download-artifact@v2
         with:
           name: sovtokenfees-deb
-          path: ./
+          path: /tmp/tokendebs/
       - name: Publish Packages
         run: |
           ls -lisha
           echo "Todo Packages with upload_debs.py and secrets"
+          echo "Something like:  ./upload_debs.py /tmp/tokendebs {$repoName} {$repoComponent} --host {$secrets.SOVRIN_REPO_HOST} --ssh-key {$secrets.sovrin_key}"
