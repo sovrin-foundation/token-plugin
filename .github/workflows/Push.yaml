@@ -32,11 +32,11 @@ jobs:
         id: setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
 
-#   lint:
-#     name: Lint
-#     needs: [workflow-setup]
-# #    if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
-#     uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
+   lint:
+     name: Lint
+     needs: [workflow-setup]
+     if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
+     uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
 
   build-image:
     name: Create Builder Image
