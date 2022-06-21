@@ -7,6 +7,6 @@
     ],
     "python.testing.unittestEnabled": false,
     "yaml.schemas": {
-        "https://json.schemastore.org/github-workflow.json": "file:///workspace/token-plugin-1/.github/workflows/build.yaml"
+        "https://json.schemastore.org/github-workflow": "/.github/workflows/**/*.yml"
     }
 }
