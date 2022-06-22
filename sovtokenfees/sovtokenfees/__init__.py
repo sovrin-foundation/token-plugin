@@ -1,4 +1,4 @@
-from sovtokenfees.__metadata__ import *
+import sovtokenfees.__metadata__
 
 from sovtokenfees.transactions import FeesTransactions
 from sovtokenfees.messages.fields import TxnFeesField
