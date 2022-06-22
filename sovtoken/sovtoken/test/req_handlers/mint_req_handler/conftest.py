@@ -17,7 +17,7 @@ from plenum.test.testing_utils import FakeSomething
 
 
 @pytest.fixture(scope="module")
-def mint_handler(utxo_cache, db_manager, write_auth_req_validator):
+def mint_handler(utxo_cache, db_manager, write_auth_req_validator):  # noqa: F811
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return MintHandler(database_manager=db_manager,
                        write_req_validator=write_auth_req_validator)

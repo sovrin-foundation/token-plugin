@@ -6,9 +6,6 @@ from sovtoken.test.helpers.helper_general import utxo_from_addr_and_seq_no
 from plenum.common.exceptions import RequestRejectedException
 from plenum.common.txn_util import get_seq_no
 
-from sovtoken.test.helper import user1_token_wallet
-from sovtoken.test.test_public_xfer_1 import addresses, initial_mint
-
 
 TestRunningTimeLimitSec = 500   # `test_incorrect_funds` takes time
 

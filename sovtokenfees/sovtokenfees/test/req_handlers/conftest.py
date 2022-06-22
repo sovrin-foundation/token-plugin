@@ -21,7 +21,7 @@ in_memory_serializer = JsonSerializer()
 
 
 @pytest.fixture(scope="module")
-def db_manager_with_config(db_manager, utxo_cache):
+def db_manager_with_config(db_manager, utxo_cache):  # noqa: F811
     storage = initKeyValueStorage(KeyValueStorageType.Memory,
                                   None,
                                   "configInMemoryStore",

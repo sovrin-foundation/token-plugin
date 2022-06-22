@@ -15,14 +15,14 @@ from plenum.test.helper import sdk_json_to_request_object
 
 
 @pytest.fixture(scope="module")
-def xfer_handler(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
+def xfer_handler(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):  # noqa: F811
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return XferHandler(db_manager,
                        write_req_validator=write_auth_req_validator)
 
 
 @pytest.fixture(scope="module")
-def xfer_handler_1_0_0(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):
+def xfer_handler_1_0_0(utxo_cache, db_manager, write_auth_req_validator, mint_tokens):  # noqa: F811
     write_auth_req_validator.auth_map.update(sovtoken_auth_map)
     return XferHandler100(db_manager,
                           write_req_validator=write_auth_req_validator)

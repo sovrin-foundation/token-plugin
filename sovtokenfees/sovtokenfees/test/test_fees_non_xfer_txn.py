@@ -34,16 +34,6 @@ def fees_paid(
 
 
 @pytest.fixture()
-def fees_paid(
-    helpers,
-    fees_set,
-    address_main,
-    mint_tokens
-):
-    return pay_fees(helpers, fees_set, address_main)
-
-
-@pytest.fixture()
 def fees_paid_manually(
     helpers,
     fees_set,

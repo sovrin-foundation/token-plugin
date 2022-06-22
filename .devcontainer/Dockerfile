@@ -77,7 +77,9 @@ RUN pip3 install -U \
     base58==2.1.0 \
     distro==1.5.0 \
     execnet==1.8.0 \
-    flake8==3.8.4 \
+    flake8 \
+    pep8 \
+    pep8-naming \
     iniconfig==1.1.1 \
     intervaltree==2.1.0 \
     ioflo==2.0.2 \
@@ -94,8 +96,6 @@ RUN pip3 install -U \
     prompt-toolkit==3.0.16 \
     psutil==5.6.6 \
     py==1.10.0 \
-    pycodestyle==2.6.0 \
-    pyflakes==2.2.0 \
     pyparsing==2.4.7 \
     pytest==6.2.2 \
     pytest-asyncio==0.14.0 \

@@ -23,14 +23,14 @@ from storage.helper import initKeyValueStorage
 
 
 @pytest.fixture(scope="module")
-def domain_fee_handler(db_manager_with_config, fees_tracker, utxo_cache, mint_tokens):
+def domain_fee_handler(db_manager_with_config, fees_tracker, utxo_cache, mint_tokens):  # noqa: F811
     handler = DomainFeeHandler(db_manager_with_config, fees_tracker)
     handler.txn_type = NYM
     return handler
 
 
 @pytest.fixture()
-def nym_request(wallet, looper, trustees):
+def nym_request(wallet, looper, trustees):  # noqa: F811
     did_future = create_and_store_my_did(wallet, "{}")
     did, vk = looper.loop.run_until_complete(did_future)
     nym_future = build_nym_request(trustees[0], did, vk, None, None)
@@ -39,7 +39,7 @@ def nym_request(wallet, looper, trustees):
 
 
 @pytest.fixture()
-def nym_request_with_fees(libsovtoken, nym_request, wallet, payment_address, looper):
+def nym_request_with_fees(libsovtoken, nym_request, wallet, payment_address, looper):  # noqa: F811
     inputs = json.dumps(
         ["txo:sov:" + b58encode_check(json.dumps({"address": payment_address, "seqNo": 1}).encode()).decode()])
     outputs = json.dumps([{

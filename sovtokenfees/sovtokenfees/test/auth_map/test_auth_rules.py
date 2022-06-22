@@ -460,7 +460,7 @@ def address(helpers):
     return helpers.wallet.create_address()
 
 
-def add_fees_request_with_address(helpers, fee_amount, request, address):
+def add_fees_request_with_address(helpers, fee_amount, request, address):  # noqa: F811
     if fee_amount is None:
         return request
     utxos_found = helpers.general.get_utxo_addresses([address])[0]

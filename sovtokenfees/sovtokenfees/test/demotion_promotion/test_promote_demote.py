@@ -21,7 +21,7 @@ from indy_node.test.helper import start_stopped_node
 
 from plenum.common.constants import KeyValueStorageType
 
-nodeCount = 6
+NODE_COUNT = 6
 
 whitelist = ['Consistency verification of merkle tree from hash store failed']
 

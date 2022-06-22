@@ -1,4 +1,4 @@
-from sovtoken.__metadata__ import *
+import sovtoken.__metadata__
 
 from sovtoken.constants import TOKEN_LEDGER_ID
 from sovtoken.transactions import TokenTransactions

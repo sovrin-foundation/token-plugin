@@ -17,7 +17,7 @@ MAX_SIG_COUNT = 3
 
 
 @pytest.fixture(scope='module')
-def write_auth_req_validator(warv, helpers):
+def write_auth_req_validator(warv, helpers):  # noqa: F811
     fee_handler = helpers.node.get_fees_req_handler()
     fees_authorizer = FeesAuthorizer(config_state=warv.config_state,
                                      utxo_cache=fee_handler.utxo_cache)

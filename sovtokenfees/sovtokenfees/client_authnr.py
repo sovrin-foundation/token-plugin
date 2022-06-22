@@ -10,7 +10,7 @@ from plenum.common.messages.internal_messages import PreSigVerification
 
 
 class FeesAuthNr(LedgerBasedAuthNr):
-    pluginType = PLUGIN_TYPE_AUTHENTICATOR
+    PLUGIN_TYPE = PLUGIN_TYPE_AUTHENTICATOR
 
     def __init__(self, write_types, query_types, action_types, cache, token_authnr):
         super().__init__(write_types, query_types, action_types, cache)
