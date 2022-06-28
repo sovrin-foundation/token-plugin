@@ -9,7 +9,9 @@ on:
       UBUNTU_VERSION:
         required: true
         type: string
-
+    secrets:
+      BOT_PR_PAT:
+        required: true
 jobs:
   publish_token_plugin:
     name: Token Plugin Publish Packages
@@ -23,7 +25,12 @@ jobs:
             python3-pip
           pip3 install -U pip plumbum==1.6.7 six==1.12.0 deb-pkg-tools
       - name: Clone Sovrin Packaging Repo
-        run: echo "Todo Clone Sovrin Packaging Repo (sovtoken needs to be used and set up)"
+        uses: actions/checkout@v3
+        with:
+          path: sovrin-packaging
+          token: ${{ secrets.BOT_PR_PAT }}
+      - name: Test cloned sovrin packaging
+        run: ls sovrin-packaging/
       - name: Download sovtoken-deb package from GHA
         uses: actions/download-artifact@v2
         with:

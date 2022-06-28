@@ -96,4 +96,5 @@ jobs:
     uses: ./.github/workflows/reuseable_publish.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.release-infos.outputs.GITHUB_REPOSITORY_NAME }}
-      UBUNTU_VERSION: ${{ needs.release-infos.outputs.UBUNTU_VERSION }}q
+      UBUNTU_VERSION: ${{ needs.release-infos.outputs.UBUNTU_VERSION }}
+      BOT_PR_PAT: ${{ secrets.BOT_PR_PAT }}
