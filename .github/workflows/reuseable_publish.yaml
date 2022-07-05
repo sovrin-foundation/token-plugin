@@ -9,6 +9,9 @@ on:
       UBUNTU_VERSION:
         required: true
         type: string
+      REPO_COMPONENT:
+        required: true
+        type: string
     secrets:
       BOT_PR_PAT:
         required: true
@@ -27,6 +30,7 @@ jobs:
       - name: Clone Sovrin Packaging Repo
         uses: actions/checkout@v3
         with:
+          repository: sovrin-foundation/sovrin-packaging
           path: sovrin-packaging
           token: ${{ secrets.BOT_PR_PAT }}
       - name: Test cloned sovrin packaging
@@ -43,6 +47,4 @@ jobs:
           path: /tmp/tokendebs/
       - name: Publish Packages
         run: |
-          ls -lisha
-          echo "Todo Packages with upload_debs.py and secrets"
-          echo "Something like:  ./upload_debs.py /tmp/tokendebs {$repoName} {$repoComponent} --host {$secrets.SOVRIN_REPO_HOST} --ssh-key {$secrets.sovrin_key}"
+          ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ${{ secrets.SOVRIN_REPO_KEY }}"
