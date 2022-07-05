@@ -9,8 +9,9 @@ on:
       - Devcontainers
       - GHARefactoring
     paths:
-      - '**.py'
-      - '.github/**'
+      - '**'
+      - '!sovtokenfees/sovtokenfees/metadata.json'
+      - '!sovtoken/sovtoken/metadata.json'
   workflow_dispatch:
 
 jobs:
@@ -42,7 +43,6 @@ jobs:
             testsNeeded:
               - '**.py'
               - '.github/**'
-
   lint:
      name: Lint
      needs: [workflow-setup]
