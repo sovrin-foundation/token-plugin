@@ -72,4 +72,5 @@ jobs:
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
       UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+    secrets:
       BOT_PR_PAT: ${{ secrets.BOT_PR_PAT }}
