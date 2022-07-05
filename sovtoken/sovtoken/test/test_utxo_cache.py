@@ -18,7 +18,7 @@ VALID_ADDR_2 = '8kjqqnF3m6agp9auU7k4TWAhuGygFAgPzbNH3shp4HFL'
 
 
 @pytest.yield_fixture()  # noqa
-def utxo_cache(parametrised_storage) -> UTXOCache:
+def utxo_cache(parametrised_storage) -> UTXOCache:  # noqa: F811
     cache = UTXOCache(parametrised_storage)
     yield cache
     if cache.un_committed:

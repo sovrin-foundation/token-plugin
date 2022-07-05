@@ -5,35 +5,7 @@ from plenum.common.txn_util import get_seq_no
 from plenum.common.exceptions import RequestNackedException
 from plenum.common.types import OPERATION
 from sovtoken.constants import SIGS, ADDRESS, SEQNO, AMOUNT, OUTPUTS, PAYMENT_ADDRESS, TOKEN_LEDGER_ID, INPUTS
-from sovtoken.test.helper import user1_token_wallet, libsovtoken_address_to_address
-
-
-@pytest.fixture
-def addresses(helpers):
-    return helpers.wallet.create_new_addresses(5)
-
-
-@pytest.fixture
-def addresses_inner(helpers):
-    return helpers.inner.wallet.create_new_addresses(5)
-
-
-@pytest.fixture
-def initial_mint(helpers, addresses):
-    outputs = [{"address": address, "amount": 100} for address in addresses]
-    mint_request = helpers.request.mint(outputs)
-    responses = helpers.sdk.send_and_check_request_objects([mint_request])
-    result = helpers.sdk.get_first_result(responses)
-    return result
-
-
-@pytest.fixture
-def initial_mint_inner(helpers, addresses_inner):
-    outputs = [{"address": "pay:sov:" + address, "amount": 100} for address in addresses_inner]
-    mint_request = helpers.request.mint(outputs)
-    responses = helpers.sdk.send_and_check_request_objects([mint_request])
-    result = helpers.sdk.get_first_result(responses)
-    return result
+from sovtoken.test.helper import libsovtoken_address_to_address
 
 
 def test_state_after_xfer(helpers, initial_mint, addresses, nodeSetWithIntegratedTokenPlugin):

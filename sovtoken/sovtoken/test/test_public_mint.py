@@ -229,7 +229,7 @@ def test_trustee_valid_minting(helpers, addresses):
     sf_master_gets = 6 * BILLION * TOKENAMT
     remaining = total_mint - sf_master_gets
     outputs = [{ADDRESS: address1, AMOUNT: sf_master_gets}, {ADDRESS: address2, AMOUNT: remaining}]
-    result = helpers.general.do_mint(outputs)
+    _ = helpers.general.do_mint(outputs)
 
     [
         address1_utxos,

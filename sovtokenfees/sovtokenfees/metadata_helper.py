@@ -7,5 +7,5 @@ def get_metadata(json_str, keys):
         try:
             md[key]
         except KeyError:
-            raise KeyError("%s not found".format(key))
+            raise KeyError("{0} not found".format(key))
     return md

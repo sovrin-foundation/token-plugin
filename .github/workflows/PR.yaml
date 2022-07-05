@@ -1,0 +1,83 @@
+name: token-plugin-pr
+on:
+  pull_request:
+    branches:
+      - master
+      - gha-ubuntu-20.04
+      - ubuntu-20.04
+      - ubuntu-20.04-upgrade
+      - Devcontainers
+      - GHARefactoring
+    paths:
+      - '**.py'
+      - '.github/**'
+  workflow_dispatch:
+
+jobs:
+  workflow-setup:
+    name: Initialize Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      CACHE_KEY_BUILD: ${{ steps.setup.outputs.CACHE_KEY_BUILD }}
+      UBUNTU_VERSION: ${{ steps.setup.outputs.UBUNTU_VERSION }}
+      # Expose the lowercase version of the GitHub repository name
+      # to all subsequent jobs that reference image repositories
+      # as the push and pull operations require the URL of the repository
+      # to be in lowercase.
+      GITHUB_REPOSITORY_NAME: ${{ steps.setup.outputs.GITHUB_REPOSITORY_NAME }}
+      distribution: ${{ steps.setup.outputs.distribution }}
+      publish: ${{ steps.setup.outputs.publish }}
+      testsNeeded: ${{ steps.testsNeeded.outputs.testsNeeded }}
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@v2
+      - name: setup
+        id: setup
+        uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
+      - name: testsNeeded
+        id: testsNeeded
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            testsNeeded:
+              - '**.py'
+              - '.github/**'
+
+  lint:
+     name: Lint
+     needs: [workflow-setup]
+     if: ${{ needs.workflow-setup.outputs.testsNeeded == 'true' }}
+     uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
+
+  build-image:
+    name: Create Builder Image
+    needs: [workflow-setup, lint]
+    uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
+    with:
+      CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
+      DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+    
+  token-plugin-tests:
+    name: Token Plugin Tests
+    needs: [workflow-setup, build-image]
+    uses: ./.github/workflows/reuseable_test.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+
+  build-packages:
+    name: Token Plugin Build package
+    needs: [workflow-setup,  token-plugin-tests]
+    uses: ./.github/workflows/reuseable_build_package.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+          
+  statusCheck:
+    name: statusCheck
+    runs-on: ubuntu-latest
+    needs: [workflow-setup, build-packages]
+    if: ${{ needs.workflow-setup.outputs.testsNeeded == 'false' || success() }}
+    steps:
+      - run: 'echo "Just a status Check (Always true, when executed) for branch protection rules(blocks merging while test are running and if tests fail)." '

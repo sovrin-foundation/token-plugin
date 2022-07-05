@@ -71,39 +71,3 @@ def send_get_utxo(looper, address, sdk_wallet_client, sdk_pool_handle):
 def decode_proof(proof):
     proof = proof_nodes_serializer.deserialize(proof)
     return Trie.deserialize_proof(proof)
-
-
-@pytest.fixture(scope="module")
-def user1_token_wallet():
-    return TokenWallet('user1')
-
-
-@pytest.fixture(scope="module")
-def user2_token_wallet():
-    return TokenWallet('user2')
-
-
-@pytest.fixture(scope="module")
-def user3_token_wallet():
-    return TokenWallet('user3')
-
-
-@pytest.fixture(scope="module")
-def user1_address(user1_token_wallet):
-    seed = 'user1000000000000000000000000000'.encode()
-    user1_token_wallet.add_new_address(seed=seed)
-    return next(iter(user1_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user2_address(user2_token_wallet):
-    seed = 'user2000000000000000000000000000'.encode()
-    user2_token_wallet.add_new_address(seed=seed)
-    return next(iter(user2_token_wallet.addresses.keys()))
-
-
-@pytest.fixture(scope="module")
-def user3_address(user3_token_wallet):
-    seed = 'user3000000000000000000000000000'.encode()
-    user3_token_wallet.add_new_address(seed=seed)
-    return next(iter(user3_token_wallet.addresses.keys()))

@@ -1,0 +1,70 @@
+name: "Test Token Plugin"
+
+on:
+  workflow_call:
+    inputs:
+      GITHUB_REPOSITORY_NAME:
+        required: true
+        type: string
+      UBUNTU_VERSION:
+        required: true
+        type: string
+
+jobs:
+  token_plugin_tests:
+    name: Token Plugin Tests
+    # Reference to workflow-setup job is required to access the GITHUB_REPOSITORY_NAME output.
+    runs-on: ubuntu-20.04
+    # Fix for scacap/action-surefire-report out of memory error:
+    # - https://github.com/ScaCap/action-surefire-report/issues/17
+    container:
+      image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
+    strategy:
+      matrix:
+        module: [sovtoken, sovtokenfees]
+        dir: ['*.py', auth_map, req_handlers, unittests]
+        include:
+          - module: sovtokenfees
+            dir: 3pc_batching
+          - module: sovtokenfees
+            dir: authorize
+          - module: sovtokenfees
+            dir: catchup
+          - module: sovtokenfees
+            dir: chain
+          - module: sovtokenfees
+            dir: demotion_promotion
+          - module: sovtokenfees
+            dir: dynamic_validation
+          - module: sovtokenfees
+            dir: multipleio
+          - module: sovtokenfees
+            dir: state_proof
+          - module: sovtokenfees
+            dir: taa
+          - module: sovtokenfees
+            dir: transactions
+          - module: sovtokenfees
+            dir: view_change
+      fail-fast: false
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          pip install -U -e sovtoken
+          pip install -U -e sovtokenfees
+
+      - name: Run Token Plugin ${{ matrix.module }} / ${{ matrix.dir }}
+        id: token-plugin-test
+        run: cd ${{ matrix.module }}/${{ matrix.module }}/test && python3 -m pytest -l -vv --junitxml=test-result-token-plugin-"${{ matrix.module }}"-"${{ matrix.dir }}".xml ${{ matrix.dir }}
+
+      - name: Publish Test Report
+        if: success() || failure()
+        uses: scacap/action-surefire-report@v1.0.7
+        continue-on-error: true
+        with:
+          check_name: Token Plugin ${{ matrix.module }} / ${{ matrix.dir }} Test Report
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          report_paths: ${{ matrix.module }}/${{ matrix.module }}/test/test-result-token-plugin-"${{ matrix.module }}"-"${{ matrix.dir }}".xml

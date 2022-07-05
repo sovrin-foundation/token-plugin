@@ -28,7 +28,7 @@ def test_add_metadata_with_not_existed_alias(looper,
     assert fees_alias not in current_fees[FEES]
     constraint = copy.deepcopy(auth_map.one_trustee_constraint)
     constraint.set_metadata({FEES_FIELD_NAME: fees_alias})
-    with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):
+    with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):  # noqa: F523
         sdk_send_and_check_auth_rule_request(looper,
                                              sdk_pool_handle,
                                              sdk_wallet_trustee,
@@ -49,7 +49,7 @@ def test_add_metadata_with_complex_constraint(looper,
     constraint = copy.deepcopy(auth_map.endorser_or_steward_or_trustee_constraint)
     # set metadata only for the last constraint in OrAuthConstraint
     constraint.auth_constraints[-1].set_metadata({FEES_FIELD_NAME: fees_alias})
-    with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):
+    with pytest.raises(RequestRejectedException, match="does not exist in current fees".format(fees_alias)):  # noqa: F523
         sdk_send_and_check_auth_rule_request(looper,
                                              sdk_pool_handle,
                                              sdk_wallet_trustee,

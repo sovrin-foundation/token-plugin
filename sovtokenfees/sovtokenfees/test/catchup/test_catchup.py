@@ -9,7 +9,7 @@ from sovtoken.constants import (ADDRESS, AMOUNT, SEQNO, TOKEN_LEDGER_ID,
                                 XFER_PUBLIC)
 from sovtoken.main import \
     integrate_plugin_in_node as integrate_token_plugin_in_node
-from sovtoken.test.helper import user1_token_wallet
+from sovtoken.test.conftest import user1_token_wallet
 from sovtokenfees.main import \
     integrate_plugin_in_node as integrate_fees_plugin_in_node
 from sovtokenfees.test.constants import NYM_FEES_ALIAS, XFER_PUBLIC_FEES_ALIAS

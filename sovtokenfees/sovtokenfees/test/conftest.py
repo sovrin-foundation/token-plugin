@@ -16,7 +16,7 @@ from sovtoken.test.conftest import sdk_trustees, sdk_stewards
 
 # fixtures, do not remove
 from indy_common.test.conftest import tconf as _tconf
-from indy_node.test.conftest import *
+from indy_node.test.conftest import *  # noqa: F403
 
 from sovtoken.constants import (
     XFER_PUBLIC, RESULT, ADDRESS, AMOUNT, SEQNO, OUTPUTS
@@ -90,7 +90,7 @@ class IOAddressesStatic(IOAddresses):
 
 
 @pytest.fixture(scope="module")
-def tconf(_tconf):
+def tconf(_tconf):  # noqa: F811
     oldMax3PCBatchSize = _tconf.Max3PCBatchSize
     oldMax3PCBatchWait = _tconf.Max3PCBatchWait
     _tconf.Max3PCBatchSize = 1000
@@ -184,7 +184,7 @@ def libsovtoken():
 
 
 @pytest.fixture(scope="module")
-def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):
+def sdk_wallet_steward(sdk_wallet_handle, sdk_stewards):  # noqa: F811
     return sdk_wallet_handle, sdk_stewards[0]
 
 
@@ -198,9 +198,9 @@ def helpers(
         sdk_wallet_client,
         sdk_wallet_steward,
         libsovtoken,
-        sdk_wallet_handle,
-        sdk_trustees,
-        sdk_stewards
+        sdk_wallet_handle,  # noqa: F811
+        sdk_trustees,  # noqa: F811
+        sdk_stewards  # noqa: F811
 ):
     return form_helpers(
         nodeSetWithIntegratedTokenPlugin,
@@ -398,7 +398,7 @@ def send_and_check_nym(
 
 # TODO old fixtures for backward compartibility
 @pytest.fixture
-def xfer_addresses(addresses):
+def xfer_addresses(addresses):  # noqa: F811
     return addresses[:2]
 
 
@@ -408,7 +408,7 @@ def xfer_mint_tokens(mint_multiple_tokens):
 
 
 @pytest.fixture(scope="module")
-def sdk_wallet_trustee(sdk_wallet_handle, sdk_trustees):
+def sdk_wallet_trustee(sdk_wallet_handle, sdk_trustees):  # noqa: F811
     return sdk_wallet_handle, sdk_trustees[0]
 
 

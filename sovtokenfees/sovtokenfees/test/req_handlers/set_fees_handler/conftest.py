@@ -15,7 +15,7 @@ from plenum.test.testing_utils import FakeSomething
 
 
 @pytest.fixture(scope="module")
-def set_fees_handler(db_manager_with_config, write_auth_req_validator):
+def set_fees_handler(db_manager_with_config, write_auth_req_validator):  # noqa: F811
     write_auth_req_validator.auth_map.update(sovtokenfees_auth_map)
     return SetFeesHandler(db_manager_with_config, write_auth_req_validator)
 
@@ -33,7 +33,7 @@ def idr_cache():
 
 
 @pytest.fixture()
-def set_fees_request(libsovtoken, looper, trustees, wallet, fees):
+def set_fees_request(libsovtoken, looper, trustees, wallet, fees):  # noqa: F811
     set_fees_future = build_set_txn_fees_req(wallet,
                                              trustees[0],
                                              "sov",

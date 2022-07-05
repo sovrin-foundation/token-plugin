@@ -55,11 +55,9 @@ def check_state(n, is_equal=False):
     assert (n.getLedger(TOKEN_LEDGER_ID).tree.root_hash == n.getLedger(
         TOKEN_LEDGER_ID).uncommitted_root_hash) == is_equal
 
-    assert (n.getState(DOMAIN_LEDGER_ID).headHash ==
-            n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
+    assert (n.getState(DOMAIN_LEDGER_ID).headHash == n.getState(DOMAIN_LEDGER_ID).committedHeadHash) == is_equal
 
-    assert (n.getState(TOKEN_LEDGER_ID).headHash ==
-            n.getState(TOKEN_LEDGER_ID).committedHeadHash) == is_equal
+    assert (n.getState(TOKEN_LEDGER_ID).headHash == n.getState(TOKEN_LEDGER_ID).committedHeadHash) == is_equal
 
 
 def get_amount_from_token_txn(token_txn):

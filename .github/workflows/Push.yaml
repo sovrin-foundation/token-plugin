@@ -1,0 +1,75 @@
+name: token-plugin-push
+
+on:
+  push:
+    branches:
+      - master
+      - gha-ubuntu-20.04
+      - ubuntu-20.04
+      - ubuntu-20.04-upgrade
+      - Devcontainers
+      - GHARefactoring
+    paths:
+      - '**.py'
+      - '.github/**'
+      
+jobs:
+  workflow-setup:
+    name: Initialize Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      CACHE_KEY_BUILD: ${{ steps.setup.outputs.CACHE_KEY_BUILD }}
+      UBUNTU_VERSION: ${{ steps.setup.outputs.UBUNTU_VERSION }}
+      # Expose the lowercase version of the GitHub repository name
+      # to all subsequent jobs that reference image repositories
+      # as the push and pull operations require the URL of the repository
+      # to be in lowercase.
+      GITHUB_REPOSITORY_NAME: ${{ steps.setup.outputs.GITHUB_REPOSITORY_NAME }}
+      distribution: ${{ steps.setup.outputs.distribution }}
+      publish: ${{ steps.setup.outputs.publish }}
+    steps:
+      - name: checkout source code
+        uses: actions/checkout@v2
+      - name: setup
+        id: setup
+        uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
+
+  lint:
+     name: Lint
+     needs: [workflow-setup]
+     uses: hyperledger/indy-shared-gha/.github/workflows/lint.yaml@v1
+
+  build-image:
+    name: Create Builder Image
+    needs: [workflow-setup]
+    if: ${{ always() }}
+    uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
+    with:
+      CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
+      DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+    
+  token-plugin-tests:
+    name: Token Plugin Tests
+    needs: [workflow-setup, build-image]
+    uses: ./.github/workflows/reuseable_test.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+
+  build-package:
+    name: Token Plugin Build package
+    needs: [workflow-setup, token-plugin-tests]
+    uses: ./.github/workflows/reuseable_build_package.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+
+  publish-package:
+    name: Token Plugin Publish Packages
+    needs: [workflow-setup, build-package]
+    uses: ./.github/workflows/reuseable_publish.yaml
+    with:
+      GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+      BOT_PR_PAT: ${{ secrets.BOT_PR_PAT }}

@@ -13,7 +13,6 @@ from sovtoken.util import update_token_wallet_with_result
 
 from sovtoken.test.helper import send_get_utxo, send_xfer, \
     decode_proof
-from sovtoken.test.helper import user1_token_wallet, user1_address
 from state.trie.pruning_trie import Trie, rlp_encode
 
 

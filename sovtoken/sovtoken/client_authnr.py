@@ -24,7 +24,7 @@ class AddressSigVerifier(Verifier):
 
 
 class TokenAuthNr(LedgerBasedAuthNr):
-    pluginType = PLUGIN_TYPE_AUTHENTICATOR
+    PLUGIN_TYPE = PLUGIN_TYPE_AUTHENTICATOR
 
     # ------------------------------------------------------------------------------------
     # Entrance point for transaction signature verification. Here come all transactions of all types,

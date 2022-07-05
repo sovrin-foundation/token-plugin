@@ -22,11 +22,11 @@ class UTXOError(Exception):
     pass
 
 
-class UTXONotFound(UTXOError):
+class UTXONotFound(UTXOError):  # noqa: N818
     pass
 
 
-class UTXOAddressNotFound(UTXONotFound):
+class UTXOAddressNotFound(UTXONotFound):  # noqa: N818
     pass
 
 

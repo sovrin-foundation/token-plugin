@@ -4,7 +4,6 @@ from indy.payment import add_request_fees, build_set_txn_fees_req, build_get_txn
 
 from plenum.common.request import Request
 from sovtoken.test.helpers import HelperRequest
-from sovtokenfees.constants import FEES
 from sovtokenfees.test.constants import txn_type_to_alias
 from sovtokenfees.test.helpers.abstract_helper_request import AbstractHelperRequest
 from plenum.common.constants import TXN_TYPE, ALIAS

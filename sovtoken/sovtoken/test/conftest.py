@@ -13,7 +13,7 @@ from plenum.test.conftest import get_data_for_role, get_payload_data
 from sovtoken.test.helper import send_get_utxo, send_xfer
 from sovtoken.test.helpers import form_helpers, libloader
 from indy_common.test.conftest import tconf as _tconf
-from indy_node.test.conftest import *
+from indy_node.test.conftest import *  # noqa: F403
 from indy.did import create_and_store_my_did
 from indy.ledger import build_nym_request, sign_and_submit_request
 
@@ -38,7 +38,7 @@ def build_wallets_from_data(name_seeds):
 
 
 @pytest.fixture(scope="module")
-def tconf(_tconf):
+def tconf(_tconf):  # noqa: F811
     oldMax3PCBatchSize = _tconf.Max3PCBatchSize
     oldMax3PCBatchWait = _tconf.Max3PCBatchWait
     _tconf.Max3PCBatchSize = 1000
@@ -245,3 +245,68 @@ def increased_trustees(helpers, trustee_wallets, sdk_trustees, sdk_wallet_handle
     ]
 
     helpers.sdk.send_and_check_request_objects(requests, sdk_wallet_trustee)
+
+
+# fixtures from test_public_xfer_1.py
+@pytest.fixture
+def addresses(helpers):
+    return helpers.wallet.create_new_addresses(5)
+
+
+@pytest.fixture
+def addresses_inner(helpers):
+    return helpers.inner.wallet.create_new_addresses(5)
+
+
+@pytest.fixture
+def initial_mint(helpers, addresses):
+    outputs = [{"address": address, "amount": 100} for address in addresses]
+    mint_request = helpers.request.mint(outputs)
+    responses = helpers.sdk.send_and_check_request_objects([mint_request])
+    result = helpers.sdk.get_first_result(responses)
+    return result
+
+
+@pytest.fixture
+def initial_mint_inner(helpers, addresses_inner):
+    outputs = [{"address": "pay:sov:" + address, "amount": 100} for address in addresses_inner]
+    mint_request = helpers.request.mint(outputs)
+    responses = helpers.sdk.send_and_check_request_objects([mint_request])
+    result = helpers.sdk.get_first_result(responses)
+    return result
+
+
+@pytest.fixture(scope="module")
+def user1_token_wallet():
+    return TokenWallet('user1')
+
+
+@pytest.fixture(scope="module")
+def user2_token_wallet():
+    return TokenWallet('user2')
+
+
+@pytest.fixture(scope="module")
+def user3_token_wallet():
+    return TokenWallet('user3')
+
+
+@pytest.fixture(scope="module")
+def user1_address(user1_token_wallet):
+    seed = 'user1000000000000000000000000000'.encode()
+    user1_token_wallet.add_new_address(seed=seed)
+    return next(iter(user1_token_wallet.addresses.keys()))
+
+
+@pytest.fixture(scope="module")
+def user2_address(user2_token_wallet):
+    seed = 'user2000000000000000000000000000'.encode()
+    user2_token_wallet.add_new_address(seed=seed)
+    return next(iter(user2_token_wallet.addresses.keys()))
+
+
+@pytest.fixture(scope="module")
+def user3_address(user3_token_wallet):
+    seed = 'user3000000000000000000000000000'.encode()
+    user3_token_wallet.add_new_address(seed=seed)
+    return next(iter(user3_token_wallet.addresses.keys()))

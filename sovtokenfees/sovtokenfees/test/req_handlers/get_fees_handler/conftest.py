@@ -24,7 +24,7 @@ def prepare_fees(db_manager_with_config, fees):
 
 
 @pytest.fixture()
-def get_fees_request(looper, libsovtoken, wallet):
+def get_fees_request(looper, libsovtoken, wallet):  # noqa: F811
     get_fees_future = build_get_txn_fees_req(wallet, None, "sov")
     get_fees_request = looper.loop.run_until_complete(get_fees_future)
     get_fees_request = sdk_json_to_request_object(json.loads(get_fees_request))

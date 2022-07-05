@@ -1,0 +1,48 @@
+name: "Publish Token Plugin Packages"
+
+on:
+  workflow_call:
+    inputs:
+      GITHUB_REPOSITORY_NAME:
+        required: true
+        type: string
+      UBUNTU_VERSION:
+        required: true
+        type: string
+    secrets:
+      BOT_PR_PAT:
+        required: true
+jobs:
+  publish_token_plugin:
+    name: Token Plugin Publish Packages
+    runs-on: ubuntu-20.04
+    steps: 
+      - name: Setup
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            openssh-client \
+            python3.5 \
+            python3-pip
+          pip3 install -U pip plumbum==1.6.7 six==1.12.0 deb-pkg-tools
+      - name: Clone Sovrin Packaging Repo
+        uses: actions/checkout@v3
+        with:
+          path: sovrin-packaging
+          token: ${{ secrets.BOT_PR_PAT }}
+      - name: Test cloned sovrin packaging
+        run: ls sovrin-packaging/
+      - name: Download sovtoken-deb package from GHA
+        uses: actions/download-artifact@v2
+        with:
+          name: sovtoken-deb
+          path: /tmp/tokendebs/
+      - name: Download sovtokenfees-deb package from GHA
+        uses: actions/download-artifact@v2
+        with:
+          name: sovtokenfees-deb
+          path: /tmp/tokendebs/
+      - name: Publish Packages
+        run: |
+          ls -lisha
+          echo "Todo Packages with upload_debs.py and secrets"
+          echo "Something like:  ./upload_debs.py /tmp/tokendebs {$repoName} {$repoComponent} --host {$secrets.SOVRIN_REPO_HOST} --ssh-key {$secrets.sovrin_key}"
