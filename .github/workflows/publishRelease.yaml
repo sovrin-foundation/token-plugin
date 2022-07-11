@@ -100,3 +100,4 @@ jobs:
       REPO_COMPONENT: ${{ needs.release-infos.outputs.component}}
     secrets:
       BOT_PR_PAT: ${{ secrets.BOT_PR_PAT }}
+      SOVRIN_REPO_KEY: ${{ secrets.SOVRIN_REPO_KEY }}

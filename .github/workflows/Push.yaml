@@ -42,7 +42,6 @@ jobs:
   build-image:
     name: Create Builder Image
     needs: [workflow-setup]
-    if: ${{ always() }}
     uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
     with:
       CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
@@ -75,3 +74,4 @@ jobs:
       REPO_COMPONENT: 'rc' 
     secrets:
       BOT_PR_PAT: ${{ secrets.BOT_PR_PAT }}
+      SOVRIN_REPO_KEY: ${{ secrets.SOVRIN_REPO_KEY }}
