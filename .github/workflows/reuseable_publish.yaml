@@ -49,4 +49,12 @@ jobs:
           path: /tmp/tokendebs/
       - name: Publish Packages
         run: |
-          ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ${{ secrets.SOVRIN_REPO_KEY }}
+          echo "${{ secrets.SOVRIN_REPO_KEY }}" > ~/.ssh/sovrin_repo
+          host='repo.sovrin.org'
+          hosts="$(dig +short "$host" | grep -v '\.$' | sed -z 's|\n|,|g')$host"
+          ssh-keyscan -H "$hosts" > ~/.ssh/known_hosts
+          ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ~/-ssh/sovrin_repo
+      - name: Cleanup
+        if: always()
+        run: |
+          rm ~/.ssh/sovrin_repo ~/.ssh/known_hosts
