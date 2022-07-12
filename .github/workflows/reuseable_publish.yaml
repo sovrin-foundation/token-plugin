@@ -49,6 +49,8 @@ jobs:
           path: /tmp/tokendebs/
       - name: Publish Packages
         run: |
+          mkdir -p ~/.ssh/
+          sudo chmod 700 ~/.ssh
           echo "${{ secrets.SOVRIN_REPO_KEY }}" > ~/.ssh/sovrin_repo
           sudo chmod 600 ~/.ssh/sovrin_repo
           host='repo.sovrin.org'
