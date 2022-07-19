@@ -47,16 +47,24 @@ jobs:
         with:
           name: sovtokenfees-deb
           path: /tmp/tokendebs/
+      
+      - run: mkdir -p ~/.ssh/
+
+      - run: sudo chmod 700 ~/.ssh
+      
+      - run: echo "${{ secrets.SOVRIN_REPO_KEY }}" > ~/.ssh/sovrin_repo
+
+      - run: sudo chmod 600 ~/.ssh/sovrin_repo
+
+      - run: export host='repo.sovrin.org'
+
+      - run: export hosts="$(dig +short "$host" | grep -v '\.$' | sed -z 's|\n|,|g')$host"
+
+      - run: ssh-keyscan -H "$hosts" > ~/.ssh/known_hosts
+
       - name: Publish Packages
-        run: |
-          mkdir -p ~/.ssh/
-          sudo chmod 700 ~/.ssh
-          echo "${{ secrets.SOVRIN_REPO_KEY }}" > ~/.ssh/sovrin_repo
-          sudo chmod 600 ~/.ssh/sovrin_repo
-          host='repo.sovrin.org'
-          hosts="$(dig +short "$host" | grep -v '\.$' | sed -z 's|\n|,|g')$host"
-          ssh-keyscan -H "$hosts" > ~/.ssh/known_hosts
-          ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ~/.ssh/sovrin_repo
+        run: ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ~/.ssh/sovrin_repo
+
       - name: Cleanup
         if: always()
         run: |
