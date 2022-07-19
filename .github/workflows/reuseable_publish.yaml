@@ -47,6 +47,11 @@ jobs:
         with:
           name: sovtokenfees-deb
           path: /tmp/tokendebs/
+          
+      - name: Install Prerequirements
+        run: |
+          apt-get update
+          apt-get install -y ssh
       
       - run: mkdir -p ~/.ssh/
 
