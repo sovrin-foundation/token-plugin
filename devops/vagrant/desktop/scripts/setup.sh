@@ -52,9 +52,8 @@ sudo apt-get update -y && apt-get install -y \
 
 echo ${CYAN}python
 sudo pip3 install -U \
-    setuptools \
     'pip<10.0.0' \
-    setuptools \
+    'setuptools<=50.3.2' \
     pytest \
     pytest-xdist \
     python3-indy==1.8.2 \

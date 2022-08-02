@@ -1,4 +1,4 @@
-FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib 
+FROM steptan/ubuntu-1604-rockdb-5.13.3-sharedlib
 
 ARG INDY_NODE_VERSION
 ARG POOL_IP
@@ -44,9 +44,8 @@ RUN apt-get update -y && apt-get install -y \
         #//python3-indy-crypto
 
 RUN pip3 install -U \
-    setuptools \
     'pip<10.0.0' \
-    setuptools \
+    'setuptools<=50.3.2' \
     pytest \
     pytest-xdist \
     python3-indy==1.8.2 \
@@ -62,7 +61,7 @@ ARG indy_plenum_ver=1.7.1
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
 RUN echo "deb https://repo.sovrin.org/deb xenial rc" >> /etc/apt/sources.list \
     && apt-get update && apt-get install -y \
-	    supervisor \
+        supervisor \
         python3-indy-crypto=0.4.5 \
         indy-plenum=${indy_plenum_ver} \
         indy-node=${INDY_NODE_VERSION} \
