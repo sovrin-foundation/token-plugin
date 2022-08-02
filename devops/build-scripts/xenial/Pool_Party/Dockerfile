@@ -43,8 +43,8 @@ RUN apt-get update -y && apt-get install -y \
 
 
 RUN pip3 install -U \
-	pip==9.0.3 \
-	setuptools
+	'pip<10.0.0' \
+	'setuptools<=50.3.2'
 
 RUN useradd -m -d /home/indy -s /bin/bash -p $(openssl passwd -1 "token") -u $uid indy; usermod -aG sudo indy
 

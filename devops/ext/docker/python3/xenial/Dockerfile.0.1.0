@@ -15,8 +15,11 @@ RUN apt-get update && apt-get install -y \
 # pypi based packages
 RUN pip3 install -U \ 
         'pip<10.0.0' \
-        setuptools \
-        virtualenv
+        'setuptools<=50.3.2' \
+        importlib_metadata==2.1.1 \
+        importlib_resources==3.2.1 \
+        virtualenv==16.0.0 \
+        pipenv==2018.11.26
 
 # TODO CMD ENTRYPOINT ...
 

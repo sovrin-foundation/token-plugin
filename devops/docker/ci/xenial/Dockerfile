@@ -6,31 +6,32 @@ ARG u_name=user
 
 # TODO move to base image
 RUN apt-get update && apt-get install -y \
-        software-properties-common \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
 # rocksdb
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
     && add-apt-repository "deb https://repo.sovrin.org/deb xenial rc master" \
     && apt-get update && apt-get install -y \
-        libbz2-dev \
-        zlib1g-dev \
-        liblz4-dev \
-        libsnappy-dev \
-        rocksdb=5.8.8 \
+    libbz2-dev \
+    zlib1g-dev \
+    liblz4-dev \
+    libsnappy-dev \
+    rocksdb=5.8.8 \
     && rm -rf /var/lib/apt/lists/*
 
 # libindy and libindy-crypto
 # TODO: I DO REALLY THINK THAT THIS SHOULD BE CHANGED
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
     && apt-get update && apt-get install -y \
-        libindy-crypto=0.4.5 \
-        libindy=1.13.0~1420 \
-        libsovtoken=1.0.2~92 \
+    libindy-crypto=0.4.5 \
+    libindy=1.13.0~1420 \
+    libsovtoken=1.0.2~92 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
-    && pip3 install -U pipenv zipp==1.2.0
+    && pip3 install -U \
+    zipp==1.2.0
 
 # TODO workaround (suggested by http://click.pocoo.org/5/python3/)
 # to use pipenv's dependency 'click' (http://click.pocoo.org)
@@ -39,7 +40,7 @@ ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 
 RUN if [ "$u_id" != "0" ]; then \
-        useradd -ms /bin/bash -u $u_id $u_name; \
+    useradd -ms /bin/bash -u $u_id $u_name; \
     fi
 USER $u_id
 

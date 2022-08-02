@@ -13,8 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # https://github.com/pypa/pip/issues/5240
 # https://github.com/pypa/pip/issues/5221
 RUN python3 -m pip install -U \
-        pip \
-        setuptools \
+        'pip<10.0.0' \
+        'setuptools<=50.3.2' \
         virtualenv \
         pipenv \
         plumbum \
