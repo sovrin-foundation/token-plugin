@@ -100,6 +100,7 @@ CI_IMAGE_BASED_TARGETS = test package clean
 $(patsubst %,image_%, $(CI_IMAGE_BASED_TARGETS)): image_ci
 
 pipenv_version:
+	pip list
 	pipenv --version
 
 # TODO

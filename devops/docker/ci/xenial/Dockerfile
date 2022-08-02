@@ -31,12 +31,7 @@ RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py \
     && pip3 install -U \
-    virtualenv==16.0.0 \
-    pipenv \
-    setuptools==50.3.2 \
-    zipp==1.2.0 \
-    importlib_metadata==2.1.1 \
-    importlib_resources==3.2.1
+    zipp==1.2.0
 
 # TODO workaround (suggested by http://click.pocoo.org/5/python3/)
 # to use pipenv's dependency 'click' (http://click.pocoo.org)
