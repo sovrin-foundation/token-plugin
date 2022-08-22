@@ -67,16 +67,42 @@ jobs:
           workflow_conclusion: success
           name: sovtokenfees-deb
           path: artifacts/sovtokenfees-deb
+      - name: Download sovtoken python Artifacts from Github Action Artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: releasepr.yaml
+          workflow_conclusion: success
+          name: sovtoken-deb
+          path: artifacts/sovtoken-python
+      - name: Download sovtokenfees python Artifacts from Github Action Artifacts
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: releasepr.yaml
+          workflow_conclusion: success
+          name: sovtoken-deb
+          path: artifacts/sovtokenfees-python
       - name: Upload sovtoken-deb
         uses: actions/upload-artifact@v2
         with:
           name: sovtoken-deb
           path: artifacts/sovtoken-deb
+      - name: Upload sovtoken-python
+        uses: actions/upload-artifact@v2
+        with:
+          name: sovtoken-python
+          path: artifacts/sovtoken-python
       - name: Upload sovtokenfees-deb
         uses: actions/upload-artifact@v2
         with:
           name: sovtokenfees-deb
           path: artifacts/sovtokenfees-deb
+      - name: Upload sovtokenfees-python
+        uses: actions/upload-artifact@v2
+        with:
+          name: sovtokenfees-python
+          path: artifacts/sovtokenfees-python          
       - name: Generate Release
         uses: softprops/action-gh-release@v1
         with:

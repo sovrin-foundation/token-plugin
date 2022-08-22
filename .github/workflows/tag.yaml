@@ -41,7 +41,7 @@ jobs:
           python-version: '3.8'          
       - name: Prepare package and set version
         run: |
-          python3 updateVersion.py ${{ needs.taginfos.outputs.VERSION }}
+          python3 updateVersion.py -t ${{ needs.taginfos.outputs.VERSION }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3

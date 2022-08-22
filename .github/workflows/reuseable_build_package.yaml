@@ -9,6 +9,9 @@ on:
       UBUNTU_VERSION:
         required: true
         type: string
+      isDev:
+        default: true
+        type: boolean
 
 jobs:
   build_token_plugin_release:
@@ -37,3 +40,49 @@ jobs:
         with:
           name: sovtokenfees-deb
           path: /tmp/build-output/sovtokenfees_*.deb
+
+  build_sovtoken_pypi:
+    name: Token Plugin Build Packages
+    runs-on: ubuntu-20.04
+    container:
+      image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set Version with UX-timestamp
+        if: ${{ inputs.isDev }}
+        run: python3 updateVersion.py
+      - name: Build python sovtoken package
+        run: python3 sovtoken/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sovtoken-python
+          path: /tmp/dist
+          retention-days: 5
+
+  build_sovtokenfees_pypi:
+    name: Token Plugin Build Packages
+    runs-on: ubuntu-20.04
+    container:
+      image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Set Version with UX-timestamp
+        if: ${{ inputs.isDev }}
+        run: python3 updateVersion.py
+      - name: Build python sovtoken package
+        run: python3 sovtokenfees/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sovtokenfees-python
+          path: /tmp/dist
+          retention-days: 5
