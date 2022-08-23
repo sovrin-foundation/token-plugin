@@ -59,7 +59,7 @@ jobs:
 
       - name: Ping Artifactory
         run: |
-          # Test the connection to Ping the Hyperledger Artifactory server
+          # Test the connection to Ping the Sovrin Artifactory server
           # to ensure everything has been setup correctly.
           jfrog rt ping
 
