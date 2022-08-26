@@ -25,4 +25,4 @@ github:
     addLabel: false
 
 vscode:
-    extensions: ["mhutchie.git-graph", "eamodio.gitlens","ms-python.python"	]
+    extensions: ["mhutchie.git-graph", "eamodio.gitlens","ms-python.python", "littlefoxteam.vscode-python-test-adapter"	]
