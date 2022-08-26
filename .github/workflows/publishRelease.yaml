@@ -75,7 +75,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
           workflow_conclusion: success
-          name: sovtoken-deb
+          name: sovtoken-python
           path: artifacts/sovtoken-python
       - name: Download sovtokenfees python Artifacts from Github Action Artifacts
         uses: dawidd6/action-download-artifact@v2
@@ -83,7 +83,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
           workflow_conclusion: success
-          name: sovtoken-deb
+          name: sovtokenfees-python
           path: artifacts/sovtokenfees-python
       - name: Upload sovtoken-deb
         uses: actions/upload-artifact@v2
@@ -121,7 +121,7 @@ jobs:
   publish-package:
     name: Token Plugin Publish Packages
     needs: [release-infos, createRelease]
-    if: ${{ neees.release-infos.outputs.publish }}
+    if:  needs.release-infos.outputs.publish == 'true'
     uses: ./.github/workflows/reuseable_publish.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.release-infos.outputs.GITHUB_REPOSITORY_NAME }}

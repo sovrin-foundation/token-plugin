@@ -70,7 +70,7 @@ jobs:
   publish-package:
     name: Token Plugin Publish Packages
     needs: [workflow-setup, build-package]
-    if: ${{ neees.workflow-setup.outputs.publish }}
+    if:  needs.workflow-setup.outputs.publish  == 'true'   
     uses: ./.github/workflows/reuseable_publish.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}

@@ -1,11 +1,11 @@
 import argparse
 import json
-import time
 import semver
 
 ap = argparse.ArgumentParser("Updates Version in json")
 
 ap.add_argument("-t", "--tag", help="Version to be set to",)
+ap.add_argument("--timestamp", help="Timestamp to be set for the version",)
 args = vars(ap.parse_args())
 
 
@@ -15,15 +15,12 @@ def updateWithTag(ver):
     return ver
 
 
-def updateWithTimestamp():
-    uxtimestamp = str(int(time.time()))
+def updateWithTimestamp(timestamp):
     version = "str"
     with open('sovtoken/sovtoken/metadata.json', 'r') as f:
         data = json.load(f)
         v = semver.VersionInfo.parse(data["version"])
-        print(v)
-        v = v.replace(prerelease="dev" + uxtimestamp)
-        print(v)
+        v = v.replace(prerelease="dev" + timestamp)
         version = str(v)
     return version
 
@@ -34,8 +31,11 @@ if args['tag'] is not None:
     version = updateWithTag(args['tag'])
     print("Version will be updated to: " + version)
 else:
-    version = updateWithTimestamp()
-    print("Replacing  Dev-Version with UX-timestamp: " + version)
+    if args['timestamp'] is not None:
+        version = updateWithTimestamp(args['timestamp'])
+        print("Replacing  Dev-Version with UX-timestamp: " + version)
+    else:
+        raise ValueError("Either timestamp or tag must be provided")
 
 with open('sovtoken/sovtoken/metadata.json', 'r') as f:
     data = json.load(f)

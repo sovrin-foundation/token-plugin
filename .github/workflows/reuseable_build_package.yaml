@@ -10,12 +10,23 @@ on:
         required: true
         type: string
       isDev:
+        required: false
         default: true
         type: boolean
 
 jobs:
+  timestamp:
+    name: Get timestamp
+    runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ steps.timestamp.outputs.timestamp }}
+    steps:
+      - id: timestamp
+        run: echo "::set-output name=timestamp::$(date +%s)"
+
   build_token_plugin_release:
     name: Token Plugin Build Packages
+    needs: timestamp
     runs-on: ubuntu-20.04
     container:
       image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
@@ -24,6 +35,9 @@ jobs:
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Check out code
         uses: actions/checkout@v3
+      - name: Set Version with UX-timestamp
+        if: ${{ inputs.isDev }}
+        run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build Token Plugin deployment package
         run: |
           mkdir -p /tmp/build-output
@@ -42,20 +56,17 @@ jobs:
           path: /tmp/build-output/sovtokenfees_*.deb
 
   build_sovtoken_pypi:
-    name: Token Plugin Build Packages
+    name: sovtoken Build Package
     runs-on: ubuntu-20.04
+    needs: timestamp
     container:
       image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
       - name: Set Version with UX-timestamp
         if: ${{ inputs.isDev }}
-        run: python3 updateVersion.py
+        run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build python sovtoken package
         run: python3 sovtoken/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
       - uses: actions/upload-artifact@v2
@@ -65,21 +76,18 @@ jobs:
           retention-days: 5
 
   build_sovtokenfees_pypi:
-    name: Token Plugin Build Packages
+    name: sovtokenfees Build Packages
     runs-on: ubuntu-20.04
+    needs: timestamp
     container:
       image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
       - name: Set Version with UX-timestamp
         if: ${{ inputs.isDev }}
-        run: python3 updateVersion.py
-      - name: Build python sovtoken package
+        run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
+      - name: Build python sovtokenfees package
         run: python3 sovtokenfees/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
       - uses: actions/upload-artifact@v2
         with:
