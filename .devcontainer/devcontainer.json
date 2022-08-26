@@ -22,6 +22,7 @@
 		"eamodio.gitlens",
 		"GitHub.vscode-pull-request-github",
 		"ms-vscode.makefile-tools",
+		"littlefoxteam.vscode-python-test-adapter",
 		"ms-azuretools.vscode-docker"
 	],
 

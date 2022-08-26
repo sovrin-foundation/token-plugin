@@ -38,10 +38,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'          
+          python-version: '3.8'
+      - name: Set up python
+        run: |
+          pip3 install semver          
       - name: Prepare package and set version
         run: |
-          python3 updateVersion.py ${{ needs.taginfos.outputs.VERSION }}
+          python3 updateVersion.py -t ${{ needs.taginfos.outputs.VERSION }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3

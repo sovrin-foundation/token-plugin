@@ -33,6 +33,8 @@ jobs:
       - name: workflow-setup
         id: workflow-setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
+        with:
+          ownerRepo: "sovrin-foundation"
 
   lint:
     name: Lint
@@ -64,7 +66,8 @@ jobs:
     uses: ./.github/workflows/reuseable_build_package.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.release-infos.outputs.GITHUB_REPOSITORY_NAME }}
-      UBUNTU_VERSION: ${{ needs.release-infos.outputs.UBUNTU_VERSION }}    
+      UBUNTU_VERSION: ${{ needs.release-infos.outputs.UBUNTU_VERSION }}
+      isDev: false   
 
   statusCheck:
     name: statusCheck

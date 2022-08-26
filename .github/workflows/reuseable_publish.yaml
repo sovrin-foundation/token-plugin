@@ -13,64 +13,80 @@ on:
         required: true
         type: string
     secrets:
-      BOT_PR_PAT:
+      SOVRIN_ARTIFACTORY_REPO_CONFIG:
         required: true
-      SOVRIN_REPO_KEY:
+      PYPI_API_TOKEN:
         required: true
+
 jobs:
-  publish_token_plugin:
+  publish_sovtoken_pypi:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download Python Packages from Pipeline Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.moduleName }}-python
+          path: dist
+      - name: Publish Python Package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
+
+  publish_sovtokenfees_pypi:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download Python Packages from Pipeline Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: sovtokenfees-python
+          path: dist
+      - name: Publish Python Package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip_existing: true
+
+  publish_token_plugin_deb:
     name: Token Plugin Publish Packages
     runs-on: ubuntu-20.04
     steps: 
-      - name: Setup
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ENV_1: ${{ secrets.SOVRIN_ARTIFACTORY_REPO_CONFIG }}
+
+      - name: Ping Artifactory
         run: |
-          sudo apt-get update && sudo apt-get install -y \
-            openssh-client \
-            python3.5 \
-            python3-pip
-          pip3 install -U pip plumbum==1.6.7 six==1.12.0 deb-pkg-tools
-      - name: Clone Sovrin Packaging Repo
-        uses: actions/checkout@v3
-        with:
-          repository: sovrin-foundation/sovrin-packaging
-          path: sovrin-packaging
-          token: ${{ secrets.BOT_PR_PAT }}
-      - name: Test cloned sovrin packaging
-        run: ls sovrin-packaging/
+          # Test the connection to Ping the Sovrin Artifactory server
+          # to ensure everything has been setup correctly.
+          jfrog rt ping
+
       - name: Download sovtoken-deb package from GHA
         uses: actions/download-artifact@v2
         with:
           name: sovtoken-deb
-          path: /tmp/tokendebs/
+          path: /tmp/sovtoken-deb/
+
+      - name: Publish sovtoken-deb artifact
+        uses: hyperledger/indy-shared-gha/.github/actions/publish-deb@v1
+        with:
+          sourceDirectory: /tmp/sovtoken-deb/
+          distribution: ${{ inputs.distribution }}
+          component: ${{ inputs.REPO_COMPONENT }}
+
       - name: Download sovtokenfees-deb package from GHA
         uses: actions/download-artifact@v2
         with:
           name: sovtokenfees-deb
-          path: /tmp/tokendebs/
+          path: /tmp/sovtokenfees-deb/
+
+      - name: Publish sovtokenfees-deb artifact
+        uses: hyperledger/indy-shared-gha/.github/actions/publish-deb@v1
+        with:
+          sourceDirectory: /tmp/sovtokenfees-deb/
+          distribution: ${{ inputs.distribution }}
+          component: ${{ inputs.REPO_COMPONENT }}
           
-      - name: Install Prerequirements
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ssh
-      
-      - run: mkdir -p ~/.ssh/
-
-      - run: sudo chmod 700 ~/.ssh
-      
-      - run: echo "${{ secrets.SOVRIN_REPO_KEY }}" > ~/.ssh/sovrin_repo
-
-      - run: sudo chmod 600 ~/.ssh/sovrin_repo
-
-      - run: export host='repo.sovrin.org'
-
-      - run: export hosts="$(dig +short "$host" | grep -v '\.$' | sed -z 's|\n|,|g')$host"
-
-      - run: ssh-keyscan -H "$hosts" > ~/.ssh/known_hosts
-
-      - name: Publish Packages
-        run: ./sovrin-packaging/upload_debs.py /tmp/tokendebs core ${{ inputs.REPO_COMPONENT }} --host repo.sovrin.org --ssh-key ~/.ssh/sovrin_repo
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm ~/.ssh/sovrin_repo ~/.ssh/known_hosts
