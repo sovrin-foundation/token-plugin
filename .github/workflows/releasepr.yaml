@@ -33,6 +33,8 @@ jobs:
       - name: workflow-setup
         id: workflow-setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
+        with:
+          ownerRepo: "sovrin-foundation"
 
   lint:
     name: Lint

@@ -13,10 +13,11 @@ on:
         required: true
         type: string
     secrets:
-      BOT_PR_PAT:
+      SOVRIN_ARTIFACTORY_REPO_CONFIG:
         required: true
       PYPI_API_TOKEN:
         required: true
+      
 jobs:
   publish_sovtoken_pypi:
     runs-on: ubuntu-20.04
