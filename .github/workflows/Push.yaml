@@ -44,7 +44,6 @@ jobs:
   build-image:
     name: Create Builder Image
     needs: [workflow-setup]
-    if: ${{ always() }}
     uses: hyperledger/indy-shared-gha/.github/workflows/buildimage.yaml@v1
     with:
       CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
@@ -80,3 +79,4 @@ jobs:
     secrets:
       PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       SOVRIN_ARTIFACTORY_REPO_CONFIG: ${{ secrets.SOVRIN_ARTIFACTORY_REPO_CONFIG }}
+
