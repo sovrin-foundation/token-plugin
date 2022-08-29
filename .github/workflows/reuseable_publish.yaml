@@ -12,6 +12,9 @@ on:
       REPO_COMPONENT:
         required: true
         type: string
+      distribution:
+        required: true
+        type: string
     secrets:
       SOVRIN_ARTIFACTORY_REPO_CONFIG:
         required: true
@@ -25,7 +28,7 @@ jobs:
       - name: Download Python Packages from Pipeline Artifacts
         uses: actions/download-artifact@v2
         with:
-          name: ${{ inputs.moduleName }}-python
+          name: sovtoken-python
           path: dist
       - name: Publish Python Package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
