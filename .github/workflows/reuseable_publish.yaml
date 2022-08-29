@@ -18,40 +18,9 @@ on:
     secrets:
       SOVRIN_ARTIFACTORY_REPO_CONFIG:
         required: true
-      PYPI_API_TOKEN:
-        required: true
+
 
 jobs:
-  publish_sovtoken_pypi:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Download Python Packages from Pipeline Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: sovtoken-python
-          path: dist
-      - name: Publish Python Package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
-
-  publish_sovtokenfees_pypi:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Download Python Packages from Pipeline Artifacts
-        uses: actions/download-artifact@v2
-        with:
-          name: sovtokenfees-python
-          path: dist
-      - name: Publish Python Package to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          skip_existing: true
-
   publish_token_plugin_deb:
     name: Token Plugin Publish Packages
     runs-on: ubuntu-20.04

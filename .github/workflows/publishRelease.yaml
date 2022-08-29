@@ -129,5 +129,4 @@ jobs:
       UBUNTU_VERSION: ${{ needs.release-infos.outputs.UBUNTU_VERSION }}
       REPO_COMPONENT: ${{ needs.release-infos.outputs.component}}
     secrets:
-      PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       SOVRIN_ARTIFACTORY_REPO_CONFIG: ${{ secrets.SOVRIN_ARTIFACTORY_REPO_CONFIG }}
