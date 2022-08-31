@@ -48,6 +48,7 @@ jobs:
           sourceDirectory: /tmp/sovtoken-deb/
           distribution: ${{ inputs.distribution }}
           component: ${{ inputs.REPO_COMPONENT }}
+          repo: "deb"
 
       - name: Download sovtokenfees-deb package from GHA
         uses: actions/download-artifact@v2
@@ -61,4 +62,6 @@ jobs:
           sourceDirectory: /tmp/sovtokenfees-deb/
           distribution: ${{ inputs.distribution }}
           component: ${{ inputs.REPO_COMPONENT }}
+          repo: "deb"
+
           
