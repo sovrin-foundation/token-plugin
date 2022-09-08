@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 
 from setuptools import setup, find_packages
 
@@ -13,9 +14,13 @@ if sys.version_info < (3, 5):
     print("NOTE: Installation failed. Run setup.py using python3")
     sys.exit(1)
 
-here = os.path.abspath(os.path.dirname(__file__))
+try:
+    here = os.path.abspath(os.path.dirname(__file__))
+except NameError:
+    # it can be the case when we are being run as script or frozen
+    here = os.path.abspath(os.path.dirname(sys.argv[0]))
 
-metadata = {}
+metadata = {'__file__': os.path.join(here, 'sovtoken', '__metadata__.py')}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 

@@ -41,8 +41,8 @@ jobs:
       - name: Build Token Plugin deployment package
         run: |
           mkdir -p /tmp/build-output
-          fpm  --input-type dir --output-type deb --name sovtoken  --version latest --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtoken/
-          fpm  --input-type dir --output-type deb --name sovtokenfees  --version latest --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtokenfees/
+          fpm  --input-type dir --output-type deb --name sovtoken  --version $(./updateVersion.py --getVersion) --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtoken/
+          fpm  --input-type dir --output-type deb --name sovtokenfees  --version $(./updateVersion.py --getVersion) --depends "indy-node(=1.13.0~dev1225)" --verbose --no-python-dependencies --force  sovtokenfees/
           mv ./*.deb /tmp/build-output
       - name: Upload sovtoken-deb
         uses: actions/upload-artifact@v2
