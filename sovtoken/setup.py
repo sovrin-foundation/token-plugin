@@ -24,7 +24,7 @@ metadata = {'__file__': os.path.join(here, 'sovtoken', '__metadata__.py')}
 with open(os.path.join(here, 'sovtoken', '__metadata__.py'), 'r') as f:
     exec(f.read(), metadata)
 
-tests_require = ['pip==9.0.3', 'pytest-xdist', 'mock', 'python-rocksdb==0.6.9']
+tests_require = ['pip==9.0.3', 'pytest-xdist', 'mock', 'python-rocksdb==0.6.9', 'indy-node==1.13.2.rc3']
 
 setup(
     name=metadata['__title__'],

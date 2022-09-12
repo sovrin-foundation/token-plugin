@@ -55,15 +55,13 @@ RUN sudo mv /usr/lib/ursa/* /usr/lib && sudo rm -rf /usr/lib/ursa
 RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 &&\
     sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9692C00E657DDE61 &&\
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9692C00E657DDE61 &&\ 
-    sudo add-apt-repository "deb https://hyperledger.jfrog.io/artifactory/indy focal dev" &&\
+    sudo add-apt-repository "deb https://hyperledger.jfrog.io/artifactory/indy focal dev rc" &&\
     sudo add-apt-repository "deb https://repo.sovrin.org/deb xenial master" &&\
     sudo add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" &&\
     sudo add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic master" &&\
     sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu xenial universe main" &&\
     sudo apt-get update -y && sudo apt-get install -y \ 
     libindy=1.15.0~1625-bionic \
-    indy-plenum=1.13.0.dev.0 \
-    indy-node=1.13.0.dev.0 \
     libsodium23
 
 ENV PATH "$PATH:/home/gitpod/.local/bin"
@@ -105,7 +103,7 @@ RUN pip3 install -U --user\
     python-dateutil==2.6.1 \
     python-rocksdb==0.7.0 \
     python-ursa==0.1.1 \
-    python3-indy==1.15.0-dev-1625 \
+    python3-indy==1.16.0.post286 \
     pyzmq==18.1.0 \
     rlp==0.6.0 \
     semver==2.13.0 \

@@ -4,7 +4,7 @@ image:
 
 tasks:
   - name: Install dependencies
-    init: sudo bash install_payment_plugins.sh
+    init: sudo -H bash install_payment_plugins.sh
       
 
 github:
