@@ -56,15 +56,13 @@ RUN mv /usr/lib/ursa/* /usr/lib && rm -rf /usr/lib/ursa
 # 	apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CE7709D068DB5E88 && \
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \ 
     && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9692C00E657DDE61 \ 
-    && echo "deb https://hyperledger.jfrog.io/artifactory/indy focal dev" >> /etc/apt/sources.list \
+    && echo "deb https://hyperledger.jfrog.io/artifactory/indy focal dev rc" >> /etc/apt/sources.list \
     && echo "deb https://repo.sovrin.org/sdk/deb xenial master"  >> /etc/apt/sources.list \
     && echo "deb https://repo.sovrin.org/sdk/deb bionic master"  >> /etc/apt/sources.list \
     && echo "deb http://archive.ubuntu.com/ubuntu xenial universe main"  >> /etc/apt/sources.list \
     && echo "deb https://repo.sovrin.org/deb xenial master"  >> /etc/apt/sources.list \
     && apt-get update -y && apt-get install -y \ 
     libindy=1.15.0~1625-bionic \
-    indy-plenum=1.13.0.dev.0 \
-    indy-node=1.13.0.dev.0 \
     libsodium23
 
 # pypi based packages
