@@ -22,7 +22,12 @@ jobs:
       timestamp: ${{ steps.timestamp.outputs.timestamp }}
     steps:
       - id: timestamp
-        run: echo "::set-output name=timestamp::$(date +%s)"
+        run: |
+          export timestamp=$(date +%s)
+          echo "timestamp=$timestamp" >> $GITHUB_OUTPUT
+          echo "::group::DEBUG"
+          echo "timestamp=$timestamp"
+          echo "::endgroup::"
 
   build_token_plugin_release:
     name: Token Plugin Build Packages
@@ -52,12 +57,12 @@ jobs:
           fpm  --input-type dir --output-type deb --name sovtokenfees  --version $(./updateVersion.py --getVersion) --depends "indy-node(=${{ steps.node-version.outputs.nodeVersion }})" --verbose --no-python-dependencies --force  sovtokenfees/
           mv ./*.deb /tmp/build-output
       - name: Upload sovtoken-deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtoken-deb
           path: /tmp/build-output/sovtoken_*.deb
       - name: Upload sovtokenfees-deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtokenfees-deb
           path: /tmp/build-output/sovtokenfees_*.deb
@@ -76,7 +81,7 @@ jobs:
         run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build python sovtoken package
         run: python3 sovtoken/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: sovtoken-python
           path: /tmp/dist
@@ -96,7 +101,7 @@ jobs:
         run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build python sovtokenfees package
         run: python3 sovtokenfees/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: sovtokenfees-python
           path: /tmp/dist

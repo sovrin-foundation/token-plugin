@@ -37,7 +37,7 @@ jobs:
           jfrog rt ping
 
       - name: Download sovtoken-deb package from GHA
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sovtoken-deb
           path: /tmp/sovtoken-deb/
@@ -51,7 +51,7 @@ jobs:
           repo: "deb"
 
       - name: Download sovtokenfees-deb package from GHA
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: sovtokenfees-deb
           path: /tmp/sovtokenfees-deb/

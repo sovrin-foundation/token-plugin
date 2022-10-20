@@ -32,7 +32,7 @@ jobs:
       publish: ${{ steps.workflow-setup.outputs.publish}}
     steps:
       - name: checkout source code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: get-release-info
         id: get-release-info
         uses: hyperledger/indy-shared-gha/.github/actions/get-release-info@v1
@@ -51,10 +51,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: Download sovtoken deb Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -62,7 +62,7 @@ jobs:
           name: sovtoken-deb
           path: artifacts/sovtoken-deb
       - name: Download sovtokenfees python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -70,7 +70,7 @@ jobs:
           name: sovtokenfees-deb
           path: artifacts/sovtokenfees-deb
       - name: Download sovtoken python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -78,7 +78,7 @@ jobs:
           name: sovtoken-python
           path: artifacts/sovtoken-python
       - name: Download sovtokenfees python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -86,22 +86,22 @@ jobs:
           name: sovtokenfees-python
           path: artifacts/sovtokenfees-python
       - name: Upload sovtoken-deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtoken-deb
           path: artifacts/sovtoken-deb
       - name: Upload sovtoken-python
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtoken-python
           path: artifacts/sovtoken-python
       - name: Upload sovtokenfees-deb
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtokenfees-deb
           path: artifacts/sovtokenfees-deb
       - name: Upload sovtokenfees-python
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sovtokenfees-python
           path: artifacts/sovtokenfees-python          
