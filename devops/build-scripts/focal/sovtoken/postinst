@@ -7,7 +7,7 @@ fi
 # End automatically added section
 
 INDY_CONFIG_PATH="/etc/indy/indy_config.py"
-PLUGINS_SOURCE_PATH="/usr/local/lib/python3.8/dist-packages/sovtoken"
+PLUGINS_SOURCE_PATH=$(python3 -c "import sovtoken as _; print(_.__path__[0])")
 
 add_plugin_if_missing()
 {
