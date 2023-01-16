@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v3
         
       - name: Download sovtoken deb Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -62,7 +62,7 @@ jobs:
           name: sovtoken-deb
           path: artifacts/sovtoken-deb
       - name: Download sovtokenfees python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -70,7 +70,7 @@ jobs:
           name: sovtokenfees-deb
           path: artifacts/sovtokenfees-deb
       - name: Download sovtoken python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
@@ -78,7 +78,7 @@ jobs:
           name: sovtoken-python
           path: artifacts/sovtoken-python
       - name: Download sovtokenfees python Artifacts from Github Action Artifacts
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: releasepr.yaml
