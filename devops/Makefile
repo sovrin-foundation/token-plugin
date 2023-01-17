@@ -38,7 +38,7 @@ ifeq ($(SRC_DIR_NAME),sovtoken)
 # 	apt: indy-plenum (stable component)
 
 FPM_P_NAME += $(PACKAGE_NAME) 
-FPM_P_DEPENDS := indy-node(=1.13.0~dev1225)
+FPM_P_DEPENDS := indy-node(=1.13.2~rc4)
 FPM_ARGS := --no-python-dependencies $(FPM_ARGS) ../$(SRC_DIR_NAME)
 endif
 
