@@ -52,7 +52,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
+
       - name: Download sovtoken deb Artifacts from Github Action Artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -104,7 +104,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: sovtokenfees-python
-          path: artifacts/sovtokenfees-python          
+          path: artifacts/sovtokenfees-python
       - name: Generate Release
         uses: softprops/action-gh-release@v1
         with:

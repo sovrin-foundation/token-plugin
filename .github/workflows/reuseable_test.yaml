@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies
         run: |
           bash ./install_payment_plugins.sh
-          
+
       - name: Run Token Plugin ${{ matrix.module }} / ${{ matrix.dir }}
         id: token-plugin-test
         run: cd ${{ matrix.module }}/${{ matrix.module }}/test && python3 -m pytest -l -vv --junitxml=test-result-token-plugin-"${{ matrix.module }}"-"${{ matrix.dir }}".xml ${{ matrix.dir }}

@@ -24,7 +24,7 @@ jobs:
   publish_token_plugin_deb:
     name: Token Plugin Publish Packages
     runs-on: ubuntu-20.04
-    steps: 
+    steps:
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v2
         env:
@@ -64,4 +64,3 @@ jobs:
           component: ${{ inputs.REPO_COMPONENT }}
           repo: "deb"
 
-          

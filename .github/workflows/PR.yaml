@@ -8,6 +8,7 @@ on:
       - ubuntu-20.04-upgrade
       - Devcontainers
       - GHARefactoring
+      - fix/dependancy-scheme
     paths:
       - '**'
       - '!sovtokenfees/sovtokenfees/metadata.json'
@@ -59,14 +60,14 @@ jobs:
       CACHE_KEY_BUILD: ${{ needs.workflow-setup.outputs.CACHE_KEY_BUILD }}
       DOCKER_IMAGE: ghcr.io/${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build
       UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
-    
+
   token-plugin-tests:
     name: Token Plugin Tests
     needs: [workflow-setup, build-image]
     uses: ./.github/workflows/reuseable_test.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
-      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
 
   build-packages:
     name: Token Plugin Build package
@@ -74,8 +75,8 @@ jobs:
     uses: ./.github/workflows/reuseable_build_package.yaml
     with:
       GITHUB_REPOSITORY_NAME: ${{ needs.workflow-setup.outputs.GITHUB_REPOSITORY_NAME }}
-      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}    
-          
+      UBUNTU_VERSION: ${{ needs.workflow-setup.outputs.UBUNTU_VERSION }}
+
   statusCheck:
     name: statusCheck
     runs-on: ubuntu-latest
