@@ -53,7 +53,7 @@ jobs:
         id: node-version
         shell: bash
         run: |
-          version=$(grep -oP "\d+.\d+.\d+((-|.)?rc\d+)?" <<< $(grep -oP "indy-node==\d+.\d+.\d+((-|.)?rc\d+)?" sovtokenfees/setup.py) || true)
+          version=$(grep -oP "\d+.\d+.\d+((-|.)?rc\d+)?" <<< $(grep -oP "indy-node==\d+.\d+.\d+((-|.)?rc\d+)?" sovtoken/setup.py) || true)
           echo $version > indy-node-version.txt
           echo "nodeVersion=$(sed 's/\./\~/3' indy-node-version.txt)" >> $GITHUB_OUTPUT
       - name: Build Token Plugin deployment package
