@@ -59,8 +59,47 @@ jobs:
       - name: Build Token Plugin deployment package
         run: |
           mkdir -p /tmp/build-output
-          fpm  --input-type dir --output-type deb --name sovtoken --architecture amd64 --maintainer "Sovrin" --no-python-fix-name  --version ${{ steps.version.outputs.debVersion }} --depends "indy-node(=${{ steps.node-version.outputs.nodeVersion }})" --verbose --no-python-dependencies --after-install ./devops/build-scripts/focal/sovtoken/postinst --before-remove ./devops/build-scripts/focal/sovtoken/prerm --exclude "*.pyo" --exclude "*.pyc" --no-python-fix-dependencies --python-bin "/usr/bin/python3" --force  sovtoken/
-          fpm  --input-type dir --output-type deb --name sovtokenfees --architecture amd64 --maintainer "Sovrin" --no-python-fix-name  --version ${{ steps.version.outputs.debVersion }} --depends "indy-node(=${{ steps.node-version.outputs.nodeVersion }})" --verbose --no-python-dependencies --after-install ./devops/build-scripts/focal/sovtokenfees/postinst --before-remove ./devops/build-scripts/focal/sovtokenfees/prerm --exclude "*.pyo" --exclude "*.pyc" --no-python-fix-dependencies --python-bin "/usr/bin/python3" --force  sovtokenfees/
+
+          # Build the sovtoken package
+          fpm  \
+            --input-type python \
+            --output-type deb \
+            --name sovtoken \
+            --version ${{ steps.version.outputs.debVersion }} \
+            --depends "indy-node(=${{ steps.node-version.outputs.nodeVersion }})" \
+            --architecture amd64 \
+            --maintainer "Sovrin" \
+            --verbose \
+            --no-python-dependencies \
+            --no-python-fix-name \
+            --python-bin "/usr/bin/python3" \
+            --no-python-fix-dependencies \
+            --exclude "*.pyc" \
+            --exclude "*.pyo" \
+            --after-install ./devops/build-scripts/focal/sovtoken/postinst \
+            --before-remove ./devops/build-scripts/focal/sovtoken/prerm \
+            --force  \
+            sovtoken/
+
+          # Build the sovtokenfees package
+          fpm  \
+            --input-type python \
+            --output-type deb \
+            --name sovtokenfees \
+            --version ${{ steps.version.outputs.debVersion }} \
+            --architecture amd64 \
+            --maintainer "Sovrin" \
+            --verbose \
+            --no-python-fix-name  \
+            --python-bin "/usr/bin/python3" \
+            --no-python-fix-dependencies \
+            --exclude "*.pyc" \
+            --exclude "*.pyo" \
+            --after-install ./devops/build-scripts/focal/sovtokenfees/postinst \
+            --before-remove ./devops/build-scripts/focal/sovtokenfees/prerm \
+            --force  \
+            sovtokenfees/
+
           mv ./*.deb /tmp/build-output
       - name: Upload sovtoken-deb
         uses: actions/upload-artifact@v3
