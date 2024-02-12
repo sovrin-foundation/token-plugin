@@ -6,12 +6,13 @@
 # Table of Contents
 
 1.  [Sovrin Token Plugins](#org581a5d8)
-    1.  [Install](#org6c5e3ee)
-    2.  [Development Environment](#org003878b)
+    1.  [Announcements](#announcements)
+    2.  [Install](#org6c5e3ee)
+    3.  [Development Environment](#org003878b)
         1.  [Why cant I use my own local machine as my enviroment?](#orga843a17)
         2.  [How to Start Working with the Code](#orgf42e059)
-        5.  [Alternative for running tests](#orga76b3c6)
-    3.  [How To Contribute](#orgd389b14)
+        3.  [Alternative for running tests](#orga76b3c6)
+    4.  [How To Contribute](#orgd389b14)
 
 <a href="https://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">![Hex.pm](https://img.shields.io/hexpm/l/plug.svg?style=plastic)</a>
 <a href="https://badge.fury.io/gh/sovrin-foundation%2Ftoken-plugin">[![GitHub version](https://badge.fury.io/gh/sovrin-foundation%2Flibsovtoken.svg)](https://badge.fury.io/gh/sovrin-foundation%2Ftoken-plugin)</a>
@@ -23,6 +24,26 @@
 This repo contains the plugins to create the Sovrin payment ledger plugins: Token and Fees
 
 <a id="org6c5e3ee"></a>
+
+## Announcements
+
+### February 12 2024
+
+**_The project branches have changed._**
+
+The `main` branch now contains the Ubuntu 20.04 work stream, and the previous `master` branch containing the Ubuntu 16.04 work stream has been moved to the `ubuntu-16.04` branch.
+
+The following changes were made to the branches:
+- `master` (default) renamed to `ubuntu-16.04`
+  - This retargeted the associated PRs, which were then closed.
+- `ubuntu-20.04` set as the default branch.
+- `ubuntu-20.04` (default) renamed to `main`
+
+**_Project sunset notice._**
+
+The token plugins are being phased out.  There will be one final release of the Ubuntu 20.04 based code to be included in the `v1.2.0` release of the [Sovrin](https://github.com/sovrin-foundation/sovrin) package.  Subsequent releases of the [Sovrin](https://github.com/sovrin-foundation/sovrin) package will not contain the token plugins.
+
+Following the Sovrin `v1.2.0` release this repository will be archived.
 
 ## Install
 
@@ -51,7 +72,7 @@ If you are new to the concept of devcontainers in combination with VSCode [here]
 Simply clone this repository and VSCode will most likely ask you to open it in the devcontainer, if you have the correct extension("ms-vscode-remote.remote-containers") installed.
 If VSCode didn't ask to open it, open the command palette and use the `Remote-Containers: Rebuild and Reopen in Container` command.
 
-If you want to use Gitpod simply use this [link](https://gitpod.io/#https://github.com/sovrin-foundation/token-plugin/tree/ubuntu-20.04) 
+If you want to use Gitpod simply use this [link](https://gitpod.io/#https://github.com/sovrin-foundation/token-plugin/tree/ubuntu-20.04)
 or if you want to work with your fork, prefix the entire URL of your branch with  `gitpod.io/#` so that it looks like `https://gitpod.io/#https://github.com/sovrin-foundation/token-plugin/tree/ubuntu-20.04`.
 
 Be aware that the automatic test discovery may need a kickstart via the command palette and `Python: Configure Tests`.
