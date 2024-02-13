@@ -1,9 +1,8 @@
 ARG VARIANT="focal"
 FROM mcr.microsoft.com/vscode/devcontainers/base:${VARIANT}
 
-RUN apt-get update -y \
-    && echo "deb http://security.ubuntu.com/ubuntu bionic main"  >> /etc/apt/sources.list \
-    && apt-get install -y --allow-downgrades \
+RUN echo "deb http://security.ubuntu.com/ubuntu bionic main"  >> /etc/apt/sources.list && \
+    apt-get update -y && apt-get install -y --allow-downgrades \
     # common stuff
     git \
     wget \
@@ -12,7 +11,7 @@ RUN apt-get update -y \
     apt-utils \
     nano \
     software-properties-common \
-    supervisor \ 
+    supervisor \
     # Python
     python3-pip \
     python3-nacl \
@@ -23,50 +22,44 @@ RUN apt-get update -y \
     libsnappy-dev \
     liblz4-dev \
     libbz2-dev \
-    docker-compose \
-    && rm -rf /var/lib/apt/lists/*
-
-# fails when executed in one command with other pip install packages
-# RUN pip install python-rocksdb
+    docker-compose
 
 RUN echo "deb http://security.ubuntu.com/ubuntu bionic-security main"  >> /etc/apt/sources.list && \
-    apt-get update && apt-get install -y \ 
+    apt-get update -y && apt-get install -y \
     libssl1.0.0 \
     libssl1.1
 # Indy Node and Plenum
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 \
     && echo "deb https://repo.sovrin.org/deb bionic master" >> /etc/apt/sources.list \
-    && apt-get update && apt-get install -y \ 
+    && apt-get update && apt-get install -y \
     ursa
 # install fpm
-ENV FPM_VERSION=1.9.3
-RUN apt-get update \
-    && apt-add-repository ppa:brightbox/ruby-ng \
-    && apt-get install -y --no-install-recommends \
-    ruby2.6 \
-    ruby2.6-dev \
-    && gem install --no-document rake fpm:$FPM_VERSION \
-    && rm -rf /var/lib/apt/lists/*
+ENV FPM_VERSION=1.14.2
+ENV DOTENV_VERSION=2.8.1
+RUN apt-get update -y && apt-get install -y \
+    ruby \
+    ruby-dev \
+    rubygems \
+    && gem install --no-document rake dotenv:$DOTENV_VERSION fpm:$FPM_VERSION
 
 # Need to move libursa.so to parent dir
 RUN mv /usr/lib/ursa/* /usr/lib && rm -rf /usr/lib/ursa
 
 # Indy SDK
-# RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 || \
-# 	apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CE7709D068DB5E88 && \
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \ 
-    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9692C00E657DDE61 \ 
-    && echo "deb https://hyperledger.jfrog.io/artifactory/indy focal dev rc" >> /etc/apt/sources.list \
-    && echo "deb https://repo.sovrin.org/sdk/deb xenial master"  >> /etc/apt/sources.list \
-    && echo "deb https://repo.sovrin.org/sdk/deb bionic master"  >> /etc/apt/sources.list \
-    && echo "deb http://archive.ubuntu.com/ubuntu xenial universe main"  >> /etc/apt/sources.list \
-    && echo "deb https://repo.sovrin.org/deb xenial master"  >> /etc/apt/sources.list \
-    && apt-get update -y && apt-get install -y \ 
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 \
+    && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9692C00E657DDE61 \
+    && add-apt-repository "deb https://hyperledger.jfrog.io/artifactory/indy focal dev" \
+    && add-apt-repository "deb https://repo.sovrin.org/deb xenial master" \
+    && add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial master" \
+    && add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic master" \
+    && add-apt-repository "deb http://archive.ubuntu.com/ubuntu xenial universe main" \
+    && apt-get update -y && apt-get install -y \
     libindy=1.15.0~1625-bionic \
     libsodium23
 
 # pypi based packages
-RUN pip3 install -U \ 
+RUN pip3 install -U \
+    Cython==0.29.36 \
     Pygments==2.2.0 \
     Pympler==0.8 \
     PyNaCl==1.3.0 \
@@ -106,7 +99,7 @@ RUN pip3 install -U \
     python3-indy==1.15.0-dev-1625 \
     pyzmq==18.1.0 \
     rlp==0.6.0 \
-    semver==2.13.0 \
+    semver \
     setuptools==53.0.0 \
     sha3==0.2.1 \
     six==1.15.0 \
@@ -118,10 +111,8 @@ RUN pip3 install -U \
     wheel==0.34.2 \
     zipp==1.2.0 \
     mock
-# virtualenv \
-# python-rocksdb==0.7
 
 RUN mkdir -p /etc/indy && echo "ENABLED_PLUGINS = ['sovtoken', 'sovtokenfees']" > /etc/indy/indy_config.py
 
 RUN apt-get -y autoremove
-
+RUN rm -rf /var/lib/apt/lists/*
