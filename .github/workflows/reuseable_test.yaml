@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Publish Test Report
         if: success() || failure()
-        uses: scacap/action-surefire-report@v1.0.7
+        uses: scacap/action-surefire-report@v1
         continue-on-error: true
         with:
           check_name: Token Plugin ${{ matrix.module }} / ${{ matrix.dir }} Test Report

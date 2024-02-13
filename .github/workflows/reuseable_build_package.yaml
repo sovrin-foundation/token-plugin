@@ -39,7 +39,7 @@ jobs:
       - name: adding github workspace as safe directory
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Version with UX-timestamp
         if: ${{ inputs.isDev }}
         run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
@@ -102,12 +102,12 @@ jobs:
 
           mv ./*.deb /tmp/build-output
       - name: Upload sovtoken-deb
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sovtoken-deb
           path: /tmp/build-output/sovtoken_*.deb
       - name: Upload sovtokenfees-deb
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sovtokenfees-deb
           path: /tmp/build-output/sovtokenfees_*.deb
@@ -120,13 +120,13 @@ jobs:
       image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Version with UX-timestamp
         if: ${{ inputs.isDev }}
         run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build python sovtoken package
         run: python3 sovtoken/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: sovtoken-python
           path: /tmp/dist
@@ -140,13 +140,13 @@ jobs:
       image: ghcr.io/${{ inputs.GITHUB_REPOSITORY_NAME }}/token-plugin-build:${{ inputs.UBUNTU_VERSION }}
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set Version with UX-timestamp
         if: ${{ inputs.isDev }}
         run: python3 updateVersion.py --timestamp ${{ needs.timestamp.outputs.timestamp }}
       - name: Build python sovtokenfees package
         run: python3 sovtokenfees/setup.py sdist --dist-dir /tmp/dist bdist_wheel --dist-dir /tmp/dist
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: sovtokenfees-python
           path: /tmp/dist
