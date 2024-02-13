@@ -107,7 +107,7 @@ RUN pip3 install -U \
     python3-indy==1.15.0-dev-1625 \
     pyzmq==18.1.0 \
     rlp==0.6.0 \
-    semver==2.13.0 \
+    semver \
     setuptools==53.0.0 \
     sha3==0.2.1 \
     six==1.15.0 \
