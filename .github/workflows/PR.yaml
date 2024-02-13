@@ -2,13 +2,7 @@ name: token-plugin-pr
 on:
   pull_request:
     branches:
-      - master
-      - gha-ubuntu-20.04
-      - ubuntu-20.04
-      - ubuntu-20.04-upgrade
-      - Devcontainers
-      - GHARefactoring
-      - fix/dependancy-scheme
+      - main
     paths:
       - '**'
       - '!sovtokenfees/sovtokenfees/metadata.json'
@@ -32,7 +26,7 @@ jobs:
       testsNeeded: ${{ steps.testsNeeded.outputs.testsNeeded }}
     steps:
       - name: checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: setup
         id: setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
@@ -40,7 +34,7 @@ jobs:
           ownerRepo: "sovrin-foundation"
       - name: testsNeeded
         id: testsNeeded
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             testsNeeded:

@@ -3,13 +3,7 @@ name: token-plugin-push
 on:
   push:
     branches:
-      - master
-      - gha-ubuntu-20.04
-      - ubuntu-20.04
-      - ubuntu-20.04-upgrade
-      - Devcontainers
-      - GHARefactoring
-      - fix/dependancy-scheme
+      - main
     paths:
       - '**.py'
       - '.github/**'
@@ -30,7 +24,7 @@ jobs:
       publish: ${{ steps.setup.outputs.publish }}
     steps:
       - name: checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: setup
         id: setup
         uses: hyperledger/indy-shared-gha/.github/actions/workflow-setup@v1
